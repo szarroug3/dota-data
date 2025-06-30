@@ -1,24 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dota Data Dashboard
 
-## Getting Started
+A comprehensive dashboard for analyzing Dota 2 team and player data, with support for multiple data sources including OpenDota, Dotabuff, Stratz, and Dota2ProTracker.
 
-First, run the development server:
+## Features
+
+- Team management and analysis
+- Player statistics and performance tracking
+- Match history with detailed insights
+- Draft suggestions and meta analysis
+- Real-time data fetching with rate limiting
+- Caching system for improved performance
+
+## Environment Variables
+
+### Mock API Configuration
+
+For development and testing, you can use mock data instead of real API calls:
+
+- `USE_MOCK_API=true` - Mock all API services
+- `USE_MOCK_OPENDOTA=true` - Mock only OpenDota API calls
+- `USE_MOCK_DOTABUFF=true` - Mock only Dotabuff API calls  
+- `USE_MOCK_STRATZ=true` - Mock only Stratz API calls
+- `USE_MOCK_D2PT=true` - Mock only Dota2ProTracker API calls
+- `MOCK_RATE_LIMIT=1000` - Set requests per minute for mock APIs (default: 1000)
+
+You can combine these to mock specific services while using real APIs for others. For example:
+- `USE_MOCK_OPENDOTA=true` - Use mock data for OpenDota, real APIs for everything else
+- `USE_MOCK_API=true` - Use mock data for all services
+- `USE_MOCK_API=true MOCK_RATE_LIMIT=600` - Use mock data with 600 requests per minute
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000` (or the next available port).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data Sources
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **OpenDota**: Match details, player statistics, hero data
+- **Dotabuff**: Team information, league data
+- **Stratz**: Advanced analytics and insights
+- **Dota2ProTracker**: Professional player data
+
+## Architecture
+
+- Next.js 15 with App Router
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Redis caching with Upstash
+- Rate limiting for API protection
 
 ## Learn More
 

@@ -1,0 +1,1929 @@
+{
+  "byId": {
+    "1": "Nyx Assassin",
+    "2": "Batrider",
+    "3": "Chen",
+    "4": "Dawnbreaker",
+    "5": "Centaur Warrunner",
+    "6": "Medusa",
+    "7": "Earth Spirit",
+    "8": "Void Spirit",
+    "9": "Bounty Hunter",
+    "10": "Bloodseeker",
+    "11": "Ember Spirit",
+    "12": "Tusk",
+    "13": "Necrophos",
+    "14": "Wraith King",
+    "15": "Terrorblade",
+    "16": "Slardar",
+    "17": "Windranger",
+    "18": "Visage",
+    "19": "Dark Willow",
+    "20": "Bristleback",
+    "21": "Legion Commander",
+    "22": "Phoenix",
+    "23": "Puck",
+    "24": "Invoker",
+    "25": "Witch Doctor",
+    "26": "Sven",
+    "27": "Juggernaut",
+    "28": "Crystal Maiden",
+    "29": "Keeper of the Light",
+    "30": "Tidehunter",
+    "31": "Treant Protector",
+    "32": "Alchemist",
+    "33": "Dark Seer",
+    "34": "Pugna",
+    "35": "Abaddon",
+    "36": "Drow Ranger",
+    "37": "Night Stalker",
+    "38": "Primal Beast",
+    "39": "Naga Siren",
+    "40": "Huskar",
+    "41": "Brewmaster",
+    "42": "Silencer",
+    "43": "Kunkka",
+    "44": "Lone Druid",
+    "45": "Undying",
+    "46": "Tinker",
+    "47": "Bane",
+    "48": "Lion",
+    "49": "Skywrath Mage",
+    "50": "Rubick",
+    "51": "Ursa",
+    "52": "Zeus",
+    "53": "Pudge",
+    "54": "Mars",
+    "55": "Disruptor",
+    "56": "Enchantress",
+    "57": "Broodmother",
+    "58": "Snapfire",
+    "59": "Vengeful Spirit",
+    "60": "Lifestealer",
+    "61": "Shadow Fiend",
+    "62": "Pangolier",
+    "63": "Io",
+    "64": "Viper",
+    "65": "Techies",
+    "66": "Storm Spirit",
+    "67": "Clinkz",
+    "68": "Hoodwink",
+    "69": "Spectre",
+    "70": "Timbersaw",
+    "71": "Luna",
+    "72": "Warlock",
+    "73": "Omniknight",
+    "74": "Nature's Prophet",
+    "75": "Ogre Magi",
+    "76": "Templar Assassin",
+    "77": "Spirit Breaker",
+    "78": "Lina",
+    "79": "Ancient Apparition",
+    "80": "Dawnbreaker",
+    "81": "Sand King",
+    "82": "Leshrac",
+    "83": "Jakiro",
+    "84": "Monkey King",
+    "85": "Muerta",
+    "86": "Meepo",
+    "87": "Phantom Lancer",
+    "88": "Grimstroke",
+    "89": "Mirana",
+    "90": "Dazzle",
+    "91": "Shadow Shaman",
+    "92": "Slark",
+    "93": "Arc Warden",
+    "94": "Outworld Destroyer",
+    "95": "Lich",
+    "96": "Riki",
+    "97": "Morphling",
+    "98": "Anti-Mage",
+    "99": "Lycan",
+    "100": "Doom",
+    "101": "Tiny",
+    "102": "Axe",
+    "103": "Shadow Demon",
+    "104": "Elder Titan",
+    "105": "Faceless Void",
+    "106": "Troll Warlord",
+    "107": "Enigma",
+    "108": "Underlord",
+    "109": "Chaos Knight",
+    "110": "Venomancer",
+    "111": "Magnus",
+    "112": "Phantom Assassin",
+    "113": "Razor",
+    "114": "Gyrocopter",
+    "115": "Beastmaster",
+    "116": "Oracle",
+    "117": "Weaver",
+    "118": "Sniper",
+    "119": "Death Prophet",
+    "120": "Dragon Knight",
+    "121": "Clockwerk",
+    "122": "Queen of Pain",
+    "123": "Winter Wyvern",
+    "124": "Marci"
+  },
+  "byName": {
+    "npc_dota_hero_nyx_assassin": "Nyx Assassin",
+    "npc_dota_hero_batrider": "Batrider",
+    "npc_dota_hero_chen": "Chen",
+    "npc_dota_hero_dawnbreaker": "Dawnbreaker",
+    "npc_dota_hero_centaur_warrunner": "Centaur Warrunner",
+    "npc_dota_hero_medusa": "Medusa",
+    "npc_dota_hero_earth_spirit": "Earth Spirit",
+    "npc_dota_hero_void_spirit": "Void Spirit",
+    "npc_dota_hero_bounty_hunter": "Bounty Hunter",
+    "npc_dota_hero_bloodseeker": "Bloodseeker",
+    "npc_dota_hero_ember_spirit": "Ember Spirit",
+    "npc_dota_hero_tusk": "Tusk",
+    "npc_dota_hero_necrophos": "Necrophos",
+    "npc_dota_hero_wraith_king": "Wraith King",
+    "npc_dota_hero_terrorblade": "Terrorblade",
+    "npc_dota_hero_slardar": "Slardar",
+    "npc_dota_hero_windranger": "Windranger",
+    "npc_dota_hero_visage": "Visage",
+    "npc_dota_hero_dark_willow": "Dark Willow",
+    "npc_dota_hero_bristleback": "Bristleback",
+    "npc_dota_hero_legion_commander": "Legion Commander",
+    "npc_dota_hero_phoenix": "Phoenix",
+    "npc_dota_hero_puck": "Puck",
+    "npc_dota_hero_invoker": "Invoker",
+    "npc_dota_hero_witch_doctor": "Witch Doctor",
+    "npc_dota_hero_sven": "Sven",
+    "npc_dota_hero_juggernaut": "Juggernaut",
+    "npc_dota_hero_crystal_maiden": "Crystal Maiden",
+    "npc_dota_hero_keeper_of_the_light": "Keeper of the Light",
+    "npc_dota_hero_tidehunter": "Tidehunter",
+    "npc_dota_hero_treant_protector": "Treant Protector",
+    "npc_dota_hero_alchemist": "Alchemist",
+    "npc_dota_hero_dark_seer": "Dark Seer",
+    "npc_dota_hero_pugna": "Pugna",
+    "npc_dota_hero_abaddon": "Abaddon",
+    "npc_dota_hero_drow_ranger": "Drow Ranger",
+    "npc_dota_hero_night_stalker": "Night Stalker",
+    "npc_dota_hero_primal_beast": "Primal Beast",
+    "npc_dota_hero_naga_siren": "Naga Siren",
+    "npc_dota_hero_huskar": "Huskar",
+    "npc_dota_hero_brewmaster": "Brewmaster",
+    "npc_dota_hero_silencer": "Silencer",
+    "npc_dota_hero_kunkka": "Kunkka",
+    "npc_dota_hero_lone_druid": "Lone Druid",
+    "npc_dota_hero_undying": "Undying",
+    "npc_dota_hero_tinker": "Tinker",
+    "npc_dota_hero_bane": "Bane",
+    "npc_dota_hero_lion": "Lion",
+    "npc_dota_hero_skywrath_mage": "Skywrath Mage",
+    "npc_dota_hero_rubick": "Rubick",
+    "npc_dota_hero_ursa": "Ursa",
+    "npc_dota_hero_zeus": "Zeus",
+    "npc_dota_hero_pudge": "Pudge",
+    "npc_dota_hero_mars": "Mars",
+    "npc_dota_hero_disruptor": "Disruptor",
+    "npc_dota_hero_enchantress": "Enchantress",
+    "npc_dota_hero_broodmother": "Broodmother",
+    "npc_dota_hero_snapfire": "Snapfire",
+    "npc_dota_hero_vengeful_spirit": "Vengeful Spirit",
+    "npc_dota_hero_lifestealer": "Lifestealer",
+    "npc_dota_hero_shadow_fiend": "Shadow Fiend",
+    "npc_dota_hero_pangolier": "Pangolier",
+    "npc_dota_hero_io": "Io",
+    "npc_dota_hero_viper": "Viper",
+    "npc_dota_hero_techies": "Techies",
+    "npc_dota_hero_storm_spirit": "Storm Spirit",
+    "npc_dota_hero_clinkz": "Clinkz",
+    "npc_dota_hero_hoodwink": "Hoodwink",
+    "npc_dota_hero_spectre": "Spectre",
+    "npc_dota_hero_timbersaw": "Timbersaw",
+    "npc_dota_hero_luna": "Luna",
+    "npc_dota_hero_warlock": "Warlock",
+    "npc_dota_hero_omniknight": "Omniknight",
+    "npc_dota_hero_nature's_prophet": "Nature's Prophet",
+    "npc_dota_hero_ogre_magi": "Ogre Magi",
+    "npc_dota_hero_templar_assassin": "Templar Assassin",
+    "npc_dota_hero_spirit_breaker": "Spirit Breaker",
+    "npc_dota_hero_lina": "Lina",
+    "npc_dota_hero_ancient_apparition": "Ancient Apparition",
+    "npc_dota_hero_sand_king": "Sand King",
+    "npc_dota_hero_leshrac": "Leshrac",
+    "npc_dota_hero_jakiro": "Jakiro",
+    "npc_dota_hero_monkey_king": "Monkey King",
+    "npc_dota_hero_muerta": "Muerta",
+    "npc_dota_hero_meepo": "Meepo",
+    "npc_dota_hero_phantom_lancer": "Phantom Lancer",
+    "npc_dota_hero_grimstroke": "Grimstroke",
+    "npc_dota_hero_mirana": "Mirana",
+    "npc_dota_hero_dazzle": "Dazzle",
+    "npc_dota_hero_shadow_shaman": "Shadow Shaman",
+    "npc_dota_hero_slark": "Slark",
+    "npc_dota_hero_arc_warden": "Arc Warden",
+    "npc_dota_hero_outworld_destroyer": "Outworld Destroyer",
+    "npc_dota_hero_lich": "Lich",
+    "npc_dota_hero_riki": "Riki",
+    "npc_dota_hero_morphling": "Morphling",
+    "npc_dota_hero_anti-mage": "Anti-Mage",
+    "npc_dota_hero_lycan": "Lycan",
+    "npc_dota_hero_doom": "Doom",
+    "npc_dota_hero_tiny": "Tiny",
+    "npc_dota_hero_axe": "Axe",
+    "npc_dota_hero_shadow_demon": "Shadow Demon",
+    "npc_dota_hero_elder_titan": "Elder Titan",
+    "npc_dota_hero_faceless_void": "Faceless Void",
+    "npc_dota_hero_troll_warlord": "Troll Warlord",
+    "npc_dota_hero_enigma": "Enigma",
+    "npc_dota_hero_underlord": "Underlord",
+    "npc_dota_hero_chaos_knight": "Chaos Knight",
+    "npc_dota_hero_venomancer": "Venomancer",
+    "npc_dota_hero_magnus": "Magnus",
+    "npc_dota_hero_phantom_assassin": "Phantom Assassin",
+    "npc_dota_hero_razor": "Razor",
+    "npc_dota_hero_gyrocopter": "Gyrocopter",
+    "npc_dota_hero_beastmaster": "Beastmaster",
+    "npc_dota_hero_oracle": "Oracle",
+    "npc_dota_hero_weaver": "Weaver",
+    "npc_dota_hero_sniper": "Sniper",
+    "npc_dota_hero_death_prophet": "Death Prophet",
+    "npc_dota_hero_dragon_knight": "Dragon Knight",
+    "npc_dota_hero_clockwerk": "Clockwerk",
+    "npc_dota_hero_queen_of_pain": "Queen of Pain",
+    "npc_dota_hero_winter_wyvern": "Winter Wyvern",
+    "npc_dota_hero_marci": "Marci"
+  },
+  "heroes": [
+    {
+      "id": 1,
+      "name": "npc_dota_hero_nyx_assassin",
+      "localized_name": "Nyx Assassin",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Durable"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 2,
+      "name": "npc_dota_hero_batrider",
+      "localized_name": "Batrider",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Support"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 3,
+      "name": "npc_dota_hero_chen",
+      "localized_name": "Chen",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Disabler",
+        "Initiator",
+        "Support",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 4,
+      "name": "npc_dota_hero_dawnbreaker",
+      "localized_name": "Dawnbreaker",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 5,
+      "name": "npc_dota_hero_centaur_warrunner",
+      "localized_name": "Centaur Warrunner",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 6,
+      "name": "npc_dota_hero_medusa",
+      "localized_name": "Medusa",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Initiator"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 7,
+      "name": "npc_dota_hero_earth_spirit",
+      "localized_name": "Earth Spirit",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Support",
+        "Escape",
+        "Initiator",
+        "Carry",
+        "Nuker"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 8,
+      "name": "npc_dota_hero_void_spirit",
+      "localized_name": "Void Spirit",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Escape",
+        "Carry",
+        "Initiator",
+        "Support"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 9,
+      "name": "npc_dota_hero_bounty_hunter",
+      "localized_name": "Bounty Hunter",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Carry",
+        "Escape",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 10,
+      "name": "npc_dota_hero_bloodseeker",
+      "localized_name": "Bloodseeker",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Disabler",
+        "Durable",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 11,
+      "name": "npc_dota_hero_ember_spirit",
+      "localized_name": "Ember Spirit",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Initiator",
+        "Escape",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 12,
+      "name": "npc_dota_hero_tusk",
+      "localized_name": "Tusk",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Nuker",
+        "Support"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 13,
+      "name": "npc_dota_hero_necrophos",
+      "localized_name": "Necrophos",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 14,
+      "name": "npc_dota_hero_wraith_king",
+      "localized_name": "Wraith King",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Carry",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 15,
+      "name": "npc_dota_hero_terrorblade",
+      "localized_name": "Terrorblade",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Carry"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 16,
+      "name": "npc_dota_hero_slardar",
+      "localized_name": "Slardar",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Nuker",
+        "Carry",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 17,
+      "name": "npc_dota_hero_windranger",
+      "localized_name": "Windranger",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Nuker",
+        "Disabler",
+        "Carry",
+        "Pusher"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 18,
+      "name": "npc_dota_hero_visage",
+      "localized_name": "Visage",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 19,
+      "name": "npc_dota_hero_dark_willow",
+      "localized_name": "Dark Willow",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Nuker",
+        "Disabler",
+        "Carry"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 20,
+      "name": "npc_dota_hero_bristleback",
+      "localized_name": "Bristleback",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Disabler",
+        "Nuker",
+        "Support",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 21,
+      "name": "npc_dota_hero_legion_commander",
+      "localized_name": "Legion Commander",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Nuker",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 22,
+      "name": "npc_dota_hero_phoenix",
+      "localized_name": "Phoenix",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Escape"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 23,
+      "name": "npc_dota_hero_puck",
+      "localized_name": "Puck",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Escape",
+        "Nuker",
+        "Support",
+        "Pusher"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 24,
+      "name": "npc_dota_hero_invoker",
+      "localized_name": "Invoker",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Initiator",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 25,
+      "name": "npc_dota_hero_witch_doctor",
+      "localized_name": "Witch Doctor",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 26,
+      "name": "npc_dota_hero_sven",
+      "localized_name": "Sven",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Nuker",
+        "Initiator",
+        "Jungler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 27,
+      "name": "npc_dota_hero_juggernaut",
+      "localized_name": "Juggernaut",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Support",
+        "Pusher",
+        "Initiator"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 28,
+      "name": "npc_dota_hero_crystal_maiden",
+      "localized_name": "Crystal Maiden",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Nuker",
+        "Disabler",
+        "Pusher",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 29,
+      "name": "npc_dota_hero_keeper_of_the_light",
+      "localized_name": "Keeper of the Light",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Support",
+        "Escape",
+        "Initiator",
+        "Jungler",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 30,
+      "name": "npc_dota_hero_tidehunter",
+      "localized_name": "Tidehunter",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Jungler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 31,
+      "name": "npc_dota_hero_treant_protector",
+      "localized_name": "Treant Protector",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Carry",
+        "Support",
+        "Pusher",
+        "Durable"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 32,
+      "name": "npc_dota_hero_alchemist",
+      "localized_name": "Alchemist",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Support",
+        "Jungler",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 33,
+      "name": "npc_dota_hero_dark_seer",
+      "localized_name": "Dark Seer",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Escape",
+        "Nuker",
+        "Durable"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 34,
+      "name": "npc_dota_hero_pugna",
+      "localized_name": "Pugna",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 35,
+      "name": "npc_dota_hero_abaddon",
+      "localized_name": "Abaddon",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Pusher",
+        "Escape",
+        "Jungler",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 36,
+      "name": "npc_dota_hero_drow_ranger",
+      "localized_name": "Drow Ranger",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Carry",
+        "Jungler",
+        "Support",
+        "Durable"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 37,
+      "name": "npc_dota_hero_night_stalker",
+      "localized_name": "Night Stalker",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Nuker",
+        "Carry",
+        "Support",
+        "Initiator"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 38,
+      "name": "npc_dota_hero_primal_beast",
+      "localized_name": "Primal Beast",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Jungler",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 39,
+      "name": "npc_dota_hero_naga_siren",
+      "localized_name": "Naga Siren",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Escape",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 40,
+      "name": "npc_dota_hero_huskar",
+      "localized_name": "Huskar",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Disabler",
+        "Carry",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 41,
+      "name": "npc_dota_hero_brewmaster",
+      "localized_name": "Brewmaster",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Pusher",
+        "Escape",
+        "Durable"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 42,
+      "name": "npc_dota_hero_silencer",
+      "localized_name": "Silencer",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Durable",
+        "Carry",
+        "Support",
+        "Initiator"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 43,
+      "name": "npc_dota_hero_kunkka",
+      "localized_name": "Kunkka",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Pusher",
+        "Initiator",
+        "Support",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 44,
+      "name": "npc_dota_hero_lone_druid",
+      "localized_name": "Lone Druid",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Carry",
+        "Initiator",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 45,
+      "name": "npc_dota_hero_undying",
+      "localized_name": "Undying",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Initiator",
+        "Escape"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 46,
+      "name": "npc_dota_hero_tinker",
+      "localized_name": "Tinker",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Jungler",
+        "Disabler",
+        "Escape"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 47,
+      "name": "npc_dota_hero_bane",
+      "localized_name": "Bane",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Support",
+        "Pusher",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 48,
+      "name": "npc_dota_hero_lion",
+      "localized_name": "Lion",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Carry",
+        "Durable",
+        "Pusher"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 49,
+      "name": "npc_dota_hero_skywrath_mage",
+      "localized_name": "Skywrath Mage",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Carry",
+        "Support"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 50,
+      "name": "npc_dota_hero_rubick",
+      "localized_name": "Rubick",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Disabler",
+        "Carry",
+        "Jungler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 51,
+      "name": "npc_dota_hero_ursa",
+      "localized_name": "Ursa",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Pusher"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 52,
+      "name": "npc_dota_hero_zeus",
+      "localized_name": "Zeus",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Carry",
+        "Support",
+        "Disabler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 53,
+      "name": "npc_dota_hero_pudge",
+      "localized_name": "Pudge",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Jungler",
+        "Support",
+        "Initiator"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 54,
+      "name": "npc_dota_hero_mars",
+      "localized_name": "Mars",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Pusher",
+        "Carry",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 55,
+      "name": "npc_dota_hero_disruptor",
+      "localized_name": "Disruptor",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Pusher",
+        "Support",
+        "Escape"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 56,
+      "name": "npc_dota_hero_enchantress",
+      "localized_name": "Enchantress",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Nuker",
+        "Pusher"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 57,
+      "name": "npc_dota_hero_broodmother",
+      "localized_name": "Broodmother",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Initiator"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 58,
+      "name": "npc_dota_hero_snapfire",
+      "localized_name": "Snapfire",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Initiator"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 59,
+      "name": "npc_dota_hero_vengeful_spirit",
+      "localized_name": "Vengeful Spirit",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Jungler"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 60,
+      "name": "npc_dota_hero_lifestealer",
+      "localized_name": "Lifestealer",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Disabler",
+        "Nuker",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 61,
+      "name": "npc_dota_hero_shadow_fiend",
+      "localized_name": "Shadow Fiend",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Pusher",
+        "Carry",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 62,
+      "name": "npc_dota_hero_pangolier",
+      "localized_name": "Pangolier",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Support",
+        "Disabler",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 63,
+      "name": "npc_dota_hero_io",
+      "localized_name": "Io",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 64,
+      "name": "npc_dota_hero_viper",
+      "localized_name": "Viper",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Durable",
+        "Disabler",
+        "Jungler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 65,
+      "name": "npc_dota_hero_techies",
+      "localized_name": "Techies",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Pusher"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 66,
+      "name": "npc_dota_hero_storm_spirit",
+      "localized_name": "Storm Spirit",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Jungler",
+        "Support"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 67,
+      "name": "npc_dota_hero_clinkz",
+      "localized_name": "Clinkz",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Initiator",
+        "Disabler",
+        "Pusher"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 68,
+      "name": "npc_dota_hero_hoodwink",
+      "localized_name": "Hoodwink",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Nuker",
+        "Initiator",
+        "Carry"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 69,
+      "name": "npc_dota_hero_spectre",
+      "localized_name": "Spectre",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Escape",
+        "Support"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 70,
+      "name": "npc_dota_hero_timbersaw",
+      "localized_name": "Timbersaw",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Carry",
+        "Escape",
+        "Durable",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 71,
+      "name": "npc_dota_hero_luna",
+      "localized_name": "Luna",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Durable"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 72,
+      "name": "npc_dota_hero_warlock",
+      "localized_name": "Warlock",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Pusher"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 73,
+      "name": "npc_dota_hero_omniknight",
+      "localized_name": "Omniknight",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Jungler",
+        "Durable",
+        "Escape",
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 74,
+      "name": "npc_dota_hero_nature's_prophet",
+      "localized_name": "Nature's Prophet",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Nuker",
+        "Pusher",
+        "Carry",
+        "Escape",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 75,
+      "name": "npc_dota_hero_ogre_magi",
+      "localized_name": "Ogre Magi",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Disabler",
+        "Nuker",
+        "Support",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 76,
+      "name": "npc_dota_hero_templar_assassin",
+      "localized_name": "Templar Assassin",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 77,
+      "name": "npc_dota_hero_spirit_breaker",
+      "localized_name": "Spirit Breaker",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Support",
+        "Pusher",
+        "Escape",
+        "Durable"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 78,
+      "name": "npc_dota_hero_lina",
+      "localized_name": "Lina",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Nuker",
+        "Disabler"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 79,
+      "name": "npc_dota_hero_ancient_apparition",
+      "localized_name": "Ancient Apparition",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Support",
+        "Nuker"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 80,
+      "name": "npc_dota_hero_dawnbreaker",
+      "localized_name": "Dawnbreaker",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Initiator",
+        "Disabler",
+        "Nuker",
+        "Escape"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 81,
+      "name": "npc_dota_hero_sand_king",
+      "localized_name": "Sand King",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Escape",
+        "Initiator",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 82,
+      "name": "npc_dota_hero_leshrac",
+      "localized_name": "Leshrac",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Nuker",
+        "Carry",
+        "Escape"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 83,
+      "name": "npc_dota_hero_jakiro",
+      "localized_name": "Jakiro",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Pusher",
+        "Disabler",
+        "Durable"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 84,
+      "name": "npc_dota_hero_monkey_king",
+      "localized_name": "Monkey King",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Initiator",
+        "Pusher",
+        "Nuker"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 85,
+      "name": "npc_dota_hero_muerta",
+      "localized_name": "Muerta",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Disabler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 86,
+      "name": "npc_dota_hero_meepo",
+      "localized_name": "Meepo",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Nuker",
+        "Support",
+        "Initiator",
+        "Pusher"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 87,
+      "name": "npc_dota_hero_phantom_lancer",
+      "localized_name": "Phantom Lancer",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Pusher",
+        "Initiator"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 88,
+      "name": "npc_dota_hero_grimstroke",
+      "localized_name": "Grimstroke",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 89,
+      "name": "npc_dota_hero_mirana",
+      "localized_name": "Mirana",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Initiator",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 90,
+      "name": "npc_dota_hero_dazzle",
+      "localized_name": "Dazzle",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Jungler",
+        "Disabler",
+        "Nuker",
+        "Escape"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 91,
+      "name": "npc_dota_hero_shadow_shaman",
+      "localized_name": "Shadow Shaman",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Jungler",
+        "Escape",
+        "Disabler",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 92,
+      "name": "npc_dota_hero_slark",
+      "localized_name": "Slark",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Initiator"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 93,
+      "name": "npc_dota_hero_arc_warden",
+      "localized_name": "Arc Warden",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 94,
+      "name": "npc_dota_hero_outworld_destroyer",
+      "localized_name": "Outworld Destroyer",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Nuker",
+        "Durable",
+        "Initiator",
+        "Support",
+        "Carry"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 95,
+      "name": "npc_dota_hero_lich",
+      "localized_name": "Lich",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Pusher"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 96,
+      "name": "npc_dota_hero_riki",
+      "localized_name": "Riki",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Initiator",
+        "Support",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 97,
+      "name": "npc_dota_hero_morphling",
+      "localized_name": "Morphling",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Durable",
+        "Escape",
+        "Carry"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 98,
+      "name": "npc_dota_hero_anti-mage",
+      "localized_name": "Anti-Mage",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Initiator",
+        "Escape"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 99,
+      "name": "npc_dota_hero_lycan",
+      "localized_name": "Lycan",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Support",
+        "Pusher",
+        "Nuker",
+        "Jungler",
+        "Carry"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 100,
+      "name": "npc_dota_hero_doom",
+      "localized_name": "Doom",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Carry",
+        "Initiator",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 101,
+      "name": "npc_dota_hero_tiny",
+      "localized_name": "Tiny",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Support",
+        "Pusher",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 102,
+      "name": "npc_dota_hero_axe",
+      "localized_name": "Axe",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 103,
+      "name": "npc_dota_hero_shadow_demon",
+      "localized_name": "Shadow Demon",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Escape"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 104,
+      "name": "npc_dota_hero_elder_titan",
+      "localized_name": "Elder Titan",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Nuker",
+        "Durable",
+        "Disabler",
+        "Jungler",
+        "Support"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 105,
+      "name": "npc_dota_hero_faceless_void",
+      "localized_name": "Faceless Void",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "roles": [
+        "Jungler",
+        "Disabler",
+        "Nuker",
+        "Support",
+        "Carry"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 106,
+      "name": "npc_dota_hero_troll_warlord",
+      "localized_name": "Troll Warlord",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Nuker",
+        "Pusher"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 107,
+      "name": "npc_dota_hero_enigma",
+      "localized_name": "Enigma",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Carry"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 108,
+      "name": "npc_dota_hero_underlord",
+      "localized_name": "Underlord",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Support",
+        "Nuker",
+        "Disabler"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 109,
+      "name": "npc_dota_hero_chaos_knight",
+      "localized_name": "Chaos Knight",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 110,
+      "name": "npc_dota_hero_venomancer",
+      "localized_name": "Venomancer",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 111,
+      "name": "npc_dota_hero_magnus",
+      "localized_name": "Magnus",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Durable",
+        "Jungler",
+        "Disabler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 112,
+      "name": "npc_dota_hero_phantom_assassin",
+      "localized_name": "Phantom Assassin",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Durable",
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 113,
+      "name": "npc_dota_hero_razor",
+      "localized_name": "Razor",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Jungler",
+        "Disabler",
+        "Durable",
+        "Carry"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 114,
+      "name": "npc_dota_hero_gyrocopter",
+      "localized_name": "Gyrocopter",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Jungler",
+        "Carry",
+        "Support",
+        "Disabler",
+        "Nuker"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 115,
+      "name": "npc_dota_hero_beastmaster",
+      "localized_name": "Beastmaster",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Support",
+        "Jungler"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 116,
+      "name": "npc_dota_hero_oracle",
+      "localized_name": "Oracle",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Disabler",
+        "Nuker",
+        "Initiator"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 117,
+      "name": "npc_dota_hero_weaver",
+      "localized_name": "Weaver",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Escape",
+        "Pusher",
+        "Carry"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 118,
+      "name": "npc_dota_hero_sniper",
+      "localized_name": "Sniper",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Nuker",
+        "Durable"
+      ],
+      "legs": 0
+    },
+    {
+      "id": 119,
+      "name": "npc_dota_hero_death_prophet",
+      "localized_name": "Death Prophet",
+      "primary_attr": "int",
+      "attack_type": "Melee",
+      "roles": [
+        "Carry",
+        "Durable",
+        "Pusher"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 120,
+      "name": "npc_dota_hero_dragon_knight",
+      "localized_name": "Dragon Knight",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "roles": [
+        "Escape",
+        "Durable",
+        "Support"
+      ],
+      "legs": 2
+    },
+    {
+      "id": 121,
+      "name": "npc_dota_hero_clockwerk",
+      "localized_name": "Clockwerk",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Carry",
+        "Jungler",
+        "Initiator",
+        "Support",
+        "Escape"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 122,
+      "name": "npc_dota_hero_queen_of_pain",
+      "localized_name": "Queen of Pain",
+      "primary_attr": "agi",
+      "attack_type": "Ranged",
+      "roles": [
+        "Durable",
+        "Disabler",
+        "Nuker",
+        "Initiator"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 123,
+      "name": "npc_dota_hero_winter_wyvern",
+      "localized_name": "Winter Wyvern",
+      "primary_attr": "int",
+      "attack_type": "Ranged",
+      "roles": [
+        "Support",
+        "Initiator",
+        "Jungler"
+      ],
+      "legs": 1
+    },
+    {
+      "id": 124,
+      "name": "npc_dota_hero_marci",
+      "localized_name": "Marci",
+      "primary_attr": "str",
+      "attack_type": "Ranged",
+      "roles": [
+        "Disabler",
+        "Jungler",
+        "Escape"
+      ],
+      "legs": 2
+    }
+  ]
+}
