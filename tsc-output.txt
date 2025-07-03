@@ -1,0 +1,96 @@
+.next/types/app/api/players/[id]/stats/route.ts(49,7): error TS2344: Type '{ __tag__: "GET"; __param_position__: "second"; __param_type__: { params: { id: string; }; }; }' does not satisfy the constraint 'ParamCheck<RouteContext>'.
+  The types of '__param_type__.params' are incompatible between these types.
+    Type '{ id: string; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+.next/types/app/api/teams/[id]/matches/route.ts(49,7): error TS2344: Type '{ __tag__: "GET"; __param_position__: "second"; __param_type__: { params: { id: string; }; }; }' does not satisfy the constraint 'ParamCheck<RouteContext>'.
+  The types of '__param_type__.params' are incompatible between these types.
+    Type '{ id: string; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+src/app/dashboard/team-management/TeamList.tsx(150,7): error TS2304: Cannot find name 'pollForTeamMatches'.
+src/app/dashboard/team-management/TeamList.tsx(154,16): error TS7006: Parameter 'newTeam' implicitly has an 'any' type.
+src/app/dashboard/team-management/TeamList.tsx(174,17): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/components/sidebar.tsx(511,57): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'className' does not exist in type 'Partial<unknown> & Attributes'.
+src/lib/data-service.ts(401,49): error TS2339: Property 'rank_tier' does not exist on type 'OpenDotaPlayer | { status: string; signature: string; }'.
+  Property 'rank_tier' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(402,35): error TS2339: Property 'personaname' does not exist on type 'OpenDotaPlayer | { status: string; signature: string; }'.
+  Property 'personaname' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(402,61): error TS2339: Property 'name' does not exist on type 'OpenDotaPlayer | { status: string; signature: string; }'.
+  Property 'name' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(406,33): error TS2339: Property 'win' does not exist on type 'OpenDotaPlayerWL | { status: string; signature: string; }'.
+  Property 'win' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(406,46): error TS2339: Property 'lose' does not exist on type 'OpenDotaPlayerWL | { status: string; signature: string; }'.
+  Property 'lose' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(407,45): error TS2339: Property 'win' does not exist on type 'OpenDotaPlayerWL | { status: string; signature: string; }'.
+  Property 'win' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(411,21): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(412,25): error TS2339: Property 'reduce' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'reduce' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(413,14): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/lib/data-service.ts(413,19): error TS7006: Parameter 'match' implicitly has an 'any' type.
+src/lib/data-service.ts(416,29): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(421,21): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(422,25): error TS2339: Property 'reduce' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'reduce' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(423,14): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/lib/data-service.ts(423,19): error TS7006: Parameter 'match' implicitly has an 'any' type.
+src/lib/data-service.ts(425,29): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(430,21): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(431,25): error TS2339: Property 'reduce' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'reduce' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(432,14): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/lib/data-service.ts(432,19): error TS7006: Parameter 'match' implicitly has an 'any' type.
+src/lib/data-service.ts(434,29): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(439,21): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(441,27): error TS2339: Property 'reduce' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'reduce' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(441,35): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/lib/data-service.ts(441,40): error TS7006: Parameter 'match' implicitly has an 'any' type.
+src/lib/data-service.ts(442,29): error TS2339: Property 'length' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'length' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(447,45): error TS2339: Property 'slice' does not exist on type 'OpenDotaPlayerRecentMatches[] | { status: string; signature: string; }'.
+  Property 'slice' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(447,62): error TS7006: Parameter 'match' implicitly has an 'any' type.
+src/lib/data-service.ts(522,32): error TS2339: Property 'leaderboard_rank' does not exist on type 'OpenDotaPlayer | { status: string; signature: string; }'.
+  Property 'leaderboard_rank' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(545,31): error TS2339: Property 'match_id' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'match_id' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(546,28): error TS2339: Property 'match_id' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'match_id' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(546,38): error TS2345: Argument of type 'OpenDotaMatch | { status: string; signature: string; }' is not assignable to parameter of type 'OpenDotaMatch'.
+  Type '{ status: string; signature: string; }' is missing the following properties from type 'OpenDotaMatch': match_id, player_slot, radiant_win, duration, and 50 more.
+src/lib/data-service.ts(676,43): error TS2339: Property 'hero_id' does not exist on type 'OpenDotaPlayerHeroes | { status: string; signature: string; }'.
+  Property 'hero_id' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(681,30): error TS2339: Property 'games' does not exist on type 'OpenDotaPlayerHeroes | { status: string; signature: string; }'.
+  Property 'games' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(682,29): error TS2339: Property 'win' does not exist on type 'OpenDotaPlayerHeroes | { status: string; signature: string; }'.
+  Property 'win' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(684,26): error TS2339: Property 'hero_id' does not exist on type 'OpenDotaPlayerHeroes | { status: string; signature: string; }'.
+  Property 'hero_id' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(807,45): error TS2339: Property 'win' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'win' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(816,40): error TS2339: Property 'kills' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'kills' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(816,53): error TS2339: Property 'deaths' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'deaths' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(816,67): error TS2339: Property 'assists' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'assists' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(824,41): error TS2339: Property 'total_gold' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'total_gold' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(824,61): error TS2339: Property 'duration' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'duration' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(832,41): error TS2339: Property 'total_xp' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'total_xp' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(832,59): error TS2339: Property 'duration' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'duration' does not exist on type '{ status: string; signature: string; }'.
+src/lib/data-service.ts(840,59): error TS2339: Property 'duration' does not exist on type 'OpenDotaMatch | { status: string; signature: string; }'.
+  Property 'duration' does not exist on type '{ status: string; signature: string; }'.
+src/lib/fetch-data.ts(3,22): error TS2304: Cannot find name 'tryMock'.
+src/lib/rate-limiter.ts(153,5): error TS2322: Type '{ status: string; signature: string; } | Awaited<T>' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to '{ status: string; signature: string; } | Awaited<T>'.

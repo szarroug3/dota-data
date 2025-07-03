@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
 async function fetchOpenDotaMatch(matchId: string) {
-  const res = await fetch(`https://api.opendota.com/api/matches/${matchId}`);
+  const res = await fetch(`/api/matches/${matchId}`);
   if (!res.ok) throw new Error("Match not found");
   return res.json();
 }
@@ -41,7 +41,7 @@ export default function AddMatch({ onClose }: AddMatchProps) {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://api.opendota.com/api/matches/${matchId}`,
+        `/api/matches/${matchId}`,
       );
       if (!res.ok) throw new Error("Failed to fetch match data");
 

@@ -3,7 +3,7 @@ import { useSidebar } from "@/contexts/sidebar-context";
 import { useTeam } from "@/contexts/team-context";
 import { getHeroNameSync, getTeamSide } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import MatchCard from "./MatchCard";
+import AsyncMatchCard from "./AsyncMatchCard";
 import PlayerPopup from "./PlayerPopup";
 
 // Helper to check if a match contains a specific hero
@@ -128,11 +128,9 @@ export default function MatchList({
         </div>
       ) : (
         <div className="h-full overflow-y-auto">
-          {matches.map((match: any) => (
-            <div key={match.id || match.date + (match.opponent || "unknown")}
-              className="relative"
-            >
-              <MatchCard
+          {matches.map((match: any, idx: number) => (
+            <div key={match.id ?? idx} className="relative">
+              <AsyncMatchCard
                 match={match}
                 currentTeam={currentTeam}
                 preferredSite={preferredSite}

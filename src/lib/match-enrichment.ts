@@ -1,80 +1,100 @@
-import { fetchOpenDota } from "@/lib/api";
+import { fetchAPI } from "@/lib/api";
+import type { OpenDotaFullMatch } from "@/types/opendota";
 import type { Match, Team } from "@/types/team";
+import { getPlayerData } from './api';
 import { logWithTimestamp } from './utils';
-
-const OPENDOTA_BASE_URL = "https://api.opendota.com/api";
 
 /**
  * Helper function to extract opponent name from OpenDota data
  */
-function getOpponentName(openDotaData: unknown, team: Team): string {
-  if (!openDotaData || typeof openDotaData !== "object") return "Unknown";
-  
-  const data = openDotaData as { radiant_name?: string; dire_name?: string };
-  
-  // If we have team names, use them
-  if (data.radiant_name && data.dire_name) {
-    if (data.radiant_name === team.name) return data.dire_name;
-    if (data.dire_name === team.name) return data.radiant_name;
+function getOpponentName(openDotaData: OpenDotaFullMatch | undefined, team: Team): string {
+  if (!openDotaData) return "Unknown";
+  if (openDotaData.radiant_name && openDotaData.dire_name) {
+    if (openDotaData.radiant_name === (team.teamName || team.id)) return openDotaData.dire_name;
+    if (openDotaData.dire_name === (team.teamName || team.id)) return openDotaData.radiant_name;
   }
-  
-  // If unable to determine, return 'Unknown'
   return "Unknown";
 }
 
-/**
- * Helper function to extract team result from OpenDota data
- */
-function getTeamResult(openDotaData: unknown, team: Team): string {
-  if (!openDotaData || typeof openDotaData !== "object") return "Unknown";
-  
-  const data = openDotaData as { 
-    radiant_name?: string; 
-    dire_name?: string; 
-    radiant_win?: boolean 
-  };
-  
-  // If we have team names and result, use them
-  if (data.radiant_name && data.dire_name && typeof data.radiant_win === 'boolean') {
-    if (data.radiant_name === team.name) {
-      return data.radiant_win ? "W" : "L";
-    }
-    if (data.dire_name === team.name) {
-      return data.radiant_win ? "L" : "W";
-    }
-  }
-  
-  // If unable to determine, return 'Unknown'
+// Helper to determine if a team is Radiant or Dire
+function getTeamSide(openDotaData: OpenDotaFullMatch | undefined, team: Team): "Radiant" | "Dire" | "Unknown" {
+  if (!openDotaData) return "Unknown";
+  const radiantTeamId = openDotaData.radiant_team_id?.toString();
+  const direTeamId = openDotaData.dire_team_id?.toString();
+  if (radiantTeamId === team.id) return "Radiant";
+  if (direTeamId === team.id) return "Dire";
   return "Unknown";
+}
+
+function getTeamResult(openDotaData: OpenDotaFullMatch | undefined, team: Team): string {
+  if (!openDotaData) return "Unknown";
+  const side = getTeamSide(openDotaData, team);
+  if (side === "Radiant" && typeof openDotaData.radiant_win === "boolean") {
+    return openDotaData.radiant_win ? "W" : "L";
+  }
+  if (side === "Dire" && typeof openDotaData.radiant_win === "boolean") {
+    return openDotaData.radiant_win ? "L" : "W";
+  }
+  return "Unknown";
+}
+
+function getActiveTeamPlayers(data: OpenDotaFullMatch | undefined, team: Team): (OpenDotaFullMatch["players"][number])[] {
+  if (!data || !Array.isArray(data.players)) return [];
+  const side = getTeamSide(data, team);
+  if (side === "Radiant") {
+    return data.players.filter((p) => p.isRadiant || (typeof p.player_slot === 'number' && p.player_slot < 128));
+  } else if (side === "Dire") {
+    return data.players.filter((p) => !p.isRadiant && (typeof p.player_slot === 'number' && p.player_slot >= 128));
+  }
+  return [];
+}
+
+async function fetchAndCachePlayerData(accountId: number): Promise<void> {
+  await getPlayerData(Number(accountId));
 }
 
 /**
  * Check if match data is complete and parsed
  */
-function isMatchDataComplete(data: unknown): boolean {
-  if (!data || typeof data !== "object") {
-    logWithTimestamp('log', '[isMatchDataComplete] Data is not an object:', typeof data);
+function isMatchDataComplete(data: OpenDotaFullMatch | undefined): boolean {
+  if (!data) {
+    logWithTimestamp('log', '[isMatchDataComplete] Data is undefined');
     return false;
   }
-  
-  const match = data as any;
-  
-  // Check if we have basic match info
-  if (!match.match_id) {
+  if (!('match_id' in data) || data.match_id == null) {
     logWithTimestamp('log', '[isMatchDataComplete] No match_id found');
     return false;
   }
-  
-  // Check if we have player data (indicates the match is parsed)
-  if (!match.players || !Array.isArray(match.players) || match.players.length === 0) {
-    logWithTimestamp('log', '[isMatchDataComplete] No valid players array found. players:', match.players);
+  if (!Array.isArray(data.players) || data.players.length === 0) {
+    logWithTimestamp('log', '[isMatchDataComplete] No valid players array found. players:', data.players);
     return false;
   }
-  
-  // For mock data, we're more lenient - we don't require team names
-  // since they might not be in the mock data structure
-  logWithTimestamp('log', '[isMatchDataComplete] Match data is complete for match', match.match_id);
+  logWithTimestamp('log', '[isMatchDataComplete] Match data is complete for match', data.match_id);
   return true;
+}
+
+function buildEnrichedMatchResult(
+  matchId: string,
+  data: OpenDotaFullMatch | undefined,
+  team: Team,
+  isComplete: boolean
+): Match {
+  return {
+    id: matchId,
+    date:
+      data && typeof data.start_time === "number"
+        ? new Date(data.start_time * 1000).toISOString()
+        : "",
+    opponent: getOpponentName(data, team),
+    result: getTeamResult(data, team),
+    score:
+      data && typeof data.radiant_score === "number" && typeof data.dire_score === "number"
+        ? `${data.radiant_score} - ${data.dire_score}`
+        : "",
+    league: team.leagueId || "",
+    notes: isComplete ? "" : "Mock data - some fields may be missing",
+    openDota: data,
+  };
 }
 
 /**
@@ -84,60 +104,33 @@ export async function enrichMatchWithOpenDota(
   matchId: string,
   team: Team,
 ): Promise<Match> {
-  logWithTimestamp('log', '[enrichMatchWithOpenDota] Start enriching match', matchId, 'for team', team.name);
-
+  logWithTimestamp('log', '[enrichMatchWithOpenDota] Start enriching match', matchId, 'for team', (team.teamName || team.id));
+  logWithTimestamp('log', '[enrichMatchWithOpenDota] Calling fetchOpenDota for match', matchId);
+  const endpoint = `/matches/${matchId}`;
+  logWithTimestamp('log', '[enrichMatchWithOpenDota] fetchFromAPI endpoint:', endpoint);
+  let data: OpenDotaFullMatch | undefined;
   try {
-    logWithTimestamp('log', '[enrichMatchWithOpenDota] Calling fetchOpenDota for match', matchId);
-    const res = await fetchOpenDota(`${OPENDOTA_BASE_URL}/matches/${matchId}`);
-    logWithTimestamp('log', '[enrichMatchWithOpenDota] fetchOpenDota completed for match', matchId, ', status:', res.status, ', ok:', res.ok);
-    
-    if (!res.ok) {
-      logWithTimestamp('error', '[enrichMatchWithOpenDota] Response not ok for match', matchId, ':', res.status, res.statusText);
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    logWithTimestamp('log', '[enrichMatchWithOpenDota] Parsed response for match', matchId, ', data type:', typeof data, ', keys:', data && typeof data === 'object' ? Object.keys(data) : 'not an object');
-
-    // For mock data, we skip the retry logic and just use what we get
-    const isComplete = isMatchDataComplete(data);
-    logWithTimestamp('log', '[enrichMatchWithOpenDota] Match data complete check:', isComplete, 'for', matchId);
-
-    const result = {
-      id: matchId,
-      date:
-        data && typeof data === "object" && "start_time" in data && typeof data.start_time === "number"
-          ? new Date(data.start_time * 1000).toISOString()
-          : "",
-      opponent: getOpponentName(data, team),
-      result: getTeamResult(data, team),
-      score:
-        data && typeof data === "object" && "radiant_score" in data && "dire_score" in data
-          ? `${data.radiant_score} - ${data.dire_score}`
-          : "",
-      league: team.league || "",
-      notes: isComplete ? "" : "Mock data - some fields may be missing",
-      openDota:
-        data && typeof data === "object" && data !== null && !Array.isArray(data)
-          ? (data as Record<string, unknown>)
-          : undefined,
-    };
-    logWithTimestamp('log', '[enrichMatchWithOpenDota] Returning match object for', matchId, ':', result);
-    return result;
+    data = await fetchAPI('opendota', endpoint, `opendota-match-${matchId}`) as OpenDotaFullMatch;
+    logWithTimestamp('log', '[enrichMatchWithOpenDota] fetchFromAPI completed for match', matchId);
   } catch (err) {
-    logWithTimestamp('error', '[enrichMatchWithOpenDota] Error enriching match', matchId, ':', err);
-    // Return a basic match object on error
-    return {
-      id: matchId,
-      date: "",
-      opponent: "Error",
-      result: "Error",
-      score: "",
-      league: team.league || "",
-      notes: `Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
-      openDota: undefined,
-    };
+    logWithTimestamp('error', '[enrichMatchWithOpenDota] fetchFromAPI error for match', matchId, ':', (err as Error)?.message || err);
+    throw err;
   }
+
+  // Enqueue player requests for active team players only
+  const activeTeamPlayers = getActiveTeamPlayers(data, team);
+  await Promise.all(
+    activeTeamPlayers
+      .filter((player) => player.account_id)
+      .map((player) => fetchAndCachePlayerData(player.account_id!))
+  );
+
+  const isComplete = isMatchDataComplete(data);
+  logWithTimestamp('log', '[enrichMatchWithOpenDota] Match data complete check:', isComplete, 'for', matchId);
+
+  const result = buildEnrichedMatchResult(matchId, data, team, isComplete);
+  logWithTimestamp('log', '[enrichMatchWithOpenDota] Returning match object for', matchId, ':', result);
+  return result;
 }
 
 /**
@@ -166,15 +159,9 @@ export async function enrichMatchesBatch(
     };
   });
 
-  // Import the cache service to use the queue
-  const { cacheService } = await import('./cache-service');
-  
   // Add all matches to the queue and wait for them to complete
   const enrichedMatches = await Promise.all(
-    enrichmentPromises.map((promise, idx) => {
-      const matchId = matches[idx].id;
-      return cacheService.queueRequest('opendota', promise, `match-${matchId}`);
-    })
+    enrichmentPromises.map((promise) => promise())
   );
   
   logWithTimestamp('log', '[enrichMatchesBatch] Completed batch enrichment for', matches.length, 'matches');

@@ -1,6 +1,15 @@
 // Fake data generator for mock API responses
-import { OpenDotaHero, OpenDotaMatch, OpenDotaPlayer, OpenDotaPlayerCounts, OpenDotaPlayerHeroes, OpenDotaPlayerTotals, OpenDotaPlayerWL } from './api';
-import { logWithTimestamp } from './utils';
+import {
+  OpenDotaHero,
+  OpenDotaPlayer,
+  OpenDotaPlayerCounts,
+  OpenDotaPlayerHeroes,
+  OpenDotaPlayerTotals,
+  OpenDotaPlayerWL
+} from '../types/opendota';
+import { writeMockData } from './mock-data-writer';
+import { FakeOpenDotaMatch } from './types/fake-data-generator-types';
+import { getAccountIdForPlayerName, randomChoice, randomFloat, randomInt, randomTeamId, randomTeamName, randomTimestamp, uniqueRandomSubset } from './utils/fake-data-helpers';
 
 // Hero data for randomization
 const HERO_NAMES = [
@@ -44,90 +53,65 @@ const TEAM_NAMES = [
   "BetBoom Team", "Azure Ray", "Xtreme Gaming", "Team Falcons", "Entity", "Quest Esports"
 ];
 
+const LEAGUE_NAMES = [
+  "RD2L Season 33",
+  "DPC WEU Tour 3",
+  "The International 2024",
+  "ESL One Summer",
+  "DreamLeague Season 22",
+  "BTS Pro Series 15",
+  "OGA Dota PIT",
+  "Epic League",
+  "Asia Challenger League",
+  "Americas Cup"
+];
+
 // Utility functions
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
-function randomChoice<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
-
-function randomSubset<T>(array: T[], min: number, max: number): T[] {
-  const count = randomInt(min, max);
-  const shuffled = [...array].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
-// Get unique random subset (no duplicates)
-function uniqueRandomSubset<T>(array: T[], min: number, max: number): T[] {
-  const count = Math.min(randomInt(min, max), array.length);
-  const shuffled = [...array].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
-function randomTimestamp(): number {
-  const now = Date.now();
-  const oneYearAgo = now - (365 * 24 * 60 * 60 * 1000);
-  return Math.floor(randomFloat(oneYearAgo, now) / 1000);
-}
-
-// Helper to generate a random team name (excluding a given name)
-function randomTeamName(exclude?: string): string {
-  let name;
-  do {
-    name = randomChoice(TEAM_NAMES);
-  } while (name === exclude);
-  return name;
-}
-
-// Helper to generate a random team ID (excluding a given ID)
-function randomTeamId(exclude?: number): number {
-  let id;
-  do {
-    id = randomInt(1000000, 9999999);
-  } while (id === exclude);
-  return id;
-}
-
-// Helper to generate a player object with account_id and name
-function generateFakePlayerWithName(accountId?: number, name?: string) {
-  return {
-    account_id: accountId || randomInt(100000000, 999999999),
-    name: name || randomChoice(PLAYER_NAMES),
-    games_played: randomInt(10, 100),
-    wins: randomInt(5, 50),
-    // ...add more fields as needed
-  };
-}
-
 // Use a fixed current team for mock data
 const CURRENT_TEAM_ID = 9517508;
 const CURRENT_TEAM_NAME = "Maple Syrup блинSummary";
 
-// Extended type for fake matches
-export type FakeOpenDotaMatch = OpenDotaMatch & {
-  radiant_team_id: number;
-  dire_team_id: number;
-  radiant_name: string;
-  dire_name: string;
-  players: Array<{ account_id: number; name: string; [key: string]: any }>;
-};
+// Helper: generate a fake player for a side
+function generateFakePlayerForSide(name: string, heroId: number, player_slot: number): { account_id: number; name: string; hero_id: number; player_slot: number; kills: number; deaths: number; assists: number; gold_per_min: number; xp_per_min: number; last_hits: number; denies: number; level: number } {
+  const account_id = getAccountIdForPlayerName(name);
+  return {
+    account_id,
+    name,
+    hero_id: heroId,
+    player_slot,
+    kills: randomInt(0, 25),
+    deaths: randomInt(0, 15),
+    assists: randomInt(0, 30),
+    gold_per_min: randomInt(250, 900),
+    xp_per_min: randomInt(300, 1200),
+    last_hits: randomInt(20, 400),
+    denies: randomInt(0, 30),
+    level: randomInt(12, 30),
+  };
+}
+
+// Helper: calculate team score
+function calculateTeamScore(players: Array<{ kills: number }>): number {
+  return players.reduce((sum, p) => sum + p.kills, 0);
+}
+
+// Helper: generate picks and bans
+function generatePicksBans(heroIds: number[]): Array<{ is_pick: boolean; hero_id: number; team: number; order: number }> {
+  return heroIds.map((heroId, i) => ({
+    is_pick: i < 10,
+    hero_id: heroId,
+    team: i % 2,
+    order: i
+  }));
+}
 
 // Generate fake hero data
-export function generateFakeHeroes(count: number = 50): OpenDotaHero[] {
-  // Use unique hero names to avoid duplicates
+export function generateFakeHeroes(count: number = 50, filename: string): OpenDotaHero[] {
   const uniqueHeroNames = uniqueRandomSubset(HERO_NAMES, count, count);
-  
-  return uniqueHeroNames.map((name, i) => {
+  const data = uniqueHeroNames.map((name, i) => {
     const primaryAttr = randomChoice(HERO_ATTRIBUTES);
     const attackType = randomChoice(HERO_ATTACK_TYPES);
     const roles = uniqueRandomSubset(HERO_ROLES, 2, 5);
-    
     return {
       id: i + 1,
       name: name.toLowerCase().replace(/\s+/g, '_'),
@@ -178,14 +162,16 @@ export function generateFakeHeroes(count: number = 50): OpenDotaHero[] {
       null_win: randomInt(0, 50)
     };
   });
+  writeMockData(filename, data, '/heroes');
+  return data;
 }
 
 // Generate fake player data
-export function generateFakePlayer(accountId: number): OpenDotaPlayer {
-  const name = randomChoice(PLAYER_NAMES);
+export function generateFakePlayer(accountId: number, filename: string): OpenDotaPlayer {
+  // Deterministically map accountId to a player name from PLAYER_NAMES
+  const name = PLAYER_NAMES[Math.abs(accountId) % PLAYER_NAMES.length];
   const rankTier = randomInt(70, 80); // Divine to Immortal
-  
-  return {
+  const data = {
     account_id: accountId,
     personaname: name,
     name: name,
@@ -197,7 +183,7 @@ export function generateFakePlayer(accountId: number): OpenDotaPlayer {
     is_contributor: false,
     is_subscriber: randomChoice([true, false]),
     rank_tier: rankTier,
-    leaderboard_rank: rankTier >= 80 ? randomInt(1, 1000) : null,
+    leaderboard_rank: rankTier >= 80 ? randomInt(1, 1000) : 0,
     solo_competitive_rank: randomInt(4000, 8000),
     competitive_rank: randomInt(4000, 8000),
     mmr_estimate: {
@@ -205,74 +191,31 @@ export function generateFakePlayer(accountId: number): OpenDotaPlayer {
       stdDev: randomInt(100, 500),
       n: randomInt(10, 100)
     }
-  } as OpenDotaPlayer;
+  };
+  writeMockData(filename, data, `/players/${accountId}`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}`);
+  return data;
 }
 
 // Generate fake match data
-export function generateFakeMatch(matchId: number, playerSlot?: number): FakeOpenDotaMatch {
+export function generateFakeMatch(matchId: number, filename: string, playerSlot?: number): FakeOpenDotaMatch {
   const isRadiant = Math.random() < 0.5;
   const radiant_team_id = isRadiant ? CURRENT_TEAM_ID : randomTeamId(CURRENT_TEAM_ID);
   const dire_team_id = isRadiant ? randomTeamId(CURRENT_TEAM_ID) : CURRENT_TEAM_ID;
   const radiant_name = isRadiant ? CURRENT_TEAM_NAME : randomTeamName(CURRENT_TEAM_NAME);
   const dire_name = isRadiant ? randomTeamName(CURRENT_TEAM_NAME) : CURRENT_TEAM_NAME;
-
-  // Unique hero IDs for 10 players
   const allHeroIds = Array.from({ length: 124 }, (_, i) => i + 1);
   const playerHeroIds = uniqueRandomSubset(allHeroIds, 10, 10);
-
-  // Generate unique player names for all 10 players
   const uniquePlayerNames = uniqueRandomSubset(PLAYER_NAMES, 10, 10);
-
-  // Generate 10 players, 5 per side, with realistic stats
-  const radiantPlayers = Array.from({ length: 5 }, (_, i) => {
-    return {
-      account_id: randomInt(100000000, 999999999),
-      name: uniquePlayerNames[i],
-      hero_id: playerHeroIds[i],
-      kills: randomInt(0, 25),
-      deaths: randomInt(0, 15),
-      assists: randomInt(0, 30),
-      gold_per_min: randomInt(250, 900),
-      xp_per_min: randomInt(300, 1200),
-      last_hits: randomInt(20, 400),
-      denies: randomInt(0, 30),
-      level: randomInt(12, 30),
-      // ...add more fields as needed
-    };
-  });
-  const direPlayers = Array.from({ length: 5 }, (_, i) => {
-    return {
-      account_id: randomInt(100000000, 999999999),
-      name: uniquePlayerNames[i + 5],
-      hero_id: playerHeroIds[i + 5],
-      kills: randomInt(0, 25),
-      deaths: randomInt(0, 15),
-      assists: randomInt(0, 30),
-      gold_per_min: randomInt(250, 900),
-      xp_per_min: randomInt(300, 1200),
-      last_hits: randomInt(20, 400),
-      denies: randomInt(0, 30),
-      level: randomInt(12, 30),
-      // ...add more fields as needed
-    };
-  });
+  const radiantPlayers = Array.from({ length: 5 }, (_, i) => generateFakePlayerForSide(uniquePlayerNames[i], playerHeroIds[i], i));
+  const direPlayers = Array.from({ length: 5 }, (_, i) => generateFakePlayerForSide(uniquePlayerNames[i + 5], playerHeroIds[i + 5], 128 + i));
   const players = [...radiantPlayers, ...direPlayers];
-
-  // Calculate scores
-  const radiant_score = radiantPlayers.reduce((sum, p) => sum + p.kills, 0);
-  const dire_score = direPlayers.reduce((sum, p) => sum + p.kills, 0);
+  const radiant_score = calculateTeamScore(radiantPlayers);
+  const dire_score = calculateTeamScore(direPlayers);
   const radiant_win = radiant_score >= dire_score;
-
-  // Picks/Bans
   const picksBansHeroIds = uniqueRandomSubset(allHeroIds, 20, 20);
-  const picks_bans = picksBansHeroIds.map((heroId, i) => ({
-    is_pick: i < 10,
-    hero_id: heroId,
-    team: i % 2,
-    order: i
-  }));
-
-  return {
+  const picks_bans = generatePicksBans(picksBansHeroIds);
+  const match = {
     match_id: matchId,
     player_slot: playerSlot ?? randomInt(0, 9),
     radiant_win,
@@ -336,14 +279,20 @@ export function generateFakeMatch(matchId: number, playerSlot?: number): FakeOpe
     dire_score,
     picks_bans
   } as FakeOpenDotaMatch;
+  if (matchId === 9999999999) {
+    // Add a new player to the Dire side
+    const newPlayer = generateFakePlayerForSide('NewPlayerSim', 101, 132);
+    direPlayers.push(newPlayer);
+  }
+  writeMockData(filename, match, `/matches/${matchId}`);
+  return match;
 }
 
 // Generate fake player heroes data
-export function generateFakePlayerHeroes(accountId: number, count: number = 20): OpenDotaPlayerHeroes[] {
+export function generateFakePlayerHeroes(accountId: number, filename: string): OpenDotaPlayerHeroes[] {
   // Use unique hero IDs to avoid duplicates
-  const uniqueHeroIds = uniqueRandomSubset(Array.from({ length: 124 }, (_, i) => i + 1), count, count);
-  
-  return uniqueHeroIds.map(heroId => ({
+  const uniqueHeroIds = uniqueRandomSubset(Array.from({ length: 124 }, (_, i) => i + 1), 20, 20);
+  const data = uniqueHeroIds.map(heroId => ({
     hero_id: heroId,
     last_played: randomTimestamp(),
     games: randomInt(1, 100),
@@ -353,50 +302,110 @@ export function generateFakePlayerHeroes(accountId: number, count: number = 20):
     against_games: randomInt(0, 20),
     against_win: randomInt(0, 10)
   }));
+  writeMockData(filename, data, `/players/${accountId}/heroes`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/heroes`);
+  return data;
 }
 
 // Generate fake player win/loss data
-export function generateFakePlayerWL(accountId: number): OpenDotaPlayerWL {
+export function generateFakePlayerWL(accountId: number, filename: string): OpenDotaPlayerWL {
   const totalGames = randomInt(100, 1000);
   const wins = randomInt(40, Math.floor(totalGames * 0.7));
-  
-  return {
+  const data = {
     win: wins,
     lose: totalGames - wins
   };
+  writeMockData(filename, data, `/players/${accountId}/wl`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/wl`);
+  return data;
 }
 
 // Generate fake player totals data
-export function generateFakePlayerTotals(accountId: number): OpenDotaPlayerTotals[] {
+export function generateFakePlayerTotals(accountId: number, filename: string): OpenDotaPlayerTotals[] {
   const fields = ['kills', 'deaths', 'assists', 'gold_per_min', 'xp_per_min', 'hero_damage', 'tower_damage', 'hero_healing'];
-  
-  return fields.map(field => ({
+  const data = fields.map(field => ({
     field: field,
     n: randomInt(50, 200),
     sum: randomInt(1000, 10000)
   }));
+  writeMockData(filename, data, `/players/${accountId}/totals`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/totals`);
+  return data;
 }
 
 // Generate fake player counts data
-export function generateFakePlayerCounts(accountId: number): OpenDotaPlayerCounts[] {
+export function generateFakePlayerCounts(accountId: number, filename: string): OpenDotaPlayerCounts[] {
   const fields = ['leaver_status', 'game_mode', 'lobby_type', 'lane_role', 'region', 'patch'];
-  
-  return fields.map(field => ({
+  const data = fields.map(field => ({
     field: field,
     n: randomInt(10, 50),
     count: randomInt(1, 20)
   }));
+  writeMockData(filename, data, `/players/${accountId}/counts`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/counts`);
+  return data;
 }
 
-// Generate fake team data
-export function generateFakeTeam(teamId: string) {
-  const name = randomChoice(TEAM_NAMES);
+// Generate fake match details
+export function generateFakeMatchDetails(matchId: number, filename: string): FakeOpenDotaMatch {
+  const match = generateFakeMatch(matchId, filename);
+  // Already written in generateFakeMatch
+  return match;
+}
+
+// Add specific functions for each endpoint
+
+export function generateFakePlayerData(accountId: number, filename: string) {
+  const data = generateFakePlayer(accountId, filename);
+  writeMockData(filename, data, `/players/${accountId}`);
+  return data;
+}
+
+export function generateFakePlayerWLData(accountId: number, filename: string) {
+  const data = generateFakePlayerWL(accountId, filename);
+  writeMockData(filename, data, `/players/${accountId}/wl`);
+  return data;
+}
+
+export function generateFakePlayerTotalsData(accountId: number, filename: string) {
+  const data = generateFakePlayerTotals(accountId, filename);
+  writeMockData(filename, data, `/players/${accountId}/totals`);
+  return data;
+}
+
+export function generateFakePlayerCountsData(accountId: number, filename: string) {
+  const data = generateFakePlayerCounts(accountId, filename);
+  writeMockData(filename, data, `/players/${accountId}/counts`);
+  return data;
+}
+
+export function generateFakePlayerHeroesData(accountId: number, filename: string) {
+  const data = generateFakePlayerHeroes(accountId, filename);
+  writeMockData(filename, data, `/players/${accountId}/heroes`);
+  return data;
+}
+
+export function generateFakePlayerRecentMatches(accountId: number, filename: string): FakeOpenDotaMatch[] {
+  const data = Array.from({ length: 20 }, (_, i) => generateFakeMatch(9000000000 + i, filename, i % 10));
+  writeMockData(filename, data, `/players/${accountId}/recentMatches`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/recentMatches`);
+  return data;
+}
+
+export function generateFakePlayerMatches(accountId: number, filename: string): FakeOpenDotaMatch[] {
+  const data = Array.from({ length: 100 }, (_, i) => generateFakeMatch(9000000000 + i, filename, i % 10));
+  writeMockData(filename, data, `/players/${accountId}/matches`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/matches`);
+  return data;
+}
+
+// Generate fake team data (for Dotabuff/teams API)
+export function generateFakeTeam(teamId: string, filename: string) {
+  const idNum = Math.abs(parseInt(teamId, 10)) || 0;
+  const name = TEAM_NAMES[idNum % TEAM_NAMES.length];
   const playerCount = randomInt(5, 8);
-  
-  // Use unique player names to avoid duplicates on the same team
   const uniquePlayerNames = uniqueRandomSubset(PLAYER_NAMES, playerCount, playerCount);
-  
-  return {
+  const data = {
     team_id: parseInt(teamId),
     rating: randomFloat(1500, 2000),
     wins: randomInt(50, 200),
@@ -408,186 +417,143 @@ export function generateFakeTeam(teamId: string) {
     sponsor: randomChoice(['', 'Sponsor1', 'Sponsor2', 'Sponsor3']),
     country_code: randomChoice(['US', 'EU', 'CN', 'SEA', 'CIS']),
     url: `https://example.com/teams/${teamId}`,
-    players: uniquePlayerNames.map((playerName, i) => ({
-      account_id: randomInt(100000000, 999999999),
+    players: uniquePlayerNames.map((playerName) => ({
+      account_id: getAccountIdForPlayerName(playerName),
       name: playerName,
       games_played: randomInt(10, 100),
       wins: randomInt(5, 50)
     }))
   };
+  writeMockData(filename, data, `/teams/${teamId}`);
+  return data;
 }
 
-// Generate fake match details
-export function generateFakeMatchDetails(matchId: number): FakeOpenDotaMatch {
-  // Use the same logic as generateFakeMatch for consistency
-  return generateFakeMatch(matchId);
+// Generate fake Dotabuff team matches (JSON, for /teams/:id/matches)
+export function generateFakeDotabuffMatches(teamId: string, seasonId: string, filename: string) {
+  const matches = Array.from({ length: 10 }, (_, i) => ({
+    match_id: i,
+    // match_id: randomInt(1000000000, 2000000000),
+    team_id: teamId,
+    season_id: seasonId,
+    index: i
+  }));
+  writeMockData(filename, matches, '/teams/[id]/matches');
+  return matches;
 }
 
-// Generate fake Dotabuff team matches
-export function generateFakeDotabuffMatches(teamId: string, seasonId: string) {
-  const matchCount = randomInt(10, 50);
-  
-  return {
-    matchIds: Array.from({ length: matchCount }, () => randomInt(1000000000, 9999999999).toString())
+// Generate fake Dotabuff league HTML (for /leagues/:id)
+export function generateFakeDotabuffLeagueHtml(leagueId: string, filename: string) {
+  // Use a deterministic fake league name from the LEAGUE_NAMES array
+  const leagueNames = LEAGUE_NAMES;
+  const idNum = Math.abs(parseInt(leagueId, 10)) || 0;
+  const fakeLeagueName = leagueNames[idNum % leagueNames.length];
+  let html = `
+    <html><body>
+      <img class="img-league img-avatar" alt="${fakeLeagueName}" src="/fake-league.png" />
+      <table>
+  `;
+  for (let index = 0; index < 10; index++) {
+    html += `<tr><td>Match ${index}</td></tr>`;
+  }
+  html += '</table></body></html>';
+  writeMockData(filename, html, '/leagues/[id]');
+  return html;
+}
+
+// Generate fake Dotabuff team matches HTML (for /teams/:id/matches?page=)
+export function generateFakeDotabuffTeamMatchesHtml(teamId: string, pageNum: number, filename: string) {
+  // Fake team name for the img alt
+  const idNum = Math.abs(parseInt(teamId, 10)) || 0;
+  const teamName = TEAM_NAMES[idNum % TEAM_NAMES.length];
+  const matchesPerPage = 10;
+  const totalPages = 3;
+  const matchStart = (pageNum - 1) * matchesPerPage;
+  let html = `<html><body>`;
+  html += `<img class="img-team img-avatar" alt="${teamName}" src="/fake-team.png" />`;
+  html += '<table>';
+  for (let i = 0; i < matchesPerPage; i++) {
+    const matchId = 8000000000 + matchStart + i;
+    html += `<tr><td><a href="/matches/${matchId}">Team Match ${matchId}</a></td></tr>`;
+  }
+  // Add a new match for refresh simulation
+  if (pageNum === 1) {
+    html += `<tr><td><a href="/matches/9999999999">Team Match 9999999999</a></td></tr>`;
+  }
+  html += '</table>';
+  // Add pagination if more than one page
+  if (totalPages > 1) {
+    html += '<span class="last"><a href="?page=' + totalPages + '">' + totalPages + '</a></span>';
+  }
+  html += '</body></html>';
+  writeMockData(filename, html, '/teams/[id]/matches');
+  return html;
+}
+
+// Generate fake PlayerStats (for /players/:id/stats)
+export function generateFakePlayerStats(accountId: number, filename: string) {
+  // Deterministically map accountId to a player name from PLAYER_NAMES
+  const name = PLAYER_NAMES[Math.abs(accountId) % PLAYER_NAMES.length];
+  const role = randomChoice(["Carry", "Support", "Offlane", "Mid", "Roamer"]);
+  const rank = randomChoice(["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]);
+  const stars = randomInt(1, 5);
+  const immortalRank = rank === "Immortal" ? randomInt(1, 1000) : undefined;
+  const rankImage = `/ranks/${rank.toLowerCase()}.png`;
+  const matches = randomInt(50, 500);
+  const winRate = parseFloat((randomFloat(40, 70)).toFixed(1));
+  const avgKDA = parseFloat((randomFloat(2, 8)).toFixed(2));
+  const avgGPM = randomInt(350, 800);
+  const avgXPM = randomInt(400, 900);
+  const avgGameLength = `${randomInt(25, 50)}:${randomInt(0,59).toString().padStart(2, '0')}`;
+  const recentPerformance = Array.from({ length: 4 }, (_, i) => ({
+    date: new Date(Date.now() - i * 86400000).toISOString().split("T")[0],
+    hero: randomChoice(HERO_NAMES),
+    result: randomChoice(["W", "L"]),
+    KDA: `${randomInt(0,20)}/${randomInt(0,10)}/${randomInt(0,20)}`,
+    GPM: randomInt(350, 900)
+  }));
+  const topHeroes = Array.from({ length: 5 }, () => ({
+    hero: randomChoice(HERO_NAMES),
+    games: randomInt(10, 100),
+    winRate: parseFloat((randomFloat(40, 70)).toFixed(1)),
+    avgKDA: parseFloat((randomFloat(2, 8)).toFixed(2)),
+    avgGPM: randomInt(350, 800)
+  }));
+  const trends = [
+    { metric: "Win Rate", value: winRate, trend: "+2%", direction: "up" },
+    { metric: "Avg KDA", value: avgKDA, trend: "+0.1", direction: "up" },
+    { metric: "Avg GPM", value: avgGPM, trend: "+5", direction: "up" },
+    { metric: "Game Impact", value: "Medium", trend: "Improving", direction: "up" }
+  ];
+  const recentlyPlayed = Array.from({ length: 4 }, () => {
+    const hero = randomChoice(HERO_NAMES);
+    return {
+      hero,
+      heroImage: `/heroes/${hero.toLowerCase().replace(/\s+/g, '_')}.png`,
+      games: randomInt(5, 50),
+      winRate: parseFloat((randomFloat(40, 70)).toFixed(1))
+    };
+  });
+  const data = {
+    name,
+    role,
+    overallStats: {
+      matches,
+      winRate,
+      avgKDA,
+      avgGPM,
+      avgXPM,
+      avgGameLength
+    },
+    recentPerformance,
+    topHeroes,
+    trends,
+    rank,
+    stars,
+    immortalRank,
+    rankImage,
+    recentlyPlayed
   };
-}
-
-// Generate fake meta insights
-export function generateFakeMetaInsights() {
-  // Use unique hero names for meta trends
-  const uniqueHeroNames = uniqueRandomSubset(HERO_NAMES, 20, 20);
-  
-  return {
-    week: randomInt(1, 52),
-    year: new Date().getFullYear(),
-    heroes: uniqueHeroNames.map((name, i) => ({
-      hero_id: i + 1,
-      name: name,
-      pick_rate: randomFloat(0.05, 0.3),
-      win_rate: randomFloat(0.4, 0.6),
-      ban_rate: randomFloat(0, 0.2),
-      total_picks: randomInt(100, 1000),
-      total_wins: randomInt(50, 500)
-    })),
-    meta_trends: {
-      most_picked: uniqueRandomSubset(HERO_NAMES, 5, 10),
-      most_banned: uniqueRandomSubset(HERO_NAMES, 5, 10),
-      highest_winrate: uniqueRandomSubset(HERO_NAMES, 5, 10),
-      emerging_heroes: uniqueRandomSubset(HERO_NAMES, 3, 8)
-    }
-  };
-}
-
-// Main function to generate fake data based on endpoint
-export function generateFakeData(endpoint: string, params?: any): any {
-  const normalized = endpoint.toLowerCase();
-
-  // Dotabuff team matches endpoint (returns HTML content for cheerio parsing)
-  if (normalized.includes('dotabuff.com/esports/teams') && normalized.includes('matches')) {
-    // Generate fake HTML content that cheerio can parse to extract match IDs
-    const matchCount = 20;
-    const matchIds = Array.from({ length: matchCount }, (_, i) => (9000000000 + i).toString());
-    // Create HTML table rows with match links and league info
-    const tableRows = matchIds.map(matchId => `
-      <tr>
-        <td>
-          <a href="/esports/leagues/16435-rd2l-season-33">Rd2l Season 33</a>
-        </td>
-        <td>
-          <a href="/matches/${matchId}">Match ${matchId}</a>
-        </td>
-        <td>Team A vs Team B</td>
-        <td>${randomInt(20, 60)}:${randomInt(0, 59)}</td>
-        <td>${randomChoice(['Radiant', 'Dire'])} Victory</td>
-      </tr>
-    `).join('');
-    // Return full HTML page with table
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head><title>Team Matches - Dotabuff</title></head>
-        <body>
-          <table class="recent-esports-matches">
-            <thead>
-              <tr>
-                <th>League</th>
-                <th>Match</th>
-                <th>Teams</th>
-                <th>Duration</th>
-                <th>Result</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
-          <div class="pagination">
-            <a href="?page=1">1</a>
-          </div>
-        </body>
-      </html>
-    `;
-  }
-
-  // Return an array of fake heroes for the heroes endpoint
-  if (normalized === 'heroes' || normalized.endsWith('/heroes')) {
-    return generateFakeHeroes(124); // 124 is the current number of Dota 2 heroes
-  }
-
-  const service = endpoint.includes('api.opendota.com') ? 'opendota' : 
-                  endpoint.includes('dotabuff.com') ? 'dotabuff' :
-                  endpoint.includes('stratz.com') ? 'stratz' :
-                  endpoint.includes('dota2protracker.com') ? 'd2pt' : 'unknown';
-  logWithTimestamp('log', `[FAKE DATA] Generating fake data for ${service} endpoint: ${endpoint}`);
-
-  // OpenDota endpoints
-  if (service === 'opendota') {
-    if (endpoint.includes('/players/') && endpoint.includes('/heroes')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayerHeroes(accountId);
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/wl')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayerWL(accountId);
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/totals')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayerTotals(accountId);
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/counts')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayerCounts(accountId);
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/recentMatches')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return Array.from({ length: 20 }, (_, i) => generateFakeMatch(randomInt(1000000000, 9999999999), i % 10));
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/matches')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return Array.from({ length: 100 }, (_, i) => generateFakeMatch(randomInt(1000000000, 9999999999), i % 10));
-    }
-    if (endpoint.includes('/matches/')) {
-      const matchId = parseInt(endpoint.match(/\/matches\/(\d+)/)?.[1] || '1234567890');
-      return generateFakeMatchDetails(matchId);
-    }
-    // Default player data
-    if (endpoint.includes('/players/')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayer(accountId);
-    }
-  }
-
-  // Handle unknown service endpoints that match OpenDota patterns
-  if (service === 'unknown') {
-    if (endpoint.includes('/players/') && endpoint.includes('/heroes')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayerHeroes(accountId);
-    }
-    if (endpoint.includes('/players/') && endpoint.includes('/recentMatches')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return Array.from({ length: 20 }, (_, i) => generateFakeMatch(randomInt(1000000000, 9999999999), i % 10));
-    }
-    if (endpoint.includes('/players/')) {
-      const accountId = parseInt(endpoint.match(/\/players\/(\d+)/)?.[1] || '123456789');
-      return generateFakePlayer(accountId);
-    }
-  }
-
-  // Dotabuff endpoints
-  if (service === 'dotabuff') {
-    if (endpoint.includes('/teams/') && endpoint.includes('/matches')) {
-      const teamId = endpoint.match(/\/teams\/(\d+)/)?.[1] || '123456';
-      const seasonId = params?.season || 'current';
-      return generateFakeDotabuffMatches(teamId, seasonId);
-    }
-  }
-
-  // If service is unknown, throw an error
-  if (service === 'unknown') {
-    throw new Error(`[generateFakeData] Unknown service for endpoint: ${endpoint}`);
-  }
-
-  // Default fallback (should never be reached)
-  logWithTimestamp('error', `[FAKE DATA] No matching handler for endpoint: ${endpoint}. Service: ${service}. This endpoint is not supported by the fake data generator.`);
-  throw new Error(`[generateFakeData] No matching handler for endpoint: ${endpoint}. Service: ${service}`);
+  writeMockData(filename, data, `/players/${accountId}/stats`);
+  writeMockData(`cache-${filename}`, data, `/players/${accountId}/stats`);
+  return data;
 } 

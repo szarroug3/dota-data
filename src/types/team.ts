@@ -21,8 +21,11 @@ export interface Match {
 
 export interface Team {
   id: string;
-  name: string;
-  tag: string;
+  teamId?: string;
+  teamName?: string;
+  leagueId?: string;
+  leagueName?: string;
+  matchIds?: string[];
   players: Player[];
   winRate?: number;
   totalMatches?: number;
@@ -36,4 +39,5 @@ export interface Team {
   leagueUrl?: string;
   standings?: any[];
   topHeroes?: any[];
+  loading?: boolean;
 }

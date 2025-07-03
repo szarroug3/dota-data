@@ -1,201 +1,132 @@
-import { logWithTimestamp } from '@/lib/utils';
-import { Redis } from "@upstash/redis";
-import { NextRequest, NextResponse } from "next/server";
+/**
+ * @openapi
+ * /teams/{id}/match-history:
+ *   get:
+ *     tags:
+ *       - Teams
+ *     summary: Get match history for a team
+ *     description: |
+ *       Returns processed match history data for the team's players.
+ *       To force a refresh and bypass the cache, add `?force=true` to the request URL.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Team ID
+ *       - in: query
+ *         name: accountIds
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Comma-separated list of player account IDs
+ *       - in: query
+ *         name: force
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: Force refresh - bypass cache and fetch fresh data
+ *     responses:
+ *       200:
+ *         description: Match history data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 summary:
+ *                   type: object
+ *                 matches:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 trends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       202:
+ *         description: Data is being fetched; client should poll until 200 is returned.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: queued
+ *                 signature:
+ *                   type: string
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+import { logWithTimestampToFile } from '@/lib/server-logger';
+import { getMatchHistory } from '@/lib/services/match-history-service';
+import { NextRequest } from 'next/server';
 
-const redis = Redis.fromEnv();
+const debug = (...args: unknown[]) => {
+  logWithTimestampToFile('log', '[MATCH HISTORY]', ...args);
+};
 
-const MATCH_PREFIX = "match-";
-const TEAM_PREFIX = "team-";
-const MATCH_EXPIRY_DAYS = 30;
-
-// Type definitions
-interface TeamData {
-  matchIds?: string[];
-  lastAccessed?: string;
-}
-
-interface MatchData {
-  id: string;
-  lastAccessed: string;
-  [key: string]: any;
-}
-
-// Helper to get current ISO timestamp
-function nowISO() {
-  return new Date().toISOString();
-}
-
-// Helper to check if a match is expired
-function isExpired(lastAccessed: string, days: number) {
-  const then = new Date(lastAccessed).getTime();
-  const now = Date.now();
-  return now - then > days * 24 * 60 * 60 * 1000;
-}
-
-// GET: Fetch all matches for a team
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  logWithTimestamp('log', "[REDIS API] ===== GET MATCHES REQUEST =====");
-  logWithTimestamp('log', "[REDIS API] Request method:", request.method);
-  logWithTimestamp('log', "[REDIS API] Request URL:", request.url);
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { searchParams } = new URL(request.url);
+  const accountIdsParam = searchParams.get('accountIds');
+  const force = searchParams.get('force') === 'true';
   
-  try {
-    const { searchParams } = new URL(request.url);
-    const { id: teamId } = await params;
-    logWithTimestamp('log', "[REDIS API] Team ID:", teamId);
-    
-    // Get team data (list of match IDs)
-    const teamKey = `${TEAM_PREFIX}${teamId}`;
-    logWithTimestamp('log', "[REDIS API] Looking up team with key:", teamKey);
-    const team = (await redis.get(teamKey)) as TeamData | null;
-    logWithTimestamp('log', "[REDIS API] Team data from Redis:", team);
-    
-    if (!team || !team.matchIds) {
-      logWithTimestamp('log', "[REDIS API] No team data or match IDs found, returning empty array");
-      return NextResponse.json({ matches: [] });
-    }
-    
-    logWithTimestamp('log', "[REDIS API] Found match IDs:", team.matchIds);
-    logWithTimestamp('log', "[REDIS API] Match IDs count:", team.matchIds.length);
-    
-    // Fetch all matches for this team
-    const matchKeys = team.matchIds.map((id: string) => `${MATCH_PREFIX}${id}`);
-    logWithTimestamp('log', "[REDIS API] Match keys to fetch:", matchKeys);
-    
-    const matches = await redis.mget(matchKeys);
-    logWithTimestamp('log', "[REDIS API] Raw matches from Redis:", matches);
-    logWithTimestamp('log', "[REDIS API] Raw matches count:", matches.length);
-    
-    // Filter out expired matches and update lastAccessed
-    const freshMatches = [];
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i] as MatchData | null;
-      if (match && !isExpired(match.lastAccessed, MATCH_EXPIRY_DAYS)) {
-        // Update lastAccessed
-        match.lastAccessed = nowISO();
-        await redis.set(matchKeys[i], match);
-        freshMatches.push(match);
-        logWithTimestamp('log', `[REDIS API] Added fresh match ${i}:`, match.id);
-      } else if (match) {
-        // Remove expired match
-        await redis.del(matchKeys[i]);
-        logWithTimestamp('log', `[REDIS API] Removed expired match ${i}:`, match.id);
-      } else {
-        logWithTimestamp('log', `[REDIS API] Match ${i} was null or undefined`);
-      }
-    }
-    
-    logWithTimestamp('log', "[REDIS API] Final fresh matches count:", freshMatches.length);
-    logWithTimestamp('log', "[REDIS API] ===== GET MATCHES COMPLETED SUCCESSFULLY =====");
-    return NextResponse.json({ matches: freshMatches });
-  } catch (error) {
-    logWithTimestamp('error', "[REDIS API] ===== GET MATCHES FAILED =====");
-    logWithTimestamp('error', "[REDIS API] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch match history" },
-      { status: 500 },
-    );
+  if (!accountIdsParam) {
+    debug('Missing accountIds query parameter');
+    return new Response(JSON.stringify({ error: 'Missing accountIds query parameter' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
 
-// POST: Add or update matches for a team
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  logWithTimestamp('log', "[REDIS API] ===== POST MATCHES REQUEST =====");
-  logWithTimestamp('log', "[REDIS API] Request method:", request.method);
-  logWithTimestamp('log', "[REDIS API] Request URL:", request.url);
+  const accountIds = accountIdsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
   
-  try {
-    const { id: teamId } = await params;
-    logWithTimestamp('log', "[REDIS API] Team ID:", teamId);
-    
-    const body = await request.json();
-    logWithTimestamp('log', "[REDIS API] Request body:", body);
-    
-    const { matches } = body;
-    logWithTimestamp('log', "[REDIS API] Matches from body:", matches);
-    logWithTimestamp('log', "[REDIS API] Matches count:", matches?.length);
-    
-    if (!Array.isArray(matches)) {
-      logWithTimestamp('error', "[REDIS API] Invalid matches array");
-      return NextResponse.json(
-        { error: "Invalid matches array" },
-        { status: 400 },
-      );
-    }
-    
-    // Store each match by matchId
-    const matchIds: string[] = [];
-    logWithTimestamp('log', "[REDIS API] Storing matches in Redis...");
-    
-    for (const match of matches) {
-      if (!match.id) {
-        logWithTimestamp('log', "[REDIS API] Skipping match without ID:", match);
-        continue;
-      }
-      
-      match.lastAccessed = nowISO();
-      const matchKey = `${MATCH_PREFIX}${match.id}`;
-      logWithTimestamp('log', "[REDIS API] Storing match with key:", matchKey);
-      await redis.set(matchKey, match);
-      matchIds.push(match.id);
-      logWithTimestamp('log', "[REDIS API] Stored match:", match.id);
-    }
-    
-    logWithTimestamp('log', "[REDIS API] All matches stored, match IDs:", matchIds);
-    
-    // Update team data with matchIds and lastAccessed
-    const teamKey = `${TEAM_PREFIX}${teamId}`;
-    logWithTimestamp('log', "[REDIS API] Updating team data with key:", teamKey);
-    
-    const team = ((await redis.get(teamKey)) as TeamData) || {};
-    team.matchIds = matchIds;
-    team.lastAccessed = nowISO();
-    await redis.set(teamKey, team);
-    
-    logWithTimestamp('log', "[REDIS API] Team data updated:", team);
-    logWithTimestamp('log', "[REDIS API] ===== POST MATCHES COMPLETED SUCCESSFULLY =====");
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    logWithTimestamp('error', "[REDIS API] ===== POST MATCHES FAILED =====");
-    logWithTimestamp('error', "[REDIS API] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to save match history" },
-      { status: 500 },
-    );
+  if (accountIds.length === 0) {
+    debug('No valid account IDs provided');
+    return new Response(JSON.stringify({ error: 'No valid account IDs provided' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
 
-// DELETE: Cleanup old matches for a team
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+  debug('Processing match history request', { accountIds, force });
+
   try {
-    const { id: teamId } = await params;
-    const team = (await redis.get(`${TEAM_PREFIX}${teamId}`)) as TeamData | null;
-    if (!team || !team.matchIds) {
-      return NextResponse.json({ deleted: 0 });
+    const result = await getMatchHistory(accountIds);
+    
+    debug('Match history result:', {
+      hasResult: !!result,
+      resultType: typeof result,
+      resultKeys: result && typeof result === 'object' ? Object.keys(result) : null,
+      isQueued: result && typeof result === 'object' && 'status' in result,
+      status: result && typeof result === 'object' && 'status' in result ? (result as any).status : null
+    });
+    
+    if (result && typeof result === 'object' && 'status' in result) {
+      // Return queued status
+      debug('Returning queued status');
+      return new Response(JSON.stringify(result), { 
+        status: 202, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
     }
-    let deleted = 0;
-    for (const matchId of team.matchIds) {
-      const match = (await redis.get(`${MATCH_PREFIX}${matchId}`)) as MatchData | null;
-      if (match && isExpired(match.lastAccessed, MATCH_EXPIRY_DAYS)) {
-        await redis.del(`${MATCH_PREFIX}${matchId}`);
-        deleted++;
-      }
-    }
-    return NextResponse.json({ deleted });
+    
+    // Return match history data
+    debug('Returning match history data');
+    return new Response(JSON.stringify(result), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+    
   } catch (error) {
-    logWithTimestamp('error', "Error cleaning up matches:");
-    logWithTimestamp('error', error);
-    return NextResponse.json(
-      { error: "Failed to cleanup matches" },
-      { status: 500 },
-    );
+    debug('Error processing match history request:', error);
+    return new Response(JSON.stringify({ error: 'Failed to process match history request' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
-}
+} 

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { getHeroImageUrl, getLeagueNameFromUrl, getMatchResult, getTeamSide } from "@/lib/utils";
-import { BarChart, Loader2, User } from "lucide-react";
+import { getHeroImageUrl, getHeroNameSync, getLeagueNameFromUrl, getMatchResult, getTeamSide } from "@/lib/utils";
+import { BarChart, User } from "lucide-react";
 
 interface MatchDetailsProps {
   selectedMatchObj: any;
@@ -121,13 +121,7 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
   }
 
   return (
-    <div className={`flex flex-col gap-4 relative ${isLoading ? 'pointer-events-none opacity-60' : ''}`}>
-      {/* Loading Spinner Overlay */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70 z-10">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
+    <div className={`flex flex-col gap-4 relative`}>
       {/* Summary Section */}
       <div className="flex flex-wrap items-center gap-4 text-sm border-b pb-2 mb-2">
         <span className="text-2xl font-bold">{radiantScore}</span>
@@ -282,6 +276,5 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
 
 // Helper to get hero name synchronously
 function getHeroName(heroId: number) {
-  const { getHeroNameSync } = require("@/lib/utils");
   return getHeroNameSync(heroId);
 } 

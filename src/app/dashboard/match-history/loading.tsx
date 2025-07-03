@@ -79,6 +79,38 @@ export default function MatchHistoryLoading() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="mt-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="font-bold text-lg mb-2">Hero Statistics</div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs text-left">
+                <thead>
+                  <tr>
+                    <th className="py-1 px-2">Hero</th>
+                    <th className="py-1 px-2">Games</th>
+                    <th className="py-1 px-2">Wins</th>
+                    <th className="py-1 px-2">Win Rate</th>
+                    <th className="py-1 px-2">Players</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(10)].map((_, i) => (
+                    <tr key={i}>
+                      <td className="py-1 px-2"><div className="h-4 w-20 bg-muted rounded" /></td>
+                      <td className="py-1 px-2"><div className="h-4 w-8 bg-muted rounded" /></td>
+                      <td className="py-1 px-2"><div className="h-4 w-8 bg-muted rounded" /></td>
+                      <td className="py-1 px-2"><div className="h-4 w-12 bg-muted rounded" /></td>
+                      <td className="py-1 px-2"><div className="h-4 w-24 bg-muted rounded" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 } 

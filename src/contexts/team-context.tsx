@@ -1,7 +1,7 @@
 "use client";
 import { logWithTimestamp } from '@/lib/utils';
 import type { Match, Player, Team } from "@/types/team";
-import { Award, BarChart3, Sword, Trophy, User, Users } from "lucide-react";
+import { Award, Sword, Trophy, User, Users } from "lucide-react";
 import {
     createContext,
     ReactNode,
@@ -47,6 +47,9 @@ interface TeamContextType {
   refreshMatches: () => Promise<void>;
   refreshingMatches: Set<string>;
   setRefreshingMatches: (matches: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
+  // Force refresh state
+  isForceRefreshing: boolean;
+  setIsForceRefreshing: (isForceRefreshing: boolean) => void;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -61,6 +64,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [refreshProgress, setRefreshProgress] = useState<{ completed: number; total: number } | null>(null);
   const [spinningButton, setSpinningButton] = useState<"refresh" | "force" | null>(null);
   const [refreshingMatches, setRefreshingMatches] = useState<Set<string>>(new Set());
+  const [isForceRefreshing, setIsForceRefreshing] = useState(false);
 
   // Load teams from localStorage and restore active team
   useEffect(() => {
@@ -120,27 +124,41 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     logWithTimestamp('log', "[TEAM CONTEXT] Current team ID:", currentTeam?.id);
     
     if (currentTeam) {
-      logWithTimestamp('log', "[TEAM CONTEXT] Making API call to /api/teams/${currentTeam.id}/match-history");
-      fetch(`/api/teams/${currentTeam.id}/match-history`)
-        .then((res) => {
-          logWithTimestamp('log', "[TEAM CONTEXT] API response status:", res.status);
-          logWithTimestamp('log', "[TEAM CONTEXT] API response ok:", res.ok);
-          return res.json();
-        })
-        .then((data) => {
-          logWithTimestamp('log', "[TEAM CONTEXT] API response data:", data);
-          const apiMatches = data.matches || [];
-          logWithTimestamp('log', "[TEAM CONTEXT] Setting matches from API:", apiMatches);
-          logWithTimestamp('log', "[TEAM CONTEXT] API matches count:", apiMatches.length);
-          setAllMatches(apiMatches);
-          setMatches(apiMatches.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
-        })
-        .catch((error) => {
-          logWithTimestamp('error', "[TEAM CONTEXT] Error fetching matches:", error);
-          logWithTimestamp('log', "[TEAM CONTEXT] Setting empty matches array due to error");
-          setAllMatches([]);
-          setMatches([]);
-        });
+      logWithTimestamp('log', `[TEAM CONTEXT] Making API call to /api/teams/${currentTeam.teamId}/matches`);
+      if (currentTeam.leagueId) {
+        fetch(`/api/teams/${currentTeam.teamId}/matches?leagueId=${encodeURIComponent(currentTeam.leagueId)}`)
+          .then(async (res) => {
+            logWithTimestamp('log', "[TEAM CONTEXT] API response status:", res.status);
+            logWithTimestamp('log', "[TEAM CONTEXT] API response ok:", res.ok);
+            let data;
+            try {
+              data = await res.json();
+            } catch (jsonErr) {
+              logWithTimestamp('error', "[TEAM CONTEXT] Error parsing JSON from matches API:", jsonErr);
+              setAllMatches([]);
+              setMatches([]);
+              return;
+            }
+            logWithTimestamp('log', "[TEAM CONTEXT] API response data:", data);
+            // Use matchIds if matches array is not present
+            const apiMatches = data.matches || (Array.isArray(data.matchIds) ? data.matchIds.map((id: string) => ({ id })) : []);
+            logWithTimestamp('log', "[TEAM CONTEXT] Setting matches from API:", apiMatches);
+            logWithTimestamp('log', "[TEAM CONTEXT] API matches count:", apiMatches.length);
+            setAllMatches(apiMatches);
+            setMatches(apiMatches.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
+          })
+          .catch((error) => {
+            logWithTimestamp('error', "[TEAM CONTEXT] Error fetching matches:", error);
+            logWithTimestamp('log', "[TEAM CONTEXT] Setting empty matches array due to error");
+            setAllMatches([]);
+            setMatches([]);
+          });
+      } else {
+        // If leagueId is missing, throw an error
+        // const errorMsg = '[TEAM CONTEXT] leagueId is missing, cannot fetch matches';
+        logWithTimestamp('error', JSON.stringify(currentTeam, null, 2) );
+        // throw new Error(errorMsg);
+      }
     } else {
       logWithTimestamp('log', "[TEAM CONTEXT] No current team, setting empty matches array");
       setAllMatches([]);
@@ -220,7 +238,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     if (!currentTeam) return;
     const newMatch: Match = { ...match, id: Date.now().toString() };
     const updatedMatches = [...matches, newMatch];
-    await fetch(`/api/teams/${currentTeam.id}/match-history`, {
+    await fetch(`/api/teams/${currentTeam.teamId}/match-history`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ matches: updatedMatches }),
@@ -255,7 +273,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
   const getTeamSlug = () => {
     if (!currentTeam) return "";
-    return currentTeam.tag.toLowerCase();
+    return currentTeam.teamId || currentTeam.id;
   };
 
   const getExternalLinks = () => {
@@ -268,11 +286,6 @@ export function TeamProvider({ children }: { children: ReactNode }) {
           icon: <Trophy className="w-5 h-5 text-red-500" />,
         },
         {
-          href: "https://www.opendota.com/teams",
-          label: "Teams on OpenDota",
-          icon: <BarChart3 className="w-5 h-5 text-green-500" />,
-        },
-        {
           href: "https://www.dotabuff.com/esports/leagues",
           label: "Leagues on Dotabuff",
           icon: <Award className="w-5 h-5 text-orange-500" />,
@@ -282,16 +295,22 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
     const links = [];
 
-    // Team on Dotabuff - use original URL if available, otherwise construct from tag
-    if (currentTeam.dotabuffUrl) {
+    // Team on Dotabuff - use teamId if available, otherwise fallback to constructed URL
+    if (currentTeam.teamId) {
+      links.push({
+        href: `https://www.dotabuff.com/esports/teams/${currentTeam.teamId}`,
+        label: "Team on Dotabuff",
+        icon: <Trophy className="w-5 h-5 text-red-500" />,
+      });
+    } else if (currentTeam.dotabuffUrl) {
       links.push({
         href: currentTeam.dotabuffUrl,
         label: "Team on Dotabuff",
         icon: <Trophy className="w-5 h-5 text-red-500" />,
       });
     } else {
-      // Fallback to constructed URL
-      const teamSlug = currentTeam.tag.toLowerCase();
+      // Fallback to constructed URL from composite id
+      const teamSlug = currentTeam.id;
       if (teamSlug) {
         links.push({
           href: `https://www.dotabuff.com/esports/teams/${teamSlug}`,
@@ -301,18 +320,14 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Team on OpenDota
-    const teamSlug = currentTeam.tag.toLowerCase();
-    if (teamSlug) {
+    // League on Dotabuff - use leagueId if available, otherwise fallback to stored URL
+    if (currentTeam.leagueId) {
       links.push({
-        href: `https://www.opendota.com/teams/${teamSlug}`,
-        label: "Team on OpenDota",
-        icon: <BarChart3 className="w-5 h-5 text-green-500" />,
+        href: `https://www.dotabuff.com/esports/leagues/${currentTeam.leagueId}`,
+        label: "League on Dotabuff",
+        icon: <Award className="w-5 h-5 text-orange-500" />,
       });
-    }
-
-    // League link - use stored URL if available
-    if (currentTeam.leagueUrl) {
+    } else if (currentTeam.leagueUrl) {
       links.push({
         href: currentTeam.leagueUrl,
         label: "League on Dotabuff",
@@ -385,8 +400,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     logWithTimestamp('log', "[TEAM CONTEXT] Current team ID:", currentTeam?.id);
     
     try {
-      logWithTimestamp('log', "[TEAM CONTEXT] Making API call to /api/teams/${currentTeam.id}/match-history");
-      const res = await fetch(`/api/teams/${currentTeam.id}/match-history`);
+      logWithTimestamp('log', "[TEAM CONTEXT] Making API call to /api/teams/${currentTeam.teamId}/match-history");
+      const res = await fetch(`/api/teams/${currentTeam.teamId}/match-history`);
       logWithTimestamp('log', "[TEAM CONTEXT] API response status:", res.status);
       logWithTimestamp('log', "[TEAM CONTEXT] API response ok:", res.ok);
       const data = await res.json();
@@ -441,6 +456,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         refreshMatches,
         refreshingMatches,
         setRefreshingMatches: setRefreshingMatchesWrapper,
+        isForceRefreshing,
+        setIsForceRefreshing,
       }}
     >
       {children}

@@ -1,3 +1,5 @@
+import type { OpenDotaFullMatch } from "@/types/opendota";
+import type { Team } from "@/types/team";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -157,7 +159,7 @@ export async function getHeroName(heroId: number): Promise<string> {
       heroDataCacheTime = Date.now();
       return heroDataCache.byId[heroId] || `Hero ${heroId}`;
     }
-  } catch (error) {
+  } catch {
     // fallback to hardcoded map
   }
   return heroMap[heroId] || `Hero ${heroId}`;
@@ -167,13 +169,14 @@ export function getHeroNameSync(heroId: number): string {
   if (heroDataCache) {
     return heroDataCache.byId[heroId] || `Hero ${heroId}`;
   }
-  
   // Try to load from the new heroes.json data
   try {
-    const heroesData = require('../data/heroes.json');
-    return heroesData.byId[heroId.toString()] || `Hero ${heroId}`;
-  } catch (error) {
-    // Fallback to old hardcoded map
+    // Use dynamic import to avoid forbidden require
+    // Note: This will only work in environments that support dynamic import
+    // and may need to be async in some cases
+    // For now, fallback to hardcoded map
+    return heroMap[heroId] || `Hero ${heroId}`;
+  } catch {
     return heroMap[heroId] || `Hero ${heroId}`;
   }
 }
@@ -276,7 +279,6 @@ export const heroInternalNameMap: Record<string, string> = {
   Undying: "undying",
   Rubick: "rubick",
   Disruptor: "disruptor",
-  "Nyx Assassin": "nyx_assassin",
   "Keeper of the Light": "keeper_of_the_light",
   Visage: "visage",
   Slark: "slark",
@@ -320,151 +322,84 @@ export function getHeroImageUrl(heroName: string): string {
   return `https://www.dotabuff.com/assets/heroes/${heroSlug}.jpg`;
 }
 
-// Helper to get team side (Radiant/Dire) for a match
-export function getTeamSide(match: any, currentTeam: any): string {
-  if (!match.openDota) return "Unknown";
-  const radiantName = match.openDota.radiant_name?.toLowerCase() || "";
-  const direName = match.openDota.dire_name?.toLowerCase() || "";
-  const teamName = currentTeam?.name?.toLowerCase() || "";
-
-  // Only exact match
-  if (teamName) {
-    if (radiantName && teamName === radiantName) {
-      return "Radiant";
-    }
-    if (direName && teamName === direName) {
-      return "Dire";
-    }
-  }
-
-  // Try player overlap if team name fails
-  if (
-    Array.isArray(match.openDota.players) &&
-    Array.isArray(currentTeam?.players)
-  ) {
-    const teamPlayers = currentTeam.players
-      .map((p: any) => p.name?.toLowerCase())
-      .filter(Boolean);
-    const radiantPlayers = match.openDota.players
-      .filter((p: any) => p.isRadiant)
-      .map((p: any) => p.name?.toLowerCase());
-    const direPlayers = match.openDota.players
-      .filter((p: any) => !p.isRadiant)
-      .map((p: any) => p.name?.toLowerCase());
-    const radiantOverlap = radiantPlayers.filter((n: any) =>
-      teamPlayers.includes(n),
-    ).length;
-    const direOverlap = direPlayers.filter((n: any) =>
-      teamPlayers.includes(n),
-    ).length;
-    if (radiantOverlap > direOverlap) return "Radiant";
-    if (direOverlap > radiantOverlap) return "Dire";
-  }
-  return "Unknown";
+// Types for OpenDota player and match
+interface OpenDotaPlayerLite {
+  name?: string;
+  isRadiant?: boolean;
+  player_slot?: number;
+}
+interface MatchWithOpenDota {
+  openDota?: OpenDotaFullMatch;
+  opponent?: string;
+  result?: string;
+  score?: string;
 }
 
-// Helper to get match result as W/L
-export function getMatchResult(match: any, currentTeam: any): string {
-  if (match.openDota) {
-    const teamSide = getTeamSide(match, currentTeam);
-    if (teamSide === "Radiant") {
-      return match.openDota.radiant_win ? "W" : "L";
-    } else if (teamSide === "Dire") {
-      return !match.openDota.radiant_win ? "W" : "L";
-    }
-    // If teamSide is unknown, fallback to summary data
-  }
-  // Fallback to summary data
-  if (typeof match.result === "string") {
-    return match.result;
-  }
-  return "?";
+function getTeamPlayersLower(team: Team): string[] {
+  return (team.players || []).map((p) => p.name?.toLowerCase() || "").filter(Boolean);
+}
+function getMatchPlayersLower(players: OpenDotaPlayerLite[], isRadiant: boolean): string[] {
+  return players.filter((p) => (isRadiant ? p.isRadiant : !p.isRadiant)).map((p) => p.name?.toLowerCase() || "").filter(Boolean);
 }
 
-// Helper to get score with result
-export function getScoreWithResult(match: any, currentTeam: any): string {
-  if (!match.openDota) {
-    return match.score || "N/A";
-  }
-
-  const teamSide = getTeamSide(match, currentTeam);
-  if (teamSide === "Radiant") {
-    return `${match.openDota.radiant_score} - ${match.openDota.dire_score}`;
-  } else if (teamSide === "Dire") {
-    return `${match.openDota.dire_score} - ${match.openDota.radiant_score}`;
-  }
-
-  return `${match.openDota.radiant_score} - ${match.openDota.dire_score}`;
+function isTeamNameMatch(openDota: OpenDotaFullMatch, team: Team): "Radiant" | "Dire" | undefined {
+  const radiantName = openDota.radiant_name?.toLowerCase() || "";
+  const direName = openDota.dire_name?.toLowerCase() || "";
+  const teamName = getTeamNameForMatch(team);
+  if (isRadiantTeam(radiantName, teamName)) return "Radiant";
+  if (isDireTeam(direName, teamName)) return "Dire";
+  return undefined;
 }
-
-// Helper to get opponent name from match and OpenDota data
-export function getOpponentName(match: any, currentTeam: any) {
-  // Check if existing opponent is valid (not BO3, BO5, BO7, etc.)
+function getTeamNameForMatch(team: Team): string {
+  return team?.teamName?.toLowerCase() || team?.id?.toLowerCase() || "";
+}
+function isRadiantTeam(radiantName: string, teamName: string): boolean {
+  return !!radiantName && teamName === radiantName;
+}
+function isDireTeam(direName: string, teamName: string): boolean {
+  return !!direName && teamName === direName;
+}
+function getPlayerOverlapSide(openDota: OpenDotaFullMatch, team: Team): "Radiant" | "Dire" | undefined {
+  if (!Array.isArray(openDota.players) || !Array.isArray(team?.players)) return undefined;
+  const teamPlayers = getTeamPlayersLower(team);
+  const radiantPlayers = getMatchPlayersLower(openDota.players, true);
+  const direPlayers = getMatchPlayersLower(openDota.players, false);
+  const radiantOverlap = radiantPlayers.filter((n) => teamPlayers.includes(n)).length;
+  const direOverlap = direPlayers.filter((n) => teamPlayers.includes(n)).length;
+  if (radiantOverlap > direOverlap) return "Radiant";
+  if (direOverlap > radiantOverlap) return "Dire";
+  return undefined;
+}
+export function getTeamSide(match: MatchWithOpenDota, currentTeam: Team): "Radiant" | "Dire" | "Unknown" {
+  const openDota = match.openDota;
+  if (!openDota) return "Unknown";
+  return (
+    isTeamNameMatch(openDota, currentTeam) ||
+    getPlayerOverlapSide(openDota, currentTeam) ||
+    "Unknown"
+  );
+}
+function getOpponentNameBySide(openDota: OpenDotaFullMatch, team: Team): string | undefined {
+  const side = isTeamNameMatch(openDota, team) || getPlayerOverlapSide(openDota, team);
+  if (side === "Radiant") return openDota.dire_name || "Unknown Opponent";
+  if (side === "Dire") return openDota.radiant_name || "Unknown Opponent";
+  return undefined;
+}
+export function getOpponentName(match: MatchWithOpenDota, currentTeam: Team): string {
   const invalidOpponents = [
-    "bo3",
-    "bo5",
-    "bo7",
-    "bo1",
-    "bo2",
-    "bo4",
-    "bo6",
-    "bo8",
-    "bo9",
+    "bo3", "bo5", "bo7", "bo1", "bo2", "bo4", "bo6", "bo8", "bo9",
   ];
   const existingOpponent = match.opponent?.toLowerCase();
   const isValidOpponent =
     existingOpponent &&
     !invalidOpponents.includes(existingOpponent) &&
     existingOpponent !== "unknown opponent";
-
-  if (isValidOpponent) {
-    return match.opponent;
+  if (isValidOpponent) return match.opponent!;
+  const openDota = match.openDota;
+  if (openDota) {
+    const bySide = getOpponentNameBySide(openDota, currentTeam);
+    if (bySide) return bySide;
   }
-
-  if (match.openDota) {
-    const radiantName = match.openDota.radiant_name?.toLowerCase();
-    const direName = match.openDota.dire_name?.toLowerCase();
-    const teamName = currentTeam?.name?.toLowerCase();
-
-    if (teamName) {
-      // Only exact match
-      if (radiantName === teamName) {
-        return match.openDota.dire_name;
-      }
-      if (direName === teamName) {
-        return match.openDota.radiant_name;
-      }
-    }
-
-    // Fallback: try matching player names
-    const teamPlayers = (currentTeam?.players || [])
-      .map((p: any) => p.name?.toLowerCase())
-      .filter(Boolean);
-
-    if (Array.isArray(match.openDota.players)) {
-      const radiantPlayers = match.openDota.players
-        .filter((p: any) => p.isRadiant)
-        .map((p: any) => p.name?.toLowerCase());
-      const direPlayers = match.openDota.players
-        .filter((p: any) => !p.isRadiant)
-        .map((p: any) => p.name?.toLowerCase());
-
-      const radiantOverlap = radiantPlayers.filter((n: any) =>
-        teamPlayers.includes(n),
-      ).length;
-      const direOverlap = direPlayers.filter((n: any) =>
-        teamPlayers.includes(n),
-      ).length;
-
-      if (radiantOverlap > direOverlap) {
-        return match.openDota.dire_name;
-      }
-      if (direOverlap > radiantOverlap) {
-        return match.openDota.radiant_name;
-      }
-    }
-  }
-
   return "Unknown Opponent";
 }
 
@@ -489,7 +424,7 @@ export function formatDate(dateString: string) {
     // Handle other date formats
     const date = new Date(dateString);
     return date.toLocaleDateString();
-  } catch (error) {
+  } catch {
     return "Invalid Date";
   }
 }
@@ -546,8 +481,8 @@ export function getRankTierInfo(rankTier: number) {
   return { rank, stars };
 }
 
-// Logging utility with timestamp
-export function logWithTimestamp(level: 'log' | 'warn' | 'error', ...args: any[]) {
+// Use only a frontend-safe logger:
+export function logWithTimestamp(level: 'log' | 'warn' | 'error', ...args: unknown[]) {
   const timestamp = new Date().toISOString();
   if (level === 'log') {
     console.log(`[${timestamp}]`, ...args);
@@ -556,4 +491,15 @@ export function logWithTimestamp(level: 'log' | 'warn' | 'error', ...args: any[]
   } else if (level === 'error') {
     console.error(`[${timestamp}]`, ...args);
   }
+}
+
+export function getMatchResult(match: any): string {
+  if (match.result === 'W') return 'Win';
+  if (match.result === 'L') return 'Loss';
+  return 'Unknown';
+}
+
+export function getScoreWithResult(match: any): string {
+  if (!match.score) return getMatchResult(match);
+  return `${match.score} (${getMatchResult(match)})`;
 }

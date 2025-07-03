@@ -1,0 +1,1939 @@
+
+> dota-data@0.1.0 test /Users/samreenzarroug/git/personal/dota-data
+> jest
+
+  console.log
+    Teams/Missing: 200 
+          <!DOCTYPE html>
+          <html class="esports-skin">
+            <head>
+              <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+              <title>Team Matches - DOTABUFF - Dota 2 Stats</title>
+            </head>
+            <body>
+              <div class="container-outer seemsgood">
+                <div class="skin-container">
+                  <div class="container-inner container-inner-content">
+                    <section>
+                      <article>
+                        <table class="table table-striped recent-esports-matches">
+                          <thead>
+                            <tr>
+                              <th>League</th>
+                              <th>Result</th>
+                              <th>Series</th>
+                              <th class="r-none-mobile">Duration</th>
+                              <th class="r-none-tablet">Team Heroes</th>
+                              <th>Opponent</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-asia-challenger-league/tooltip" href="/esports/leagues/9999999999-asia-challenger-league"><span class="league-image"><img alt="Asia Challenger League" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000000">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2600714">Series 2600714</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                44:28
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 47%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/brewmaster"><img class="image-hero image-icon" rel="tooltip-remote" title="Brewmaster" data-tooltip-url="/heroes/brewmaster/tooltip" src="/assets/heroes/brewmaster-936453158.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/earthshaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Earthshaker" data-tooltip-url="/heroes/earthshaker/tooltip" src="/assets/heroes/earthshaker-901859153.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/dazzle"><img class="image-hero image-icon" rel="tooltip-remote" title="Dazzle" data-tooltip-url="/heroes/dazzle/tooltip" src="/assets/heroes/dazzle-882724470.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/weaver"><img class="image-hero image-icon" rel="tooltip-remote" title="Weaver" data-tooltip-url="/heroes/weaver/tooltip" src="/assets/heroes/weaver-874689866.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/sven"><img class="image-hero image-icon" rel="tooltip-remote" title="Sven" data-tooltip-url="/heroes/sven/tooltip" src="/assets/heroes/sven-331874851.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9489904-og/tooltip" href="/esports/teams/9489904-og"><span class="team-image"><img alt="OG" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/359988540.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9489904-og/tooltip" href="/esports/teams/9489904-og"><span class="team-text team-text-full">OG</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-the-international-2024/tooltip" href="/esports/leagues/9999999999-the-international-2024"><span class="league-image"><img alt="The International 2024" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000001">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2610784">Series 2610784</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                43:31
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 87%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/batrider"><img class="image-hero image-icon" rel="tooltip-remote" title="Batrider" data-tooltip-url="/heroes/batrider/tooltip" src="/assets/heroes/batrider-683463727.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/mirana"><img class="image-hero image-icon" rel="tooltip-remote" title="Mirana" data-tooltip-url="/heroes/mirana/tooltip" src="/assets/heroes/mirana-396173365.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lifestealer"><img class="image-hero image-icon" rel="tooltip-remote" title="Lifestealer" data-tooltip-url="/heroes/lifestealer/tooltip" src="/assets/heroes/lifestealer-325858166.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/axe"><img class="image-hero image-icon" rel="tooltip-remote" title="Axe" data-tooltip-url="/heroes/axe/tooltip" src="/assets/heroes/axe-928496384.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/witch-doctor"><img class="image-hero image-icon" rel="tooltip-remote" title="Witch Doctor" data-tooltip-url="/heroes/witch-doctor/tooltip" src="/assets/heroes/witch-doctor-139755125.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8182132-shopify-rebellion/tooltip" href="/esports/teams/8182132-shopify-rebellion"><span class="team-image"><img alt="Shopify Rebellion" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/890836024.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8182132-shopify-rebellion/tooltip" href="/esports/teams/8182132-shopify-rebellion"><span class="team-text team-text-full">Shopify Rebellion</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-asia-challenger-league/tooltip" href="/esports/leagues/9999999999-asia-challenger-league"><span class="league-image"><img alt="Asia Challenger League" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000002">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2615071">Series 2615071</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                47:55
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 76%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/phantom-lancer"><img class="image-hero image-icon" rel="tooltip-remote" title="Phantom Lancer" data-tooltip-url="/heroes/phantom-lancer/tooltip" src="/assets/heroes/phantom-lancer-868287782.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/razor"><img class="image-hero image-icon" rel="tooltip-remote" title="Razor" data-tooltip-url="/heroes/razor/tooltip" src="/assets/heroes/razor-318000113.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/axe"><img class="image-hero image-icon" rel="tooltip-remote" title="Axe" data-tooltip-url="/heroes/axe/tooltip" src="/assets/heroes/axe-437574406.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/gyrocopter"><img class="image-hero image-icon" rel="tooltip-remote" title="Gyrocopter" data-tooltip-url="/heroes/gyrocopter/tooltip" src="/assets/heroes/gyrocopter-105081538.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/zeus"><img class="image-hero image-icon" rel="tooltip-remote" title="Zeus" data-tooltip-url="/heroes/zeus/tooltip" src="/assets/heroes/zeus-874649830.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9257212-natus-vincere/tooltip" href="/esports/teams/9257212-natus-vincere"><span class="team-image"><img alt="Natus Vincere" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/969223600.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9257212-natus-vincere/tooltip" href="/esports/teams/9257212-natus-vincere"><span class="team-text team-text-full">Natus Vincere</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-americas-cup/tooltip" href="/esports/leagues/9999999999-americas-cup"><span class="league-image"><img alt="Americas Cup" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000003">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2609347">Series 2609347</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                44:28
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 47%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/queen-of-pain"><img class="image-hero image-icon" rel="tooltip-remote" title="Queen of Pain" data-tooltip-url="/heroes/queen-of-pain/tooltip" src="/assets/heroes/queen-of-pain-274632673.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/batrider"><img class="image-hero image-icon" rel="tooltip-remote" title="Batrider" data-tooltip-url="/heroes/batrider/tooltip" src="/assets/heroes/batrider-673316674.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/omniknight"><img class="image-hero image-icon" rel="tooltip-remote" title="Omniknight" data-tooltip-url="/heroes/omniknight/tooltip" src="/assets/heroes/omniknight-860065646.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/tidehunter"><img class="image-hero image-icon" rel="tooltip-remote" title="Tidehunter" data-tooltip-url="/heroes/tidehunter/tooltip" src="/assets/heroes/tidehunter-544745876.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/pudge"><img class="image-hero image-icon" rel="tooltip-remote" title="Pudge" data-tooltip-url="/heroes/pudge/tooltip" src="/assets/heroes/pudge-839310087.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8576636-og/tooltip" href="/esports/teams/8576636-og"><span class="team-image"><img alt="OG" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/613006832.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8576636-og/tooltip" href="/esports/teams/8576636-og"><span class="team-text team-text-full">OG</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-dpc-weu-tour-3/tooltip" href="/esports/leagues/9999999999-dpc-weu-tour-3"><span class="league-image"><img alt="DPC WEU Tour 3" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000004">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2609547">Series 2609547</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                34:00
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 42%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/lich"><img class="image-hero image-icon" rel="tooltip-remote" title="Lich" data-tooltip-url="/heroes/lich/tooltip" src="/assets/heroes/lich-490993560.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/nature's-prophet"><img class="image-hero image-icon" rel="tooltip-remote" title="Nature's Prophet" data-tooltip-url="/heroes/nature's-prophet/tooltip" src="/assets/heroes/nature's-prophet-186886299.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/slardar"><img class="image-hero image-icon" rel="tooltip-remote" title="Slardar" data-tooltip-url="/heroes/slardar/tooltip" src="/assets/heroes/slardar-163664633.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/earthshaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Earthshaker" data-tooltip-url="/heroes/earthshaker/tooltip" src="/assets/heroes/earthshaker-755006566.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/warlock"><img class="image-hero image-icon" rel="tooltip-remote" title="Warlock" data-tooltip-url="/heroes/warlock/tooltip" src="/assets/heroes/warlock-421372622.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9096200-shopify-rebellion/tooltip" href="/esports/teams/9096200-shopify-rebellion"><span class="team-image"><img alt="Shopify Rebellion" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/293741733.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9096200-shopify-rebellion/tooltip" href="/esports/teams/9096200-shopify-rebellion"><span class="team-text team-text-full">Shopify Rebellion</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-bts-pro-series-15/tooltip" href="/esports/leagues/9999999999-bts-pro-series-15"><span class="league-image"><img alt="BTS Pro Series 15" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000005">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2598995">Series 2598995</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                50:34
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 50%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/gyrocopter"><img class="image-hero image-icon" rel="tooltip-remote" title="Gyrocopter" data-tooltip-url="/heroes/gyrocopter/tooltip" src="/assets/heroes/gyrocopter-953427414.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/crystal-maiden"><img class="image-hero image-icon" rel="tooltip-remote" title="Crystal Maiden" data-tooltip-url="/heroes/crystal-maiden/tooltip" src="/assets/heroes/crystal-maiden-498692218.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/tidehunter"><img class="image-hero image-icon" rel="tooltip-remote" title="Tidehunter" data-tooltip-url="/heroes/tidehunter/tooltip" src="/assets/heroes/tidehunter-872065962.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/broodmother"><img class="image-hero image-icon" rel="tooltip-remote" title="Broodmother" data-tooltip-url="/heroes/broodmother/tooltip" src="/assets/heroes/broodmother-910644706.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/phantom-assassin"><img class="image-hero image-icon" rel="tooltip-remote" title="Phantom Assassin" data-tooltip-url="/heroes/phantom-assassin/tooltip" src="/assets/heroes/phantom-assassin-374803519.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8065402-team-spirit/tooltip" href="/esports/teams/8065402-team-spirit"><span class="team-image"><img alt="Team Spirit" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/901184447.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8065402-team-spirit/tooltip" href="/esports/teams/8065402-team-spirit"><span class="team-text team-text-full">Team Spirit</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-epic-league/tooltip" href="/esports/leagues/9999999999-epic-league"><span class="league-image"><img alt="Epic League" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000006">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2614810">Series 2614810</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                47:55
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 94%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/pangolier"><img class="image-hero image-icon" rel="tooltip-remote" title="Pangolier" data-tooltip-url="/heroes/pangolier/tooltip" src="/assets/heroes/pangolier-703119286.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lycan"><img class="image-hero image-icon" rel="tooltip-remote" title="Lycan" data-tooltip-url="/heroes/lycan/tooltip" src="/assets/heroes/lycan-130766885.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/spirit-breaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Spirit Breaker" data-tooltip-url="/heroes/spirit-breaker/tooltip" src="/assets/heroes/spirit-breaker-192901176.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/shadow-fiend"><img class="image-hero image-icon" rel="tooltip-remote" title="Shadow Fiend" data-tooltip-url="/heroes/shadow-fiend/tooltip" src="/assets/heroes/shadow-fiend-519152278.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/techies"><img class="image-hero image-icon" rel="tooltip-remote" title="Techies" data-tooltip-url="/heroes/techies/tooltip" src="/assets/heroes/techies-805652676.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8077242-betboom-team/tooltip" href="/esports/teams/8077242-betboom-team"><span class="team-image"><img alt="BetBoom Team" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/353198918.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8077242-betboom-team/tooltip" href="/esports/teams/8077242-betboom-team"><span class="team-text team-text-full">BetBoom Team</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-bts-pro-series-15/tooltip" href="/esports/leagues/9999999999-bts-pro-series-15"><span class="league-image"><img alt="BTS Pro Series 15" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000007">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2589272">Series 2589272</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                30:24
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 57%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/chaos-knight"><img class="image-hero image-icon" rel="tooltip-remote" title="Chaos Knight" data-tooltip-url="/heroes/chaos-knight/tooltip" src="/assets/heroes/chaos-knight-401176467.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/marci"><img class="image-hero image-icon" rel="tooltip-remote" title="Marci" data-tooltip-url="/heroes/marci/tooltip" src="/assets/heroes/marci-944212871.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/invoker"><img class="image-hero image-icon" rel="tooltip-remote" title="Invoker" data-tooltip-url="/heroes/invoker/tooltip" src="/assets/heroes/invoker-446181214.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/arc-warden"><img class="image-hero image-icon" rel="tooltip-remote" title="Arc Warden" data-tooltip-url="/heroes/arc-warden/tooltip" src="/assets/heroes/arc-warden-627728917.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/io"><img class="image-hero image-icon" rel="tooltip-remote" title="Io" data-tooltip-url="/heroes/io/tooltip" src="/assets/heroes/io-232850544.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8952457-betboom-team/tooltip" href="/esports/teams/8952457-betboom-team"><span class="team-image"><img alt="BetBoom Team" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/564113807.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8952457-betboom-team/tooltip" href="/esports/teams/8952457-betboom-team"><span class="team-text team-text-full">BetBoom Team</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-americas-cup/tooltip" href="/esports/leagues/9999999999-americas-cup"><span class="league-image"><img alt="Americas Cup" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000008">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2619724">Series 2619724</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                30:24
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 70%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/io"><img class="image-hero image-icon" rel="tooltip-remote" title="Io" data-tooltip-url="/heroes/io/tooltip" src="/assets/heroes/io-171301225.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/meepo"><img class="image-hero image-icon" rel="tooltip-remote" title="Meepo" data-tooltip-url="/heroes/meepo/tooltip" src="/assets/heroes/meepo-199478798.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/arc-warden"><img class="image-hero image-icon" rel="tooltip-remote" title="Arc Warden" data-tooltip-url="/heroes/arc-warden/tooltip" src="/assets/heroes/arc-warden-989166231.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/void-spirit"><img class="image-hero image-icon" rel="tooltip-remote" title="Void Spirit" data-tooltip-url="/heroes/void-spirit/tooltip" src="/assets/heroes/void-spirit-553158073.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lycan"><img class="image-hero image-icon" rel="tooltip-remote" title="Lycan" data-tooltip-url="/heroes/lycan/tooltip" src="/assets/heroes/lycan-620797647.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8281484-tundra-esports/tooltip" href="/esports/teams/8281484-tundra-esports"><span class="team-image"><img alt="Tundra Esports" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/118966765.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8281484-tundra-esports/tooltip" href="/esports/teams/8281484-tundra-esports"><span class="team-text team-text-full">Tundra Esports</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-esl-one-summer/tooltip" href="/esports/leagues/9999999999-esl-one-summer"><span class="league-image"><img alt="ESL One Summer" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000009">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2602479">Series 2602479</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                30:24
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 51%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/omniknight"><img class="image-hero image-icon" rel="tooltip-remote" title="Omniknight" data-tooltip-url="/heroes/omniknight/tooltip" src="/assets/heroes/omniknight-705458752.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/dawnbreaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Dawnbreaker" data-tooltip-url="/heroes/dawnbreaker/tooltip" src="/assets/heroes/dawnbreaker-700629616.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/clockwerk"><img class="image-hero image-icon" rel="tooltip-remote" title="Clockwerk" data-tooltip-url="/heroes/clockwerk/tooltip" src="/assets/heroes/clockwerk-348062840.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/dark-seer"><img class="image-hero image-icon" rel="tooltip-remote" title="Dark Seer" data-tooltip-url="/heroes/dark-seer/tooltip" src="/assets/heroes/dark-seer-858359004.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/bloodseeker"><img class="image-hero image-icon" rel="tooltip-remote" title="Bloodseeker" data-tooltip-url="/heroes/bloodseeker/tooltip" src="/assets/heroes/bloodseeker-858392216.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8044266-virtus.pro/tooltip" href="/esports/teams/8044266-virtus.pro"><span class="team-image"><img alt="Virtus.pro" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/356534497.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8044266-virtus.pro/tooltip" href="/esports/teams/8044266-virtus.pro"><span class="team-text team-text-full">Virtus.pro</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-rd2l-season-33/tooltip" href="/esports/leagues/9999999999-rd2l-season-33"><span class="league-image"><img alt="RD2L Season 33" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000010">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2594337">Series 2594337</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                28:06
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 62%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/magnus"><img class="image-hero image-icon" rel="tooltip-remote" title="Magnus" data-tooltip-url="/heroes/magnus/tooltip" src="/assets/heroes/magnus-924353259.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/earthshaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Earthshaker" data-tooltip-url="/heroes/earthshaker/tooltip" src="/assets/heroes/earthshaker-243117051.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/sand-king"><img class="image-hero image-icon" rel="tooltip-remote" title="Sand King" data-tooltip-url="/heroes/sand-king/tooltip" src="/assets/heroes/sand-king-186074753.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/viper"><img class="image-hero image-icon" rel="tooltip-remote" title="Viper" data-tooltip-url="/heroes/viper/tooltip" src="/assets/heroes/viper-478358020.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/sven"><img class="image-hero image-icon" rel="tooltip-remote" title="Sven" data-tooltip-url="/heroes/sven/tooltip" src="/assets/heroes/sven-994610428.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8986185-xtreme-gaming/tooltip" href="/esports/teams/8986185-xtreme-gaming"><span class="team-image"><img alt="Xtreme Gaming" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/580940473.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8986185-xtreme-gaming/tooltip" href="/esports/teams/8986185-xtreme-gaming"><span class="team-text team-text-full">Xtreme Gaming</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-oga-dota-pit/tooltip" href="/esports/leagues/9999999999-oga-dota-pit"><span class="league-image"><img alt="OGA Dota PIT" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000011">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2604369">Series 2604369</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                24:00
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 88%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/monkey-king"><img class="image-hero image-icon" rel="tooltip-remote" title="Monkey King" data-tooltip-url="/heroes/monkey-king/tooltip" src="/assets/heroes/monkey-king-812987554.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/hoodwink"><img class="image-hero image-icon" rel="tooltip-remote" title="Hoodwink" data-tooltip-url="/heroes/hoodwink/tooltip" src="/assets/heroes/hoodwink-829144221.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/batrider"><img class="image-hero image-icon" rel="tooltip-remote" title="Batrider" data-tooltip-url="/heroes/batrider/tooltip" src="/assets/heroes/batrider-364368102.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/gyrocopter"><img class="image-hero image-icon" rel="tooltip-remote" title="Gyrocopter" data-tooltip-url="/heroes/gyrocopter/tooltip" src="/assets/heroes/gyrocopter-681748940.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/underlord"><img class="image-hero image-icon" rel="tooltip-remote" title="Underlord" data-tooltip-url="/heroes/underlord/tooltip" src="/assets/heroes/underlord-290299494.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8785320-natus-vincere/tooltip" href="/esports/teams/8785320-natus-vincere"><span class="team-image"><img alt="Natus Vincere" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/857878892.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8785320-natus-vincere/tooltip" href="/esports/teams/8785320-natus-vincere"><span class="team-text team-text-full">Natus Vincere</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-rd2l-season-33/tooltip" href="/esports/leagues/9999999999-rd2l-season-33"><span class="league-image"><img alt="RD2L Season 33" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000012">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2608910">Series 2608910</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                30:45
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 92%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/axe"><img class="image-hero image-icon" rel="tooltip-remote" title="Axe" data-tooltip-url="/heroes/axe/tooltip" src="/assets/heroes/axe-768206643.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/pangolier"><img class="image-hero image-icon" rel="tooltip-remote" title="Pangolier" data-tooltip-url="/heroes/pangolier/tooltip" src="/assets/heroes/pangolier-602032257.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/chaos-knight"><img class="image-hero image-icon" rel="tooltip-remote" title="Chaos Knight" data-tooltip-url="/heroes/chaos-knight/tooltip" src="/assets/heroes/chaos-knight-760280631.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/phantom-lancer"><img class="image-hero image-icon" rel="tooltip-remote" title="Phantom Lancer" data-tooltip-url="/heroes/phantom-lancer/tooltip" src="/assets/heroes/phantom-lancer-355194323.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lina"><img class="image-hero image-icon" rel="tooltip-remote" title="Lina" data-tooltip-url="/heroes/lina/tooltip" src="/assets/heroes/lina-909194573.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8696401-psg.lgd/tooltip" href="/esports/teams/8696401-psg.lgd"><span class="team-image"><img alt="PSG.LGD" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/973362482.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8696401-psg.lgd/tooltip" href="/esports/teams/8696401-psg.lgd"><span class="team-text team-text-full">PSG.LGD</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-oga-dota-pit/tooltip" href="/esports/leagues/9999999999-oga-dota-pit"><span class="league-image"><img alt="OGA Dota PIT" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000013">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2604585">Series 2604585</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                35:25
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 95%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/earthshaker"><img class="image-hero image-icon" rel="tooltip-remote" title="Earthshaker" data-tooltip-url="/heroes/earthshaker/tooltip" src="/assets/heroes/earthshaker-348108467.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/hoodwink"><img class="image-hero image-icon" rel="tooltip-remote" title="Hoodwink" data-tooltip-url="/heroes/hoodwink/tooltip" src="/assets/heroes/hoodwink-213434139.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/treant-protector"><img class="image-hero image-icon" rel="tooltip-remote" title="Treant Protector" data-tooltip-url="/heroes/treant-protector/tooltip" src="/assets/heroes/treant-protector-133557378.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/troll-warlord"><img class="image-hero image-icon" rel="tooltip-remote" title="Troll Warlord" data-tooltip-url="/heroes/troll-warlord/tooltip" src="/assets/heroes/troll-warlord-723959879.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/dark-willow"><img class="image-hero image-icon" rel="tooltip-remote" title="Dark Willow" data-tooltip-url="/heroes/dark-willow/tooltip" src="/assets/heroes/dark-willow-315618332.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8890374-natus-vincere/tooltip" href="/esports/teams/8890374-natus-vincere"><span class="team-image"><img alt="Natus Vincere" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/373645804.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8890374-natus-vincere/tooltip" href="/esports/teams/8890374-natus-vincere"><span class="team-text team-text-full">Natus Vincere</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-asia-challenger-league/tooltip" href="/esports/leagues/9999999999-asia-challenger-league"><span class="league-image"><img alt="Asia Challenger League" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000014">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2593396">Series 2593396</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                57:29
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 63%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/earth-spirit"><img class="image-hero image-icon" rel="tooltip-remote" title="Earth Spirit" data-tooltip-url="/heroes/earth-spirit/tooltip" src="/assets/heroes/earth-spirit-640973220.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/disruptor"><img class="image-hero image-icon" rel="tooltip-remote" title="Disruptor" data-tooltip-url="/heroes/disruptor/tooltip" src="/assets/heroes/disruptor-635897374.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/ancient-apparition"><img class="image-hero image-icon" rel="tooltip-remote" title="Ancient Apparition" data-tooltip-url="/heroes/ancient-apparition/tooltip" src="/assets/heroes/ancient-apparition-395554471.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/grimstroke"><img class="image-hero image-icon" rel="tooltip-remote" title="Grimstroke" data-tooltip-url="/heroes/grimstroke/tooltip" src="/assets/heroes/grimstroke-339798662.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/hoodwink"><img class="image-hero image-icon" rel="tooltip-remote" title="Hoodwink" data-tooltip-url="/heroes/hoodwink/tooltip" src="/assets/heroes/hoodwink-417241950.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8721482-alliance/tooltip" href="/esports/teams/8721482-alliance"><span class="team-image"><img alt="Alliance" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/987878977.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8721482-alliance/tooltip" href="/esports/teams/8721482-alliance"><span class="team-text team-text-full">Alliance</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-dreamleague-season-22/tooltip" href="/esports/leagues/9999999999-dreamleague-season-22"><span class="league-image"><img alt="DreamLeague Season 22" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000015">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2583773">Series 2583773</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                31:33
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 82%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/jakiro"><img class="image-hero image-icon" rel="tooltip-remote" title="Jakiro" data-tooltip-url="/heroes/jakiro/tooltip" src="/assets/heroes/jakiro-694644607.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/dark-willow"><img class="image-hero image-icon" rel="tooltip-remote" title="Dark Willow" data-tooltip-url="/heroes/dark-willow/tooltip" src="/assets/heroes/dark-willow-208631255.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/crystal-maiden"><img class="image-hero image-icon" rel="tooltip-remote" title="Crystal Maiden" data-tooltip-url="/heroes/crystal-maiden/tooltip" src="/assets/heroes/crystal-maiden-836928815.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/mirana"><img class="image-hero image-icon" rel="tooltip-remote" title="Mirana" data-tooltip-url="/heroes/mirana/tooltip" src="/assets/heroes/mirana-441119660.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/templar-assassin"><img class="image-hero image-icon" rel="tooltip-remote" title="Templar Assassin" data-tooltip-url="/heroes/templar-assassin/tooltip" src="/assets/heroes/templar-assassin-254815453.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8046712-shopify-rebellion/tooltip" href="/esports/teams/8046712-shopify-rebellion"><span class="team-image"><img alt="Shopify Rebellion" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/784545398.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8046712-shopify-rebellion/tooltip" href="/esports/teams/8046712-shopify-rebellion"><span class="team-text team-text-full">Shopify Rebellion</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-asia-challenger-league/tooltip" href="/esports/leagues/9999999999-asia-challenger-league"><span class="league-image"><img alt="Asia Challenger League" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000016">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2585421">Series 2585421</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                49:15
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 85%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/luna"><img class="image-hero image-icon" rel="tooltip-remote" title="Luna" data-tooltip-url="/heroes/luna/tooltip" src="/assets/heroes/luna-572179927.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/chen"><img class="image-hero image-icon" rel="tooltip-remote" title="Chen" data-tooltip-url="/heroes/chen/tooltip" src="/assets/heroes/chen-103738108.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/storm-spirit"><img class="image-hero image-icon" rel="tooltip-remote" title="Storm Spirit" data-tooltip-url="/heroes/storm-spirit/tooltip" src="/assets/heroes/storm-spirit-662302385.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lich"><img class="image-hero image-icon" rel="tooltip-remote" title="Lich" data-tooltip-url="/heroes/lich/tooltip" src="/assets/heroes/lich-603242607.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/faceless-void"><img class="image-hero image-icon" rel="tooltip-remote" title="Faceless Void" data-tooltip-url="/heroes/faceless-void/tooltip" src="/assets/heroes/faceless-void-998403220.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8758101-xtreme-gaming/tooltip" href="/esports/teams/8758101-xtreme-gaming"><span class="team-image"><img alt="Xtreme Gaming" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/352652739.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8758101-xtreme-gaming/tooltip" href="/esports/teams/8758101-xtreme-gaming"><span class="team-text team-text-full">Xtreme Gaming</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-rd2l-season-33/tooltip" href="/esports/leagues/9999999999-rd2l-season-33"><span class="league-image"><img alt="RD2L Season 33" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000017">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2599552">Series 2599552</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                28:06
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 71%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/night-stalker"><img class="image-hero image-icon" rel="tooltip-remote" title="Night Stalker" data-tooltip-url="/heroes/night-stalker/tooltip" src="/assets/heroes/night-stalker-742328779.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/tusk"><img class="image-hero image-icon" rel="tooltip-remote" title="Tusk" data-tooltip-url="/heroes/tusk/tooltip" src="/assets/heroes/tusk-801608463.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/snapfire"><img class="image-hero image-icon" rel="tooltip-remote" title="Snapfire" data-tooltip-url="/heroes/snapfire/tooltip" src="/assets/heroes/snapfire-740991926.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/grimstroke"><img class="image-hero image-icon" rel="tooltip-remote" title="Grimstroke" data-tooltip-url="/heroes/grimstroke/tooltip" src="/assets/heroes/grimstroke-327758297.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/terrorblade"><img class="image-hero image-icon" rel="tooltip-remote" title="Terrorblade" data-tooltip-url="/heroes/terrorblade/tooltip" src="/assets/heroes/terrorblade-113497944.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8217499-gaimin-gladiators/tooltip" href="/esports/teams/8217499-gaimin-gladiators"><span class="team-image"><img alt="Gaimin Gladiators" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/518921802.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8217499-gaimin-gladiators/tooltip" href="/esports/teams/8217499-gaimin-gladiators"><span class="team-text team-text-full">Gaimin Gladiators</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-americas-cup/tooltip" href="/esports/leagues/9999999999-americas-cup"><span class="league-image"><img alt="Americas Cup" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="won" href="/matches/8000000018">Won Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2597838">Series 2597838</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                44:28
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 75%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/enigma"><img class="image-hero image-icon" rel="tooltip-remote" title="Enigma" data-tooltip-url="/heroes/enigma/tooltip" src="/assets/heroes/enigma-355053516.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/lion"><img class="image-hero image-icon" rel="tooltip-remote" title="Lion" data-tooltip-url="/heroes/lion/tooltip" src="/assets/heroes/lion-570458121.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/witch-doctor"><img class="image-hero image-icon" rel="tooltip-remote" title="Witch Doctor" data-tooltip-url="/heroes/witch-doctor/tooltip" src="/assets/heroes/witch-doctor-944553079.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/naga-siren"><img class="image-hero image-icon" rel="tooltip-remote" title="Naga Siren" data-tooltip-url="/heroes/naga-siren/tooltip" src="/assets/heroes/naga-siren-502719417.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/centaur-warrunner"><img class="image-hero image-icon" rel="tooltip-remote" title="Centaur Warrunner" data-tooltip-url="/heroes/centaur-warrunner/tooltip" src="/assets/heroes/centaur-warrunner-468418028.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9059430-team-spirit/tooltip" href="/esports/teams/9059430-team-spirit"><span class="team-image"><img alt="Team Spirit" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/767676459.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9059430-team-spirit/tooltip" href="/esports/teams/9059430-team-spirit"><span class="team-text team-text-full">Team Spirit</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+              <tr>
+                <td><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/9999999999-esl-one-summer/tooltip" href="/esports/leagues/9999999999-esl-one-summer"><span class="league-image"><img alt="ESL One Summer" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/9999999999/banner.png" /></span></a></td>
+              <td>
+                <div><a class="lost" href="/matches/8000000019">Lost Match</a></div>
+                <span class="r-none-mobile"><time datetime="2024-11-26T03:03:11+00:00" title="Tue, 26 Nov 2024 03:03:11 +0000" data-time-ago="2024-11-26T03:03:11+00:00">2024-11-26</time></span>
+              </td>
+              <td>
+                <div><a href="/esports/series/2583538">Series 2583538</a></div>
+                <small>US East</small>
+              </td>
+              <td class="r-none-mobile">
+                49:23
+                <div class="bar bar-default">
+                  <div class="segment segment-duration" style="width: 100%;"></div>
+                </div>
+              </td>
+              <td class="r-none-tablet cell-icons">
+                <div class="image-container image-container-hero image-container-icon"><a href="/heroes/crystal-maiden"><img class="image-hero image-icon" rel="tooltip-remote" title="Crystal Maiden" data-tooltip-url="/heroes/crystal-maiden/tooltip" src="/assets/heroes/crystal-maiden-935568133.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/beastmaster"><img class="image-hero image-icon" rel="tooltip-remote" title="Beastmaster" data-tooltip-url="/heroes/beastmaster/tooltip" src="/assets/heroes/beastmaster-475119829.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/sand-king"><img class="image-hero image-icon" rel="tooltip-remote" title="Sand King" data-tooltip-url="/heroes/sand-king/tooltip" src="/assets/heroes/sand-king-358404317.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/disruptor"><img class="image-hero image-icon" rel="tooltip-remote" title="Disruptor" data-tooltip-url="/heroes/disruptor/tooltip" src="/assets/heroes/disruptor-353908893.jpg" /></a></div><div class="image-container image-container-hero image-container-icon"><a href="/heroes/spectre"><img class="image-hero image-icon" rel="tooltip-remote" title="Spectre" data-tooltip-url="/heroes/spectre/tooltip" src="/assets/heroes/spectre-214251496.jpg" /></a></div>
+              </td>
+              <td class="cell-icons">
+                <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9246226-team-falcons/tooltip" href="/esports/teams/9246226-team-falcons"><span class="team-image"><img alt="Team Falcons" class="img-team img-avatar" src="https://riki.dotabuff.com/t/l/954802161.png" /></span></a> <a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9246226-team-falcons/tooltip" href="/esports/teams/9246226-team-falcons"><span class="team-text team-text-full">Team Falcons</span></a>
+                <div class="r-none-tablet clearfix" style="margin-top: 4px"></div>
+              </td>
+            </tr>
+          
+                          </tbody>
+                        </table>
+                        <div class="viewport">1 - 20 of 23</div>
+                        <nav class="pagination">
+                          <span class="page current">1</span>
+                          <span class="page"><a rel="next" href="?page=2">2</a></span>
+                          <span class="next"><a rel="next" href="?page=2">Next &rsaquo;</a></span>
+                          <span class="last"><a href="?page=2">Last &raquo;</a></span>
+                        </nav>
+                      </article>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </body>
+          </html>
+
+      at Object.<anonymous> (tests/api.integration.test.ts:40:15)
+
+  console.log
+    Teams/Mock: 200 {
+      "teamName": "Maple Syrup блин",
+      "matchIdsByLeague": {
+        "16435": [
+          "8054337855",
+          "8054301932",
+          "8043366236",
+          "8043319576",
+          "8031824017",
+          "8031793554",
+          "8031743221",
+          "8009191822",
+          "8009166618",
+          "7998598227",
+          "7998572440",
+          "7978250325",
+          "7978218646",
+          "7967574072",
+          "7967548696",
+          "7957231133",
+          "7957197156",
+          "7950807632",
+          "7950785138",
+          "7936155454"
+        ]
+      }
+    }
+
+      at Object.<anonymous> (tests/api.integration.test.ts:46:15)
+
+  console.log
+    Teams/Cached: 200 {
+      "teamName": "Maple Syrup блин",
+      "matchIdsByLeague": {
+        "16435": [
+          "8054337855",
+          "8054301932",
+          "8043366236",
+          "8043319576",
+          "8031824017",
+          "8031793554",
+          "8031743221",
+          "8009191822",
+          "8009166618",
+          "7998598227",
+          "7998572440",
+          "7978250325",
+          "7978218646",
+          "7967574072",
+          "7967548696",
+          "7957231133",
+          "7957197156",
+          "7950807632",
+          "7950785138",
+          "7936155454"
+        ]
+      }
+    }
+
+      at Object.<anonymous> (tests/api.integration.test.ts:55:15)
+
+  console.log
+    Teams/Polling: [
+      {
+        status: 200,
+        body: '{\n' +
+          '  "teamName": "Maple Syrup блин",\n' +
+          '  "matchIdsByLeague": {\n' +
+          '    "16435": [\n' +
+          '      "8054337855",\n' +
+          '      "8054301932",\n' +
+          '      "8043366236",\n' +
+          '      "8043319576",\n' +
+          '      "8031824017",\n' +
+          '      "8031793554",\n' +
+          '      "8031743221",\n' +
+          '      "8009191822",\n' +
+          '      "8009166618",\n' +
+          '      "7998598227",\n' +
+          '      "7998572440",\n' +
+          '      "7978250325",\n' +
+          '      "7978218646",\n' +
+          '      "7967574072",\n' +
+          '      "7967548696",\n' +
+          '      "7957231133",\n' +
+          '      "7957197156",\n' +
+          '      "7950807632",\n' +
+          '      "7950785138",\n' +
+          '      "7936155454"\n' +
+          '    ]\n' +
+          '  }\n' +
+          '}'
+      },
+      {
+        status: 200,
+        body: '{\n' +
+          '  "teamName": "Maple Syrup блин",\n' +
+          '  "matchIdsByLeague": {\n' +
+          '    "16435": [\n' +
+          '      "8054337855",\n' +
+          '      "8054301932",\n' +
+          '      "8043366236",\n' +
+          '      "8043319576",\n' +
+          '      "8031824017",\n' +
+          '      "8031793554",\n' +
+          '      "8031743221",\n' +
+          '      "8009191822",\n' +
+          '      "8009166618",\n' +
+          '      "7998598227",\n' +
+          '      "7998572440",\n' +
+          '      "7978250325",\n' +
+          '      "7978218646",\n' +
+          '      "7967574072",\n' +
+          '      "7967548696",\n' +
+          '      "7957231133",\n' +
+          '      "7957197156",\n' +
+          '      "7950807632",\n' +
+          '      "7950785138",\n' +
+          '      "7936155454"\n' +
+          '    ]\n' +
+          '  }\n' +
+          '}'
+      },
+      {
+        status: 200,
+        body: '{\n' +
+          '  "teamName": "Maple Syrup блин",\n' +
+          '  "matchIdsByLeague": {\n' +
+          '    "16435": [\n' +
+          '      "8054337855",\n' +
+          '      "8054301932",\n' +
+          '      "8043366236",\n' +
+          '      "8043319576",\n' +
+          '      "8031824017",\n' +
+          '      "8031793554",\n' +
+          '      "8031743221",\n' +
+          '      "8009191822",\n' +
+          '      "8009166618",\n' +
+          '      "7998598227",\n' +
+          '      "7998572440",\n' +
+          '      "7978250325",\n' +
+          '      "7978218646",\n' +
+          '      "7967574072",\n' +
+          '      "7967548696",\n' +
+          '      "7957231133",\n' +
+          '      "7957197156",\n' +
+          '      "7950807632",\n' +
+          '      "7950785138",\n' +
+          '      "7936155454"\n' +
+          '    ]\n' +
+          '  }\n' +
+          '}'
+      },
+      {
+        status: 200,
+        body: '{\n' +
+          '  "teamName": "Maple Syrup блин",\n' +
+          '  "matchIdsByLeague": {\n' +
+          '    "16435": [\n' +
+          '      "8054337855",\n' +
+          '      "8054301932",\n' +
+          '      "8043366236",\n' +
+          '      "8043319576",\n' +
+          '      "8031824017",\n' +
+          '      "8031793554",\n' +
+          '      "8031743221",\n' +
+          '      "8009191822",\n' +
+          '      "8009166618",\n' +
+          '      "7998598227",\n' +
+          '      "7998572440",\n' +
+          '      "7978250325",\n' +
+          '      "7978218646",\n' +
+          '      "7967574072",\n' +
+          '      "7967548696",\n' +
+          '      "7957231133",\n' +
+          '      "7957197156",\n' +
+          '      "7950807632",\n' +
+          '      "7950785138",\n' +
+          '      "7936155454"\n' +
+          '    ]\n' +
+          '  }\n' +
+          '}'
+      },
+      {
+        status: 200,
+        body: '{\n' +
+          '  "teamName": "Maple Syrup блин",\n' +
+          '  "matchIdsByLeague": {\n' +
+          '    "16435": [\n' +
+          '      "8054337855",\n' +
+          '      "8054301932",\n' +
+          '      "8043366236",\n' +
+          '      "8043319576",\n' +
+          '      "8031824017",\n' +
+          '      "8031793554",\n' +
+          '      "8031743221",\n' +
+          '      "8009191822",\n' +
+          '      "8009166618",\n' +
+          '      "7998598227",\n' +
+          '      "7998572440",\n' +
+          '      "7978250325",\n' +
+          '      "7978218646",\n' +
+          '      "7967574072",\n' +
+          '      "7967548696",\n' +
+          '      "7957231133",\n' +
+          '      "7957197156",\n' +
+          '      "7950807632",\n' +
+          '      "7950785138",\n' +
+          '      "7936155454"\n' +
+          '    ]\n' +
+          '  }\n' +
+          '}'
+      }
+    ]
+
+      at Object.<anonymous> (tests/api.integration.test.ts:61:15)
+
+  console.log
+    Leagues/Missing: 200 
+          <!DOCTYPE html>
+          <html class="esports-skin">
+            <head>
+              <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+              <title>DreamLeague Season 22 - Amateur League - DOTABUFF - Dota 2 Stats</title>
+            </head>
+            <body>
+              <div class="container-outer seemsgood">
+                <div class="skin-container">
+                  <div class="container-inner container-inner-content">
+                    <div class="header-content-container">
+                      <div class="header-content">
+                        <div class="header-content-primary">
+                          <div class="header-content-avatar"><a class="esports-league esports-link league-link" rel="tooltip-remote" data-tooltip-url="/esports/leagues/16435-dreamleague-season-22/tooltip" href="/esports/leagues/16435-dreamleague-season-22"><span class="league-image"><img alt="DreamLeague Season 22" class="img-league img-avatar" src="https://riki.dotabuff.com/leagues/16435/banner.png" /></span></a></div>
+                          <div class="header-content-title">
+                            <h1>DreamLeague Season 22<small>Amateur League</small></h1>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="content-inner">
+                      <section>
+                        <article>
+                          <table class="table table-striped">
+                            <thead>
+                              <tr>
+                                <th class="r-tab-button active" data-defaultsort="disabled" data-group="1">Overview</th>
+                                <th class="r-tab-button" data-defaultsort="disabled" data-group="2">Match Stats</th>
+                                <th class="r-tab-button" data-defaultsort="disabled" data-group="3">Averages</th>
+                              </tr>
+                              <tr>
+                                <th class="cell-icon" data-defaultsort="disabled"></th>
+                                <th data-firstsort="asc">Team</th>
+                                <th class="cell-medium r-tab r-group-1" data-defaultsort="desc">Series</th>
+                                <th class="cell-medium r-tab r-group-2" data-firstsort="desc">Matches</th>
+                                <th class="cell-medium r-tab r-group-2" data-firstsort="desc">Heroes</th>
+                                <th class="cell-avatar r-tab r-group-3" data-firstsort="desc">KDA</th>
+                                <th class="cell-avatar r-tab r-group-3" data-firstsort="desc">GPM</th>
+                                <th class="cell-avatar r-tab r-group-3" data-firstsort="desc">XPM</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7564075-betboom-team/tooltip" href="/esports/teams/7564075-betboom-team"><span class="team-image"><img alt="BetBoom Team" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/126228423.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by BetBoom Team in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7564075"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7564075-betboom-team/tooltip" href="/esports/teams/7564075-betboom-team"><span class="team-text team-text-full">BetBoom Team</span></a></td>
+              <td class="r-tab r-group-1" data-value="80.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">4</span><span class="sep">-</span><span class="color-stat-loss">1</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 80%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 20%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">4</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">1</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">5</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="75.0">
+                <span class="game-record"><span class="wins">24</span><span class="sep">-</span><span class="losses">8</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 75%;"></div>
+                  <div class="segment segment-loss" style="width: 25%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="75">
+                <div class="group" rel="neighbour-tooltip">
+                  75
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 24%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 57.333333333333336%;"></div>
+                    <div class="segment segment-only-banned" style="width: 18.666666666666668%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">18</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">43</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">14</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">75</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="2.94">
+                2.94
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 58.8%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2592">
+                2,592
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 99.6923076923077%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3145">
+                3,145
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 92.5%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7751491-team-liquid/tooltip" href="/esports/teams/7751491-team-liquid"><span class="team-image"><img alt="Team Liquid" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/861951508.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Team Liquid in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7751491"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7751491-team-liquid/tooltip" href="/esports/teams/7751491-team-liquid"><span class="team-text team-text-full">Team Liquid</span></a></td>
+              <td class="r-tab r-group-1" data-value="66.7">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">4</span><span class="sep">-</span><span class="color-stat-loss">2</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 66.66666666666666%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 33.33333333333333%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">4</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">2</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">6</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="72.4">
+                <span class="game-record"><span class="wins">21</span><span class="sep">-</span><span class="losses">8</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 72.41379310344827%;"></div>
+                  <div class="segment segment-loss" style="width: 27.586206896551722%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="72">
+                <div class="group" rel="neighbour-tooltip">
+                  72
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 34.72222222222222%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 37.5%;"></div>
+                    <div class="segment segment-only-banned" style="width: 27.77777777777778%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">25</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">27</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">20</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">72</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.52">
+                3.52
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 70.39999999999999%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2564">
+                2,564
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 98.61538461538461%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3394">
+                3,394
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 99.82352941176471%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7758874-evil-geniuses/tooltip" href="/esports/teams/7758874-evil-geniuses"><span class="team-image"><img alt="Evil Geniuses" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/615553563.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Evil Geniuses in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7758874"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7758874-evil-geniuses/tooltip" href="/esports/teams/7758874-evil-geniuses"><span class="team-text team-text-full">Evil Geniuses</span></a></td>
+              <td class="r-tab r-group-1" data-value="71.4">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">5</span><span class="sep">-</span><span class="color-stat-loss">2</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 71.42857142857143%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 28.57142857142857%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">5</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">2</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">7</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="60.0">
+                <span class="game-record"><span class="wins">18</span><span class="sep">-</span><span class="losses">12</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 60%;"></div>
+                  <div class="segment segment-loss" style="width: 40%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="63">
+                <div class="group" rel="neighbour-tooltip">
+                  63
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 39.682539682539684%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 38.095238095238095%;"></div>
+                    <div class="segment segment-only-banned" style="width: 22.22222222222222%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">25</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">24</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">14</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">63</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="4.18">
+                4.18
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 83.6%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2289">
+                2,289
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 88.03846153846155%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3064">
+                3,064
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 90.11764705882352%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8860820-team-secret/tooltip" href="/esports/teams/8860820-team-secret"><span class="team-image"><img alt="Team Secret" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/849215838.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Team Secret in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8860820"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8860820-team-secret/tooltip" href="/esports/teams/8860820-team-secret"><span class="team-text team-text-full">Team Secret</span></a></td>
+              <td class="r-tab r-group-1" data-value="62.5">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">5</span><span class="sep">-</span><span class="color-stat-loss">3</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 62.5%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 37.5%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">5</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">3</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">8</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="61.5">
+                <span class="game-record"><span class="wins">16</span><span class="sep">-</span><span class="losses">10</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 61.53846153846154%;"></div>
+                  <div class="segment segment-loss" style="width: 38.46153846153847%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="80">
+                <div class="group" rel="neighbour-tooltip">
+                  80
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 30%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 50%;"></div>
+                    <div class="segment segment-only-banned" style="width: 20%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">24</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">40</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">16</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">80</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="2.84">
+                2.84
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 56.8%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2338">
+                2,338
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 89.92307692307693%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3119">
+                3,119
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 91.73529411764706%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9174245-azure-ray/tooltip" href="/esports/teams/9174245-azure-ray"><span class="team-image"><img alt="Azure Ray" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/491425010.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Azure Ray in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=9174245"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9174245-azure-ray/tooltip" href="/esports/teams/9174245-azure-ray"><span class="team-text team-text-full">Azure Ray</span></a></td>
+              <td class="r-tab r-group-1" data-value="75.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">3</span><span class="sep">-</span><span class="color-stat-loss">1</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 75%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 25%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">3</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">1</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">4</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="66.7">
+                <span class="game-record"><span class="wins">20</span><span class="sep">-</span><span class="losses">10</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 66.66666666666666%;"></div>
+                  <div class="segment segment-loss" style="width: 33.33333333333333%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="55">
+                <div class="group" rel="neighbour-tooltip">
+                  55
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 43.63636363636363%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 25.454545454545453%;"></div>
+                    <div class="segment segment-only-banned" style="width: 30.909090909090907%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">24</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">14</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">17</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">55</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.68">
+                3.68
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 73.6%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2345">
+                2,345
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 90.1923076923077%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3284">
+                3,284
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 96.58823529411765%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8385704-team-spirit/tooltip" href="/esports/teams/8385704-team-spirit"><span class="team-image"><img alt="Team Spirit" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/255722432.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Team Spirit in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8385704"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8385704-team-spirit/tooltip" href="/esports/teams/8385704-team-spirit"><span class="team-text team-text-full">Team Spirit</span></a></td>
+              <td class="r-tab r-group-1" data-value="72.7">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">8</span><span class="sep">-</span><span class="color-stat-loss">3</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 72.72727272727273%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 27.27272727272727%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">8</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">3</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">11</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="60.0">
+                <span class="game-record"><span class="wins">15</span><span class="sep">-</span><span class="losses">10</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 60%;"></div>
+                  <div class="segment segment-loss" style="width: 40%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="81">
+                <div class="group" rel="neighbour-tooltip">
+                  81
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 23.456790123456788%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 53.086419753086425%;"></div>
+                    <div class="segment segment-only-banned" style="width: 23.456790123456788%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">19</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">43</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">19</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">81</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.30">
+                3.30
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 65.99999999999999%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2401">
+                2,401
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 92.34615384615384%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3367">
+                3,367
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 99.02941176470588%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7757866-natus-vincere/tooltip" href="/esports/teams/7757866-natus-vincere"><span class="team-image"><img alt="Natus Vincere" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/920941604.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Natus Vincere in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7757866"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7757866-natus-vincere/tooltip" href="/esports/teams/7757866-natus-vincere"><span class="team-text team-text-full">Natus Vincere</span></a></td>
+              <td class="r-tab r-group-1" data-value="50.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">3</span><span class="sep">-</span><span class="color-stat-loss">3</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 50%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 50%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">3</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">3</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">6</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="64.3">
+                <span class="game-record"><span class="wins">18</span><span class="sep">-</span><span class="losses">10</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 64.28571428571429%;"></div>
+                  <div class="segment segment-loss" style="width: 35.714285714285715%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="72">
+                <div class="group" rel="neighbour-tooltip">
+                  72
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 20.833333333333336%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 61.111111111111114%;"></div>
+                    <div class="segment segment-only-banned" style="width: 18.055555555555554%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">15</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">44</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">13</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">72</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="2.52">
+                2.52
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 50.4%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2447">
+                2,447
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 94.11538461538461%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3071">
+                3,071
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 90.3235294117647%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8996978-shopify-rebellion/tooltip" href="/esports/teams/8996978-shopify-rebellion"><span class="team-image"><img alt="Shopify Rebellion" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/687815591.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Shopify Rebellion in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8996978"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8996978-shopify-rebellion/tooltip" href="/esports/teams/8996978-shopify-rebellion"><span class="team-text team-text-full">Shopify Rebellion</span></a></td>
+              <td class="r-tab r-group-1" data-value="60.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">6</span><span class="sep">-</span><span class="color-stat-loss">4</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 60%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 40%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">6</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">4</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">10</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="61.1">
+                <span class="game-record"><span class="wins">22</span><span class="sep">-</span><span class="losses">14</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 61.111111111111114%;"></div>
+                  <div class="segment segment-loss" style="width: 38.88888888888889%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="52">
+                <div class="group" rel="neighbour-tooltip">
+                  52
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 34.61538461538461%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 46.15384615384615%;"></div>
+                    <div class="segment segment-only-banned" style="width: 19.230769230769234%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">18</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">24</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">10</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">52</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.46">
+                3.46
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 69.19999999999999%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2211">
+                2,211
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 85.03846153846155%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3318">
+                3,318
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 97.58823529411764%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7667610-fnatic/tooltip" href="/esports/teams/7667610-fnatic"><span class="team-image"><img alt="Fnatic" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/456237013.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Fnatic in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7667610"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7667610-fnatic/tooltip" href="/esports/teams/7667610-fnatic"><span class="team-text team-text-full">Fnatic</span></a></td>
+              <td class="r-tab r-group-1" data-value="55.6">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">5</span><span class="sep">-</span><span class="color-stat-loss">4</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 55.55555555555556%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 44.44444444444444%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">5</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">4</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">9</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="66.7">
+                <span class="game-record"><span class="wins">22</span><span class="sep">-</span><span class="losses">11</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 66.66666666666666%;"></div>
+                  <div class="segment segment-loss" style="width: 33.33333333333333%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="72">
+                <div class="group" rel="neighbour-tooltip">
+                  72
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 33.33333333333333%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 45.83333333333333%;"></div>
+                    <div class="segment segment-only-banned" style="width: 20.833333333333336%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">24</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">33</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">15</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">72</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.21">
+                3.21
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 64.2%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2420">
+                2,420
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 93.07692307692308%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3185">
+                3,185
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 93.67647058823529%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9434010-og/tooltip" href="/esports/teams/9434010-og"><span class="team-image"><img alt="OG" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/975375718.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by OG in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=9434010"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9434010-og/tooltip" href="/esports/teams/9434010-og"><span class="team-text team-text-full">OG</span></a></td>
+              <td class="r-tab r-group-1" data-value="66.7">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">4</span><span class="sep">-</span><span class="color-stat-loss">2</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 66.66666666666666%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 33.33333333333333%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">4</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">2</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">6</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="75.9">
+                <span class="game-record"><span class="wins">22</span><span class="sep">-</span><span class="losses">7</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 75.86206896551724%;"></div>
+                  <div class="segment segment-loss" style="width: 24.137931034482758%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="61">
+                <div class="group" rel="neighbour-tooltip">
+                  61
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 39.34426229508197%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 37.704918032786885%;"></div>
+                    <div class="segment segment-only-banned" style="width: 22.950819672131146%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">24</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">23</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">14</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">61</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="2.72">
+                2.72
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 54.400000000000006%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2406">
+                2,406
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 92.53846153846153%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3184">
+                3,184
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 93.64705882352942%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8984373-psg.lgd/tooltip" href="/esports/teams/8984373-psg.lgd"><span class="team-image"><img alt="PSG.LGD" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/899591633.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by PSG.LGD in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8984373"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8984373-psg.lgd/tooltip" href="/esports/teams/8984373-psg.lgd"><span class="team-text team-text-full">PSG.LGD</span></a></td>
+              <td class="r-tab r-group-1" data-value="85.7">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">6</span><span class="sep">-</span><span class="color-stat-loss">1</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 85.71428571428571%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 14.285714285714285%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">6</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">1</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">7</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="72.4">
+                <span class="game-record"><span class="wins">21</span><span class="sep">-</span><span class="losses">8</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 72.41379310344827%;"></div>
+                  <div class="segment segment-loss" style="width: 27.586206896551722%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="67">
+                <div class="group" rel="neighbour-tooltip">
+                  67
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 22.388059701492537%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 61.19402985074627%;"></div>
+                    <div class="segment segment-only-banned" style="width: 16.417910447761194%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">15</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">41</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">11</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">67</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="4.36">
+                4.36
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 87.20000000000002%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2474">
+                2,474
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 95.15384615384616%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3196">
+                3,196
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 94%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9299799-team-falcons/tooltip" href="/esports/teams/9299799-team-falcons"><span class="team-image"><img alt="Team Falcons" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/841330375.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Team Falcons in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=9299799"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9299799-team-falcons/tooltip" href="/esports/teams/9299799-team-falcons"><span class="team-text team-text-full">Team Falcons</span></a></td>
+              <td class="r-tab r-group-1" data-value="57.1">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">4</span><span class="sep">-</span><span class="color-stat-loss">3</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 57.14285714285714%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 42.857142857142854%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">4</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">3</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">7</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="75.8">
+                <span class="game-record"><span class="wins">25</span><span class="sep">-</span><span class="losses">8</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 75.75757575757575%;"></div>
+                  <div class="segment segment-loss" style="width: 24.242424242424242%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="72">
+                <div class="group" rel="neighbour-tooltip">
+                  72
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 27.77777777777778%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 58.333333333333336%;"></div>
+                    <div class="segment segment-only-banned" style="width: 13.88888888888889%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">20</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">42</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">10</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">72</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="2.53">
+                2.53
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 50.6%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2338">
+                2,338
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 89.92307692307693%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3171">
+                3,171
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 93.26470588235294%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9409138-xtreme-gaming/tooltip" href="/esports/teams/9409138-xtreme-gaming"><span class="team-image"><img alt="Xtreme Gaming" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/477488926.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Xtreme Gaming in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=9409138"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/9409138-xtreme-gaming/tooltip" href="/esports/teams/9409138-xtreme-gaming"><span class="team-text team-text-full">Xtreme Gaming</span></a></td>
+              <td class="r-tab r-group-1" data-value="80.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">4</span><span class="sep">-</span><span class="color-stat-loss">1</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 80%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 20%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">4</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">1</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">5</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="79.2">
+                <span class="game-record"><span class="wins">19</span><span class="sep">-</span><span class="losses">5</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 79.16666666666666%;"></div>
+                  <div class="segment segment-loss" style="width: 20.833333333333336%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="54">
+                <div class="group" rel="neighbour-tooltip">
+                  54
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 35.18518518518518%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 42.592592592592595%;"></div>
+                    <div class="segment segment-only-banned" style="width: 22.22222222222222%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">19</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">23</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">12</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">54</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="4.66">
+                4.66
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 93.2%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2386">
+                2,386
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 91.76923076923077%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3331">
+                3,331
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 97.97058823529412%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7594672-alliance/tooltip" href="/esports/teams/7594672-alliance"><span class="team-image"><img alt="Alliance" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/314073238.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Alliance in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=7594672"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/7594672-alliance/tooltip" href="/esports/teams/7594672-alliance"><span class="team-text team-text-full">Alliance</span></a></td>
+              <td class="r-tab r-group-1" data-value="60.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">6</span><span class="sep">-</span><span class="color-stat-loss">4</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 60%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 40%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">6</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">4</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">10</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="82.1">
+                <span class="game-record"><span class="wins">23</span><span class="sep">-</span><span class="losses">5</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 82.14285714285714%;"></div>
+                  <div class="segment segment-loss" style="width: 17.857142857142858%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="83">
+                <div class="group" rel="neighbour-tooltip">
+                  83
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 18.072289156626507%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 67.46987951807229%;"></div>
+                    <div class="segment segment-only-banned" style="width: 14.457831325301203%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">15</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">56</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">12</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">83</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.73">
+                3.73
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 74.6%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2338">
+                2,338
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 89.92307692307693%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3125">
+                3,125
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 91.91176470588235%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8143714-gaimin-gladiators/tooltip" href="/esports/teams/8143714-gaimin-gladiators"><span class="team-image"><img alt="Gaimin Gladiators" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/600530358.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Gaimin Gladiators in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8143714"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8143714-gaimin-gladiators/tooltip" href="/esports/teams/8143714-gaimin-gladiators"><span class="team-text team-text-full">Gaimin Gladiators</span></a></td>
+              <td class="r-tab r-group-1" data-value="100.0">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">5</span><span class="sep">-</span><span class="color-stat-loss">0</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 100%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 0%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">5</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">0</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">5</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="77.4">
+                <span class="game-record"><span class="wins">24</span><span class="sep">-</span><span class="losses">7</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 77.41935483870968%;"></div>
+                  <div class="segment segment-loss" style="width: 22.58064516129032%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="81">
+                <div class="group" rel="neighbour-tooltip">
+                  81
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 22.22222222222222%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 61.72839506172839%;"></div>
+                    <div class="segment segment-only-banned" style="width: 16.049382716049383%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">18</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">50</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">13</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">81</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="4.26">
+                4.26
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 85.2%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2584">
+                2,584
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 99.38461538461539%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3174">
+                3,174
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 93.35294117647058%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+            <tr>
+              <td><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8297239-entity/tooltip" href="/esports/teams/8297239-entity"><span class="team-image"><img alt="Entity" class="img-team img-icon" src="https://riki.dotabuff.com/t/l/400335170.png" /></span></a></td>
+              <td><a class="filter-more" rel="tooltip" title="View series played by Entity in DreamLeague Season 22" href="/esports/leagues/16435-dreamleague-season-22/series?team_id=8297239"><i class="fa fa-search-plus"></i></a><a class="esports-team esports-link team-link" rel="tooltip-remote" data-tooltip-url="/esports/teams/8297239-entity/tooltip" href="/esports/teams/8297239-entity"><span class="team-text team-text-full">Entity</span></a></td>
+              <td class="r-tab r-group-1" data-value="85.7">
+                <div class="group" rel="neighbour-tooltip">
+                  <span class="game-record"><span class="color-stat-win">6</span><span class="sep">-</span><span class="color-stat-loss">1</span></span>
+                  <div class="bar bar-default">
+                    <div class="segment segment-win" style="width: 85.71428571428571%;"></div>
+                    <div class="segment segment-ties" style="width: 0%;"></div>
+                    <div class="segment segment-loss" style="width: 14.285714285714285%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-win">6</span> <span class="legend legend-win">series won</span>
+                  <li></li>
+                  <span class="key color-stat-ties">0</span> <span class="legend legend-ties">series tied</span>
+                  <li></li>
+                  <span class="key color-stat-loss">1</span> <span class="legend legend-loss">series lost</span>
+                  <li></li>
+                  <span class="key color-stat-total">7</span> <span class="legend legend-total">series played</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-2" data-value="60.0">
+                <span class="game-record"><span class="wins">18</span><span class="sep">-</span><span class="losses">12</span></span>
+                <div class="bar bar-default">
+                  <div class="segment segment-win" style="width: 60%;"></div>
+                  <div class="segment segment-loss" style="width: 40%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-2" data-value="75">
+                <div class="group" rel="neighbour-tooltip">
+                  75
+                  <div class="bar bar-default">
+                    <div class="segment segment-only-picked" style="width: 22.666666666666664%;"></div>
+                    <div class="segment segment-picked-and-banned" style="width: 54.666666666666664%;"></div>
+                    <div class="segment segment-only-banned" style="width: 22.666666666666664%;"></div>
+                  </div>
+                </div>
+                <ul class="key-legend-tooltip">
+                  <span class="key color-stat-only-picked">17</span> <span class="legend legend-only-picked">heroes were picked by this team (and never banned against them).</span>
+                  <li></li>
+                  <span class="key color-stat-picked-and-banned">41</span> <span class="legend legend-picked-and-banned">heroes were picked by this team and banned against them.</span>
+                  <li></li>
+                  <span class="key color-stat-only-banned">17</span> <span class="legend legend-only-banned">heroes were banned against this team (and never picked by this team).</span>
+                  <li></li>
+                  <span class="key color-stat-total">75</span> <span class="legend legend-total">heroes were contested by this team, or against them, in total.</span>
+                </ul>
+              </td>
+              <td class="r-tab r-group-3" data-value="3.84">
+                3.84
+                <div class="bar bar-default">
+                  <div class="segment segment-kda" style="width: 76.8%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="2544">
+                2,544
+                <div class="bar bar-default">
+                  <div class="segment segment-gold" style="width: 97.84615384615385%;"></div>
+                </div>
+              </td>
+              <td class="r-tab r-group-3" data-value="3055">
+                3,055
+                <div class="bar bar-default">
+                  <div class="segment segment-experience" style="width: 89.8529411764706%;"></div>
+                </div>
+              </td>
+            </tr>
+          
+                            </tbody>
+                          </table>
+                        </article>
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </body>
+          </html>
+
+      at Object.<anonymous> (tests/api.integration.test.ts:74:15)
+
+  console.log
+    Leagues/Mock: 200 {
+      "leagueName": "RD2L Season 33"
+    }
+
+      at Object.<anonymous> (tests/api.integration.test.ts:80:15)
+
+  console.log
+    Leagues/Cached: 200 {
+      "leagueName": "RD2L Season 33"
+    }
+
+      at Object.<anonymous> (tests/api.integration.test.ts:89:15)
+
+  console.log
+    Leagues/Polling: [
+      { status: 200, body: '{\n  "leagueName": "RD2L Season 33"\n}' },
+      { status: 200, body: '{\n  "leagueName": "RD2L Season 33"\n}' },
+      { status: 200, body: '{\n  "leagueName": "RD2L Season 33"\n}' },
+      { status: 200, body: '{\n  "leagueName": "RD2L Season 33"\n}' },
+      { status: 200, body: '{\n  "leagueName": "RD2L Season 33"\n}' }
+    ]
+
+      at Object.<anonymous> (tests/api.integration.test.ts:95:15)
+

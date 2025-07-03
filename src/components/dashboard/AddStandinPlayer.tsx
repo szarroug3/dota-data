@@ -23,7 +23,7 @@ async function fetchOpenDotaPlayer(playerId: string) {
     // Convert Steam64 to Steam32
     id = (BigInt(playerId) - 76561197960265728n).toString();
   }
-  const res = await fetch(`https://api.opendota.com/api/players/${id}`);
+  const res = await fetch(`/api/players/${id}/data`);
   if (!res.ok) throw new Error("Player not found");
   return res.json();
 }

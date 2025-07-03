@@ -1,7 +1,7 @@
 import { useFetchTracker } from "@/contexts/data-fetching-context";
 import { useTeam } from "@/contexts/team-context";
-import { fetchData } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { fetchData } from '@/lib/fetch-data';
+import { useEffect, useRef, useState } from "react";
 
 // Types for the hook responses
 export interface DataFetchingState<T> {
@@ -76,17 +76,17 @@ export interface MatchHistory {
     bans: string[];
     opponentPicks: string[];
     opponentBans: string[];
-    draftOrder: any[];
+    draftOrder: unknown[];
     highlights: string[];
-    playerStats: Record<string, any>;
+    playerStats: Record<string, unknown>;
     games: Array<{
       picks: string[];
       bans: string[];
       opponentPicks: string[];
       opponentBans: string[];
-      draftOrder: any[];
+      draftOrder: unknown[];
       highlights: string[];
-      playerStats: Record<string, any>;
+      playerStats: Record<string, unknown>;
       duration: string;
       score: string;
     }>;
@@ -234,15 +234,14 @@ interface UseDataFetchingResult<T> {
 
 export function useDataFetching<T>(
   endpoint: string | null,
-  dependencies: any[] = [],
   fetchKey?: string,
 ): UseDataFetchingResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Use the data fetching context for tracking if a fetch key is provided
-  const fetchTracker = fetchKey ? useFetchTracker(fetchKey) : null;
+  // Always call useFetchTracker, but only use it if fetchKey is provided
+  const fetchTracker = useFetchTracker(fetchKey || '__no_fetch_key__');
 
   useEffect(() => {
     let isMounted = true;
@@ -252,8 +251,12 @@ export function useDataFetching<T>(
         setLoading(true);
         setError(null);
 
+        // Debug logging
+        console.log('[useDataFetching] Starting fetch:', { endpoint, fetchKey });
+
         // Don't fetch if endpoint is null
         if (!endpoint) {
+          console.log('[useDataFetching] No endpoint provided, skipping fetch');
           if (isMounted) {
             setData(null);
             setLoading(false);
@@ -261,16 +264,23 @@ export function useDataFetching<T>(
           return;
         }
 
-        // Use fetch tracker if available for debugging
-        const result = fetchTracker 
+        // Use fetch tracker if fetchKey is provided
+        const result = fetchKey
           ? await fetchTracker.trackFetch(fetchData<T>(endpoint))
           : await fetchData<T>(endpoint);
+
+        console.log('[useDataFetching] Fetch completed:', {
+          hasResult: !!result,
+          resultType: typeof result,
+          resultKeys: result && typeof result === 'object' ? Object.keys(result) : null
+        });
 
         if (isMounted) {
           setData(result);
           setLoading(false);
         }
       } catch (err) {
+        console.error('[useDataFetching] Fetch error:', err);
         if (isMounted) {
           setError(err instanceof Error ? err.message : "An error occurred");
           setLoading(false);
@@ -283,7 +293,7 @@ export function useDataFetching<T>(
     return () => {
       isMounted = false;
     };
-  }, dependencies);
+  }, [endpoint, fetchKey, fetchTracker]);
 
   return { data, loading, error };
 }
@@ -297,58 +307,72 @@ export function usePlayerStats(
   const url = accountId
     ? `/api/players/${accountId}/stats?name=${encodeURIComponent(playerName)}&role=${encodeURIComponent(role)}`
     : null;
-
-  return useDataFetching<PlayerStats>(url, [accountId, playerName, role], `player-stats-${accountId}`);
+  const fetchKey = `player-stats-${accountId}`;
+  return useDataFetching<PlayerStats>(url, fetchKey);
 }
 
 // Hook for fetching match history
 export function useMatchHistory(accountIds: string[] | null) {
   const { currentTeam } = useTeam();
   const teamId = currentTeam?.id;
-
   const url =
     accountIds && accountIds.length > 0 && teamId
       ? `/api/teams/${teamId}/match-history?accountIds=${accountIds.join(",")}`
       : null;
-
-  return useDataFetching<MatchHistory>(url, [accountIds, teamId], 'match-history');
+  const fetchKey = 'match-history';
+  
+  // Debug logging
+  console.log('[useMatchHistory] Hook called with:', {
+    accountIds,
+    teamId,
+    url,
+    hasCurrentTeam: !!currentTeam
+  });
+  
+  const result = useDataFetching<MatchHistory>(url, fetchKey);
+  
+  // Debug logging for result
+  console.log('[useMatchHistory] Hook result:', {
+    loading: result.loading,
+    error: result.error,
+    hasData: !!result.data,
+    dataKeys: result.data ? Object.keys(result.data) : null
+  });
+  
+  return result;
 }
 
 // Hook for fetching draft suggestions
 export function useDraftSuggestions(accountIds: string[] | null) {
   const { currentTeam } = useTeam();
   const teamId = currentTeam?.id;
-
   const url =
     accountIds && accountIds.length > 0 && teamId
       ? `/api/teams/${teamId}/draft-suggestions?accountIds=${accountIds.join(",")}`
       : null;
-
-  return useDataFetching<DraftSuggestions>(url, [accountIds, teamId], 'draft-suggestions');
+  const fetchKey = 'draft-suggestions';
+  return useDataFetching<DraftSuggestions>(url, fetchKey);
 }
 
 // Hook for fetching team analysis
 export function useTeamAnalysis(accountIds: string[] | null) {
   const { currentTeam } = useTeam();
   const teamId = currentTeam?.id;
-
   const url =
     accountIds && accountIds.length > 0 && teamId
       ? `/api/teams/${teamId}/analysis?accountIds=${accountIds.join(",")}`
       : null;
-
-  return useDataFetching<TeamAnalysis>(url, [accountIds, teamId], 'team-analysis');
+  const fetchKey = 'team-analysis';
+  return useDataFetching<TeamAnalysis>(url, fetchKey);
 }
 
 // Hook for fetching meta insights
 export function useMetaInsights(
   timeRange: "week" | "month" | "patch" = "week",
 ) {
-  return useDataFetching<MetaInsights>(
-    `/api/meta/insights?timeRange=${timeRange}`,
-    [timeRange],
-    `meta-insights-${timeRange}`,
-  );
+  const url = `/api/meta/insights?timeRange=${timeRange}`;
+  const fetchKey = `meta-insights-${timeRange}`;
+  return useDataFetching<MetaInsights>(url, fetchKey);
 }
 
 // Hook for fetching team data based on current team context
@@ -371,4 +395,41 @@ export function useTeamData() {
     metaInsights,
     hasTeam: !!currentTeam,
   };
+}
+
+// Batch fetch match details for a list of match IDs
+export function useBatchMatchDetails(matchIds: string[] | null) {
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  // Simple in-memory cache for the session
+  const cacheRef = useRef<Record<string, any>>({});
+
+  useEffect(() => {
+    if (!matchIds || matchIds.length === 0) {
+      setMatches([]);
+      return;
+    }
+    let isMounted = true;
+    setLoading(true);
+    // Find which IDs need to be fetched
+    const toFetch = matchIds.filter(id => !cacheRef.current[id]);
+    const fetches = toFetch.map(id =>
+      fetch(`/api/matches/${id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) cacheRef.current[id] = data;
+        })
+        .catch(() => {})
+    );
+    Promise.all(fetches).then(() => {
+      if (isMounted) {
+        // Return matches in the same order as matchIds
+        setMatches(matchIds.map(id => cacheRef.current[id] || { id, error: true }));
+        setLoading(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [JSON.stringify(matchIds)]);
+
+  return { matches, loading };
 }

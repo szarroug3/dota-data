@@ -17,6 +17,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...(config.watchOptions || {}),
+        ignored: [
+          ...(Array.isArray(config.watchOptions?.ignored)
+            ? config.watchOptions.ignored
+            : typeof config.watchOptions?.ignored === 'string'
+              ? [config.watchOptions.ignored]
+              : []),
+          'mock-data/**',
+        ].filter(v => typeof v === 'string' && v.length > 0),
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

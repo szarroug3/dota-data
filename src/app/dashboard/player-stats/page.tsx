@@ -35,7 +35,7 @@ export default function PlayerStatsPage() {
         title="Player Statistics"
         description={
           currentTeam
-            ? `Player stats for ${currentTeam.name}`
+            ? `Player stats for ${currentTeam.teamName}`
             : "No team selected. Please add a team in Team Management."
         }
       />

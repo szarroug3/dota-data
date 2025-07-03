@@ -35,11 +35,37 @@ export default defineConfig([
       // General rules
       'prefer-const': 'warn',
       'no-empty': 'warn',
+      
+      // Complexity and length rules
+      'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
+      'max-depth': ['warn', { max: 4 }],
+      'complexity': ['warn', { max: 10 }],
+      
+      // Disallow in-line require and dynamic import()
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='require']",
+          message: 'All require() calls must be at the top-level. In-line require is not allowed.'
+        },
+        {
+          selector: 'ImportExpression',
+          message: 'Dynamic import() is not allowed except for code-splitting. All imports should be at the top.'
+        }
+      ],
     },
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     ignores: ['node_modules/**', '.next/**', 'out/**'],
+    settings: {
+      next: {
+        rootDir: '.',
+        appDir: ['src/app'],
+        pagesDir: ['src/pages'],
+      },
+    },
   },
   prettier,
 ]);

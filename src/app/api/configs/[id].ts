@@ -1,25 +1,85 @@
-import { Redis } from "@upstash/redis";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { cacheService } from '@/lib/cache-service';
+import { corsOptionsHandler, withCORS } from '@/lib/cors';
+import { getDashboardConfigCacheKey } from '@/lib/utils/cache-keys';
+import { NextRequest, NextResponse } from 'next/server';
 
-const redis = Redis.fromEnv();
+/**
+ * @openapi
+ * /configs/{id}:
+ *   get:
+ *     tags:
+ *       - Configs
+ *     summary: Get config by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Config ID
+ *     responses:
+ *       200:
+ *         description: Config data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties: true
+ *   post:
+ *     tags:
+ *       - Configs
+ *     summary: Update config by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Config updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const { id } = req.query;
-  if (typeof id !== "string")
-    return res.status(400).json({ error: "Invalid id" });
-
-  if (req.method === "GET") {
-    const config = await redis.get(`dashboard-config:${id}`);
-    if (!config) return res.status(404).json({ error: "Not found" });
-    return res.status(200).json(config);
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
+  const cacheKey = getDashboardConfigCacheKey(id);
+  const filename = `${cacheKey}.json`;
+  const CONFIG_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
+  if (!id || typeof id !== 'string') {
+    return withCORS(NextResponse.json({ error: 'Invalid id' }, { status: 400 }));
   }
-  if (req.method === "POST") {
-    const config = req.body;
-    await redis.set(`dashboard-config:${id}`, config);
-    return res.status(200).json({ success: true });
+  const config = await cacheService.get(cacheKey, filename, CONFIG_TTL);
+  if (!config) {
+    return withCORS(NextResponse.json({ error: 'Not found' }, { status: 404 }));
   }
-  return res.status(405).json({ error: "Method not allowed" });
+  // Sliding expiry: extend TTL on access
+  await cacheService.set('dashboard-config', cacheKey, config, CONFIG_TTL, filename);
+  return withCORS(NextResponse.json(config));
+}
+
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
+  const cacheKey = getDashboardConfigCacheKey(id);
+  const filename = `${cacheKey}.json`;
+  const CONFIG_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
+  if (!id || typeof id !== 'string') {
+    return withCORS(NextResponse.json({ error: 'Invalid id' }, { status: 400 }));
+  }
+  const config = await request.json();
+  await cacheService.set('dashboard-config', cacheKey, config, CONFIG_TTL, filename);
+  return withCORS(NextResponse.json({ success: true }));
+}
+
+export async function OPTIONS() {
+  return corsOptionsHandler();
 }

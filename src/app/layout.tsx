@@ -39,7 +39,9 @@ export default function RootLayout({
                   <HeroCacheInitializer />
                   <div className="flex min-h-screen gap-8">
                     <Sidebar />
-                    <Layout>{children}</Layout>
+                    <main className="flex-1 ml-4 md:ml-8">
+                      <Layout>{children}</Layout>
+                    </main>
                   </div>
                 </SidebarProvider>
               </TeamProvider>

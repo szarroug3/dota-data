@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getMatchResult, getOpponentName, getScoreWithResult, getTeamSide } from "@/lib/utils";
+import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getMatchResult, getOpponentName, getScoreWithResult, getTeamSide, logWithTimestamp } from "@/lib/utils";
 import { EyeOff, RefreshCw } from "lucide-react";
 
 // Custom icon components from sidebar
@@ -71,6 +71,9 @@ export default function MatchCard({
   isRefreshing = false,
   onRefresh,
 }: MatchCardProps) {
+  // Debug log for selection state
+  logWithTimestamp('log', `[MatchCard] isSelected: ${isSelected}, match.id: ${match.id}`);
+
   let matchUrl = "";
   let matchLogo = null;
   if (preferredSite === "dotabuff") {
@@ -121,9 +124,7 @@ export default function MatchCard({
 
   return (
     <div
-      className={`p-4 border-b cursor-pointer hover:bg-muted/30 transition-colors relative ${
-        isSelected ? "bg-primary/10 border-l-4 border-l-primary" : ""
-      } ${isRefreshing ? "opacity-75" : ""}`}
+      className={`p-4 border-b cursor-pointer hover:bg-muted/30 transition-colors relative ${isSelected ? "bg-primary/10 border-l-4 border-l-primary" : "border-l-4 !border-l-transparent"} ${isRefreshing ? "opacity-75" : ""}`}
       onClick={() => onSelect(match.id)}
     >
       <div className="flex justify-between items-start">

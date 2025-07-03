@@ -1,17 +1,8 @@
 // This module only works on the server side
-let fs: any = null;
-let path: any = null;
-
-// Only import Node.js modules on the server side
-if (typeof window === "undefined") {
-  try {
-    fs = require("fs");
-    path = require("path");
-  } catch (error) {}
-}
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Static import for fake data generator to avoid dynamic import hanging
-import { generateFakeData } from './fake-data-generator';
 import { logWithTimestamp } from './utils';
 
 interface MockDataConfig {
@@ -25,179 +16,195 @@ function getServiceFromEndpoint(endpoint: string): 'opendota' | 'dotabuff' | 'st
   if (endpoint.includes('dotabuff.com')) return 'dotabuff';
   if (endpoint.includes('stratz.com')) return 'stratz';
   if (endpoint.includes('dota2protracker.com')) return 'd2pt';
+  
+  // If it's a relative endpoint (doesn't start with http), assume it's OpenDota
+  if (!endpoint.startsWith('http')) {
+    return 'opendota';
+  }
+  
   return 'unknown';
 }
 
 // Check if a specific service should be mocked
-function shouldMockService(service: 'opendota' | 'dotabuff' | 'stratz' | 'd2pt' | 'unknown'): boolean {
+export function shouldMockService(service: 'opendota' | 'dotabuff' | 'stratz' | 'd2pt' | 'db' | 'unknown'): boolean {
+  if (process.env.USE_MOCK_API === 'true') return true;
   switch (service) {
-    case 'opendota':
-      return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_OPENDOTA === 'true';
-    case 'dotabuff':
-      return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DOTABUFF === 'true';
-    case 'stratz':
-      return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_STRATZ === 'true';
-    case 'd2pt':
-      return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_D2PT === 'true';
-    case 'unknown':
-    default:
-      return process.env.USE_MOCK_API === 'true';
+    case 'opendota': return process.env.USE_MOCK_OPENDOTA === 'true';
+    case 'dotabuff': return process.env.USE_MOCK_DOTABUFF === 'true';
+    case 'stratz': return process.env.USE_MOCK_STRATZ === 'true';
+    case 'd2pt': return process.env.USE_MOCK_D2PT === 'true';
+    case 'db': return process.env.USE_MOCK_DB === 'true';
+    default: throw new Error('Unknown service passed to shouldMockService');
   }
 }
 
 const config: MockDataConfig = {
   enabled:
     process.env.NODE_ENV === "development" && typeof window === "undefined",
-  basePath:
-    typeof window === "undefined" ? path?.join(process.cwd(), "mock-data") : "",
+  basePath: "",
 };
 
-// NOTE: Only call writeMockData after a real API/network fetch, not when reading from cache or mock data.
-export async function writeMockData(
-  filename: string,
-  data: any,
-  endpoint?: string,
-): Promise<void> {
-  if (!config.enabled || !fs || !path) return;
-
-  // Check if this service should be mocked
-  if (endpoint) {
-    const service = getServiceFromEndpoint(endpoint);
-    if (!shouldMockService(service)) {
-      logWithTimestamp('log', `[MOCK ${service.toUpperCase()}] Skipping mock data write for ${endpoint} - service not mocked`);
-      return;
-    }
-  }
-
-  try {
-    // Ensure the mock-data directory exists
-    if (!fs.existsSync(config.basePath)) {
-      fs.mkdirSync(config.basePath, { recursive: true });
-    }
-
-    const filePath = path.join(config.basePath, filename);
-    const jsonData = JSON.stringify(data, null, 2);
-
-    fs.writeFileSync(filePath, jsonData, "utf8");
-    
-    if (endpoint && endpoint.includes('/matches/')) {
-      logWithTimestamp('log', `[MOCK] Wrote match mock data to file: ${filePath}`);
-    }
-
-    if (endpoint) {
-      const service = getServiceFromEndpoint(endpoint);
-      logWithTimestamp('log', `[MOCK ${service.toUpperCase()}] Wrote mock data for ${endpoint} to file: ${filename}`);
-    } else {
-      logWithTimestamp('log', `[MOCK] Wrote mock data to file: ${filename}`);
-    }
-  } catch (error) {}
+if (typeof window !== 'undefined') {
+  throw new Error('[mock-data-writer.ts] Mocking logic should never run on the client!');
 }
 
-export async function readMockData(filename: string, endpoint?: string): Promise<any | null> {
-  logWithTimestamp('log', `[readMockData] Starting for filename: ${filename}, endpoint: ${endpoint}`);
-  
+// NOTE: Only call writeMockData after a real API/network fetch, not when reading from cache or mock data.
+async function ensureDirAndWriteFile(filePath: string, data: unknown) {
+  if (!fs || !path) return;
+  const dirPath = path.dirname(filePath);
+  await fs.promises.mkdir(dirPath, { recursive: true });
+  const jsonData = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  await fs.promises.writeFile(filePath, jsonData, "utf8");
+}
+
+function shouldWriteForService(endpoint?: string): boolean {
+  if (!endpoint) return true;
+  const service = getServiceFromEndpoint(endpoint);
+  return shouldMockService(service);
+}
+
+function logWriteMockData(endpoint: string | undefined, filePath: string, filename: string) {
+  if (endpoint && endpoint.includes('/matches/')) {
+    logWithTimestamp('log', `[MOCK] Wrote match mock data to file: ${filePath}`);
+  }
+  if (endpoint) {
+    const service = getServiceFromEndpoint(endpoint);
+    logWithTimestamp('log', `[MOCK ${service.toUpperCase()}] Wrote mock data for ${endpoint} to file: ${filename}`);
+  } else {
+    logWithTimestamp('log', `[MOCK] Wrote mock data to file: ${filename}`);
+  }
+}
+
+export async function writeMockData(
+  filename: string,
+  data: unknown,
+  endpoint?: string,
+): Promise<void> {
+  logWithTimestamp('log', `[writeMockData] Called with filename: ${filename}, endpoint: ${endpoint}, data type: ${typeof data}, data length: ${typeof data === 'string' ? data.length : 'N/A'}`);
+  if (!config.enabled || !fs || !path) {
+    logWithTimestamp('log', `[writeMockData] Not enabled or fs/path not available. enabled: ${config.enabled}, fs: ${!!fs}, path: ${!!path}`);
+    return;
+  }
+  const shouldWriteReal = process.env.WRITE_REAL_DATA_TO_MOCK === 'true';
+  const shouldWriteFake = process.env.USE_MOCK_API === 'true';
+  if (!shouldWriteReal && !shouldWriteFake) {
+    logWithTimestamp('log', `[writeMockData] Neither WRITE_REAL_DATA_TO_MOCK nor USE_MOCK_API is true, skipping write for ${filename}`);
+    return;
+  }
+  if (!shouldWriteForService(endpoint)) {
+    logWithTimestamp('log', `[writeMockData] Service should not be mocked for endpoint: ${endpoint}`);
+    return;
+  }
+  try {
+    const filePath = path ? path.join(process.cwd(), "mock-data", filename) : filename;
+    logWithTimestamp('log', `[writeMockData] Writing to file: ${filePath}`);
+    await ensureDirAndWriteFile(filePath, data);
+    logWriteMockData(endpoint, filePath, filename);
+  } catch {
+    logWithTimestamp('error', `[writeMockData] Error writing mock data for ${filename}`);
+  }
+}
+
+// --- MOCK/REAL UTILITY FUNCTIONS ---
+/**
+ * Returns true if real or fake data should be written to disk as mock data.
+ * - Always true for fake data in mock mode.
+ * - True for real data in real mode if WRITE_REAL_DATA_TO_MOCK is true.
+ */
+export function shouldWriteMockData({ isFake, isReal }: { isFake?: boolean, isReal?: boolean }): boolean {
+  if (isFake && process.env.NODE_ENV === 'development' && typeof window === 'undefined') return true;
+  if (isReal && process.env.WRITE_REAL_DATA_TO_MOCK === 'true') return true;
+  return false;
+}
+
+/**
+ * Reads mock data from disk for the given filename.
+ * Returns the parsed data if the file exists, or null if not found.
+ * No service or endpoint logic is handled here; the caller is responsible for all context.
+ */
+export async function readMockData(filename: string, _params?: Record<string, string | number>): Promise<unknown | null> {
+  logWithTimestamp('log', `[readMockData] Attempting to read mock file: ${filename}`);
   if (!config.enabled || !fs || !path) {
     logWithTimestamp('log', `[readMockData] Mock data disabled or fs/path not available`);
     return null;
   }
-
-  // Check if this service should be mocked
-  if (endpoint) {
-    const service = getServiceFromEndpoint(endpoint);
-    logWithTimestamp('log', `[readMockData] Detected service: ${service}`);
-    if (!shouldMockService(service)) {
-      logWithTimestamp('log', `[readMockData] Service ${service} should not be mocked`);
-      return null;
-    }
-    logWithTimestamp('log', `[readMockData] Service ${service} should be mocked`);
-  }
-
   try {
-    const filePath = path.join(config.basePath, filename);
+    const filePath = path ? path.join(process.cwd(), "mock-data", filename) : filename;
     logWithTimestamp('log', `[readMockData] Checking file path: ${filePath}`);
-    
     if (!fs.existsSync(filePath)) {
       logWithTimestamp('log', `[readMockData] File does not exist: ${filePath}`);
-      // If mock file doesn't exist, generate fake data
-      if (endpoint) {
-        try {
-          logWithTimestamp('log', `[readMockData] Generating fake data for missing file: ${filename}`);
-          const fakeData = generateFakeData(endpoint);
-          logWithTimestamp('log', `[readMockData] Generated fake data for missing file: ${filename}`);
-          
-          // Write the generated fake data to disk so it persists
-          const jsonData = JSON.stringify(fakeData, null, 2);
-          fs.writeFileSync(filePath, jsonData, "utf8");
-          logWithTimestamp('log', `[readMockData] Wrote generated fake data to: ${filePath}`);
-          
-          return fakeData;
-        } catch (error) {
-          logWithTimestamp('error', `[readMockData] Error generating fake data for ${filename}:`, error);
-          return null;
-        }
-      }
-      logWithTimestamp('log', `[readMockData] No endpoint provided, cannot generate fake data`);
       return null;
     }
-
     logWithTimestamp('log', `[readMockData] File exists, reading: ${filePath}`);
-    const fileContent = fs.readFileSync(filePath, "utf8");
+    const fileContent = await fs.promises.readFile(filePath, "utf8");
     logWithTimestamp('log', `[readMockData] Read file content, length: ${fileContent.length}`);
-    
-    const data = JSON.parse(fileContent);
-    logWithTimestamp('log', `[readMockData] Parsed JSON data successfully`);
-    
-    if (endpoint && endpoint.includes('/matches/')) {
-      logWithTimestamp('log', `[MOCK] Read match mock data from file: ${filePath}`);
+    if (filename.endsWith('.html')) {
+      logWithTimestamp('log', `[readMockData] Returning raw HTML content for file: ${filename}`);
+      return fileContent;
+    } else if (filename.endsWith('.json')) {
+      const data = JSON.parse(fileContent);
+      logWithTimestamp('log', `[readMockData] Parsed JSON data successfully`);
+      return data;
+    } else {
+      logWithTimestamp('error', `[readMockData] Unknown file type for: ${filename}`);
+      throw new Error(`Uknown file type for: ${filename}`)
     }
-    
-    return data;
-  } catch (error) {
-    logWithTimestamp('error', `[readMockData] Error reading mock data from ${filename}:`, error);
+  } catch {
+    logWithTimestamp('error', `[readMockData] Error reading mock data from ${filename}`);
     return null;
   }
 }
 
-export function generateMockFilename(
-  endpoint: string,
-  params?: Record<string, string | number>,
-): string {
-  // Determine service name from endpoint
-  let service = "unknown";
-  if (endpoint.includes("api.opendota.com")) {
-    service = "opendota";
-  } else if (endpoint.includes("dotabuff.com")) {
-    service = "dotabuff";
-  } else if (endpoint.includes("stratz.com")) {
-    service = "stratz";
-  } else if (endpoint.includes("dota2protracker.com")) {
-    service = "d2pt";
+// Refactor tryMock to extract helpers for paginated file loading and error handling
+async function loadPaginatedDotabuffHtml(filename: string): Promise<string> {
+  let page = 1;
+  let combinedHtml = '';
+  let foundAny = false;
+  while (true) {
+    const pageFilename = filename.replace('.html', `-page-${page}.html`);
+    const html = (await readMockData(pageFilename)) as string | null;
+    if (!html) break;
+    foundAny = true;
+    combinedHtml += html;
+    page++;
   }
+  return foundAny ? combinedHtml : '';
+}
 
-  if (service === "unknown") {
-    throw new Error(`[generateMockFilename] Unknown service for endpoint: ${endpoint}`);
+export async function tryMock(
+  service: 'opendota' | 'dotabuff' | 'stratz' | 'd2pt' | 'db' | 'unknown',
+  filename: string,
+  _params?: Record<string, string | number>
+): Promise<Response | null> {
+  logWithTimestamp('log', `[tryMock] Called for service=${service}, filename=${filename}`);
+  if (!filename) {
+    logWithTimestamp('error', '[tryMock] Filename is required');
+    throw new Error('[tryMock] Filename is required');
   }
-
-  // Clean the endpoint and create a filename
-  let filename = endpoint
-    .replace(/^https?:\/\/[^/]+\/api\//, "")
-    .replace(/\//g, "-")
-    .replace(/[^a-zA-Z0-9-]/g, "");
-
-  // Try to extract ids from endpoint
-  const idMatches = endpoint.match(/(match|player|league|team)[-_]?(\d+)/gi);
-  if (idMatches) {
-    filename +=
-      "-" + idMatches.map((id) => id.replace(/[^a-zA-Z0-9]/g, "")).join("-");
+  if (service === 'unknown') {
+    logWithTimestamp('error', `[tryMock] Unknown service for filename: ${filename}`);
+    throw new Error(`[tryMock] Unknown service for filename: ${filename}`);
   }
-
-  // Add params if provided
-  if (params && Object.keys(params).length > 0) {
-    const paramString = Object.entries(params)
-      .map(([key, value]) => `${key}-${value}`)
-      .join("-");
-    filename += `-${paramString}`;
+  if (shouldMockService(service)) {
+    logWithTimestamp('log', `[tryMock] Service ${service} should be mocked`);
+    if (
+      service === 'dotabuff' &&
+      filename.match(/^dotabuff-team-\d+-matches\.html$/)
+    ) {
+      logWithTimestamp('log', `[tryMock] Attempting to load paginated files for combined file: ${filename}`);
+      const combinedHtml = await loadPaginatedDotabuffHtml(filename);
+      if (combinedHtml) {
+        return new Response(combinedHtml, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      }
+    }
+    const data = await readMockData(filename);
+    if (data) {
+      if (filename.endsWith('.html')) {
+        return new Response(data as string, { status: 200, headers: { 'Content-Type': 'text/html' } });
+      } else if (filename.endsWith('.json')) {
+        return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+    }
   }
-
-  return `${service}-${filename}.json`;
+  return null;
 }

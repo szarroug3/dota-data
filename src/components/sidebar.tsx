@@ -1,23 +1,16 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useTeam } from "@/contexts/team-context";
-import { getQueueStatsFromAPI } from "@/lib/api";
 import { logWithTimestamp } from '@/lib/utils';
 import {
-  Activity,
   BarChart2,
   Calendar,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  Circle,
   Clipboard,
   ClipboardCheck,
-  Clock,
   Home,
   LineChart,
   Moon,
@@ -32,7 +25,7 @@ import { usePathname } from "next/navigation";
 import React, { ComponentType, useEffect, useRef, useState } from "react";
 
 // Minimal outline SVGs for external resources
-const DotabuffIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const DotabuffIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
   <svg
     className={className}
     viewBox="0 0 24 24"
@@ -57,7 +50,7 @@ const DotabuffIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
     </text>
   </svg>
 );
-const OpenDotaIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const OpenDotaIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
   <svg
     className={className}
     viewBox="0 0 20 20"
@@ -74,7 +67,7 @@ const OpenDotaIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
     <path d="M9 1 a8.5 8.5 0 0 1 0 18" stroke="#22c55e" fill="none" strokeWidth={1.5} />
   </svg>
 );
-const StratzIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+const StratzIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
   <svg className={className} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="30" cy="30" r="27" fill="none" stroke="url(#circleOutline)" strokeWidth="6" />
     <path fillRule="evenodd" d="M56.72 30C56.72 15.253 44.747 3.28 30 3.28S3.279 15.253 3.279 30 15.252 56.721 30 56.721 56.72 44.748 56.72 30z" fill="none"></path>
@@ -190,13 +183,14 @@ function mergeIconClassName(icon: any, extra: string) {
   return `${orig} ${extra}`.trim();
 }
 
-// External resource links with explicit typing for icon
-const externalResourceLinks: {
+type ExternalResourceLink = {
   label: string;
   url: string;
   icon: ComponentType<{ className?: string }>;
   iconClass: string;
-}[] = [
+};
+
+const externalResourceLinks: ExternalResourceLink[] = [
   { label: 'Dotabuff', url: 'https://www.dotabuff.com/', icon: DotabuffIcon, iconClass: 'text-red-500' },
   { label: 'OpenDota', url: 'https://www.opendota.com/', icon: OpenDotaIcon, iconClass: 'text-green-500' },
   { label: 'Dota2ProTracker', url: 'https://www.dota2protracker.com/', icon: Dota2ProTrackerIcon, iconClass: 'text-orange-500' },
@@ -209,30 +203,30 @@ export function Sidebar() {
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [queueStats, setQueueStats] = useState<Record<string, { length: number; processing: boolean }>>({});
-  const [showQueueDebug, setShowQueueDebug] = useState(false);
-  const activeIconRef = useRef<HTMLSpanElement>(null);
   const pathname = usePathname();
   const { getExternalLinks, currentTeam } = useTeam();
-  const { toast } = useToast();
   const externalLinks = getExternalLinks();
   const { theme, setTheme } = useTheme();
 
-  // Update queue stats every second
+  // Adaptive polling state
+  const pollingState = useRef({
+    intervalMs: 1000,
+    lastActive: false,
+    destroyed: false,
+    timeoutId: undefined as undefined | NodeJS.Timeout,
+    active: false,
+  });
+
   useEffect(() => {
-    const updateQueueStats = async () => {
-      try {
-        const stats = await getQueueStatsFromAPI();
-        setQueueStats(stats.queueStats || {});
-      } catch (error) {
-        console.error('[Sidebar] Error updating queue stats:', error);
-      }
+    pollingState.current.active = true;
+    pollingState.current.destroyed = false;
+    logWithTimestamp('log', '[Sidebar][Polling] Polling loop started');
+    return () => {
+      pollingState.current.destroyed = true;
+      pollingState.current.active = false;
+      if (pollingState.current.timeoutId) clearTimeout(pollingState.current.timeoutId);
+      logWithTimestamp('log', '[Sidebar][Polling] Polling loop stopped');
     };
-
-    updateQueueStats();
-    const interval = setInterval(updateQueueStats, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   // Mock dashboard config object
@@ -275,11 +269,6 @@ export function Sidebar() {
     }
   };
 
-  // Log collapsed state changes
-  useEffect(() => {
-    logWithTimestamp('log', '[Sidebar] Collapsed state changed:', collapsed);
-  }, [collapsed]);
-
   // Log icon absolute positions during animation
   useEffect(() => {
     const logIconPositions = () => {
@@ -290,17 +279,6 @@ export function Sidebar() {
         logWithTimestamp('log', '[Sidebar] No icons found with data-icon-debug attribute');
         return;
       }
-      Array.from(icons).forEach((icon, index) => {
-        const rect = icon.getBoundingClientRect();
-        const sanitizedLabel = icon.getAttribute('data-icon-debug') || `icon-${index}`;
-        // Get the original label from the parent element for display
-        const parentElement = icon.closest('a, [href]');
-        const originalLabel = parentElement?.getAttribute('title') || parentElement?.textContent?.trim() || sanitizedLabel;
-        // Get absolute position by adding scroll offsets
-        const absoluteX = rect.x + window.scrollX;
-        const absoluteY = rect.y + window.scrollY;
-        logWithTimestamp('log', `[Sidebar] ${originalLabel}: absoluteX=${Math.round(absoluteX)}, absoluteY=${Math.round(absoluteY)}, viewportX=${Math.round(rect.x)}, viewportY=${Math.round(rect.y)}`);
-      });
     };
     // Log immediately when collapsed state changes
     logIconPositions();
@@ -469,8 +447,9 @@ export function Sidebar() {
                   title={collapsed ? link.label : undefined}
                 >
                   <span className="absolute left-3 w-5 h-5 flex items-center justify-center" data-icon-debug={link.label.replace(/[^a-zA-Z0-9]/g, '')}>
-                    {/* @ts-expect-error: Icon components accept className, TS inference is wrong here */}
-                    {React.createElement(link.icon as ComponentType<any>, { className: `w-5 h-5 ${link.iconClass} text-neutral-800 dark:text-white` })}
+                    {typeof link.icon === 'function' ? (
+                      React.createElement(link.icon, { className: `w-5 h-5 ${link.iconClass} text-neutral-800 dark:text-white` })
+                    ) : null}
                   </span>
                   <span className={`transition-opacity duration-200 ml-8 whitespace-nowrap ${collapsed ? "opacity-0 pointer-events-none select-none" : "opacity-100"}`}>{link.label}</span>
                 </a>
@@ -479,59 +458,6 @@ export function Sidebar() {
 
             {/* Extra space below external resources */}
             <div className="flex-1" />
-
-            {/* Queue Status */}
-            {Object.values(queueStats).some(stats => (stats.length ?? 0) > 0 || stats.processing) && (
-              <>
-                <div className="border-t border-border mx-3 my-2" />
-                <div className="px-3 mb-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                      <Activity className="w-3 h-3" />
-                      Queue Status
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowQueueDebug(!showQueueDebug)}
-                      className="h-6 w-6 p-0"
-                    >
-                      {showQueueDebug ? (
-                        <ChevronUp className="w-3 h-3" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3" />
-                      )}
-                    </Button>
-                  </div>
-                  
-                  {showQueueDebug && (
-                    <div className="space-y-2">
-                      <div className="flex gap-2 text-xs">
-                        {Object.entries(queueStats).map(([service, stats]) => (
-                          <div key={service} className="flex items-center gap-1">
-                            {stats.processing ? (
-                              <Activity className="w-3 h-3 text-green-500" />
-                            ) : stats.length > 0 ? (
-                              <Clock className="w-3 h-3 text-yellow-500" />
-                            ) : (
-                              <Circle className="w-3 h-3 text-gray-400" />
-                            )}
-                            <span className="font-medium capitalize">{service}:</span>
-                            <span>{stats.length}</span>
-                          </div>
-                        ))}
-                        {Object.keys(queueStats).length === 0 && (
-                          <div className="flex items-center gap-1">
-                            <Circle className="w-3 h-3 text-gray-400" />
-                            <span className="text-muted-foreground">No active requests</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
 
             {/* Theme Toggle and Preferred Site Switch - now inside scrollable area */}
             <div className="border-t border-border mx-3 my-2" />

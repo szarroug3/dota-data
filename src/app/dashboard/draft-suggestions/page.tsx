@@ -105,7 +105,7 @@ export default function DraftSuggestionsPage() {
         title="Draft Suggestions"
         description={
           currentTeam
-            ? `Draft suggestions for ${currentTeam.name}`
+            ? `Draft suggestions for ${currentTeam.teamName}`
             : "No team selected. Please add a team in Team Management."
         }
       />
