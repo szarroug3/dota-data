@@ -1,0 +1,11 @@
+---
+description: summarizing for the next chat
+globs: 
+alwaysApply: false
+---
+summarize all of these decisions and changes so i can start a new chat. include:
+- what we did
+- what decisions we made
+- where to read docs
+- what needs to be done
+- a plan and checklist for implementation that includes where changes need to be made

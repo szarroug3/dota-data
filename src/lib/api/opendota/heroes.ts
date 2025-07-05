@@ -2,7 +2,6 @@ import { shouldMockService, tryMock } from '@/lib/api';
 import { fetchAPI, isAlreadyQueuedResult } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
 import { generateFakeHeroes } from '@/lib/fake-data-generator';
-import { logWithTimestampToFile } from '@/lib/server-logger';
 import type { OpenDotaHero } from '@/types/opendota';
 
 /**
@@ -38,9 +37,6 @@ export async function getHeroes(forceRefresh = false): Promise<OpenDotaHero[] | 
       if (shouldMockService('opendota')) {
         const fakeData = generateFakeHeroes(124, filename);
         await cacheService.set('opendota', cacheKey, fakeData, HEROES_TTL, filename);
-        if (typeof logWithTimestampToFile === 'function') {
-          logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Wrote mock hero data to cache for filename=${filename}`);
-        }
         return fakeData;
       }
       
@@ -89,9 +85,6 @@ export async function getHeroStats(forceRefresh = false): Promise<OpenDotaHero[]
       if (shouldMockService('opendota')) {
         const fakeData = generateFakeHeroes(124, filename);
         await cacheService.set('opendota', cacheKey, fakeData, HEROES_TTL, filename);
-        if (typeof logWithTimestampToFile === 'function') {
-          logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Wrote mock hero data to cache for filename=${filename}`);
-        }
         return fakeData;
       }
       

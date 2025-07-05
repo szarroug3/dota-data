@@ -2,26 +2,165 @@ import { Button } from "@/components/ui/button";
 import { getHeroImageUrl, getHeroNameSync, getRankInfo, getRankTierInfo } from "@/lib/utils";
 import { BarChart3, Crown, Loader2, User, X } from "lucide-react";
 
-interface PlayerPopupProps {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedPlayer: any;
-  playerData: any;
-  loadingPlayerData: boolean;
-  onNavigateToPlayer: (player: any) => void;
+interface PlayerData {
+  name?: string;
+  personaname?: string;
+  account_id?: number;
+  hero_id?: number;
+  kills?: number;
+  deaths?: number;
+  assists?: number;
+  last_hits?: number;
+  denies?: number;
+  gold_per_min?: number;
+  xp_per_min?: number;
+  net_worth?: number;
+  level?: number;
+  hero_damage?: number;
+  tower_damage?: number;
+  hero_healing?: number;
+  items?: number[];
+  backpack?: number[];
+  item_win?: number[];
+  item_usage?: number[];
+  purchase_time?: Record<string, number>;
+  first_purchase_time?: Record<string, number>;
+  item_purchase_log?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_2?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_2?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_2?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_3?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_3?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_3?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_4?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_4?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_4?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_5?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_5?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_5?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_6?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_6?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_6?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_7?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_7?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_7?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_8?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_8?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_8?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_purchase_log_9?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_win_log_9?: Array<{
+    time: number;
+    key: string;
+  }>;
+  item_usage_log_9?: Array<{
+    time: number;
+    key: string;
+  }>;
 }
 
-function getTopHeroes(playerData: any, months?: number) {
-  if (!playerData || !playerData.heroes) return [];
-  let heroes = playerData.heroes;
+interface PlayerPopupProps {
+  player: PlayerData;
+  isOpen: boolean;
+  onClose: () => void;
+  playerData: PlayerData | null;
+  loadingPlayerData: boolean;
+  onNavigateToPlayer: (player: PlayerData) => void;
+}
+
+function getTopHeroes(playerData: PlayerData | null, months?: number) {
+  if (!playerData?.heroes) return [];
+  
+  let heroes = playerData.heroes as Array<{
+    hero_id: number;
+    games: number;
+    last_played: number;
+  }>;
+  
   if (months) {
     const cutoff = Date.now() / 1000 - months * 30 * 24 * 60 * 60;
-    heroes = heroes.filter((h: any) => h.last_played >= cutoff);
+    heroes = heroes.filter((h) => h.last_played >= cutoff);
   }
   return heroes
-    .sort((a: any, b: any) => b.games - a.games)
+    .sort((a, b) => b.games - a.games)
     .slice(0, 5)
-    .map((h: any) => ({
+    .map((h) => ({
       id: h.hero_id,
       name: getHeroNameSync(h.hero_id),
       games: h.games,
@@ -29,14 +168,14 @@ function getTopHeroes(playerData: any, months?: number) {
 }
 
 export default function PlayerPopup({
+  player,
   isOpen,
   onClose,
-  selectedPlayer,
   playerData,
   loadingPlayerData,
   onNavigateToPlayer,
 }: PlayerPopupProps) {
-  if (!isOpen || !selectedPlayer) return null;
+  if (!isOpen || !player) return null;
 
   const truncateName = (name: string, maxLength: number = 20) => {
     if (!name) return "Unknown";
@@ -47,6 +186,39 @@ export default function PlayerPopup({
 
   const topAllTime = getTopHeroes(playerData);
   const topRecent = getTopHeroes(playerData, 3);
+
+  // Helper to get item name
+  const getItemName = (itemId: number) => {
+    // This would need to be implemented with actual item data
+    return `Item ${itemId}`;
+  };
+
+  // Helper to get player stats
+  const getPlayerStats = (data: PlayerData) => {
+    return {
+      kills: data.kills || 0,
+      deaths: data.deaths || 0,
+      assists: data.assists || 0,
+      lastHits: data.last_hits || 0,
+      denies: data.denies || 0,
+      gpm: data.gold_per_min || 0,
+      xpm: data.xp_per_min || 0,
+      netWorth: data.net_worth || 0,
+      level: data.level || 0,
+      heroDamage: data.hero_damage || 0,
+      towerDamage: data.tower_damage || 0,
+      heroHealing: data.hero_healing || 0,
+    };
+  };
+
+  // Helper to get top heroes
+  const getTopHeroes = (data: PlayerData | null, limit: number = 5) => {
+    if (!data) return [];
+    
+    // This would need to be implemented with actual hero data
+    // For now, return empty array
+    return [];
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -66,9 +238,9 @@ export default function PlayerPopup({
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold">{truncateName(selectedPlayer.name)}</h3>
+                <h3 className="font-semibold">{truncateName(player.name || player.personaname || "")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPlayer.account_id}
+                  {player.account_id}
                 </p>
               </div>
             </div>
@@ -106,7 +278,7 @@ export default function PlayerPopup({
                     Top Heroes (All Time)
                   </h4>
                   <div className="space-y-2">
-                    {playerData.topHeroes.map((hero: any, index: number) => (
+                    {playerData.topHeroes.map((hero: { hero_id: number; name: string; games: number; winRate: number }, index: number) => (
                       <div
                         key={hero.hero_id}
                         className="flex items-center justify-between p-2 bg-muted/20 rounded"
@@ -143,7 +315,7 @@ export default function PlayerPopup({
                     Top Heroes (Last 3 Months)
                   </h4>
                   <div className="space-y-2">
-                    {playerData.topRecentHeroes.map((hero: any, index: number) => (
+                    {playerData.topRecentHeroes.map((hero: { hero_id: number; name: string; games: number; winRate: number }, index: number) => (
                       <div
                         key={hero.hero_id}
                         className="flex items-center justify-between p-2 bg-muted/20 rounded"
@@ -177,7 +349,7 @@ export default function PlayerPopup({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onNavigateToPlayer(selectedPlayer)}
+                  onClick={() => onNavigateToPlayer(player)}
                   className="flex-1"
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
@@ -213,6 +385,33 @@ export default function PlayerPopup({
                       <span className="text-xs text-muted-foreground">{h.games} games</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {playerData ? getPlayerStats(playerData).kills : 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Kills</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">
+                    {playerData ? getPlayerStats(playerData).deaths : 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Deaths</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {playerData ? getPlayerStats(playerData).assists : 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Assists</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {playerData ? getPlayerStats(playerData).lastHits : 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Last Hits</div>
                 </div>
               </div>
             </div>

@@ -399,7 +399,7 @@ export function Sidebar() {
                 >
                   <span className="absolute left-3 w-5 h-5 flex items-center justify-center" data-icon-debug={link.label.replace(/[^a-zA-Z0-9]/g, '')}>
                     {React.isValidElement(link.icon)
-                      ? React.cloneElement(link.icon, { className: mergeIconClassName(link.icon, 'w-5 h-5') })
+                      ? React.cloneElement(link.icon, { className: mergeIconClassName(link.icon, 'w-5 h-5') } as any)
                       : null}
                   </span>
                   <span className={`transition-opacity duration-200 ml-8 whitespace-nowrap ${collapsed ? "opacity-0 pointer-events-none select-none" : "opacity-100"}`}>{link.label}</span>
@@ -423,7 +423,7 @@ export function Sidebar() {
                   >
                     <span className="absolute left-3 w-5 h-5 flex items-center justify-center" data-icon-debug={link.label.replace(/[^a-zA-Z0-9]/g, '')}>
                       {React.isValidElement(link.icon)
-                        ? React.cloneElement(link.icon, { className: mergeIconClassName(link.icon, 'w-5 h-5') })
+                        ? React.cloneElement(link.icon, { className: mergeIconClassName(link.icon, 'w-5 h-5') } as any)
                         : null}
                     </span>
                     <span className={`transition-opacity duration-200 ml-8 whitespace-nowrap ${collapsed ? "opacity-0 pointer-events-none select-none" : "opacity-100"}`}>{link.label}</span>

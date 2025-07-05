@@ -4,17 +4,17 @@ export function getTeamCacheKey(teamId: string) {
   return `dotabuff-team-${teamId}-matches`;
 }
 export function getTeamCacheFilename(teamId: string, pageNum?: number) {
-  if (typeof pageNum === 'number') {
-    return `dotabuff-team-${teamId}-matches${pageNum > 0 ? `-page-${pageNum}` : ''}.html`;
+  if (typeof pageNum === 'number' && pageNum > 0) {
+    return `dotabuff-team-${teamId}-matches-page-${pageNum}.html`;
   }
-  return `dotabuff-team-${teamId}-matches.html`;
+  return `dotabuff-team-${teamId}-matches.json`;
 }
 
 export function getDotabuffMatchesCacheKey(teamId: string) {
   return `dotabuff-team-${teamId}-matches`;
 }
 export function getDotabuffMatchesCacheFilename(teamId: string) {
-  return `dotabuff-team-${teamId}-matches.html`;
+  return `dotabuff-team-${teamId}-matches.json`;
 }
 
 export function getPlayerDraftDataCacheKey(teamId: string) {
@@ -42,6 +42,10 @@ export function getLeagueCacheKey(leagueId: string) {
   return `dotabuff-league-${leagueId}`;
 }
 export function getLeagueCacheFilename(leagueId: string) {
+  return `dotabuff-league-${leagueId}.json`;
+}
+
+export function getLeagueHtmlFilename(leagueId: string) {
   return `dotabuff-league-${leagueId}.html`;
 }
 
@@ -79,5 +83,50 @@ export function getOpendotaPlayerStatsCacheKey(accountId: string) {
 }
 // Dashboard config cache keys
 export function getDashboardConfigCacheKey(id: string) {
-  return `dashboard-config:${id}`;
+  return `dashboard-config-${id}`;
+}
+
+export function getDashboardConfigCacheFilename(id: string) {
+  return `dashboard-config-${id}.json`;
+}
+
+export function getCacheKeyAndFilename(type: string, id: string) {
+  switch (type) {
+    case 'player':
+      return {
+        key: `opendota-player-${id}`,
+        filename: `opendota-player-${id}.json`
+      };
+    case 'team':
+      return {
+        key: `dotabuff-team-${id}-matches`,
+        filename: `dotabuff-team-${id}-matches.json`
+      };
+    case 'match':
+      return {
+        key: `opendota-match-${id}`,
+        filename: `opendota-match-${id}.json`
+      };
+    case 'league':
+      return {
+        key: `dotabuff-league-${id}`,
+        filename: `dotabuff-league-${id}.json`
+      };
+    default:
+      throw new Error(`Unknown cache type: ${type}`);
+  }
+}
+
+export function getHeroesCacheKeyAndFilename() {
+  return {
+    key: 'opendota-heroes',
+    filename: 'opendota-heroes.json'
+  };
+}
+
+export function getPlayerStatsCacheKeyAndFilename(playerId: string) {
+  return {
+    key: `opendota-player-stats-${playerId}`,
+    filename: `opendota-player-stats-${playerId}.json`
+  };
 } 

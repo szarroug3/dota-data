@@ -414,7 +414,11 @@ export function useBatchMatchDetails(matchIds: string[] | null) {
     // Find which IDs need to be fetched
     const toFetch = matchIds.filter(id => !cacheRef.current[id]);
     const fetches = toFetch.map(id =>
-      fetch(`/api/matches/${id}`)
+      fetch(`/api/matches/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId: 'batch' }),
+      })
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) cacheRef.current[id] = data;

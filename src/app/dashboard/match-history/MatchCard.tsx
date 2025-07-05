@@ -1,7 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getMatchResult, getOpponentName, getScoreWithResult, getTeamSide, logWithTimestamp } from "@/lib/utils";
+import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getMatchResult, getOpponentName, getScoreWithResult, getTeamSide } from "@/lib/utils";
+import type { Team } from "@/types/team";
 import { EyeOff, RefreshCw } from "lucide-react";
+import type { Match } from "./match-utils";
 
 // Custom icon components from sidebar
 const DotabuffIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -49,8 +51,8 @@ const OpenDotaIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
 );
 
 interface MatchCardProps {
-  match: any;
-  currentTeam: any;
+  match: Match;
+  currentTeam: Team;
   preferredSite: string;
   isSelected: boolean;
   onSelect: (matchId: string) => void;
@@ -58,6 +60,114 @@ interface MatchCardProps {
   teamSide?: string;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+}
+
+function getHeroPicks(match: Match, _currentTeam: Team) {
+  if (!match.openDota?.players) return { radiant: [], dire: [] };
+  const radiantHeroes = match.openDota.players
+    .filter((p) => p.isRadiant === true)
+    .map((p) => getHeroNameSync((p as any).hero_id))
+    .slice(0, 5);
+  const direHeroes = match.openDota.players
+    .filter((p) => p.isRadiant === false)
+    .map((p) => getHeroNameSync((p as any).hero_id))
+    .slice(0, 5);
+  return { radiant: radiantHeroes, dire: direHeroes };
+}
+
+function getPickOrder(match: Match, currentTeam: Team) {
+  if (!match.openDota?.picks_bans) return null;
+  const firstPick = match.openDota.picks_bans.find((pb: { is_pick: boolean }) => pb.is_pick);
+  if (!firstPick) return null;
+  const ourTeam = getTeamSide(match, currentTeam) === "Radiant" ? 0 : 1;
+  return firstPick.team === ourTeam ? "FP" : "SP";
+}
+
+function HeroPicksDisplay({ heroPicks }: { heroPicks: { radiant: string[]; dire: string[] } }) {
+  if (heroPicks.radiant.length === 0) return null;
+  return (
+    <div className="flex flex-col items-end ml-12 min-w-[56px] relative">
+      <div className="flex flex-col items-end relative">
+        <div className="flex items-center gap-1 mb-0.5 relative">
+          {heroPicks.radiant.map((hero: string, index: number) => (
+            <img
+              key={index}
+              src={getHeroImageUrl(hero)}
+              alt={hero}
+              className="w-5 h-5 rounded object-cover bg-gray-200 dark:bg-gray-700"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/window.svg";
+              }}
+              title={hero}
+            />
+          ))}
+        </div>
+        <div className="w-full flex justify-center text-[10px] text-muted-foreground my-0.5">vs</div>
+        <div className="flex items-center gap-1 mt-0.5">
+          {heroPicks.dire.map((hero: string, index: number) => (
+            <img
+              key={index}
+              src={getHeroImageUrl(hero)}
+              alt={hero}
+              className="w-5 h-5 rounded object-cover bg-gray-200 dark:bg-gray-700"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/window.svg";
+              }}
+              title={hero}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MatchCardActions({ matchUrl, matchLogo, onHide, matchId, onRefresh, isRefreshing }: { matchUrl: string; matchLogo: React.ReactNode; onHide: (id: string) => void; matchId: string; onRefresh?: () => void; isRefreshing: boolean }) {
+  return (
+    <div className="flex flex-row gap-1 items-center ml-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={(e) => {
+          e.stopPropagation();
+          onHide(matchId);
+        }}
+        title="Hide match"
+        className="p-1"
+      >
+        <EyeOff className="w-4 h-4" />
+      </Button>
+      {onRefresh && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRefresh();
+          }}
+          title="Refresh match data"
+          disabled={isRefreshing}
+          className="p-1"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+      )}
+      {matchUrl && matchLogo && (
+        <a
+          href={matchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1"
+          title="View match on preferred site"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {matchLogo}
+        </a>
+      )}
+    </div>
+  );
 }
 
 export default function MatchCard({
@@ -71,9 +181,6 @@ export default function MatchCard({
   isRefreshing = false,
   onRefresh,
 }: MatchCardProps) {
-  // Debug log for selection state
-  logWithTimestamp('log', `[MatchCard] isSelected: ${isSelected}, match.id: ${match.id}`);
-
   let matchUrl = "";
   let matchLogo = null;
   if (preferredSite === "dotabuff") {
@@ -85,47 +192,19 @@ export default function MatchCard({
     matchLogo = <OpenDotaIcon className="w-5 h-5" />;
   }
 
-  // Get hero picks for both teams
-  const getHeroPicks = () => {
-    if (!match.openDota?.players) return { radiant: [], dire: [] };
+  const heroPicks = getHeroPicks(match, currentTeam);
+  const pickOrder = getPickOrder(match, currentTeam);
 
-    const teamSide = getTeamSide(match, currentTeam);
-    const isRadiant = teamSide === "Radiant";
-
-    const radiantHeroes = match.openDota.players
-      .filter((p: any) => p.isRadiant)
-      .map((p: any) => getHeroNameSync(p.hero_id))
-      .slice(0, 5);
-
-    const direHeroes = match.openDota.players
-      .filter((p: any) => !p.isRadiant)
-      .map((p: any) => getHeroNameSync(p.hero_id))
-      .slice(0, 5);
-
-    return {
-      radiant: radiantHeroes,
-      dire: direHeroes,
-    };
-  };
-
-  const heroPicks = getHeroPicks();
-
-  // Helper to determine FP/SP
-  const getPickOrder = () => {
-    if (!match.openDota?.picks_bans) return null;
-    const firstPick = match.openDota.picks_bans.find((pb: any) => pb.is_pick);
-    if (!firstPick) return null;
-    const teamSide = getTeamSide(match, currentTeam);
-    const isRadiant = teamSide === "Radiant";
-    const ourTeam = isRadiant ? 0 : 1;
-    return firstPick.team === ourTeam ? "FP" : "SP";
-  };
-  const pickOrder = getPickOrder();
+  // Use openDota date/duration if available, otherwise fallback
+  const matchDate = (match.openDota && (match.openDota as any).start_time)
+    ? new Date((match.openDota as any).start_time * 1000).toISOString()
+    : (match as any).date || "";
+  const matchDuration = match.openDota?.duration ?? (match as any).duration ?? 0;
 
   return (
     <div
       className={`p-4 border-b cursor-pointer hover:bg-muted/30 transition-colors relative ${isSelected ? "bg-primary/10 border-l-4 border-l-primary" : "border-l-4 !border-l-transparent"} ${isRefreshing ? "opacity-75" : ""}`}
-      onClick={() => onSelect(match.id)}
+      onClick={() => onSelect(match.id!)}
     >
       <div className="flex justify-between items-start">
         <div className="flex-1">
@@ -138,7 +217,7 @@ export default function MatchCard({
             )}
           </div>
           <div className="text-xs text-muted-foreground">
-            {formatDate(match.date || "")}
+            {formatDate(matchDate)}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Badge
@@ -174,92 +253,12 @@ export default function MatchCard({
             </span>
             <span className="text-xs text-muted-foreground">
               •{" "}
-              {formatDuration(
-                match.openDota?.duration || match.duration || 0,
-              )}
+              {formatDuration(matchDuration)}
             </span>
           </div>
         </div>
-        {/* Hero picks moved to right side */}
-        {heroPicks.radiant.length > 0 && (
-          <div className="flex flex-col items-end ml-12 min-w-[56px] relative">
-            <div className="flex flex-col items-end relative">
-              <div className="flex items-center gap-1 mb-0.5 relative">
-                {heroPicks.radiant.map((hero: string, index: number) => (
-                  <img
-                    key={index}
-                    src={getHeroImageUrl(hero)}
-                    alt={hero}
-                    className="w-5 h-5 rounded object-cover bg-gray-200 dark:bg-gray-700"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/window.svg";
-                    }}
-                    title={hero}
-                  />
-                ))}
-              </div>
-              <div className="w-full flex justify-center text-[10px] text-muted-foreground my-0.5">vs</div>
-              <div className="flex items-center gap-1 mt-0.5">
-                {heroPicks.dire.map((hero: string, index: number) => (
-                  <img
-                    key={index}
-                    src={getHeroImageUrl(hero)}
-                    alt={hero}
-                    className="w-5 h-5 rounded object-cover bg-gray-200 dark:bg-gray-700"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/window.svg";
-                    }}
-                    title={hero}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Compact right-side buttons */}
-        <div className="flex flex-row gap-1 items-center ml-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onHide(match.id);
-            }}
-            title="Hide match"
-            className="p-1"
-          >
-            <EyeOff className="w-4 h-4" />
-          </Button>
-          {onRefresh && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRefresh();
-              }}
-              title="Refresh match data"
-              disabled={isRefreshing}
-              className="p-1"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-          )}
-          {matchUrl && matchLogo && (
-            <a
-              href={matchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1"
-              title="View match on preferred site"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {matchLogo}
-            </a>
-          )}
-        </div>
+        <HeroPicksDisplay heroPicks={heroPicks} />
+        <MatchCardActions matchUrl={matchUrl} matchLogo={matchLogo} onHide={onHide} matchId={match.id!} onRefresh={onRefresh} isRefreshing={isRefreshing} />
       </div>
     </div>
   );

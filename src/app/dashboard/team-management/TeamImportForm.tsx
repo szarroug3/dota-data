@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTeam } from "@/contexts/team-context";
 import { logWithTimestamp } from "@/lib/utils";
-import type { Team } from "@/types/team";
+import type { Match, Team } from "@/types/team";
 import { FileText, Loader2 } from "lucide-react";
 import { ReactElement, useRef, useState } from "react";
 
@@ -19,20 +19,14 @@ export function TeamImportFormCard({ children }: { children: React.ReactNode }) 
 
 // 1. Move pollForData to module scope and type it
 async function pollForData(url: string, options: RequestInit): Promise<Record<string, unknown>> {
-  let attempt = 0;
-  const pollUrl = url;
-  let res = await fetch(url, options);
-  let data = await res.json();
-  while (res.status === 202 && data && data.status === 'queued' && attempt < 20) {
-    await new Promise(r => setTimeout(r, 1000));
-    res = await fetch(pollUrl, { method: 'GET' });
-    data = await res.json();
-    attempt++;
-  }
-  if (res.status !== 200) {
+  console.log('pollForData called:', url, options);
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    let data;
+    try { data = await res.json(); } catch { data = {}; }
     throw new Error((data as { error?: string })?.error || 'Failed to fetch data');
   }
-  return data;
+  return res.json();
 }
 
 // Extract createOptimisticTeam to its own file-level function (already done)
@@ -62,50 +56,54 @@ function handleMatchesUpdate(
   optimisticTeam: Team,
   newTeam: Record<string, unknown>,
   teamsRef: React.MutableRefObject<Team[]>,
-  setTeams: (teams: Team[]) => void,
-  setCurrentTeam: (team: Team) => void
+  setTeams: React.Dispatch<React.SetStateAction<Team[]>>,
+  _setCurrentTeam: (team: Team) => void
 ) {
-  const updatedTeams = teamsRef.current.map((t: Team) =>
-    t.id === optimisticTeam.id ? {
-      ...t,
-      ...newTeam,
-      loading: false,
-    } as Team : t
-  );
-  setTeams(updatedTeams);
-  localStorage.setItem('dota-dashboard-teams', JSON.stringify(updatedTeams));
-  setCurrentTeam({
-    ...optimisticTeam,
-    ...newTeam,
-    loading: false,
-  } as Team);
+  setTeams(prevTeams => {
+    const updatedTeams = prevTeams.map((t: Team) => {
+      if (t.id !== optimisticTeam.id) return t;
+      // Never update id or leagueId, only update intended fields
+      return {
+        ...t,
+        teamName: typeof newTeam.teamName === 'string' ? newTeam.teamName : t.teamName,
+        matchIds: Array.isArray(newTeam.matchIds) ? newTeam.matchIds as string[] : t.matchIds,
+        matchIdsByLeague: typeof newTeam.matchIdsByLeague === 'object' ? newTeam.matchIdsByLeague as Record<string, string[]> : t.matchIdsByLeague,
+        manualMatches: Array.isArray(newTeam.manualMatches) ? newTeam.manualMatches as Match[] : t.manualMatches,
+        loading: false,
+      } as Team;
+    });
+    localStorage.setItem('dota-dashboard-teams', JSON.stringify(updatedTeams));
+    return updatedTeams;
+  });
 }
 
 function handleLeagueUpdate(
   optimisticTeam: Team,
   leagueData: Record<string, unknown>,
   teamsRef: React.MutableRefObject<Team[]>,
-  setTeams: (teams: Team[]) => void,
-  setCurrentTeam: (team: Team) => void
+  setTeams: React.Dispatch<React.SetStateAction<Team[]>>,
+  _setCurrentTeam: (team: Team) => void
 ) {
+  console.log('[handleLeagueUpdate] leagueData:', leagueData, 'leagueName:', leagueData.leagueName);
   const leagueName = (leagueData.leagueName as string) || optimisticTeam.leagueId;
-  const updatedTeams = teamsRef.current.map((t: Team) =>
-    t.id === optimisticTeam.id ? {
-      ...t,
-      leagueName,
-    } as Team : t
-  );
-  setTeams(updatedTeams);
-  localStorage.setItem('dota-dashboard-teams', JSON.stringify(updatedTeams));
-  const current = teamsRef.current.find((t: Team) => t.id === optimisticTeam.id);
-  if (current) {
-    setCurrentTeam({ ...current, leagueName } as Team);
-  }
+  setTeams(prevTeams => {
+    const updatedTeams = prevTeams.map((t: Team) => {
+      if (t.id !== optimisticTeam.id) return t;
+      console.log('[handleLeagueUpdate] updating team:', t, 'with leagueName:', leagueName);
+      // Never update id or leagueId, only update leagueName
+      return {
+        ...t,
+        leagueName,
+      } as Team;
+    });
+    localStorage.setItem('dota-dashboard-teams', JSON.stringify(updatedTeams));
+    return updatedTeams;
+  });
 }
 
 function useTeamImport(
   teams: Team[],
-  setTeams: (teams: Team[]) => void,
+  setTeams: React.Dispatch<React.SetStateAction<Team[]>>,
   setCurrentTeam: (team: Team) => void
 ) {
   const teamsRef = useRef(teams);
@@ -130,42 +128,42 @@ function useTeamImport(
       return;
     }
     const optimisticTeam = createOptimisticTeam(teamId, leagueId);
-    setTeams([...teams, optimisticTeam]);
+    setTeams(prevTeams => [...prevTeams, optimisticTeam]);
+    setCurrentTeam(optimisticTeam);
     setTeamId("");
     setLeagueId("");
     try {
       logWithTimestamp('log', `[TeamImportForm] optimisticTeam: ${JSON.stringify(optimisticTeam, null, 2)}`);
-      fetch(`/api/teams/${optimisticTeam.teamId}/matches`, {
+      console.log('Making POST to', `/api/teams/${optimisticTeam.teamId}/matches`, 'with leagueId', optimisticTeam.leagueId);
+      const matchesPromise = pollForData(`/api/teams/${optimisticTeam.teamId}/matches`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leagueId: optimisticTeam.leagueId }),
-      }).catch(() => {});
-      fetch(`/api/leagues/${optimisticTeam.leagueId}`, {
+      });
+      const leaguePromise = pollForData(`/api/leagues/${optimisticTeam.leagueId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
-      }).catch(() => {});
-      const matchesPromise = pollForData(`/api/teams/${optimisticTeam.teamId}/matches?leagueId=${encodeURIComponent(optimisticTeam.leagueId ?? "")}`, { method: 'GET' });
-      const leaguePromise = pollForData(`/api/leagues/${optimisticTeam.leagueId}`, { method: 'GET' });
+      });
       matchesPromise.then((newTeam: Record<string, unknown>) =>
-        handleMatchesUpdate(optimisticTeam, newTeam, teamsRef, setTeams, setCurrentTeam)
+        handleMatchesUpdate(optimisticTeam, newTeam, teamsRef, setTeams, () => {})
       ).catch((e: unknown) => {
         setImportError(getErrorMessage(e));
-        setTeams(teamsRef.current.map((t: Team) =>
+        setTeams(prevTeams => prevTeams.map((t: Team) =>
           t.id === optimisticTeam.id ? { ...t, loading: false } : t
         ));
       });
       leaguePromise.then((leagueData: Record<string, unknown>) =>
-        handleLeagueUpdate(optimisticTeam, leagueData, teamsRef, setTeams, setCurrentTeam)
+        handleLeagueUpdate(optimisticTeam, leagueData, teamsRef, setTeams, () => {})
       ).catch((e: unknown) => {
         setImportError(getErrorMessage(e));
-        setTeams(teamsRef.current.map((t: Team) =>
+        setTeams(prevTeams => prevTeams.map((t: Team) =>
           t.id === optimisticTeam.id ? { ...t } : t
         ));
       });
     } catch (e: unknown) {
       setImportError(getErrorMessage(e));
-      setTeams(teamsRef.current.map((t: Team) =>
+      setTeams(prevTeams => prevTeams.map((t: Team) =>
         t.id === optimisticTeam.id ? { ...t, loading: false } : t
       ));
     } finally {
@@ -184,7 +182,7 @@ function useTeamImport(
   };
 }
 
-export default function TeamImportForm({ teams, setTeams }: { teams: Team[]; setTeams: (teams: Team[]) => void }): ReactElement {
+export default function TeamImportForm({ teams, setTeams }: { teams: Team[]; setTeams: React.Dispatch<React.SetStateAction<Team[]>> }): ReactElement {
   const { setCurrentTeam } = useTeam();
   const {
     importing,

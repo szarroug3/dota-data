@@ -109,31 +109,25 @@ export async function getMatch(
   const filename = `${cacheKey}.json`;
   const MATCH_TTL = 60 * 60 * 24 * 14; // 14 days in seconds
 
-  logWithTimestampToFile('log', `[SAMREEN] in getMatch matchId=${matchId}, forceRefresh=${forceRefresh}, teamId=${teamId}`);
   // 1. Check cache for data
   if (!forceRefresh) {
-    logWithTimestampToFile('log', '[SAMREEN] in getMatch not forceRefresh');
     const cached = await cacheService.get<unknown>(cacheKey, filename, MATCH_TTL);
     if (cached) {
-      logWithTimestampToFile('log', `[SAMREEN] in if for cached cached=${JSON.stringify(cached)} teamId=${teamId}`);
       // Queue players if teamId is provided
       await handleQueuePlayersForMatch(cached, teamId, matchId, forceRefresh);
       return cached;
     }
   }
 
-  logWithTimestampToFile('log', '[SAMREEN] in getMatch after not forceRefresh');
   // 2. Queue the fetch
   const queueResult = await cacheService.queueRequest(
     'opendota',
     cacheKey,
     async () => {
-      logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Background job started for matchId=${matchId}, teamId=${teamId}`);
       // 1. Try mock data if available
       const mockRes = await tryMock('opendota', cacheKey + ".json");
       if (mockRes) {
         const data = await mockRes.json();
-        logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Got mockRes for matchId=${matchId}, teamId=${teamId}`);
         // Queue players if teamId is provided
         await handleQueuePlayersForMatch(data, teamId, matchId, forceRefresh);
         return data;
@@ -144,7 +138,6 @@ export async function getMatch(
         const fakeData = generateFakeMatchDetails(matchId, filename);
         // Write mock data to cache and disk immediately
         await cacheService.set('opendota', cacheKey, fakeData, MATCH_TTL, filename);
-        logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Wrote mock match data to cache for matchId=${matchId}, filename=${filename}`);
         // Queue players if teamId is provided
         await handleQueuePlayersForMatch(fakeData, teamId, matchId, forceRefresh);
         // Always return the real data, never a status object
@@ -167,13 +160,9 @@ export async function getMatch(
     filename
   );
 
-  logWithTimestampToFile('log', `[SAMREEN] queueResult=${JSON.stringify(queueResult)}`);
   if (isAlreadyQueuedResult(queueResult)) {
-    // Don't cache the "queued" status - only return it
-    logWithTimestampToFile('log', `[SAMREEN] returning queued status for matchId=${matchId}`);
     return { status: 'queued', signature: queueResult.signature };
   }
-  logWithTimestampToFile('log', `[SAMREEN] returning actual data for matchId=${matchId}`);
   return queueResult;
 }
 

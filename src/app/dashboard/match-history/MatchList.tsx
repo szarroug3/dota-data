@@ -1,52 +1,69 @@
 import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useTeam } from "@/contexts/team-context";
-import { getHeroNameSync, getTeamSide } from "@/lib/utils";
+import { getTeamSide } from "@/lib/utils";
+import type { Team, Match as TeamMatch } from "@/types/team";
 import { Loader2 } from "lucide-react";
+import { Suspense } from 'react';
 import AsyncMatchCard from "./AsyncMatchCard";
+import MatchCardSkeleton from './MatchCardSkeleton';
 import PlayerPopup from "./PlayerPopup";
-
-// Helper to check if a match contains a specific hero
-function matchContainsHero(match: any, heroName: string): boolean {
-  if (!match.openDota?.players || !heroName) return false;
-  
-  const searchTerm = heroName.toLowerCase();
-  
-  return match.openDota.players.some((player: any) => {
-    const playerHero = getHeroNameSync(player.hero_id);
-    return playerHero.toLowerCase().includes(searchTerm);
-  });
-}
 
 export default function MatchList({
   matches,
   selectedMatch,
   setSelectedMatch,
-  selectedMatchObj,
-  selectedGameIndex,
-  setSelectedGameIndex,
+  _selectedMatchObj,
+  _selectedGameIndex,
+  _setSelectedGameIndex,
   currentTeam,
-  error,
-  onAddMatch,
-  hiddenMatchIds,
-  onHideMatch,
-  onUnhideMatch,
-  showHidden,
+  _error,
+  _onAddMatch,
+  _hiddenMatchIds,
+  _onHideMatch,
+  _onUnhideMatch,
+  _showHidden,
   className,
   showPlayerPopup,
   setShowPlayerPopup,
   selectedPlayer,
-  setSelectedPlayer,
+  _setSelectedPlayer,
   playerData,
   setPlayerData,
   loadingPlayerData,
-  prefetchedPlayerData,
-  prefetchingPlayers,
+  _prefetchedPlayerData,
+  _prefetchingPlayers,
   loading = false,
-  updateQueueStats,
-}: any) {
+  _updateQueueStats,
+}: {
+  matches: TeamMatch[];
+  selectedMatch: string | null;
+  setSelectedMatch: (matchId: string) => void;
+  _selectedMatchObj: unknown;
+  _selectedGameIndex: number;
+  _setSelectedGameIndex: (index: number) => void;
+  currentTeam: Team;
+  _error: string | null;
+  _onAddMatch: () => void;
+  _hiddenMatchIds: string[];
+  _onHideMatch: (matchId: string) => void;
+  _onUnhideMatch: (matchId: string) => void;
+  _showHidden: boolean;
+  className?: string;
+  showPlayerPopup: boolean;
+  setShowPlayerPopup: (show: boolean) => void;
+  selectedPlayer: unknown;
+  _setSelectedPlayer: (player: unknown) => void;
+  playerData: unknown;
+  setPlayerData: (data: unknown) => void;
+  loadingPlayerData: boolean;
+  _prefetchedPlayerData: unknown;
+  _prefetchingPlayers: boolean;
+  loading?: boolean;
+  _updateQueueStats: () => void;
+}) {
   const { toast } = useToast();
-  const { setCurrentTeam, removeMatch, unhideMatch, hiddenMatchIds: teamHiddenMatchIds } = useTeam();
+  const { setCurrentTeam, removeMatch, hiddenMatchIds: teamHiddenMatchIds } = useTeam();
   const { preferredSite } = useSidebar();
 
   const handleRefreshMatch = async (matchId: string) => {
@@ -61,14 +78,14 @@ export default function MatchList({
 
     try {
       // Find the match in the current team's matches
-      const matchIndex = currentTeam?.manualMatches?.findIndex((m: any) => m.id === matchId);
+      const matchIndex = currentTeam?.manualMatches?.findIndex((m: TeamMatch) => m.id === matchId);
       
       if (matchIndex === -1 || matchIndex === undefined) {
         throw new Error("Match not found in team data");
       }
 
       // Get the match object
-      const match = currentTeam.manualMatches[matchIndex];
+      const match = currentTeam.manualMatches![matchIndex];
       
       // Enrich the match with fresh OpenDota data
       const response = await fetch('/api/refresh-match', {
@@ -80,7 +97,7 @@ export default function MatchList({
       const enrichedMatch = await response.json();
       
       // Update the match in the team's matches array
-      const updatedMatches = [...currentTeam.manualMatches];
+      const updatedMatches = [...(currentTeam.manualMatches || [])];
       updatedMatches[matchIndex] = enrichedMatch;
       
       // Update the team with the new matches
@@ -96,28 +113,28 @@ export default function MatchList({
         description: "Match data refreshed successfully",
       });
       
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error",
         description: "Failed to refresh match data",
         variant: "destructive",
       });
     } finally {
-      if (typeof updateQueueStats === 'function') {
-        updateQueueStats();
+      if (typeof _updateQueueStats === 'function') {
+        _updateQueueStats();
       }
     }
   };
 
   // Get hidden matches for popup
-  const hiddenMatches = currentTeam?.manualMatches?.filter((match: any) => 
-    teamHiddenMatchIds.includes(match.id)
+  const _hiddenMatches = currentTeam?.manualMatches?.filter((match: TeamMatch) => 
+    teamHiddenMatchIds.includes(match.id!)
   ) || [];
 
   return (
     <div className={`overflow-y-auto ${className || ''}`}>
-      {error ? (
-        <p className="text-red-500 text-sm font-semibold p-4">{error}</p>
+      {_error ? (
+        <p className="text-red-500 text-sm font-semibold p-4">{_error}</p>
       ) : loading ? (
         <div className="flex items-center justify-center h-full py-8">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -128,8 +145,8 @@ export default function MatchList({
         </div>
       ) : (
         <div className="h-full overflow-y-auto">
-          {matches.map((match: any, idx: number) => (
-            <div key={match.id ?? idx} className="relative">
+          {matches.map((match: TeamMatch, index: number) => (
+            <Suspense key={match.id || index} fallback={<MatchCardSkeleton />}>
               <AsyncMatchCard
                 match={match}
                 currentTeam={currentTeam}
@@ -139,9 +156,9 @@ export default function MatchList({
                 onHide={removeMatch}
                 teamSide={getTeamSide(match, currentTeam)}
                 isRefreshing={false}
-                onRefresh={() => {}}
+                onRefresh={() => handleRefreshMatch(match.id!)}
               />
-            </div>
+            </Suspense>
           ))}
         </div>
       )}

@@ -1,23 +1,71 @@
 import { Badge } from "@/components/ui/badge";
 import { getHeroImageUrl, getHeroNameSync, getLeagueNameFromUrl, getMatchResult, getTeamSide } from "@/lib/utils";
+import type { Team } from "@/types/team";
 import { BarChart, User } from "lucide-react";
+import type { Match } from "./match-utils";
 
 interface MatchDetailsProps {
-  selectedMatchObj: any;
-  currentTeam: any;
-  error: string | null;
-  isLoading?: boolean;
-  onShowPlayerPopup: (player: any) => void;
+  match: Match;
+  currentTeam: Team;
+  _isLoading?: boolean;
+  onShowPlayerPopup?: (player: unknown) => void;
 }
 
-export default function MatchDetails({ selectedMatchObj, currentTeam, error, isLoading = false, onShowPlayerPopup }: MatchDetailsProps) {
+export default function MatchDetails({ 
+  match, 
+  currentTeam, 
+  _isLoading = false,
+  onShowPlayerPopup 
+}: MatchDetailsProps) {
+  // Extract basic match info
+  const _league = match.league;
+  const _matchId = match.match_id || match.id;
+  
+  // Get OpenDota data
+  const openDotaData = match.openDota;
+  
+  // Extract player data
+  const radiantPlayers = openDotaData?.players?.filter((player: unknown) => 
+    (player as { player_slot: number }).player_slot < 128
+  ) || [];
+  const _direPlayers = openDotaData?.players?.filter((player: unknown) => 
+    (player as { player_slot: number }).player_slot >= 128
+  ) || [];
+  
+  // Get team sides
+  const radiantSide = getTeamSide(currentTeam, match);
+  const _direSide = radiantSide === 'radiant' ? 'dire' : 'radiant';
+  
+  // Calculate match duration
+  const duration = openDotaData?.duration ? Math.floor(openDotaData.duration / 60) : 0;
+  const _minutes = Math.floor(duration);
+  const _seconds = duration % 60;
+  
+  // Determine winner
+  const radiantWin = openDotaData?.radiant_win;
+  const _winner = radiantWin ? 'Radiant' : 'Dire';
+  
+  // Get hero stats data
+  const _heroStats = {
+    ourPicks: {},
+    ourBans: {},
+    opponentPicks: {},
+    opponentBans: {}
+  };
+  
+  // Helper function to get highlight style
+  const _getHighlightStyle = (_hero: string, _type: string) => {
+    // Implementation for highlight styling
+    return '';
+  };
+
   if (error) {
     return (
       <p className="text-red-500 text-sm font-semibold p-4">{error}</p>
     );
   }
 
-  if (!selectedMatchObj) {
+  if (!match) {
     return (
       <div className="text-center text-muted-foreground">
         <div className="text-lg font-medium mb-2">Select a match</div>
@@ -29,17 +77,16 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
   }
 
   // Extract OpenDota data if available
-  const od = selectedMatchObj.openDota || {};
+  const od = openDotaData || {};
   const radiantName = od.radiant_name || "Radiant";
   const direName = od.dire_name || "Dire";
   const radiantScore = od.radiant_score ?? "?";
   const direScore = od.dire_score ?? "?";
-  const duration = od.duration ?? selectedMatchObj.duration ?? 0;
-  const league = getLeagueNameFromUrl(selectedMatchObj.league);
-  const result = getMatchResult(selectedMatchObj, currentTeam);
-  const teamSide = getTeamSide(selectedMatchObj, currentTeam);
-  const matchDate = selectedMatchObj.date || (od.start_time ? new Date(od.start_time * 1000).toISOString() : "");
-  const matchId = od.match_id || selectedMatchObj.id || "?";
+  const _league = getLeagueNameFromUrl(match.league);
+  const result = getMatchResult(match, currentTeam);
+  const teamSide = getTeamSide(match, currentTeam);
+  const matchDate = match.date || (od.start_time ? new Date(od.start_time * 1000).toISOString() : "");
+  const _matchId = od.match_id || match.id || "?";
 
   // Format date as 12/7/2024 10:17 PM (no comma)
   const formatMatchDate = (dateString: string) => {
@@ -58,26 +105,26 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
     return `${dateStr} ${timeStr}`;
   };
 
-  // Hero picks and bans
+  // Extract picks and bans
   const picksBans = od.picks_bans || [];
-  const radiantPicks = picksBans.filter((pb: any) => pb.is_pick && pb.team === 0).map((pb: any) => pb.hero_id);
-  const radiantBans = picksBans.filter((pb: any) => !pb.is_pick && pb.team === 0).map((pb: any) => pb.hero_id);
-  const direPicks = picksBans.filter((pb: any) => pb.is_pick && pb.team === 1).map((pb: any) => pb.hero_id);
-  const direBans = picksBans.filter((pb: any) => !pb.is_pick && pb.team === 1).map((pb: any) => pb.hero_id);
-
-  // Player stats
-  const players = od.players || [];
-  // Split players by team
-  const radiantPlayers = players.filter((p: any) => p.isRadiant);
-  const direPlayers = players.filter((p: any) => !p.isRadiant);
+  const radiantPicks = picksBans.filter((pb: { is_pick: boolean; team: number }) => pb.is_pick && pb.team === 0).map((pb: { hero_id: number }) => pb.hero_id);
+  const radiantBans = picksBans.filter((pb: { is_pick: boolean; team: number }) => !pb.is_pick && pb.team === 0).map((pb: { hero_id: number }) => pb.hero_id);
+  const direPicks = picksBans.filter((pb: { is_pick: boolean; team: number }) => pb.is_pick && pb.team === 1).map((pb: { hero_id: number }) => pb.hero_id);
+  const direBans = picksBans.filter((pb: { is_pick: boolean; team: number }) => !pb.is_pick && pb.team === 1).map((pb: { hero_id: number }) => pb.hero_id);
 
   // Helper to get player name
-  function getPlayerName(p: any) {
-    return p.name || p.personaname || p.account_id || "?";
-  }
+  const getPlayerName = (player: unknown) => {
+    const p = player as { name?: string; personaname?: string; account_id?: number };
+    return p.name || p.personaname || `Player ${p.account_id}` || 'Unknown';
+  };
+
+  // Helper to get hero name
+  const getHeroName = (heroId: number) => {
+    return getHeroNameSync(heroId);
+  };
 
   // Helper for quick and full stats buttons
-  function PlayerButtons({ player, onShowPlayerPopup }: { player: any, onShowPlayerPopup: (player: any) => void }) {
+  function _PlayerButtons({ player, onShowPlayerPopup }: { player: unknown, onShowPlayerPopup: (player: unknown) => void }) {
     const handleQuickInfo = () => {
       onShowPlayerPopup(player);
     };
@@ -110,7 +157,7 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
   // FP/SP indicator logic
   let fpSpIndicator = null;
   if (picksBans.length > 0) {
-    const firstPickTeam = picksBans.find((pb: any) => pb.is_pick)?.team;
+    const firstPickTeam = picksBans.find((pb: { is_pick: boolean; team: number }) => pb.is_pick)?.team;
     if (firstPickTeam !== undefined && teamSide !== 'Unknown') {
       const activeTeamIsRadiant = teamSide === 'Radiant';
       const activeTeamHadFirstPick = (firstPickTeam === 0 && activeTeamIsRadiant) || (firstPickTeam === 1 && !activeTeamIsRadiant);
@@ -203,7 +250,7 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
       </div>
 
       {/* Player Stats */}
-      {players.length > 0 && (
+      {radiantPlayers.length > 0 && (
         <div>
           <div className="font-medium mb-1">Players</div>
           <div className="overflow-x-auto">
@@ -221,29 +268,29 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
                 </tr>
               </thead>
               <tbody>
-                {players.map((p: any, i: number) => {
+                {radiantPlayers.map((p: unknown, i: number) => {
                   const handleFullInfo = () => {
                     const event = new CustomEvent('showPlayerStatsTab', { detail: { player: p } });
                     window.dispatchEvent(event);
                   };
                   return (
-                    <tr key={i} className={p.isRadiant ? 'bg-blue-950/10' : 'bg-pink-950/10'}>
+                    <tr key={i} className={`bg-blue-950/10`}>
                       <td className="py-1 px-2">{getPlayerName(p)}</td>
                       <td className="py-1 px-2">
                         <img
-                          src={getHeroImageUrl(getHeroName(p.hero_id))}
-                          alt={getHeroName(p.hero_id)}
-                          className="w-6 h-6 rounded object-cover bg-gray-200 dark:bg-gray-700 inline-block mr-1"
-                          title={getHeroName(p.hero_id)}
+                          src={getHeroImageUrl(getHeroName((p as { hero_id: number }).hero_id))}
+                          alt={getHeroName((p as { hero_id: number }).hero_id)}
+                          className="w-6 h-6 rounded object-cover bg-gray-200 dark:bg-gray-700"
+                          title={getHeroName((p as { hero_id: number }).hero_id)}
                         />
                       </td>
-                      <td className="py-1 px-2">{p.kills}</td>
-                      <td className="py-1 px-2">{p.deaths}</td>
-                      <td className="py-1 px-2">{p.assists}</td>
-                      <td className="py-1 px-2">{p.gold_per_min}</td>
-                      <td className="py-1 px-2">{p.xp_per_min}</td>
-                      <td className="py-1 px-2 w-auto">
-                        <span className="flex gap-1 items-center">
+                      <td className="py-1 px-2">{(p as { kills?: number }).kills || 0}</td>
+                      <td className="py-1 px-2">{(p as { deaths?: number }).deaths || 0}</td>
+                      <td className="py-1 px-2">{(p as { assists?: number }).assists || 0}</td>
+                      <td className="py-1 px-2">{(p as { gold_per_min?: number }).gold_per_min || 0}</td>
+                      <td className="py-1 px-2">{(p as { xp_per_min?: number }).xp_per_min || 0}</td>
+                      <td className="py-1 px-2">
+                        {onShowPlayerPopup && (
                           <button
                             className="text-xs px-1 py-0.5 rounded bg-muted hover:bg-accent border border-border flex items-center justify-center cursor-pointer"
                             title="Quick player info"
@@ -252,15 +299,7 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
                           >
                             <User className="w-4 h-4 text-blue-500" />
                           </button>
-                          <button
-                            className="text-xs px-1 py-0.5 rounded bg-muted hover:bg-accent border border-border flex items-center justify-center cursor-pointer"
-                            title="Full player info"
-                            type="button"
-                            onClick={handleFullInfo}
-                          >
-                            <BarChart className="w-4 h-4 text-pink-500" />
-                          </button>
-                        </span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -272,9 +311,4 @@ export default function MatchDetails({ selectedMatchObj, currentTeam, error, isL
       )}
     </div>
   );
-}
-
-// Helper to get hero name synchronously
-function getHeroName(heroId: number) {
-  return getHeroNameSync(heroId);
 } 

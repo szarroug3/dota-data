@@ -1,21 +1,20 @@
+"use client";
+
 import HeroCacheInitializer from "@/components/HeroCacheInitializer";
 import { Layout } from "@/components/layout";
 import { Sidebar } from "@/components/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
 import { DataFetchingProvider } from "@/contexts/data-fetching-context";
+import { MatchDataProvider } from "@/contexts/match-data-context";
+import { PlayerDataProvider } from "@/contexts/player-data-context";
 import { SidebarProvider } from "@/contexts/sidebar-context";
 import { TeamProvider } from "@/contexts/team-context";
-import type { Metadata } from "next";
+import { TeamDataProvider } from "@/contexts/team-data-context";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Dota Data Assistant",
-  description: "A comprehensive Dota 2 drafting and analysis assistant",
-};
 
 export default function RootLayout({
   children,
@@ -34,17 +33,23 @@ export default function RootLayout({
         >
           <DataFetchingProvider>
             <ToastProvider>
-              <TeamProvider>
-                <SidebarProvider>
-                  <HeroCacheInitializer />
-                  <div className="flex min-h-screen gap-8">
-                    <Sidebar />
-                    <main className="flex-1 ml-4 md:ml-8">
-                      <Layout>{children}</Layout>
-                    </main>
-                  </div>
-                </SidebarProvider>
-              </TeamProvider>
+              <MatchDataProvider>
+                <TeamDataProvider>
+                  <PlayerDataProvider>
+                    <TeamProvider>
+                      <SidebarProvider>
+                        <HeroCacheInitializer />
+                        <div className="flex min-h-screen gap-8">
+                          <Sidebar />
+                          <main className="flex-1 ml-4 md:ml-8">
+                            <Layout>{children}</Layout>
+                          </main>
+                        </div>
+                      </SidebarProvider>
+                    </TeamProvider>
+                  </PlayerDataProvider>
+                </TeamDataProvider>
+              </MatchDataProvider>
             </ToastProvider>
           </DataFetchingProvider>
         </ThemeProvider>

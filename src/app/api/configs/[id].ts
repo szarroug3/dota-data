@@ -1,6 +1,6 @@
 import { cacheService } from '@/lib/cache-service';
 import { corsOptionsHandler, withCORS } from '@/lib/cors';
-import { getDashboardConfigCacheKey } from '@/lib/utils/cache-keys';
+import { getDashboardConfigCacheFilename, getDashboardConfigCacheKey } from '@/lib/utils/cache-keys';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -50,10 +50,10 @@ import { NextRequest, NextResponse } from 'next/server';
  *               type: object
  */
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cacheKey = getDashboardConfigCacheKey(id);
-  const filename = `${cacheKey}.json`;
+  const filename = getDashboardConfigCacheFilename(id);
   const CONFIG_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
   if (!id || typeof id !== 'string') {
     return withCORS(NextResponse.json({ error: 'Invalid id' }, { status: 400 }));
@@ -67,10 +67,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   return withCORS(NextResponse.json(config));
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const cacheKey = getDashboardConfigCacheKey(id);
-  const filename = `${cacheKey}.json`;
+  const filename = getDashboardConfigCacheFilename(id);
   const CONFIG_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
   if (!id || typeof id !== 'string') {
     return withCORS(NextResponse.json({ error: 'Invalid id' }, { status: 400 }));

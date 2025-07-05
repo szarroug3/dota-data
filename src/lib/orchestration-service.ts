@@ -145,27 +145,6 @@ export class OrchestrationService {
   }
 
   /**
-   * Get current queue status for all services
-   */
-  getQueueStatus(): QueueStatus {
-    logWithTimestampToFile('log', '[ORCHESTRATION_SERVICE] Getting queue status');
-    
-    const cacheQueueStats = cacheService.getQueueStats();
-    const requestQueueStats = rateLimiter.getQueueStats();
-    
-    // Merge the stats (request queue takes precedence for consistency)
-    const mergedStats = {
-      ...cacheQueueStats,
-      ...requestQueueStats
-    };
-    
-    return {
-      services: mergedStats,
-      timestamp: new Date().toISOString()
-    };
-  }
-
-  /**
    * Invalidate cache for a team and all related data
    */
   async invalidateTeamCache(
@@ -178,7 +157,7 @@ export class OrchestrationService {
     try {
       // Invalidate team cache
       const teamCacheKey = `dotabuff-team-${_teamId}-matches`;
-      const teamFilename = `${teamCacheKey}.html`;
+      const teamFilename = `${teamCacheKey}.json`;
       await cacheService.invalidate(teamCacheKey, teamFilename);
       // Invalidate league cache
       if (_leagueId) {

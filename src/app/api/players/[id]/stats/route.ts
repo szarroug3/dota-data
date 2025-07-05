@@ -1,12 +1,13 @@
 /**
  * @openapi
  * /players/{id}/stats:
- *   get:
+ *   post:
  *     tags:
  *       - Players
  *     summary: Get player stats
  *     description: |
- *       To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.
+ *       Returns player statistics immediately if cached, or waits for fetch to complete.
+ *       Always returns 200 with the actual data.
  *     parameters:
  *       - in: path
  *         name: id
@@ -14,12 +15,16 @@
  *         schema:
  *           type: string
  *         description: Player ID
- *       - in: query
- *         name: force
- *         required: false
- *         schema:
- *           type: boolean
- *         description: Force refresh - bypass cache and fetch fresh data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               force:
+ *                 type: boolean
+ *                 description: Force refresh - bypass cache and fetch fresh data
  *     responses:
  *       200:
  *         description: Player stats
@@ -27,69 +32,73 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/PlayerStats'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-import { getPlayerStats as getPlayerStatsFromOpendota } from '@/lib/api/opendota/players';
 import { cacheService } from '@/lib/cache-service';
 import { corsOptionsHandler } from '@/lib/cors';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getPlayerStats as getPlayerStatsFromService } from '@/lib/services/player-stats-service';
 import type { PlayerStats } from '@/lib/types/data-service';
-import { NextRequest } from 'next/server';
+import { getPlayerStatsCacheKeyAndFilename } from '@/lib/utils/cache-keys';
 
 const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[PLAYER STATS POLL]', ...args);
 };
 
 async function isPlayerStatsFilePresent(playerId: string, debug: (...args: unknown[]) => void): Promise<boolean> {
-  const statsCacheKey = `opendota-player-stats-${playerId}`;
-  const statsFilename = `opendota-player-stats-${playerId}.json`;
-  debug('Checking for player stats file:', statsFilename);
-  const statsData = await cacheService.get<PlayerStats>(statsCacheKey, statsFilename);
+  const { key, filename } = getPlayerStatsCacheKeyAndFilename(playerId);
+  debug('Checking for player stats file:', filename);
+  const statsData = await cacheService.get<PlayerStats>(key, filename);
   return !!statsData;
-}
-
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id: _id } = await params;
-  if (await isPlayerStatsFilePresent(_id, debug)) {
-    const statsCacheKey = `opendota-player-stats-${_id}`;
-    const statsFilename = `opendota-player-stats-${_id}.json`;
-    const statsData = await cacheService.get<PlayerStats>(statsCacheKey, statsFilename);
-    debug('Player stats file present, returning 200:', statsFilename);
-    return new Response(JSON.stringify(statsData), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  }
-  debug('Player stats file missing, starting background job:', _id);
-  (async () => {
-    try {
-      await getPlayerStatsFromOpendota(Number(_id), true);
-      debug('Background job completed for player stats:', _id);
-    } catch (err) {
-      debug('Background job error for player stats:', _id, err);
-    }
-  })();
-  return new Response(JSON.stringify({ status: 'queued', signature: _id }), { status: 202 });
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: _id } = await params;
   debug('POST: Handler called for player stats', _id);
-  const statsCacheKey = `opendota-player-stats-${_id}`;
-  const statsFilename = `opendota-player-stats-${_id}.json`;
-  const statsData = await cacheService.get<PlayerStats>(statsCacheKey, statsFilename);
-  if (statsData) {
-    debug('POST: Player stats file present, returning ready');
-    return new Response(JSON.stringify({ status: 'ready', signature: statsCacheKey }), { status: 200 });
+  
+  let force = false;
+  try {
+    const body = await request.json();
+    force = body.force || false;
+  } catch (err) {
+    debug('POST: Failed to parse JSON body, using default force=false', err);
   }
-  // Start background job if not present
-  (async () => {
-    try {
-      await getPlayerStatsFromService(Number(_id));
-      debug('POST: Background job completed for player stats:', _id);
-    } catch (err) {
-      debug('POST: Background job error for player stats:', _id, err);
+
+  try {
+    // Always call the player stats service, which will use cache/mocks for underlying data
+    const statsData = await getPlayerStatsFromService(Number(_id));
+    if (!statsData || (typeof statsData === 'object' && 'status' in statsData && statsData.status === 'error')) {
+      throw new Error('Failed to fetch player stats');
     }
-  })();
-  debug('POST: Player stats file not present, background job started, returning queued');
-  return new Response(JSON.stringify({ status: 'queued', signature: statsCacheKey }), { status: 202 });
+    debug('POST: Player stats fetched and combined successfully');
+    return new Response(JSON.stringify(statsData), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  } catch (err) {
+    debug('POST: Error fetching player stats:', err);
+    return new Response(JSON.stringify({ error: 'Failed to fetch player stats' }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  }
 }
 
 export async function OPTIONS() {

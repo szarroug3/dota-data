@@ -26,6 +26,7 @@ export interface Team {
   leagueId?: string;
   leagueName?: string;
   matchIds?: string[];
+  matchIdsByLeague?: Record<string, string[]>;
   players: Player[];
   winRate?: number;
   totalMatches?: number;

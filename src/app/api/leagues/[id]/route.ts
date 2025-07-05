@@ -1,7 +1,7 @@
 import { getLeagueName } from '@/lib/api/dotabuff/leagues';
 import { cacheService } from '@/lib/cache-service';
 import { logWithTimestampToFile } from '@/lib/server-logger';
-import { getLeagueCacheFilename, getLeagueCacheKey } from '@/lib/utils/cache-keys';
+import { getLeagueCacheKey } from '@/lib/utils/cache-keys';
 import * as cheerio from 'cheerio';
 import { NextRequest } from 'next/server';
 
@@ -22,15 +22,63 @@ function parseLeagueNameHtml(html: string, leagueId: string) {
   return { leagueName };
 }
 
+function parseForceFlag(request: NextRequest): Promise<boolean> {
+  return request.json()
+    .then(body => body.force || false)
+    .catch(() => false);
+}
+
+async function getCachedLeagueData(leagueCacheKey: string, leagueFilename: string) {
+  let cached = await cacheService.get(leagueCacheKey, leagueFilename);
+  if (typeof cached === 'string') {
+    try { cached = JSON.parse(cached); }
+    catch {
+      // Ignore JSON parse errors: return the raw string if not valid JSON
+    }
+  }
+  return cached;
+}
+
+async function invalidateLeagueCache(leagueCacheKey: string, leagueFilename: string) {
+  await cacheService.invalidate(leagueCacheKey, leagueFilename);
+}
+
+function parseLeagueNameResult(htmlOrStatus: unknown, id: string): { leagueName: string } {
+  if (typeof htmlOrStatus === 'string') {
+    return parseLeagueNameHtml(htmlOrStatus, id);
+  } else if (typeof htmlOrStatus === 'object' && htmlOrStatus !== null && 'leagueName' in htmlOrStatus) {
+    return htmlOrStatus as { leagueName: string };
+  } else {
+    throw new Error('Unexpected response from getLeagueName');
+  }
+}
+
+async function fetchAndCacheLeagueData(id: string, leagueCacheKey: string, leagueFilename: string, debug: (...args: unknown[]) => void) {
+  const htmlOrStatus = await getLeagueName(id, true);
+  if (typeof htmlOrStatus === 'object' && htmlOrStatus !== null && 'status' in htmlOrStatus) {
+    // Still queued or processing
+    return { status: 202, body: htmlOrStatus };
+  }
+  const parsed = parseLeagueNameResult(htmlOrStatus, id);
+  if (parsed && typeof parsed === 'object' && 'leagueName' in parsed) {
+    debug('POST: Setting cache with parsed leagueName', parsed.leagueName, leagueCacheKey, leagueFilename);
+    await cacheService.set('league', leagueCacheKey, JSON.stringify(parsed), undefined, leagueFilename);
+    debug('POST: Cache set complete', leagueCacheKey, leagueFilename);
+  }
+  debug('POST: League data fetched and cached successfully');
+  return { status: 200, body: parsed };
+}
+
 /**
  * @openapi
  * /leagues/{id}:
- *   get:
+ *   post:
  *     tags:
  *       - League
  *     summary: Get league name from Dotabuff
  *     description: |
- *       This endpoint uses an async/polling pattern. If the data is not available yet, it will queue the fetch and return a 202 response with `{ status: 'queued', signature }`. The client should poll this endpoint until a 200 response with the data is returned.
+ *       Returns league data immediately if cached, or waits for fetch to complete.
+ *       Always returns 200 with the actual data.
  *     parameters:
  *       - in: path
  *         name: id
@@ -38,6 +86,16 @@ function parseLeagueNameHtml(html: string, leagueId: string) {
  *         schema:
  *           type: string
  *         description: League ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               force:
+ *                 type: boolean
+ *                 description: Force refresh - bypass cache and fetch fresh data
  *     responses:
  *       200:
  *         description: League data
@@ -47,18 +105,6 @@ function parseLeagueNameHtml(html: string, leagueId: string) {
  *               type: object
  *               properties:
  *                 leagueName:
- *                   type: string
- *       202:
- *         description: Data is being fetched; client should poll until 200 is returned.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: queued
- *                 signature:
  *                   type: string
  *       400:
  *         description: Invalid input
@@ -79,47 +125,52 @@ function parseLeagueNameHtml(html: string, leagueId: string) {
  *                 error:
  *                   type: string
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const leagueCacheKey = getLeagueCacheKey(id);
-  const leagueFilename = getLeagueCacheFilename(id);
-  const leagueHtml = await cacheService.get<string>(leagueCacheKey, leagueFilename);
-  if (leagueHtml) {
-    debug('League file present, returning 200:', leagueFilename);
-    const parsed = parseLeagueNameHtml(leagueHtml, id);
-    return new Response(JSON.stringify(parsed), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  }
-  debug('League file missing, starting background job:', id);
-  (async () => {
-    try {
-      await getLeagueName(id, true);
-      debug('Background job completed for league:', id);
-    } catch (err) {
-      debug('Background job error for league:', id, err);
-    }
-  })();
-  return new Response(JSON.stringify({ status: 'queued', signature: id }), { status: 202 });
-}
+  debug('POST: Handler called for league', id);
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id: _id } = await params;
-  debug('POST: Handler called for league', _id);
-  const leagueCacheKey = getLeagueCacheKey(_id);
-  const leagueFilename = getLeagueCacheFilename(_id);
-  const leagueHtml = await cacheService.get<string>(leagueCacheKey, leagueFilename);
-  if (leagueHtml) {
-    debug('POST: League file present, returning ready');
-    return new Response(JSON.stringify({ status: 'ready', signature: leagueCacheKey }), { status: 200 });
-  }
-  // Start background job if not present
-  (async () => {
-    try {
-      await getLeagueName(_id, true);
-      debug('POST: Background job completed for league:', _id);
-    } catch (err) {
-      debug('POST: Background job error for league:', _id, err);
+  const leagueCacheKey = getLeagueCacheKey(id);
+  const leagueFilename = `${leagueCacheKey}.json`;
+
+  let force = false;
+  force = await parseForceFlag(request);
+
+  if (!force) {
+    const cached = await getCachedLeagueData(leagueCacheKey, leagueFilename);
+    if (cached) {
+      debug('POST: League data present in cache, returning data');
+      return new Response(JSON.stringify(cached), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
-  })();
-  debug('POST: League file not present, background job started, returning queued');
-  return new Response(JSON.stringify({ status: 'queued', signature: leagueCacheKey }), { status: 202 });
+  }
+
+  if (force) {
+    debug('POST: Force refresh requested, invalidating cache', leagueCacheKey, leagueFilename);
+    await invalidateLeagueCache(leagueCacheKey, leagueFilename);
+    debug('POST: Cache invalidated', leagueCacheKey, leagueFilename);
+  }
+
+  debug('POST: League data not in cache, fetching and waiting for completion');
+
+  try {
+    const result = await fetchAndCacheLeagueData(id, leagueCacheKey, leagueFilename, debug);
+    if ('status' in result && result.status === 202) {
+      return new Response(JSON.stringify(result.body), {
+        status: 202,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    return new Response(JSON.stringify(result.body), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (err) {
+    debug('POST: Error fetching league data:', err);
+    return new Response(JSON.stringify({ error: 'Failed to fetch league data' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }

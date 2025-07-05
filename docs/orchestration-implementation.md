@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive guide to the implemented backend orchestration system for the Dota Data dashboard. The system handles team import, background queueing of match and player data, and intelligent cache management with polling support.
+This document provides a comprehensive guide to the implemented backend orchestration system for the Dota Data dashboard. The system uses a simplified POST-only pattern that ensures data is always returned to the client, either immediately from cache or after waiting for background processing to complete.
 
 ## Architecture Summary
 
@@ -30,11 +30,19 @@ The orchestration system implements the architecture described in `architecture.
 
 ### 2. API Endpoints
 
+All endpoints follow the simplified POST-only pattern:
+
 #### Team Import (`/api/teams/[id]/matches`)
 ```typescript
-POST /api/teams/{id}/matches?leagueId={leagueId}&force={boolean}
+POST /api/teams/{id}/matches
+Content-Type: application/json
+
+{
+  "leagueId": "1234",
+  "force": false
+}
 ```
-Imports team data and queues match/player fetching:
+Returns team name and match IDs immediately if cached, or waits for import to complete:
 ```json
 {
   "id": "2586976-1234",
@@ -42,18 +50,21 @@ Imports team data and queues match/player fetching:
   "teamName": "Team Liquid",
   "leagueId": "1234",
   "leagueName": "The International",
-  "matchIds": ["1234567890", "1234567891"],
-  "matches": [],
-  "players": [],
-  "status": "queued"
+  "matchIds": ["1234567890", "1234567891"]
 }
 ```
 
 #### Match Data (`/api/matches/[id]`)
 ```typescript
-GET /api/matches/{id}?force={boolean}
+POST /api/matches/{id}
+Content-Type: application/json
+
+{
+  "teamId": "2586976",
+  "force": false
+}
 ```
-Fetches match data with automatic player queueing:
+Returns match data immediately if cached, or waits for fetch to complete:
 ```json
 {
   "match_id": 1234567890,
@@ -67,9 +78,14 @@ Fetches match data with automatic player queueing:
 
 #### Player Data (`/api/players/[id]/data`)
 ```typescript
-GET /api/players/{id}/data?force={boolean}
+POST /api/players/{id}/data
+Content-Type: application/json
+
+{
+  "force": false
+}
 ```
-Fetches player data:
+Returns player data immediately if cached, or waits for fetch to complete:
 ```json
 {
   "profile": {
@@ -85,44 +101,62 @@ Fetches player data:
 
 ### 3. Frontend Integration
 
-#### Queue Status Hook (`src/lib/hooks/useQueueStatus.ts`)
+#### Simplified Data Loading Hook
 ```typescript
-import { useQueueStatus } from '@/lib/hooks/useQueueStatus';
+import { useState, useEffect } from 'react';
 
-function MyComponent() {
-  const { status, isLoading, error, isPolling } = useQueueStatus({
-    pollingInterval: 2000,
-    enabled: true,
-  });
+function useDataLoader<T>(endpoint: string, body: any) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (isLoading) return <div>Loading queue status...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  return (
-    <div>
-      <h3>Background Jobs</h3>
-      {Object.entries(status?.services || {}).map(([service, data]) => (
-        <div key={service}>
-          {service}: {data.activeSignatures} active requests
-        </div>
-      ))}
-    </div>
-  );
+    fetchData();
+  }, [endpoint, JSON.stringify(body)]);
+
+  return { data, loading, error };
 }
 ```
 
-#### Queue Status Component (`src/components/QueueStatusIndicator.tsx`)
+#### Usage Example
 ```typescript
-import { QueueStatusIndicator } from '@/components/QueueStatusIndicator';
+function MatchHistoryPage({ matchId, teamId }: { matchId: string, teamId: string }) {
+  const { data, loading, error } = useDataLoader(`/api/matches/${matchId}`, {
+    teamId,
+    force: false
+  });
 
-function Dashboard() {
+  if (loading) return <div>Loading match data...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!data) return <div>No data available</div>;
+
   return (
     <div>
-      <QueueStatusIndicator 
-        serviceNames={['dotabuff', 'opendota']}
-        showDetails={true}
-        compact={false}
-      />
+      <h2>Match {data.match_id}</h2>
+      <p>Duration: {data.duration}s</p>
+      <p>Winner: {data.radiant_win ? 'Radiant' : 'Dire'}</p>
     </div>
   );
 }
@@ -132,23 +166,170 @@ function Dashboard() {
 
 ### Data Flow
 
-1. **Team Import Flow**:
-   ```
-   User Action → Team Import API → Dotabuff HTML Fetch → Match ID Extraction → 
-   Match Queueing → Player Queueing → Background Processing → Cache Storage
-   ```
+#### 1. Synchronous Data Loading Flow
+The following flowchart shows the complete data loading process:
 
-2. **Polling Flow**:
-   ```
-   Frontend Request → Cache Check → Queue Status → Background Job → 
-   Data Ready → Cache Update → Frontend Poll → Data Return
-   ```
+```mermaid
+flowchart TD
+    %% Frontend Request
+    FRONTEND[Frontend POST Request] --> API[API Route Handler]
+    
+    %% Request Validation
+    API --> VALIDATE{Valid Request?}
+    VALIDATE -->|No| ERROR_400[Return 400 Bad Request]
+    VALIDATE -->|Yes| CACHE{Cache Check}
+    
+    %% Cache Hit Path
+    CACHE -->|Data Found| RETURN[Return Data 200]
+    
+    %% Cache Miss Path
+    CACHE -->|Data Missing| QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
+    
+    %% Background Processing
+    PROCESS --> RATE_LIMIT{Rate Limited?}
+    RATE_LIMIT -->|Yes| RETRY[Wait & Retry]
+    RETRY --> PROCESS
+    RATE_LIMIT -->|No| FETCH[Fetch from External API]
+    FETCH --> STORE[Store in Cache]
+    STORE --> RETURN
+    
+    %% Response
+    RETURN --> FRONTEND_RESPONSE[Frontend Receives Data]
+    ERROR_400 --> FRONTEND_ERROR[Frontend Error]
+    
+    %% Notes
+    N1[POST always returns data]
+    N2[No polling required]
+    N3[Synchronous processing]
+    
+    API -.-> N1
+    WAIT -.-> N2
+    PROCESS -.-> N3
+```
 
-3. **Refresh Flow**:
-   ```
-   Force Refresh → Cache Invalidation → Re-queue Jobs → 
-   Background Processing → Cache Update → Data Return
-   ```
+#### 2. Team Import Flow
+The following sequence diagram shows the team import process:
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant A as API Route
+    participant C as Cache
+    participant Q as Queue
+    participant D as Dotabuff API
+    participant O as OpenDota API
+    
+    F->>A: POST /api/teams/{id}/matches
+    Note over F,A: { leagueId: "1234", force: false }
+    
+    A->>C: Check cache for team data
+    
+    alt Data in cache
+        C->>A: Return cached data
+        A->>F: Return team name + match IDs immediately
+    else Data not in cache
+        A->>Q: Queue team import job
+        Q->>D: Fetch team HTML from Dotabuff
+        D->>Q: Return team HTML
+        Q->>Q: Parse team name and match IDs
+        Q->>C: Store team name and match IDs in cache
+        
+        Note over Q: Start background jobs before returning:
+        Q->>Q: Queue match data fetching for each match ID
+        Q->>O: Fetch match data (background)
+        O->>Q: Return match data
+        Q->>Q: Parse player IDs from match data
+        Q->>Q: Queue player data fetching for each player ID
+        Q->>Q: Fetch player data (background)
+        
+        C->>A: Team data ready
+        A->>F: Return team name + match IDs
+    end
+```
+
+#### 3. Force Refresh Flow
+The following flowchart shows how force refresh works:
+
+```mermaid
+flowchart TD
+    %% Force Refresh Request
+    FRONTEND[Frontend POST with force=true] --> API[API Route Handler]
+    
+    %% Force Refresh Logic
+    API --> FORCE{Force Refresh?}
+    FORCE -->|Yes| INVALIDATE[Invalidate Cache]
+    FORCE -->|No| CACHE{Cache Check}
+    
+    %% Cache Invalidation
+    INVALIDATE --> QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
+    
+    %% Normal Cache Check
+    CACHE -->|Data Found| RETURN[Return Data 200]
+    CACHE -->|Data Missing| QUEUE
+    
+    %% Background Processing
+    PROCESS --> FETCH[Fetch Fresh Data]
+    FETCH --> STORE[Store in Cache]
+    STORE --> RETURN
+    
+    %% Response
+    RETURN --> FRONTEND_RESPONSE[Frontend Receives Fresh Data]
+    
+    %% Notes
+    N1[Force refresh bypasses cache]
+    N2[Always fetches fresh data]
+    N3[Updates cache with new data]
+    
+    INVALIDATE -.-> N1
+    FETCH -.-> N2
+    STORE -.-> N3
+```
+
+#### 4. Rate Limiting Flow
+The following flowchart shows how rate limiting is handled:
+
+```mermaid
+flowchart TD
+    %% External API Request
+    REQUEST[External API Request] --> RATE_CHECK{Rate Limit Check}
+    
+    %% Rate Limit Decision
+    RATE_CHECK -->|Under Limit| ALLOW[Allow Request]
+    RATE_CHECK -->|Over Limit| BLOCK[Block Request]
+    
+    %% Allowed Request
+    ALLOW --> API_CALL[Make API Call]
+    API_CALL --> SUCCESS{Success?}
+    SUCCESS -->|Yes| RETURN[Return Data]
+    SUCCESS -->|No| ERROR_TYPE{Error Type?}
+    
+    %% Blocked Request
+    BLOCK --> WAIT[Wait for Rate Limit]
+    WAIT --> RATE_CHECK
+    
+    %% Error Handling
+    ERROR_TYPE -->|429 Rate Limited| RETRY_HEADER{Retry-After Header?}
+    RETRY_HEADER -->|Yes| RETRY_WAIT[Wait for Retry-After]
+    RETRY_HEADER -->|No| DEFAULT_WAIT[Wait 60 seconds]
+    RETRY_WAIT --> API_CALL
+    DEFAULT_WAIT --> API_CALL
+    
+    ERROR_TYPE -->|Other Error| LOG_ERROR[Log Error]
+    LOG_ERROR --> THROW[Throw Error]
+    
+    %% Notes
+    N1[Instance-local rate limiting]
+    N2[Graceful retry handling]
+    N3[Exponential backoff]
+    
+    RATE_CHECK -.-> N1
+    RETRY_WAIT -.-> N2
+    DEFAULT_WAIT -.-> N3
+```
 
 ### Cache Strategy
 
@@ -160,9 +341,10 @@ function Dashboard() {
 
 ### Queue Management
 
-- **Immediate Response**: Always return "queued" status for background jobs
-- **Side Effects**: Parse and queue dependent jobs in background functions
-- **Cache Separation**: Never cache "queued" status, only actual data
+- **Synchronous Processing**: POST requests wait for background jobs to complete
+- **Immediate Response**: Return data immediately if available in cache
+- **Side Effects**: Parse and process dependent jobs in background functions
+- **Cache Separation**: Never cache processing status, only actual data
 - **Error Handling**: Comprehensive logging and graceful degradation
 
 ### Configuration
@@ -184,17 +366,16 @@ interface OrchestrationConfig {
 ### Basic Team Import
 
 ```typescript
-import { orchestrationService } from '@/lib/orchestration-service';
+// POST request to import team data
+const response = await fetch('/api/teams/2586976/matches', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ leagueId: '1234', force: false })
+});
 
-// Import a team and queue all related data
-const result = await orchestrationService.importTeam('2586976', '1234');
-
-if (result.status === 'queued') {
-  console.log('Team import queued, data will be available soon');
-} else {
-  console.log('Team import completed:', result.teamName);
-  console.log('Matches found:', result.matchIds.length);
-}
+const result = await response.json();
+console.log('Team import completed:', result.teamName);
+console.log('Matches found:', result.matchIds.length);
 ```
 
 ### Force Refresh

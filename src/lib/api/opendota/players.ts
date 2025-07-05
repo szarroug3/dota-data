@@ -3,16 +3,15 @@ import { fetchAPI } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
 import { getPlayerStats as getPlayerStatsFromService, type PlayerStats } from '@/lib/data-service';
 import { generateFakePlayer, generateFakePlayerCounts, generateFakePlayerHeroes, generateFakePlayerMatches, generateFakePlayerRecentMatches, generateFakePlayerStats, generateFakePlayerTotals, generateFakePlayerWL } from '@/lib/fake-data-generator';
-import { logWithTimestampToFile } from '@/lib/server-logger';
 import {
-    getOpendotaPlayerCacheKey,
-    getOpendotaPlayerCountsCacheKey,
-    getOpendotaPlayerHeroesCacheKey,
-    getOpendotaPlayerMatchesCacheKey,
-    getOpendotaPlayerRecentMatchesCacheKey,
-    getOpendotaPlayerStatsCacheKey,
-    getOpendotaPlayerTotalsCacheKey,
-    getOpendotaPlayerWlCacheKey
+  getOpendotaPlayerCacheKey,
+  getOpendotaPlayerCountsCacheKey,
+  getOpendotaPlayerHeroesCacheKey,
+  getOpendotaPlayerMatchesCacheKey,
+  getOpendotaPlayerRecentMatchesCacheKey,
+  getOpendotaPlayerStatsCacheKey,
+  getOpendotaPlayerTotalsCacheKey,
+  getOpendotaPlayerWlCacheKey
 } from '@/lib/utils/cache-keys';
 import type { OpenDotaMatch, OpenDotaPlayer, OpenDotaPlayerCounts, OpenDotaPlayerHeroes, OpenDotaPlayerRecentMatches, OpenDotaPlayerTotals, OpenDotaPlayerWL } from '@/types/opendota';
 
@@ -59,9 +58,6 @@ export async function getPlayerData(accountId: number, forceRefresh = false): Pr
       if (shouldMockService('opendota')) {
         const fakeData = generateFakePlayer(accountId, filename);
         await cacheService.set('opendota', cacheKey, fakeData, PLAYER_TTL, filename);
-        if (typeof logWithTimestampToFile === 'function') {
-          logWithTimestampToFile('log', `[SAMREEN] [BGJOB] Wrote mock player data to cache for accountId=${accountId}, filename=${filename}`);
-        }
         return fakeData;
       }
       
@@ -379,6 +375,7 @@ export async function getPlayerStats(accountId: number, forceRefresh = false): P
       // 2. Check if we should use mock service
       if (shouldMockService('opendota')) {
         const fakeData = generateFakePlayerStats(accountId, filename);
+        await cacheService.set('opendota', cacheKey, fakeData, PLAYER_STATS_TTL, filename);
         return fakeData;
       }
       

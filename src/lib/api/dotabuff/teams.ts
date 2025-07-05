@@ -3,7 +3,6 @@ import { getPlayerData } from '@/lib/api/opendota/players';
 import { fetchPage, isAlreadyQueuedResult } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
 import { generateFakeDotabuffTeamMatchesHtml, generateFakeMatchDetails } from '@/lib/fake-data-generator';
-import { writeMockData } from '@/lib/mock-data-writer';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getOpendotaMatchCacheKey, getTeamCacheFilename, getTeamCacheKey } from '@/lib/utils/cache-keys';
 import * as cheerio from 'cheerio';
@@ -50,15 +49,16 @@ async function fetchTeamMatchesPage(teamId: string, pageNum: number, endpoint: s
 }
 
 // Extracted helper: checkTeamMatchesCache
-async function checkTeamMatchesCache(cacheKey: string, filename: string, leagueId: string, teamId: string): Promise<{ teamName: string; matchIdsByLeague: Record<string, string[]> } | null> {
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] Checking cache for key: ${cacheKey}`);
-  const cached = await cacheService.get<string>(cacheKey, filename);
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] cacheService.get returned type: ${typeof cached}, value: ${JSON.stringify(cached)}`);
-  if (cached) {
-    logWithTimestampToFile('log', `[getTeamNameAndMatches] Cache hit for key: ${cacheKey}`);
-    return parseTeamMatchesHtml(cached, leagueId, teamId);
+async function checkTeamMatchesCache(cacheKey: string, filename: string): Promise<{ teamName: string; matchIdsByLeague: Record<string, string[]> } | null> {
+  let cached = await cacheService.get<string>(cacheKey, filename);
+  if (typeof cached === 'string') {
+    try { cached = JSON.parse(cached); } catch {
+      throw new Error(`Unable to parse cached: ${cached}`)
+    }
   }
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] Cache miss for key: ${cacheKey}`);
+  if (cached && typeof cached === 'object' && 'teamName' in cached && 'matchIdsByLeague' in cached) {
+    return cached as { teamName: string; matchIdsByLeague: Record<string, string[]> };
+  }
   return null;
 }
 
@@ -70,7 +70,7 @@ async function queueTeamMatchesRequest(
   cacheKey: string,
   CACHE_TTL: number,
   filename: string
-): Promise<string | { status: string; signature: string } | { error: string; status: number }> {
+): Promise<unknown> {
   return await cacheService.queueRequest(
     'dotabuff',
     cacheKey,
@@ -79,79 +79,66 @@ async function queueTeamMatchesRequest(
       const htmlPages = await fetchAllDotabuffPages(endpoint, teamId);
       const joinedHtml = htmlPages.join('');
       logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Fetched and joined HTML, length=${joinedHtml.length}`);
-      // Write combined HTML to cache-dotabuff-team-[id]-matches.html in mock path
-      const combinedCacheFile = getTeamCacheFilename(teamId, 0);
-      try {
-        await writeMockData(combinedCacheFile, joinedHtml, `/teams/${teamId}/matches`);
-        logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Wrote combined HTML to ${combinedCacheFile}`);
-      } catch (err: unknown) {
-        logWithTimestampToFile('error', `[getTeamNameAndMatches] [queueRequest] Error writing combined HTML to ${combinedCacheFile}:`, err);
-      }
-      // Parse and enqueue as side effects
-      try {
-        const parsed = parseTeamMatchesHtml(joinedHtml, leagueId, teamId);
-        logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Parsed team matches: ${JSON.stringify(parsed)}`);
-        if (parsed && parsed.matchIdsByLeague && parsed.matchIdsByLeague[leagueId]) {
-          for (const matchId of parsed.matchIdsByLeague[leagueId]) {
-            logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Enqueuing matchId=${matchId}`);
-            // Refactored: Inline the match job logic so the background job writes data directly
-            cacheService.queueRequest(
-              'opendota',
-              `opendota-match-${matchId}`,
-              async () => {
-                logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Starting match job for matchId=${matchId}, teamId=${teamId}`);
-                const cacheKey = getOpendotaMatchCacheKey(matchId);
-                const filename = `${cacheKey}.json`;
-                const MATCH_TTL = 60 * 60 * 24 * 14; // 14 days in seconds
-                let matchData: unknown;
-                // 1. Try mock data if available
-                const mockRes = await tryMock('opendota', filename);
-                if (mockRes) {
-                  matchData = await mockRes.json();
-                } else if (shouldMockService('opendota')) {
-                  matchData = generateFakeMatchDetails(Number(matchId), filename);
-                } else {
-                  matchData = await getMatch(Number(matchId), false, teamId);
-                }
-                // Write to cache/disk
-                await cacheService.set('opendota', cacheKey, matchData, MATCH_TTL, filename);
-                logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Wrote match data to cache for matchId=${matchId}, filename=${filename}`);
-                // Queue player jobs if possible
-                if (
-                  matchData &&
-                  typeof matchData === 'object' &&
-                  'players' in matchData &&
-                  Array.isArray((matchData as { players: unknown[] }).players)
-                ) {
-                  for (const player of (matchData as { players: Array<{ account_id?: number }> }).players) {
-                    if (player.account_id) {
-                      getPlayerData(player.account_id, false)
-                        .then((playerData: unknown) => {
-                          if (playerData && typeof playerData === 'object' && !('status' in playerData)) {
-                            logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Successfully fetched player data for account_id=${player.account_id}`);
-                          } else {
-                            logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] getPlayerData returned status for account_id=${player.account_id}: ${JSON.stringify(playerData)}`);
-                          }
-                        })
-                        .catch((err: unknown) => {
-                          logWithTimestampToFile('error', `[DOTABUFF] [BGJOB] Error fetching player data for account_id=${player.account_id}:`, err);
-                        });
-                    }
+      // Parse the HTML to get processed data
+      const parsed = parseTeamMatchesHtml(joinedHtml, leagueId, teamId);
+      // Store the processed data as JSON in the cache
+      await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), CACHE_TTL, filename);
+      logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Cached processed team matches for ${teamId}`);
+      // Enqueue match jobs as before
+      if (parsed && parsed.matchIdsByLeague && parsed.matchIdsByLeague[leagueId]) {
+        for (const matchId of parsed.matchIdsByLeague[leagueId]) {
+          logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Enqueuing matchId=${matchId}`);
+          cacheService.queueRequest(
+            'opendota',
+            `opendota-match-${matchId}`,
+            async () => {
+              logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Starting match job for matchId=${matchId}, teamId=${teamId}`);
+              const cacheKey = getOpendotaMatchCacheKey(matchId);
+              const filename = `${cacheKey}.json`;
+              const MATCH_TTL = 60 * 60 * 24 * 14; // 14 days in seconds
+              let matchData: unknown;
+              const mockRes = await tryMock('opendota', filename);
+              if (mockRes) {
+                matchData = await mockRes.json();
+              } else if (shouldMockService('opendota')) {
+                matchData = generateFakeMatchDetails(Number(matchId), filename);
+              } else {
+                matchData = await getMatch(Number(matchId), false, teamId);
+              }
+              await cacheService.set('opendota', cacheKey, matchData, MATCH_TTL, filename);
+              logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Wrote match data to cache for matchId=${matchId}, filename=${filename}`);
+              if (
+                matchData &&
+                typeof matchData === 'object' &&
+                'players' in matchData &&
+                Array.isArray((matchData as { players: unknown[] }).players)
+              ) {
+                for (const player of (matchData as { players: Array<{ account_id?: number }> }).players) {
+                  if (player.account_id) {
+                    getPlayerData(player.account_id, false)
+                      .then((playerData: unknown) => {
+                        if (playerData && typeof playerData === 'object' && !('status' in playerData)) {
+                          logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Successfully fetched player data for account_id=${player.account_id}`);
+                        } else {
+                          logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] getPlayerData returned status for account_id=${player.account_id}: ${JSON.stringify(playerData)}`);
+                        }
+                      })
+                      .catch((err: unknown) => {
+                        logWithTimestampToFile('error', `[DOTABUFF] [BGJOB] Error fetching player data for account_id=${player.account_id}:`, err);
+                      });
                   }
                 }
-                logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Finished match job for matchId=${matchId}, teamId=${teamId}`);
-                return matchData;
-              },
-              CACHE_TTL,
-              `opendota-match-${matchId}.json`
-            );
-          }
+              }
+              logWithTimestampToFile('log', `[DOTABUFF] [BGJOB] Finished match job for matchId=${matchId}, teamId=${teamId}`);
+              return matchData;
+            },
+            CACHE_TTL,
+            `opendota-match-${matchId}.json`
+          );
         }
-      } catch (err: unknown) {
-        logWithTimestampToFile('error', `[getTeamNameAndMatches] [queueRequest] Error during parse/enqueue:`, err);
       }
-      // Only return the joined HTML for caching
-      return joinedHtml;
+      // Only return the processed JSON for caching
+      return parsed;
     },
     CACHE_TTL,
     filename
@@ -164,12 +151,9 @@ function handleTeamMatchesResult(result: unknown, leagueId: string, teamId: stri
   | { status: string; signature: string }
   | { error: string; status: number }
 {
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] cacheService.queueRequest returned type: ${typeof result}, value: ${JSON.stringify(result)}`);
   if (isAlreadyQueuedResult(result)) {
-    logWithTimestampToFile('log', `[getTeamNameAndMatches] Already queued for key: ${cacheKey}`);
     return { status: 'queued', signature: cacheKey };
   }
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] Returning queueResult for teamId=${teamId}`);
   if (typeof result === 'string') {
     return parseTeamMatchesHtml(result, leagueId, teamId);
   }
@@ -195,10 +179,11 @@ export async function getTeamNameAndMatches(
   const cacheKey = getTeamCacheKey(teamId);
   const CACHE_TTL = 60 * 60 * 2; // 2 hours in seconds
   const filename = getTeamCacheFilename(teamId, 0);
+  logWithTimestampToFile('log', `[getTeamNameAndMatches] cacheKey=${cacheKey} filename=${filename} forceRefresh=${forceRefresh}`)
 
   // 1. Check cache for combined HTML
   if (!forceRefresh) {
-    const cachedResult = await checkTeamMatchesCache(cacheKey, filename, leagueId, teamId);
+    const cachedResult = await checkTeamMatchesCache(cacheKey, filename);
     if (cachedResult) return cachedResult;
   }
 

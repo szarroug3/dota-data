@@ -4,8 +4,6 @@
  * Handles hero-related operations and transformations
  */
 
-import { getHeroDisplayName } from "../utils/data-calculations";
-
 /**
  * Get hero display name from internal name
  */

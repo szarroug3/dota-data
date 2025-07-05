@@ -6,8 +6,8 @@
  *       - Teams
  *     summary: Import Dotabuff matches for a team
  *     description: |
- *       This endpoint uses an async/polling pattern. If the data is not available yet, it will queue the fetch and return a 202 response with `{ status: 'queued', signature }`. The client should poll this endpoint until a 200 response with the data is returned.
- *       To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.
+ *       Returns team name and match IDs immediately if cached, or waits for import to complete.
+ *       Always returns 200 with the actual data.
  *     parameters:
  *       - in: path
  *         name: id
@@ -15,12 +15,6 @@
  *         schema:
  *           type: string
  *         description: Team ID
- *       - in: query
- *         name: force
- *         required: false
- *         schema:
- *           type: boolean
- *         description: Force refresh - bypass cache and fetch fresh data
  *     requestBody:
  *       required: true
  *       content:
@@ -31,11 +25,14 @@
  *               leagueId:
  *                 type: string
  *                 description: The Dotabuff league ID
+ *               force:
+ *                 type: boolean
+ *                 description: Force refresh - bypass cache and fetch fresh data
  *             required:
  *               - leagueId
  *     responses:
  *       200:
- *         description: Import result
+ *         description: Team data with match IDs
  *         content:
  *           application/json:
  *             schema:
@@ -56,26 +53,6 @@
  *                   type: array
  *                   items:
  *                     type: string
- *                 matches:
- *                   type: array
- *                   items:
- *                     type: object
- *                 players:
- *                   type: array
- *                   items:
- *                     type: object
- *       202:
- *         description: Data is being fetched; client should poll until 200 is returned.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: queued
- *                 signature:
- *                   type: string
  *       400:
  *         description: Invalid input
  *         content:
@@ -95,7 +72,7 @@
  *                 error:
  *                   type: string
  */
-import { fetchAndQueueMatchData, getTeamNameAndMatches, parseTeamMatchesHtml } from '@/lib/api/dotabuff/teams';
+import { getTeamNameAndMatches } from '@/lib/api/dotabuff/teams';
 import { cacheService } from '@/lib/cache-service';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getTeamCacheFilename, getTeamCacheKey } from '@/lib/utils/cache-keys';
@@ -105,70 +82,116 @@ const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[TEAM IMPORT POLL]', ...args);
 };
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { searchParams } = new URL(request.url);
-  const leagueId = searchParams.get('leagueId');
-  if (!leagueId) {
-    debug('Missing leagueId query parameter');
-    return new Response(JSON.stringify({ error: 'Missing leagueId query parameter' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+interface RequestBody {
+  leagueId: string;
+  force?: boolean;
+}
+
+async function parseRequestBody(request: NextRequest): Promise<RequestBody> {
+  return await request.json() as RequestBody;
+}
+
+function validateRequestBody(body: RequestBody): string | null {
+  if (!body.leagueId) {
+    return 'Missing leagueId in body';
   }
-  const { id } = await params;
-  const teamCacheKey = getTeamCacheKey(id);
-  const teamFilename = getTeamCacheFilename(id);
+  return null;
+}
+
+async function getCachedTeamData(teamCacheKey: string, teamFilename: string): Promise<Response | null> {
   const cachedData = await cacheService.get<string>(teamCacheKey, teamFilename);
-  debug('GET: Data exists in cache?', cachedData, 'for', teamFilename);
-  if (!cachedData) {
-    debug('GET: Combined team HTML cache file missing:', teamFilename);
-    return new Response(JSON.stringify({ status: 'queued', signature: `${id}-${leagueId}` }), { status: 202 });
+  if (cachedData) {
+    try {
+      // Parse the cached JSON data
+      const parsed = typeof cachedData === 'string' ? JSON.parse(cachedData) : cachedData;
+      if (parsed && typeof parsed === 'object' && 'teamName' in parsed && 'matchIdsByLeague' in parsed) {
+        debug('POST: Team data found in cache, returning parsed data');
+        return new Response(JSON.stringify(parsed), { 
+          status: 200, 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+      }
+    } catch (parseErr) {
+      debug('POST: Failed to parse cached data:', parseErr);
+    }
   }
-  const parsed = parseTeamMatchesHtml(cachedData, leagueId, id);
-  // Do NOT start enrichment in the background for GET
-  debug('Returning parsed Dotabuff data only (GET). No enrichment started.');
-  return new Response(JSON.stringify(parsed), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  return null;
+}
+
+function createErrorResponse(message: string, status: number): Response {
+  return new Response(JSON.stringify({ error: message }), { 
+    status, 
+    headers: { 'Content-Type': 'application/json' } 
+  });
+}
+
+function createSuccessResponse(data: unknown): Response {
+  return new Response(JSON.stringify(data), { 
+    status: 200, 
+    headers: { 'Content-Type': 'application/json' } 
+  });
+}
+
+async function fetchAndProcessTeamData(id: string, leagueId: string, _teamCacheKey: string, _teamFilename: string): Promise<Response> {
+  try {
+    // Wait for the background job to complete
+    const result = await getTeamNameAndMatches(id, leagueId, true);
+    
+    // Check if we got a valid result
+    if (result && typeof result === 'object' && 'teamName' in result && 'matchIdsByLeague' in result) {
+      debug('POST: Team data fetched successfully');
+      return createSuccessResponse(result);
+    } else if (result && typeof result === 'object' && 'status' in result) {
+      // Handle queued status
+      debug('POST: Request queued, returning status');
+      return createSuccessResponse(result);
+    } else {
+      throw new Error('Invalid result format from getTeamNameAndMatches');
+    }
+  } catch (err) {
+    debug('POST: Error fetching team data:', err);
+    console.error('[API ERROR] /api/teams/[id]/matches:', err);
+    return createErrorResponse('Failed to fetch team data', 500);
+  }
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   debug('POST: Handler called');
   const { id } = await params;
-  let leagueId: string | undefined;
+  
+  let body: RequestBody;
   try {
-    const body = await request.json();
-    leagueId = body.leagueId;
+    body = await parseRequestBody(request);
   } catch (err) {
     debug('POST: Failed to parse JSON body', err);
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 });
+    return createErrorResponse('Invalid JSON body', 400);
   }
-  if (!leagueId) {
+  
+  const validationError = validateRequestBody(body);
+  if (validationError) {
     debug('POST: Missing leagueId in body');
-    return new Response(JSON.stringify({ error: 'Missing leagueId in body' }), { status: 400 });
+    return createErrorResponse(validationError, 400);
   }
+
+  const { leagueId, force = false } = body;
   const teamCacheKey = getTeamCacheKey(id);
   const teamFilename = getTeamCacheFilename(id);
-  const teamHtml = await cacheService.get<string>(teamCacheKey, teamFilename);
-  if (teamHtml) {
-    const parsed = parseTeamMatchesHtml(teamHtml, leagueId, id);
-    const matchIds = parsed.matchIdsByLeague?.[leagueId] || [];
-    // Start enrichment in the background, but do not await
-    (async () => {
-      for (const matchId of matchIds) {
-        fetchAndQueueMatchData(matchId, { matches: [] }, id, false);
-      }
-    })();
-    debug('POST: Returning parsed Dotabuff data immediately after parsing. Enrichment is running in background.');
-    return new Response(JSON.stringify({ status: 'ready', signature: `${id}-${leagueId}` }), { status: 200 });
-  }
-  debug('POST: Starting background job for team import', { id, leagueId });
-  (async () => {
-    debug('POST: Background job IIFE started', { id, leagueId });
-    try {
-      await getTeamNameAndMatches(id, leagueId, true);
-      debug('POST: Background job completed for team import', { id, leagueId });
-    } catch (err) {
-      debug('POST: Background job error', err);
+  
+  // Check cache first (unless force refresh)
+  if (!force) {
+    const cachedResponse = await getCachedTeamData(teamCacheKey, teamFilename);
+    if (cachedResponse) {
+      return cachedResponse;
     }
-  })();
-  return new Response(JSON.stringify({ status: 'queued', signature: `${id}-${leagueId}` }), { status: 202 });
+  }
+
+  // If force refresh or not in cache, invalidate and fetch fresh data
+  if (force) {
+    debug('POST: Force refresh requested, invalidating cache');
+    await cacheService.invalidate(teamCacheKey, teamFilename);
+  }
+
+  debug('POST: Team data not in cache, fetching and waiting for completion');
+  
+  return await fetchAndProcessTeamData(id, leagueId, teamCacheKey, teamFilename);
 }

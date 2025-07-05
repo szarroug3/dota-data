@@ -1,12 +1,13 @@
 /**
  * @openapi
  * /players/{id}/data:
- *   get:
+ *   post:
  *     tags:
  *       - Players
  *     summary: Get player data
  *     description: |
- *       To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.
+ *       Returns player data immediately if cached, or waits for fetch to complete.
+ *       Always returns 200 with the actual data.
  *     parameters:
  *       - in: path
  *         name: id
@@ -14,12 +15,16 @@
  *         schema:
  *           type: string
  *         description: Player ID
- *       - in: query
- *         name: force
- *         required: false
- *         schema:
- *           type: boolean
- *         description: Force refresh - bypass cache and fetch fresh data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               force:
+ *                 type: boolean
+ *                 description: Force refresh - bypass cache and fetch fresh data
  *     responses:
  *       200:
  *         description: Player data
@@ -27,12 +32,29 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/OpenDotaPlayer'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
 import { getPlayerData } from '@/lib/api/opendota/players';
 import { cacheService } from '@/lib/cache-service';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import type { OpenDotaPlayer } from '@/types/opendota';
-import { NextRequest } from 'next/server';
 
 // Add debug logger
 const debug = (...args: unknown[]) => {
@@ -47,46 +69,63 @@ async function isPlayerFilePresent(playerId: string, debug: (...args: unknown[])
   return !!playerData;
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id: _id } = await params;
-  if (await isPlayerFilePresent(_id, debug)) {
-    const playerCacheKey = `opendota-player-${_id}`;
-    const playerFilename = `opendota-player-${_id}.json`;
-    const playerData = await cacheService.get<OpenDotaPlayer>(playerCacheKey, playerFilename);
-    debug('Player file present, returning 200:', playerFilename);
-    return new Response(JSON.stringify(playerData), { status: 200, headers: { 'Content-Type': 'application/json' } });
-  }
-  debug('Player file missing, starting background job:', _id);
-  (async () => {
-    try {
-      await getPlayerData(Number(_id), true);
-      debug('Background job completed for player:', _id);
-    } catch (err) {
-      debug('Background job error for player:', _id, err);
-    }
-  })();
-  return new Response(JSON.stringify({ status: 'queued', signature: _id }), { status: 202 });
-}
+
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: _id } = await params;
   debug('POST: Handler called for player', _id);
+  
+  let force = false;
+  try {
+    const body = await request.json();
+    force = body.force || false;
+  } catch (err) {
+    debug('POST: Failed to parse JSON body, using default force=false', err);
+  }
+
   const playerCacheKey = `opendota-player-${_id}`;
   const playerFilename = `opendota-player-${_id}.json`;
-  const playerData = await cacheService.get<OpenDotaPlayer>(playerCacheKey, playerFilename);
-  if (playerData) {
-    debug('POST: Player file present, returning ready');
-    return new Response(JSON.stringify({ status: 'ready', signature: playerCacheKey }), { status: 200 });
-  }
-  // Start background job if not present
-  (async () => {
-    try {
-      await getPlayerData(Number(_id), true);
-      debug('POST: Background job completed for player:', _id);
-    } catch (err) {
-      debug('POST: Background job error for player:', _id, err);
+  
+  // Check cache first (unless force refresh)
+  if (!force) {
+    const playerData = await cacheService.get<OpenDotaPlayer>(playerCacheKey, playerFilename);
+    if (playerData) {
+      debug('POST: Player file present, returning data');
+      return new Response(JSON.stringify(playerData), { 
+        status: 200, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
     }
-  })();
-  debug('POST: Player file not present, background job started, returning queued');
-  return new Response(JSON.stringify({ status: 'queued', signature: playerCacheKey }), { status: 202 });
+  }
+
+  // If force refresh or not in cache, invalidate and fetch fresh data
+  if (force) {
+    debug('POST: Force refresh requested, invalidating cache');
+    await cacheService.invalidate(playerCacheKey, playerFilename);
+  }
+
+  debug('POST: Player data not in cache, fetching and waiting for completion');
+  
+  try {
+    // Wait for the background job to complete
+    await getPlayerData(Number(_id), true);
+    
+    // Get the fresh data from cache
+    const playerData = await cacheService.get<OpenDotaPlayer>(playerCacheKey, playerFilename);
+    if (!playerData) {
+      throw new Error('Failed to fetch player data');
+    }
+    
+    debug('POST: Player data fetched successfully');
+    return new Response(JSON.stringify(playerData), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  } catch (err) {
+    debug('POST: Error fetching player data:', err);
+    return new Response(JSON.stringify({ error: 'Failed to fetch player data' }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  }
 }

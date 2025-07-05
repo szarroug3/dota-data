@@ -1,0 +1,14 @@
+---
+description: when making code changes
+globs: 
+alwaysApply: false
+---
+- Always update documents, comments, jsdocs for any changes you make when relevant.
+- We don't need to document every single thing but let's document architecture and design decisions.
+- Always fix linting, typescript and formatting errors for any changes you make.
+- Never fix linting and formatting errors by silencing them unless strictly necessary.
+- For things like unused variables, don't fix them by adding _ at the beginning. Remove them unless the code won't work without it. If the code requires something to be there, use _ without a variable name to be consistent.
+- Terminal logs can be found in my terminal. They're also written to log files for the server.
+- Most of the time I want you to make the fixes so you don't need to ask me to do them.
+- Always keep code readable and maintable. If functions or files are long, refactor them to make break them up into smaller pieces and keep things organized.
+- Always try to use best practices and make recommendations based on real data.

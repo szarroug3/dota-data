@@ -1,14 +1,15 @@
 import { enrichMatchWithOpenDota } from '@/lib/match-enrichment';
 import type { Team } from '@/types/team';
+import type { Match } from './match-utils';
 import MatchDetails from './MatchDetails';
 import MatchDetailsSkeleton from './MatchDetailsSkeleton';
 
 interface AsyncMatchDetailsProps {
-  selectedMatchObj: any;
+  selectedMatchObj: Match;
   currentTeam: Team;
   error?: string | null;
   isLoading?: boolean;
-  onShowPlayerPopup?: (player: any) => void;
+  onShowPlayerPopup?: (player: unknown) => void;
 }
 
 // Server component for Suspense

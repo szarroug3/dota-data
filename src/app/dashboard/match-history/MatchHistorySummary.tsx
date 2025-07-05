@@ -1,14 +1,42 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 
+interface MatchSummary {
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  avgGameLength: string;
+  currentStreak: number;
+}
+
+interface MatchTrend {
+  type: string;
+  value: number;
+  change: number;
+}
+
+interface MatchHistorySummaryProps {
+  summary: MatchSummary;
+  trends: MatchTrend[];
+  error?: string;
+  loading?: boolean;
+}
+
 export default function MatchHistorySummary({
   summary,
   trends,
   error,
-}: {
-  summary: any;
-  trends: any[];
-  error?: string;
-}) {
+  loading,
+}: MatchHistorySummaryProps) {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-16 w-full bg-muted animate-pulse rounded" />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>

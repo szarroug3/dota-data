@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Logging utility with timestamp that writes to file (Node.js only)
 export function logWithTimestampToFile(level: 'log' | 'warn' | 'error', ...args: unknown[]) {

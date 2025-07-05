@@ -7,22 +7,21 @@
 import { HeroStatsFilterControls } from "@/components/dashboard/hero-stats/HeroStatsFilterControls";
 import { useHeroStatsFilters } from "@/components/dashboard/hero-stats/HeroStatsFilters";
 import { HeroStatsTable } from "@/components/dashboard/hero-stats/HeroStatsTable";
+import type { Team } from "@/types/team";
+import type { HeroStatsData } from "./match-utils";
 
-export interface HeroStatsTablesProps {
-  heroStats: {
-    ourPicks: Record<string, any>;
-    ourBans: Record<string, any>;
-    opponentPicks: Record<string, any>;
-    opponentBans: Record<string, any>;
-  };
-  currentTeam: any;
-  getHighlightStyle: (hero: string, stat: string, value: number) => string;
+interface HeroStatsTablesProps {
+  heroStats: HeroStatsData;
+  currentTeam: Team;
+  getHighlightStyle: (hero: string, type: string) => string;
+  loading?: boolean;
 }
 
-export default function HeroStatsTables({
-  heroStats,
-  currentTeam,
-  getHighlightStyle
+export default function HeroStatsTables({ 
+  heroStats, 
+  _currentTeam, 
+  getHighlightStyle, 
+  loading = false 
 }: HeroStatsTablesProps) {
   const { filters, setFilters, clearFilters } = useHeroStatsFilters();
 
@@ -32,6 +31,16 @@ export default function HeroStatsTables({
       [`${tableType}SortOrder`]: sortOrder
     });
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+        <div className="h-32 w-full bg-muted animate-pulse rounded" />
+        <div className="h-32 w-full bg-muted animate-pulse rounded" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

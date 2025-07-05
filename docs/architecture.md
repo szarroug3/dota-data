@@ -1,48 +1,225 @@
-# Architecture: Team Import, Match & Player Queueing, and Refresh Semantics
+# Architecture: Simplified API Orchestration with Synchronous Data Loading
 
 ## Overview
-This document describes the architecture and design decisions for handling team import, background queueing of match and player data, and the refresh/force refresh logic in the Dota Data dashboard.
+This document describes the simplified architecture for handling data loading in the Dota Data dashboard. The system uses a single POST endpoint pattern that ensures data is always returned to the client, either immediately from cache or after waiting for background processing to complete.
 
 ---
 
+## API Design Principles
+
+### Simplified POST-Only Pattern
+All API endpoints follow a single, simplified pattern using only POST requests:
+
+1. **POST Endpoint Behavior**:
+   - Check cache for requested data
+   - If data exists: Return 200 with data immediately
+   - If data missing: Queue background job and wait for completion
+   - Always return 200 with the actual data (never 202 "queued" status)
+
+2. **Benefits**:
+   - **Simplified Frontend**: No need to handle different response types or polling
+   - **Guaranteed Data**: POST always returns the data you need
+   - **Synchronous Loading**: Request waits for background processing to complete
+   - **Clear Semantics**: POST = "get me this data, even if you have to fetch it"
+
+3. **Error Handling**:
+   - 400: Invalid request parameters
+   - 500: Server error during processing
+   - No 404 responses (data is fetched if missing)
+
+### Migration from GET/POST Pattern
+The previous GET/POST pattern has been simplified:
+- **Removed**: GET endpoints that only checked cache
+- **Removed**: POST endpoints that returned 202 "queued" status
+- **Simplified**: Single POST endpoint that always returns data
+
+## Data Flow Diagrams
+
+### 1. Synchronous Data Loading Flow
+The following flowchart shows how POST requests handle data loading:
+
+```mermaid
+flowchart TD
+    %% Frontend Request
+    FRONTEND[Frontend POST Request] --> API[API Route Handler]
+    
+    %% Cache Check
+    API --> CACHE{Cache Check}
+    
+    %% Cache Hit Path
+    CACHE -->|Data Found| RETURN[Return Data 200]
+    
+    %% Cache Miss Path
+    CACHE -->|Data Missing| QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
+    
+    %% Background Processing
+    PROCESS --> RATE_LIMIT{Rate Limited?}
+    RATE_LIMIT -->|Yes| RETRY[Wait & Retry]
+    RETRY --> PROCESS
+    RATE_LIMIT -->|No| FETCH[Fetch from External API]
+    FETCH --> STORE[Store in Cache]
+    STORE --> RETURN
+    
+    %% Response
+    RETURN --> FRONTEND_RESPONSE[Frontend Receives Data]
+    
+    %% Notes
+    N1[POST always returns data]
+    N2[No polling required]
+    N3[Synchronous processing]
+    
+    API -.-> N1
+    WAIT -.-> N2
+    PROCESS -.-> N3
+```
+
+### 2. Team Import Flow
+The following sequence diagram shows the team import process:
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant A as API Route
+    participant C as Cache
+    participant Q as Queue
+    participant D as Dotabuff API
+    participant O as OpenDota API
+    
+    F->>A: POST /api/teams/{id}/matches
+    Note over F,A: { leagueId: "1234", force: false }
+    
+    A->>C: Check cache for team data
+    
+    alt Data in cache
+        C->>A: Return cached data
+        A->>F: Return team name + match IDs immediately
+    else Data not in cache
+        A->>Q: Queue team import job
+        Q->>D: Fetch team HTML from Dotabuff
+        D->>Q: Return team HTML
+        Q->>Q: Parse team name and match IDs
+        Q->>C: Store team name and match IDs in cache
+        
+        Note over Q: Start background jobs before returning:
+        Q->>Q: Queue match data fetching for each match ID
+        Q->>O: Fetch match data (background)
+        O->>Q: Return match data
+        Q->>Q: Parse player IDs from match data
+        Q->>Q: Queue player data fetching for each player ID
+        Q->>O: Fetch player data (background)
+        
+        C->>A: Team data ready
+        A->>F: Return team name + match IDs
+    end
+```
+
+### 3. Force Refresh Flow
+The following flowchart shows how force refresh works:
+
+```mermaid
+flowchart TD
+    %% Force Refresh Request
+    FRONTEND[Frontend POST with force=true] --> API[API Route Handler]
+    
+    %% Force Refresh Logic
+    API --> FORCE{Force Refresh?}
+    FORCE -->|Yes| INVALIDATE[Invalidate Cache]
+    FORCE -->|No| CACHE{Cache Check}
+    
+    %% Cache Invalidation
+    INVALIDATE --> QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
+    
+    %% Normal Cache Check
+    CACHE -->|Data Found| RETURN[Return Data 200]
+    CACHE -->|Data Missing| QUEUE
+    
+    %% Background Processing
+    PROCESS --> FETCH[Fetch Fresh Data]
+    FETCH --> STORE[Store in Cache]
+    STORE --> RETURN
+    
+    %% Response
+    RETURN --> FRONTEND_RESPONSE[Frontend Receives Fresh Data]
+    
+    %% Notes
+    N1[Force refresh bypasses cache]
+    N2[Always fetches fresh data]
+    N3[Updates cache with new data]
+    
+    INVALIDATE -.-> N1
+    FETCH -.-> N2
+    STORE -.-> N3
+```
+
+### 4. Error Handling Flow
+The following flowchart shows error handling patterns:
+
+```mermaid
+flowchart TD
+    %% Request Flow
+    REQUEST[POST Request] --> API[API Route Handler]
+    
+    %% Validation
+    API --> VALIDATE{Valid Request?}
+    VALIDATE -->|No| ERROR_400[Return 400 Bad Request]
+    
+    %% Processing
+    VALIDATE -->|Yes| PROCESS[Process Request]
+    PROCESS --> SUCCESS{Success?}
+    
+    %% Success Path
+    SUCCESS -->|Yes| RETURN_200[Return 200 with Data]
+    
+    %% Error Paths
+    SUCCESS -->|No| ERROR_TYPE{Error Type?}
+    ERROR_TYPE -->|Rate Limited| ERROR_429[Return 429 Rate Limited]
+    ERROR_TYPE -->|External API Error| ERROR_502[Return 502 Bad Gateway]
+    ERROR_TYPE -->|Internal Error| ERROR_500[Return 500 Internal Error]
+    
+    %% Response
+    RETURN_200 --> FRONTEND[Frontend Success]
+    ERROR_400 --> FRONTEND_ERROR[Frontend Error]
+    ERROR_429 --> FRONTEND_ERROR
+    ERROR_502 --> FRONTEND_ERROR
+    ERROR_500 --> FRONTEND_ERROR
+    
+    %% Notes
+    N1[No 404 responses - data is fetched if missing]
+    N2[Clear error messages for debugging]
+    N3[Graceful degradation on errors]
+    
+    VALIDATE -.-> N1
+    ERROR_TYPE -.-> N2
+    FRONTEND_ERROR -.-> N3
+```
+
 ## System Architecture Diagrams
 
-### Generic Caching System
-The following diagram shows the unified caching, queueing, and mocking system used across all API endpoints:
+### Simplified API Orchestration Flow
+The following diagram shows the simplified orchestration pattern used across all API endpoints:
 
 ```mermaid
 flowchart TD
     %% API Layer
-    API1([Individual API Calls])
-    API2([Orchestrated API Calls])
-    
-    %% Request Router
-    API1 --> RR[Request Router]
-    API2 --> RR
+    POST([POST Request])
     
     %% Cache Check Layer
-    RR --> CC{Check Cache}
-    CC --> ME{Is Mock Enabled?}
-    ME -- Yes --> IC{In-Memory Cache?}
-    ME -- No --> RC{Redis Cache?}
+    POST --> CC{Check Cache}
     
-    %% Mock Cache Path
-    IC -- Yes --> RC1[Return Cached Data]
-    IC -- No --> FC{File Cache?}
-    FC -- Yes --> LC[Load to In-Memory & Return]
-    FC -- No --> QC{Already Queued?}
+    %% Cache Hit Path
+    CC --> CACHED[Return Data 200]
     
-    %% Real Cache Path
-    RC -- Yes --> RC2[Return Cached Data]
-    RC -- No --> QC
-    
-    %% Queue Management
-    QC -- Yes --> QR[Return Queued Status]
-    QC -- No --> QB[Queue Background Job]
-    QB --> QR2[Return Queued Status]
+    %% Cache Miss Path
+    CC --> QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
     
     %% Background Job System
-    QB --> BJ[Background Job Queue]
+    PROCESS --> BJ[Background Job Queue]
     BJ --> WJ[Worker Process]
     WJ --> DC{Data Source Decision}
     
@@ -51,245 +228,289 @@ flowchart TD
     MOCK -- Yes --> MG[Mock Data Generator]
     MOCK -- No --> RE[Real API Endpoint]
     
-    %% Mock Data Flow
+    %% Data Flow
     MG --> MF[Generate Mock Data]
-    MF --> MW[Write to Mock Files]
-    MW --> MC1[Write to In-Memory Cache]
-    MC1 --> MC2[Write to File Cache]
-    
-    %% Real Data Flow
     RE --> RF[Fetch Real Data]
-    RF --> RW[Write to Mock Files if Enabled]
-    RW --> MC3[Write to In-Memory Cache]
-    MC3 --> MC4[Write to Redis Cache]
+    MF --> CACHE[Write to Cache]
+    RF --> CACHE
+    
+    %% Rate Limiting
+    RF --> RL{Rate Limited?}
+    RL -- Yes --> RETRY[Wait & Retry]
+    RETRY --> RF
+    RL -- No --> CACHE
     
     %% Response Flow
-    RC1 --> RESP[API Response]
-    RC2 --> RESP
-    LC --> RESP
-    QR --> RESP
-    QR2 --> RESP
-    
-    %% Cache Invalidation
-    INV([Cache Invalidation])
-    INV --> CI[Clear In-Memory]
-    INV --> CF[Clear File Cache if Mock]
-    INV --> CR[Clear Redis Cache if not Mock]
+    CACHED --> RESP[API Response 200]
+    CACHE --> RESP
     
     %% Notes
-    N1[Background jobs only write to cache, never return 'queued' status]
-    N2[File cache only used when mock is enabled]
-    N3[Redis cache only used when mock is disabled]
-    N4[Queued response returned immediately after job is queued]
+    N1[POST: Always returns data]
+    N2[POST: Waits for background jobs to complete]
+    N3[Rate limiting is instance-local]
+    N4[Queue state is instance-local]
+    N5[Synchronous data loading]
     
-    MC2 -.-> N1
-    MC2 -.-> N2
-    MC4 -.-> N3
-    QR2 -.-> N4
+    POST -.-> N1
+    WAIT -.-> N2
+    RL -.-> N3
+    BJ -.-> N4
+    PROCESS -.-> N5
 ```
 
-### Data Polling Flow
-The following diagram shows how the frontend polls for queued data and handles the transition from "queued" status to actual data:
+### Frontend Data Loading Pattern
+The following diagram shows how the frontend handles data loading with the simplified synchronous approach:
 
 ```mermaid
 flowchart TD
-    %% Initial API Call
-    API([Frontend API Call])
-    API --> INIT[Initial Request]
-    INIT --> RESP{Response Type}
+    %% Initial Page Load
+    LOAD([Page Load])
+    LOAD --> POST[POST Request]
+    POST --> LOADING[Show Loading State]
     
-    %% Immediate Response Paths
-    RESP --> CACHED[Return Cached Data]
-    RESP --> QUEUED[Return Queued Status]
-    RESP --> ERROR[Return Error]
+    %% Backend Processing
+    POST --> CACHE{Check Cache}
+    CACHE --> CACHED[Return Data Immediately]
+    CACHE --> QUEUE[Queue Background Job]
+    QUEUE --> WAIT[Wait for Completion]
+    WAIT --> PROCESS[Process Background Job]
+    PROCESS --> COMPLETE[Data Ready]
     
-    %% Frontend Handling
-    CACHED --> UI1[Update UI with Data]
-    ERROR --> UI2[Show Error Message]
-    QUEUED --> POLL[Start Polling]
-    
-    %% Polling Logic
-    POLL --> TIMER[Set Polling Timer]
-    TIMER --> POLL_REQ[Make Polling Request]
-    POLL_REQ --> POLL_RESP{Response Type}
-    
-    %% Polling Response Handling
-    POLL_RESP --> STILL_QUEUED[Still Queued]
-    POLL_RESP --> NOW_READY[Data Ready]
-    POLL_RESP --> POLL_ERROR[Polling Error]
-    
-    %% Still Queued - Continue Polling
-    STILL_QUEUED --> CHECK_TIMEOUT{Timeout Reached?}
-    CHECK_TIMEOUT -- No --> TIMER
-    CHECK_TIMEOUT -- Yes --> TIMEOUT[Show Timeout Error]
-    
-    %% Data Ready - Success Path
-    NOW_READY --> UPDATE_UI[Update UI with Data]
-    UPDATE_UI --> STOP_POLL[Stop Polling]
-    STOP_POLL --> SUCCESS[Show Success State]
+    %% UI Updates
+    CACHED --> UI1[Show Data Immediately]
+    COMPLETE --> UI2[Show Data After Loading]
     
     %% Error Handling
-    POLL_ERROR --> RETRY{Retry Count < Max?}
-    RETRY -- Yes --> TIMER
-    RETRY -- No --> POLL_FAIL[Show Polling Failed]
+    POST --> ERROR[Error State]
+    ERROR --> UI3[Show Error Message]
     
-    %% Background Job Completion
-    BG_JOB[Background Job Completes]
-    BG_JOB --> CACHE_DATA[Cache Actual Data]
-    CACHE_DATA --> NEXT_POLL[Next Polling Request Gets Data]
-    NEXT_POLL --> NOW_READY
+    %% Examples
+    TEAM_LOAD([Team Management Page])
+    TEAM_LOAD --> TEAM_POST[POST api teams id matches]
+    TEAM_POST --> TEAM_DATA[Show Team Data]
     
-    %% UI States
-    UI1 --> FINAL[Final UI State]
-    UI2 --> FINAL
-    TIMEOUT --> FINAL
-    SUCCESS --> FINAL
-    POLL_FAIL --> FINAL
+    MATCH_REQ([Match History Page])
+    MATCH_REQ --> MATCH_POST[POST api matches id]
+    MATCH_POST --> MATCH_DATA[Show Match Data]
+    
+    PLAYER_REQ([Player Stats Page])
+    PLAYER_REQ --> PLAYER_POST[POST api players id data]
+    PLAYER_POST --> PLAYER_DATA[Show Player Data]
     
     %% Notes
-    N1[Polling interval: 1-3 seconds]
-    N2[Timeout: 30-60 seconds]
-    N3[Max retries: 3-5 attempts]
-    N4[Background job writes to cache, polling reads from cache]
+    N1[All endpoints use POST]
+    N2[No polling required]
+    N3[Synchronous data loading]
+    N4[Simple error handling]
     
-    POLL -.-> N1
-    CHECK_TIMEOUT -.-> N2
-    RETRY -.-> N3
-    BG_JOB -.-> N4
+    POST -.-> N1
+    LOADING -.-> N2
+    WAIT -.-> N3
+    ERROR -.-> N4
 ```
 
-### Dotabuff Team Matches Flow
-The following diagram shows the specific flow for team import and match/player data orchestration:
+### Rate Limiting and Queue Management
+The following diagram shows how rate limiting and queue management work in the serverless environment:
 
 ```mermaid
 flowchart TD
-    %% Team/Matches API Flow
-    AA([User/API calls team/id/matches])
-    AA --> AB[Orchestration: Get Team & Match IDs]
-    AB --> AC[Check Force Refresh or Refresh]
-    AC --> AD{Is Force Refresh?}
-    AD -- Yes --> AE[Invalidate Cache for All Relevant Parts]
-    AD -- No --> AF{Is Refresh?}
-    AF -- Yes --> AG[Invalidate Dotabuff Team Matches]
-    AF -- No --> AH[Continue to Team Processing]
-    AE --> AH
-    AG --> AH
-    AH --> AI[Fetch Dotabuff Team HTML]
-    AI --> AJ{Is Mock Enabled?}
-    AJ -- Yes --> AK[Generate Mock Dotabuff HTML]
-    AK --> AK2[Write Mock HTML to Mock File]
-    AJ -- No --> AL[Fetch from Real Dotabuff Website]
-    AL --> AM[Write Dotabuff HTML to Cache]
-    AK2 --> AM
-    AM --> AN[Parse HTML to Extract Match IDs]
-    AN --> AO[For each matchId: Call getMatch with teamId]
-    AO --> A[API Request for Match Data]
-
-    %% Individual Match API Flow
-    BB([User/API calls matches/id])
-    BB --> A
-
-    %% Individual Player API Flow  
-    CC([User/API calls players/id/data])
-    CC --> DD[API Request for Player Data]
-
-    %% Shared Match Data Flow
-    A --> B{Is Data in In-Memory Cache?}
-    B -- Yes --> C[Return Cached Data]
-    B -- No --> D{Is Data in File Cache?}
-    D -- Yes --> E[Load Data to In-Memory Cache & Return]
-    D -- No --> F{Is Job Already Queued?}
-    F -- Yes --> G[Return status: 'queued']
-    F -- No --> H[Queue Background Job]
-    H --> I[Return status: 'queued']
-    I --> J[Background Job Fetches Data]
-    J --> K{Is Mock Enabled?}
-    K -- Yes --> L[Generate Mock Match Data]
-    L --> L2[Write Mock Match Data to Mock File]
-    K -- No --> M[Fetch from Real OpenDota API]
-    M --> N[Write Data to In-Memory Cache]
-    L2 --> N
-    N --> O[Write Data to File Cache]
-    O --> P[Queue Player Jobs for Each Player in Match]
-    P --> DD
-
-    %% Shared Player Data Flow
-    DD --> U{Is Player Data in In-Memory Cache?}
-    U -- Yes --> V[Return Cached Player Data]
-    U -- No --> W{Is Player Data in File Cache?}
-    W -- Yes --> X[Load Player Data to In-Memory Cache & Return]
-    W -- No --> Y{Is Player Job Already Queued?}
-    Y -- Yes --> Z[Return status: 'queued']
-    Y -- No --> AA2[Queue Player Background Job]
-    AA2 --> BB2[Return status: 'queued']
-    BB2 --> CC2[Player Background Job Fetches Data]
-    CC2 --> DD2{Is Mock Enabled?}
-    DD2 -- Yes --> EE[Generate Mock Player Data]
-    EE --> EE2[Write Mock Player Data to Mock File]
-    DD2 -- No --> FF[Fetch from Real OpenDota API]
-    FF --> GG[Write Player Data to In-Memory Cache]
-    EE2 --> GG
-    GG --> HH[Write Player Data to File Cache]
-    HH --> R[End]
-
+    %% Request Flow
+    REQ([API Request])
+    REQ --> INSTANCE{Which Instance?}
+    
+    %% Instance A
+    INSTANCE --> A[Instance A]
+    A --> RL_A[Rate Limiter A]
+    RL_A --> CHECK_A{Can Make Request?}
+    
+    %% Instance B
+    INSTANCE --> B[Instance B]
+    B --> RL_B[Rate Limiter B]
+    RL_B --> CHECK_B{Can Make Request?}
+    
+    %% Rate Limit Checks
+    CHECK_A --> ALLOW_A[Allow Request]
+    CHECK_A --> BLOCK_A[Rate Limited]
+    CHECK_B --> ALLOW_B[Allow Request]
+    CHECK_B --> BLOCK_B[Rate Limited]
+    
+    %% Queue Management
+    ALLOW_A --> Q_A[Queue A]
+    ALLOW_B --> Q_B[Queue B]
+    
+    %% Background Processing
+    Q_A --> PROC_A[Process A]
+    Q_B --> PROC_B[Process B]
+    
+    %% External API
+    PROC_A --> API[External API]
+    PROC_B --> API
+    
+    %% Rate Limit Response
+    API --> RATE_LIMIT[429 Rate Limited]
+    RATE_LIMIT --> RETRY[Wait and Retry]
+    RETRY --> API
+    
+    %% Success Path
+    API --> SUCCESS[200 Success]
+    SUCCESS --> CACHE[Update Cache]
+    
     %% Notes
-    II[Only the background job writes to the cache files. 'queued' status is never written to disk.]
-    JJ[API returns 'queued' status if job is in progress, actual data when ready.]
-    O -.-> II
-    I -.-> JJ
+    N1[Rate limiters are instance-local]
+    N2[Queues are instance-local]
+    N3[No cross-instance coordination]
+    N4[Higher rate limit usage]
+    N5[Graceful 429 handling]
+    
+    RL_A -.-> N1
+    Q_A -.-> N2
+    INSTANCE -.-> N3
+    API -.-> N4
+    RATE_LIMIT -.-> N5
 ```
 
-### Team/League Import Flow
-1. **User Action:** User adds a team/league via the import form.
-2. **Frontend:** Optimistically adds the team to the UI (team list) with a loading state.
-3. **Backend:**
-   - Fetches team and league names.
-   - Parses and returns match IDs for the team/league.
-   - **Immediately enqueues background jobs for each match** (if not already cached).
-   - As each match is processed, **extracts player IDs for players on the imported team's side** and enqueues background jobs for those players.
+## Current Architecture Decisions
 
-## Optimistic UI
-- The team appears immediately in the team list, even before all data is loaded.
-- The UI updates as data becomes available.
+### Simplified GET/POST Pattern
+All data endpoints follow a consistent pattern:
 
-## Background Queueing for Matches & Players
-- **Backend-centric:** All queueing for match and player data is triggered on the backend, not the frontend.
-- **Deduplication:** The backend ensures jobs are not re-queued for matches/players already being processed or cached.
-- **Responsiveness:** The frontend remains simple and responsive, only polling for status and updating UI as data arrives.
+- **GET**: Check cache and return data if available, 404 if not found
+- **POST**: Check cache and return ready status if available, or queue background job and return queued status
 
-## Refresh & Force Refresh
-- **Force Refresh:**
-  - Invalidates all relevant cache (dotabuff team, matches, players).
-  - Re-enqueues all jobs for team, matches, and players.
-- **Refresh:**
-  - Only invalidates or bypasses the cache for the team data.
-  - Fetches new matches and enqueues jobs for any new matches/players.
-- **UI:**
-  - Buttons for both actions are present and trigger the correct backend logic.
+### Instance-Local Rate Limiting
+Rate limiting is implemented per-instance using in-memory storage:
 
-## Queue Status
-- The backend exposes an endpoint (or websocket) for the frontend to query the status of enqueued jobs (per service: dotabuff, opendota, etc.).
-- The sidebar or a dedicated UI component polls or subscribes to this endpoint and updates the queue status in real time.
+```typescript
+// rate-limiter.ts
+private requestCounts: Map<string, number[]> = new Map();
+private lastRequestTimes: Map<string, number> = new Map();
+private backoffTimes: Map<string, number> = new Map();
+```
 
-## Rationale
-- **Centralizing queueing on the backend** ensures consistency, avoids race conditions, and simplifies the frontend.
-- **Frontend remains responsive** and can show partial data as it becomes available.
-- **Queue status is surfaced to the user** for transparency and better UX.
-- **Refresh and force refresh** are clearly separated in logic and UI.
+### Fire-and-Forget Background Jobs
+Background jobs are queued and processed asynchronously:
 
-## Implementation Steps
-1. Centralize all match/player queueing logic on the backend (team import and refresh handlers).
-2. Expose a queue status endpoint for the frontend to poll or subscribe to.
-3. Update the frontend to poll for queue status and update the UI accordingly.
-4. Keep this document updated as the architecture evolves.
+1. **Route enqueues request** and returns immediately
+2. **Queue processor handles** the actual API call
+3. **Results are cached** for future requests
+4. **No blocking** of the main request flow
 
-## Polling and Async Data Pattern
+### Serverless Environment Constraints
+The application is deployed on Vercel's free tier, which means:
+- Multiple serverless instances may handle requests simultaneously
+- No shared memory between instances
+- Limited external service dependencies
 
-In serverless and distributed environments, real-time queue internals (such as queue length, active signatures, or job status) are not exposed to the frontend. Instead, the frontend should use a polling pattern:
+### Trade-offs Accepted
+- **Higher rate limit usage** (multiple instances)
+- **Potential duplicate processing** (mitigated by queue deduplication)
+- **No cross-instance coordination** (each instance operates independently)
+- **Imperfect rate limiting** (but functional for most use cases)
 
-- When a user triggers a background job (e.g., team import), the backend returns a status such as `{ status: 'queued' }`.
-- The frontend polls the data endpoint (not a queue status endpoint) every few seconds.
-- When the data is ready, the endpoint returns the data and the frontend updates the UI.
-- While waiting, the frontend shows a suspense/loading state.
+## Team Management Flow
 
-**Note:** Queue internals are not exposed because in-memory queue state is not shared across serverless/serverful processes, and persistent queue state is not implemented in this project. This pattern is robust and works for all deployment targets. 
+### Hybrid Loading Pattern
+The frontend uses a hybrid approach for data loading:
+
+1. **Immediate responses** when data is cached
+2. **Background loading** for heavy operations
+3. **Suspense/lazy loading** for responsive UI
+4. **Independent endpoints** for different data types
+
+### Example Implementation
+```typescript
+// Team management page
+const loadTeam = async () => {
+  // Kick off team import (returns immediately if cached)
+  const response = await fetch('/api/teams/123/matches', {
+    method: 'POST',
+    body: JSON.stringify({ leagueId: '456' })
+  });
+  
+  if (response.status === 200) {
+    const data = await response.json();
+    setTeamData(data); // Team name, league name available immediately
+  }
+  
+  // Match/player data loaded independently via other endpoints
+};
+```
+
+## Graceful Rate Limit Handling
+
+When external services return 429 (rate limited), the application:
+
+1. **Uses retry headers** if provided by the service
+2. **Waits default amount of time** (60 seconds) if no retry header
+3. **Implements exponential backoff** for repeated failures
+4. **Logs rate limit events** for monitoring
+
+```typescript
+async function fetchWithRetry(url: string, options: RequestInit) {
+  const maxRetries = 3;
+  let attempt = 0;
+  
+  while (attempt < maxRetries) {
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) { // Rate limited
+        const retryAfter = response.headers.get('Retry-After');
+        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000;
+        
+        console.log(`Rate limited, waiting ${waitTime}ms before retry`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        attempt++;
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      attempt++;
+      if (attempt >= maxRetries) throw error;
+      
+      // Exponential backoff
+      const waitTime = Math.pow(2, attempt) * 1000;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+}
+```
+
+## Future Considerations
+
+### When to Upgrade
+Consider upgrading to external services when:
+- **Rate limiting becomes problematic** (frequent 429s)
+- **Queue coordination is needed** (cross-instance state)
+- **Higher reliability required** (persistent queue state)
+- **Budget allows** for paid services
+
+### Potential Upgrades
+- **Redis-based rate limiting** for cross-instance coordination
+- **Bull/BullMQ** for robust queue management
+- **Database persistence** for critical state
+- **External queue services** (AWS SQS, Google Cloud Tasks)
+
+## Monitoring and Debugging
+
+### Logging
+All rate limiting and queue operations are logged:
+
+```typescript
+logWithTimestampToFile('log', `[RateLimiter] Rate limit check for ${service}: ${requests.length}/${config.maxRequests}`);
+logWithTimestampToFile('log', `[RequestQueue] Enqueued request ${requestId} for ${service}`);
+```
+
+### Queue Stats
+Queue statistics are available for monitoring:
+
+```typescript
+const stats = cacheService.getQueueStats();
+const activeSignatures = cacheService.getActiveSignatures();
+```
+
+### Error Handling
+- **Rate limit events** are logged and handled gracefully
+- **Queue failures** are logged and retried
+- **Cache misses** are logged for debugging 

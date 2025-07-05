@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTeam } from "@/contexts/team-context";
-import { usePlayerStats } from "@/lib/hooks/useDataFetching";
+import { usePlayerStats } from "@/lib/hooks/usePlayerStats";
 import { Minus, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
@@ -81,7 +81,7 @@ function PlayerStatsCard({ player }: { player: any }) {
     data: playerStats,
     loading,
     error,
-  } = usePlayerStats(player.accountId, player.name, player.role);
+  } = usePlayerStats(player.id, player.name, player.role || "Unknown");
 
   if (loading) {
     return (

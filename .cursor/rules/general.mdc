@@ -6,7 +6,7 @@ alwaysApply: true
 - Do not assume anything. Always read both docs and code to get context.
 - Always update documents, comments, jsdocs for any changes you make when relevant.
 - We don't need to document every single thing but let's document architecture and design decisions.
-- Always fix linting and formatting errors for any changes you make.
+- Always fix linting, typescript and formatting errors for any changes you make.
 - Never fix linting and formatting errors by silencing them unless strictly necessary.
 - For things like unused variables, don't fix them by adding _ at the beginning. Remove them unless the code won't work without it. If the code requires something to be there, use _ without a variable name to be consistent.
 - This project uses pnpm. To run any pnpm commands, you need to do `nvm use && [pnpm command]`.

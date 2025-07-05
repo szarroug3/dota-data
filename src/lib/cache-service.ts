@@ -51,7 +51,6 @@ class CacheService {
    * @returns The cached value or null if not found/expired.
    */
   async get<T>(cacheKey: string, filename: string, ttl?: number): Promise<T | null> {
-    logWithTimestampToFile('log', `[CacheService] GET called for cacheKey: ${cacheKey}, filename: ${filename}`);
     const isMock = shouldMockService('db');
     if (isMock) {
       const mem = this.getFromMockCache<T>(filename);
@@ -76,7 +75,6 @@ class CacheService {
    * @param filename - The filename for mock/file cache.
    */
   async set<T>(service: string, cacheKey: string, data: T, ttl: number | undefined, filename: string): Promise<void> {
-    logWithTimestampToFile('log', `[CacheService] SET called for service: ${service}, cacheKey: ${cacheKey}, ttl: ${ttl}, filename: ${filename}`);
     const isMock = shouldMockService('db');
     if (isMock) {
       await this.setMockCache<T>(filename, data);
@@ -92,7 +90,6 @@ class CacheService {
    * @param filename - The filename for mock/file cache.
    */
   async invalidate(cacheKey: string, filename: string): Promise<void> {
-    logWithTimestampToFile('log', `[CacheService] invalidate called for cacheKey: ${cacheKey}, filename: ${filename}`);
     const isMock = shouldMockService('db');
     if (isMock) {
       await this.invalidateMockCache(filename);
@@ -131,10 +128,8 @@ class CacheService {
     filename: string,
     skipSet: boolean = false
   ): Promise<T | { status: string; signature: string }> {
-    logWithTimestampToFile('log', `[CacheService] queueRequest called for ${service}, cacheKey: ${cacheKey}, filename: ${filename}`);
     const cached = await this.get<T>(cacheKey, filename);
     if (cached !== null && cached !== undefined) {
-      logWithTimestampToFile('log', `[CacheService] queueRequest: Cache hit for ${cacheKey}`);
       return cached;
     }
 
@@ -143,17 +138,14 @@ class CacheService {
       const result = await this.rateLimiter.queueRequest<T>(service, async () => {
         const data = await requestFn();
         if (!skipSet) {
-          logWithTimestampToFile('log', `[CacheService] queueRequest: Caching result for ${cacheKey}`);
           await this.set<T>(service, cacheKey, data, ttl, filename);
         }
         return data;
       }, cacheKey);
       // If the result is a queued status, return it as-is
       if (result && typeof result === 'object' && 'status' in result && result.status === 'already_queued') {
-        logWithTimestampToFile('log', `[CacheService] queueRequest: Already queued for ${cacheKey}`);
         return { status: 'queued', signature: cacheKey };
       }
-      logWithTimestampToFile('log', `[CacheService] queueRequest: Background job completed for ${cacheKey}, result type: ${typeof result}`);
       return result;
     } catch (err) {
       logWithTimestampToFile('error', `[CacheService] queueRequest: Error for ${cacheKey}:`, err);
@@ -178,28 +170,6 @@ class CacheService {
     logWithTimestampToFile('log', `[CacheService] recordRateLimitHit called for ${service}, retryAfter: ${retryAfter || 'not specified'}`);
     await this.rateLimiter.recordRateLimitHit(service, retryAfter);
     logWithTimestampToFile('log', `[CacheService] recordRateLimitHit completed for ${service}`);
-  }
-
-  /**
-   * Returns queue stats for all services (for monitoring/debugging).
-   * @returns An object with queue stats per service.
-   */
-  getQueueStats() {
-    logWithTimestampToFile('log', '[CacheService] getQueueStats called');
-    const stats = this.rateLimiter.getQueueStats();
-    logWithTimestampToFile('log', '[CacheService] getQueueStats completed, returning:', stats);
-    return stats;
-  }
-
-  /**
-   * Returns the list of active signatures (queued requests) for all services.
-   * @returns An array of active signatures.
-   */
-  getActiveSignatures() {
-    logWithTimestampToFile('log', '[CacheService] getActiveSignatures called');
-    const signatures = this.rateLimiter.getActiveSignatures();
-    logWithTimestampToFile('log', '[CacheService] getActiveSignatures completed, returning:', signatures);
-    return signatures;
   }
 
   /**
@@ -237,7 +207,6 @@ class CacheService {
 
   private getFromMockCache<T>(filename: string): T | null {
     if (this.mockMemoryCache.has(filename)) {
-      logWithTimestampToFile('log', `[CacheService] [MOCK] Returning in-memory cache for filename: ${filename}`);
       return this.mockMemoryCache.get(filename) as T;
     }
     return null;
@@ -247,10 +216,8 @@ class CacheService {
     const fileData = await this.readMockCacheFile(filename);
     if (fileData !== null) {
       this.mockMemoryCache.set(filename, fileData);
-      logWithTimestampToFile('log', `[CacheService] [MOCK] Returning file cache for filename: ${filename}`);
       return fileData as T;
     }
-    logWithTimestampToFile('log', `[CacheService] [MOCK] Cache miss for filename: ${filename}`);
     return null;
   }
 

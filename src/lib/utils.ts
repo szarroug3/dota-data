@@ -1,7 +1,7 @@
-import type { OpenDotaFullMatch } from "@/types/opendota";
-import type { Team } from "@/types/team";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { OpenDotaFullMatch } from '../types/opendota';
+import type { Team } from '../types/team';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -152,7 +152,11 @@ export async function getHeroName(heroId: number): Promise<string> {
     if (heroDataCache && Date.now() - heroDataCacheTime < CACHE_DURATION) {
       return heroDataCache.byId[heroId] || `Hero ${heroId}`;
     }
-    const response = await fetch("/api/heroes");
+    const response = await fetch("/api/heroes", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
     if (response.ok) {
       const data = await response.json();
       heroDataCache = { byId: data.byId, byName: data.byName };
@@ -493,13 +497,21 @@ export function logWithTimestamp(level: 'log' | 'warn' | 'error', ...args: unkno
   }
 }
 
-export function getMatchResult(match: any): string {
+export function getMatchResult(match: OpenDotaFullMatch & { result?: string; openDota?: OpenDotaFullMatch; score?: string }, currentTeam?: Team): string {
   if (match.result === 'W') return 'Win';
   if (match.result === 'L') return 'Loss';
-  return 'Unknown';
+  if (match.openDota && currentTeam) {
+    const teamSide = getTeamSide(match, currentTeam);
+    if (teamSide === 'Radiant') {
+      return match.openDota.radiant_win ? 'Win' : 'Loss';
+    } else if (teamSide === 'Dire') {
+      return !match.openDota.radiant_win ? 'Win' : 'Loss';
+    }
+  }
+  return '';
 }
 
-export function getScoreWithResult(match: any): string {
-  if (!match.score) return getMatchResult(match);
-  return `${match.score} (${getMatchResult(match)})`;
+export function getScoreWithResult(match: OpenDotaFullMatch & { result?: string; openDota?: OpenDotaFullMatch; score?: string }, currentTeam?: Team): string {
+  if (!match.score) return getMatchResult(match, currentTeam);
+  return `${match.score} (${getMatchResult(match, currentTeam)})`;
 }

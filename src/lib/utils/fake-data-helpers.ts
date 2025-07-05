@@ -27,17 +27,18 @@ export function randomTimestamp(): number {
   return randomInt(past, now);
 }
 
+export const TEAM_NAMES = [
+  "Team Liquid", "OG", "PSG.LGD", "Team Secret", "Virtus.pro", "Evil Geniuses", "Natus Vincere",
+  "Alliance", "Fnatic", "T1", "Team Spirit", "Gaimin Gladiators", "Tundra Esports", "Shopify Rebellion",
+  "BetBoom Team", "Azure Ray", "Xtreme Gaming", "Team Falcons", "Entity", "Quest Esports"
+];
+
 export function randomTeamName(exclude?: string): string {
-  const TEAM_NAMES = [
-    'Team Secret', 'OG', 'Evil Geniuses', 'PSG.LGD', 'Virtus.pro',
-    'Nigma', 'Alliance', 'Fnatic', 'TNC Predator', 'Vici Gaming',
-    'beastcoast', 'Quincy Crew', 'Team Liquid', 'Thunder Awaken', 'Entity'
-  ];
-  let name = randomChoice(TEAM_NAMES);
-  while (exclude && name === exclude) {
-    name = randomChoice(TEAM_NAMES);
+  let available = TEAM_NAMES;
+  if (exclude) {
+    available = TEAM_NAMES.filter(name => name !== exclude);
   }
-  return name;
+  return randomChoice(available);
 }
 
 export function randomTeamId(exclude?: number): number {

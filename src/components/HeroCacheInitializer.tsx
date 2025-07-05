@@ -7,7 +7,11 @@ export default function HeroCacheInitializer() {
     // Initialize hero cache on app start
     const initializeHeroCache = async () => {
       try {
-        const response = await fetch("/api/heroes");
+        const response = await fetch("/api/heroes", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
         if (response.ok) {
           // const data = await response.json(); // Unused
         }

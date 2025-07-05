@@ -1,9 +1,10 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useTeam } from "@/contexts/team-context";
 import { logWithTimestamp } from "@/lib/utils";
 import type { Team as TeamBase } from "@/types/team";
-import { Check, Loader2, RefreshCw, Trash2, Zap } from "lucide-react";
+import { Check, FileText, Loader2, RefreshCw, Trash2, Zap } from "lucide-react";
 import { useState } from "react";
 
 // Extend Team type locally to include UI-only fields
@@ -15,17 +16,9 @@ export type Team = TeamBase & {
 
 // Poll for team matches utility (shared by refresh and force refresh)
 async function pollForTeamMatches(url: string, options: RequestInit): Promise<unknown> {
-  let attempt = 0;
-  let res = await fetch(url, options);
-  let data = await res.json();
-  while (res.status === 202 && data && data.status === 'queued' && data.signature && attempt < 20) {
-    await new Promise(r => setTimeout(r, 1000));
-    res = await fetch(url, { method: 'GET' });
-    data = await res.json();
-    attempt++;
-  }
-  if (res.status !== 200) throw new Error('Failed to fetch team matches');
-  return data;
+  const res = await fetch(url, options);
+  if (!res.ok) throw new Error('Failed to fetch team matches');
+  return res.json();
 }
 
 export function TeamListCard({ children }: { children: React.ReactNode }) {
@@ -153,13 +146,14 @@ function TeamListRow({
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
             </>
           ) : null}
-          {isActive && (
-            <Check className="w-4 h-4 text-primary" />
-          )}
           <span className={`font-semibold ${isActive ? 'text-primary' : ''}`}>
             {team.teamName}
-            {isActive && <span className="ml-2 text-xs text-muted-foreground">(Active)</span>}
           </span>
+          {isActive && (
+            <Badge variant="default" className="ml-2">
+              Active
+            </Badge>
+          )}
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <span>{team.leagueName || team.leagueId}</span>
@@ -179,7 +173,7 @@ function TeamListRow({
   );
 }
 
-function useTeamListHandlers(teams: Team[], setTeams: ((teams: Team[]) => void) | undefined, currentTeam: Team | null, setCurrentTeam: (team: Team | null) => void, setRefreshingId: (id: string | null) => void, setForceRefreshingId: (id: string | null) => void) {
+function useTeamListHandlers(teams: Team[], setTeams: React.Dispatch<React.SetStateAction<Team[]>> | undefined, currentTeam: Team | null, setCurrentTeam: (team: Team | null) => void, setRefreshingId: (id: string | null) => void, setForceRefreshingId: (id: string | null) => void) {
   const handleSwitchTeam = (team: Team) => {
     setCurrentTeam(team);
   };
@@ -205,7 +199,14 @@ function useTeamListHandlers(teams: Team[], setTeams: ((teams: Team[]) => void) 
       return;
     }
     logWithTimestamp('log', '[TeamList] Refresh - team data:', { teamId: team.teamId, leagueId: team.leagueId });
-    pollForTeamMatches(`/api/teams/${team.teamId}/matches?leagueId=${encodeURIComponent(team.leagueId ?? '')}`, { method: 'GET' })
+    pollForTeamMatches(
+      `/api/teams/${team.teamId}/matches`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId: team.leagueId }),
+      }
+    )
       .then((data: unknown) => {
         logWithTimestamp('log', '[TeamList] Refresh import completed successfully', data);
       })
@@ -231,7 +232,14 @@ function useTeamListHandlers(teams: Team[], setTeams: ((teams: Team[]) => void) 
     setTimeout(() => {
       setForceRefreshingId(null);
     }, 2000);
-    pollForTeamMatches(`/api/teams/${team.teamId}/matches?force=true&leagueId=${encodeURIComponent(team.leagueId ?? '')}`, { method: 'GET' })
+    pollForTeamMatches(
+      `/api/teams/${team.teamId}/matches`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId: team.leagueId, force: true }),
+      }
+    )
       .then((newTeam: unknown) => {
         logWithTimestamp('log', '[TeamList] Import successful, new team data:', newTeam);
         const finalTeams = updatedTeams.map((t) =>
@@ -272,7 +280,7 @@ function useTeamListHandlers(teams: Team[], setTeams: ((teams: Team[]) => void) 
  * This approach is honest about what's happening - the user knows their
  * request has been submitted and is being processed in the background.
  */
-export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?: (teams: Team[]) => void }) {
+export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?: React.Dispatch<React.SetStateAction<Team[]>> }) {
   // NOTE: This component does NOT poll for team/league names.
   // Ongoing polling is handled by ClientTeamManagementPage.
   // Only refresh/force refresh logic is handled here.
@@ -291,27 +299,36 @@ export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?
     handleForceRefreshTeam,
   } = useTeamListHandlers(teams, setTeams, currentTeam, setCurrentTeam, setRefreshingId, setForceRefreshingId);
 
+  // Show empty state immediately if no teams
+  if (!teams || teams.length === 0) {
+    return (
+      <CardContent className="space-y-3">
+        <div className="text-center text-muted-foreground py-8">
+          <div className="mb-4">
+            <FileText className="w-12 h-12 mx-auto text-muted-foreground/50" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">No teams yet</h3>
+          <p className="text-sm">Use the form below to import your first team from Dotabuff.</p>
+        </div>
+      </CardContent>
+    );
+  }
+
   return (
     <CardContent className="space-y-3">
-      {(!teams || teams.length === 0) ? (
-        <div className="text-center text-muted-foreground py-8">
-          No teams have been added yet. Use the form below to import your first team.
-        </div>
-      ) : (
-        teams.map((team) => (
-          <TeamListRow
-            key={team.id}
-            team={team}
-            currentTeam={currentTeam}
-            refreshingId={refreshingId}
-            forceRefreshingId={forceRefreshingId}
-            onSwitch={handleSwitchTeam}
-            onRefresh={handleRefreshTeam}
-            onForceRefresh={handleForceRefreshTeam}
-            onDelete={handleDeleteTeam}
-          />
-        ))
-      )}
+      {teams.map((team) => (
+        <TeamListRow
+          key={team.id}
+          team={team}
+          currentTeam={currentTeam}
+          refreshingId={refreshingId}
+          forceRefreshingId={forceRefreshingId}
+          onSwitch={handleSwitchTeam}
+          onRefresh={handleRefreshTeam}
+          onForceRefresh={handleForceRefreshTeam}
+          onDelete={handleDeleteTeam}
+        />
+      ))}
     </CardContent>
   );
 } 

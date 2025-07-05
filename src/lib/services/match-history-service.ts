@@ -11,7 +11,7 @@ import { formatDuration, logWithTimestamp } from "../utils";
 import { getHeroDisplayName } from "../utils/data-calculations";
 
 // Type for processed match object
-export type ProcessedMatch = {
+export type Match = {
   id: string;
   date: string;
   opponent: string;
@@ -84,7 +84,7 @@ export async function getMatchHistory(
     const sortedMatches = uniqueMatches.sort((a, b) => b.start_time - a.start_time);
 
     // Process matches into app format
-    const processedMatches: ProcessedMatch[] = sortedMatches.slice(0, 50).map(match => processMatch(match));
+    const processedMatches: Match[] = sortedMatches.slice(0, 50).map(match => processMatch(match));
 
     // Calculate summary statistics
     const summary = calculateMatchSummary(processedMatches);
@@ -132,7 +132,7 @@ function getOptionalStringField(match: object, field: string): string | undefine
 /**
  * Process individual match data
  */
-function getPlayerStats(match: OpenDotaMatch): ProcessedMatch["playerStats"] {
+function getPlayerStats(match: OpenDotaMatch): Match["playerStats"] {
   const heroName = getOptionalStringField(match, "hero_name");
   return {
     kills: match.kills,
@@ -148,7 +148,7 @@ function getPlayerStats(match: OpenDotaMatch): ProcessedMatch["playerStats"] {
   };
 }
 
-function getGameObject(match: OpenDotaMatch): ProcessedMatch["games"][number] {
+function getGameObject(match: OpenDotaMatch): Match["games"][number] {
   return {
     picks: [],
     bans: [],
@@ -168,7 +168,7 @@ function getGameObject(match: OpenDotaMatch): ProcessedMatch["games"][number] {
   };
 }
 
-function processMatch(match: OpenDotaMatch): ProcessedMatch {
+function processMatch(match: OpenDotaMatch): Match {
   const isRadiant = match.player_slot < 128;
   const radiantWin = match.radiant_win;
   const result = (isRadiant && radiantWin) || (!isRadiant && !radiantWin) ? 'Win' : 'Loss';
@@ -212,7 +212,7 @@ function generateHighlights(match: OpenDotaMatch): string[] {
 /**
  * Calculate match summary statistics
  */
-function calculateMatchSummary(matches: ProcessedMatch[]): {
+function calculateMatchSummary(matches: Match[]): {
   totalMatches: number;
   wins: number;
   losses: number;
@@ -251,7 +251,7 @@ function calculateMatchSummary(matches: ProcessedMatch[]): {
 /**
  * Calculate win/loss streaks
  */
-function calculateStreaks(matches: ProcessedMatch[]): { longest: number; current: number } {
+function calculateStreaks(matches: Match[]): { longest: number; current: number } {
   let currentStreak = 0;
   let longestStreak = 0;
   let currentDirection: 'win' | 'loss' | null = null;
@@ -289,7 +289,7 @@ function calculateStreaks(matches: ProcessedMatch[]): { longest: number; current
 /**
  * Calculate match trends
  */
-function calculateMatchTrends(matches: ProcessedMatch[]): Array<{ metric: string; value: string; trend: string; direction: 'up' | 'down' }> {
+function calculateMatchTrends(matches: Match[]): Array<{ metric: string; value: string; trend: string; direction: 'up' | 'down' }> {
   if (matches.length < 2) return [];
   
   const recentMatches = matches.slice(0, 10);
@@ -320,7 +320,7 @@ function calculateMatchTrends(matches: ProcessedMatch[]): Array<{ metric: string
 /**
  * Calculate win rate from matches
  */
-function calculateWinRate(matches: ProcessedMatch[]): number {
+function calculateWinRate(matches: Match[]): number {
   if (matches.length === 0) return 0;
   const wins = matches.filter(m => m.result === 'Win').length;
   return (wins / matches.length) * 100;
@@ -329,7 +329,7 @@ function calculateWinRate(matches: ProcessedMatch[]): number {
 /**
  * Calculate average kills from matches
  */
-function calculateAverageKills(matches: ProcessedMatch[]): number {
+function calculateAverageKills(matches: Match[]): number {
   if (matches.length === 0) return 0;
   const totalKills = matches.reduce((sum, match) => {
     const kills = parseInt(match.playerStats.kills) || 0;

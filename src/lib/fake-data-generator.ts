@@ -9,7 +9,7 @@ import {
 } from '../types/opendota';
 import { writeMockData } from './mock-data-writer';
 import { FakeOpenDotaMatch } from './types/fake-data-generator-types';
-import { getAccountIdForPlayerName, randomChoice, randomFloat, randomInt, randomTeamId, randomTeamName, randomTimestamp, uniqueRandomSubset } from './utils/fake-data-helpers';
+import { getAccountIdForPlayerName, randomChoice, randomFloat, randomInt, randomTeamId, randomTeamName, randomTimestamp, TEAM_NAMES, uniqueRandomSubset } from './utils/fake-data-helpers';
 
 // Hero data for randomization
 const HERO_NAMES = [
@@ -45,12 +45,6 @@ const PLAYER_NAMES = [
   "Daxak", "fn", "Miposhka", "Collapse", "Yatoro", "TORONTOTOKYO", "Mira", "Save-", "Kingslayer",
   "Dyrachyo", "gpk", "Nightfall", "DM", "Solo", "Lil", "Daxak", "fn", "Miposhka", "Collapse",
   "Yatoro", "TORONTOTOKYO", "Mira", "Save-", "Kingslayer", "Dyrachyo", "gpk", "Nightfall", "DM"
-];
-
-const TEAM_NAMES = [
-  "Team Liquid", "OG", "PSG.LGD", "Team Secret", "Virtus.pro", "Evil Geniuses", "Natus Vincere",
-  "Alliance", "Fnatic", "T1", "Team Spirit", "Gaimin Gladiators", "Tundra Esports", "Shopify Rebellion",
-  "BetBoom Team", "Azure Ray", "Xtreme Gaming", "Team Falcons", "Entity", "Quest Esports"
 ];
 
 const LEAGUE_NAMES = [
@@ -223,6 +217,7 @@ export function generateFakeMatch(matchId: number, filename: string, playerSlot?
     game_mode: randomInt(1, 22),
     lobby_type: randomInt(0, 7),
     hero_id: playerHeroIds[0],
+    hero_name: HERO_NAMES[(playerHeroIds[0] - 1) % HERO_NAMES.length],
     start_time: randomTimestamp(),
     version: 1,
     kills: randomInt(0, 25),
@@ -294,6 +289,7 @@ export function generateFakePlayerHeroes(accountId: number, filename: string): O
   const uniqueHeroIds = uniqueRandomSubset(Array.from({ length: 124 }, (_, i) => i + 1), 20, 20);
   const data = uniqueHeroIds.map(heroId => ({
     hero_id: heroId,
+    hero_name: HERO_NAMES[(heroId - 1) % HERO_NAMES.length],
     last_played: randomTimestamp(),
     games: randomInt(1, 100),
     win: randomInt(0, 50),
@@ -431,8 +427,7 @@ export function generateFakeTeam(teamId: string, filename: string) {
 // Generate fake Dotabuff team matches (JSON, for /teams/:id/matches)
 export function generateFakeDotabuffMatches(teamId: string, seasonId: string, filename: string) {
   const matches = Array.from({ length: 10 }, (_, i) => ({
-    match_id: i,
-    // match_id: randomInt(1000000000, 2000000000),
+    match_id: randomInt(1000000000, 2000000000),
     team_id: teamId,
     season_id: seasonId,
     index: i
@@ -443,6 +438,7 @@ export function generateFakeDotabuffMatches(teamId: string, seasonId: string, fi
 
 // Generate fake Dotabuff league HTML (for /leagues/:id)
 export function generateFakeDotabuffLeagueHtml(leagueId: string, filename: string) {
+  // filename should be .html for mock HTML
   // Use a deterministic fake league name from the LEAGUE_NAMES array
   const leagueNames = LEAGUE_NAMES;
   const idNum = Math.abs(parseInt(leagueId, 10)) || 0;

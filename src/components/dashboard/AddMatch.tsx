@@ -17,7 +17,11 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
 async function fetchOpenDotaMatch(matchId: string) {
-  const res = await fetch(`/api/matches/${matchId}`);
+  const res = await fetch(`/api/matches/${matchId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamId: 'manual' }),
+  });
   if (!res.ok) throw new Error("Match not found");
   return res.json();
 }
@@ -42,6 +46,11 @@ export default function AddMatch({ onClose }: AddMatchProps) {
     try {
       const res = await fetch(
         `/api/matches/${matchId}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teamId: currentTeam?.id || 'manual' }),
+        }
       );
       if (!res.ok) throw new Error("Failed to fetch match data");
 

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getHeroImageUrl } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { filterHeroRows, sortHeroRows } from "./HeroStatsFilters";
+import { filterHeroRows, HeroStatsFilters, sortHeroRows } from "./HeroStatsFilters";
 
 export interface HeroStatsTableProps {
   title: string;
@@ -16,12 +16,7 @@ export interface HeroStatsTableProps {
   sortBy: string;
   sortOrder: string;
   onSortChange: (sortBy: string, sortOrder: string) => void;
-  filters: {
-    heroFilter: string;
-    countFilter: string;
-    winsFilter: string;
-    winRateFilter: string;
-  };
+  filters: HeroStatsFilters;
   getHighlightStyle: (hero: string, stat: string, value: number) => string;
 }
 
@@ -35,7 +30,7 @@ export function HeroStatsTable({
   getHighlightStyle
 }: HeroStatsTableProps) {
   // Prepare hero stats rows
-  const rows = Object.entries(data).map(([hero, stats]) => [hero, stats]);
+  const rows: [string, any][] = Object.entries(data).map(([hero, stats]) => [hero, stats]);
   
   // Apply filters and sorting
   const filteredRows = filterHeroRows(rows, filters);
