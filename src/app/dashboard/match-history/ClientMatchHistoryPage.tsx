@@ -1,9 +1,10 @@
 "use client";
+import React, { Suspense, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import type { Team } from "@/types/team";
-import { Suspense, useEffect, useState, useTransition } from "react";
+import PageHeader from "@/components/dashboard/PageHeader";
 import HeroStatsTables from "./HeroStatsTables";
 import MatchHistoryGrid from "./MatchHistoryGrid";
 import MatchHistorySummary from "./MatchHistorySummary";
@@ -14,65 +15,72 @@ import { useMatchHistoryState } from "./useMatchHistoryState";
 
 function MatchHistorySkeleton() {
   return (
-    <div className="dashboard-content">
-      {/* Main grid skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 w-full min-h-0" style={{ height: 600 }}>
-        {/* Left column skeleton */}
-        <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
-          <CardContent className="flex-1 flex flex-col p-0 min-h-0 h-full">
-            <div className="flex-1 min-h-0 overflow-y-auto p-4">
+    <div className="space-y-6">
+      <PageHeader
+        title="Match History"
+        description="View detailed match history, analyze performance, and track your team's progress"
+      />
+      
+      <div className="dashboard-content">
+        {/* Main grid skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 w-full min-h-0" style={{ height: 600 }}>
+          {/* Left column skeleton */}
+          <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
+            <CardContent className="flex-1 flex flex-col p-0 min-h-0 h-full">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="border rounded-lg p-4 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-3 w-2/3" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          {/* Right column skeleton */}
+          <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
+            <CardContent className="flex-1 flex flex-col p-6 min-h-0 h-full">
               <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="border rounded-lg p-4 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                    <Skeleton className="h-3 w-2/3" />
-                  </div>
-                ))}
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Right column skeleton */}
-        <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
-          <CardContent className="flex-1 flex flex-col p-6 min-h-0 h-full">
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <div className="grid grid-cols-2 gap-4 mt-6">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+        {/* Summary skeleton */}
+        <div className="max-w-full">
+          <Card className="h-fit mb-0">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Summary skeleton */}
-      <div className="max-w-full">
-        <Card className="h-fit mb-0">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Hero stats skeleton */}
-      <div className="max-w-full">
-        <Card className="h-fit mt-0">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-1/3" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+        {/* Hero stats skeleton */}
+        <div className="max-w-full">
+          <Card className="h-fit mt-0">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-1/3" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -124,57 +132,63 @@ function MatchHistoryContent({
   emptyHeroStats: HeroStatsData;
 }) {
   return (
-    <div className="dashboard-content">
-      {/* Main grid and content */}
-      <MatchHistoryGrid 
-        gridHeight={gridHeight} 
-        gridRef={gridRef} 
-        isLoaded={isLoaded} 
-        currentTeam={currentTeam} 
-        filteredMatches={filteredMatches} 
-        selectedMatch={selectedMatch} 
-        handleSelectMatch={handleSelectMatch} 
-        selectedMatchObj={selectedMatchObj} 
-        showPlayerPopup={showPlayerPopup} 
-        setShowPlayerPopup={setShowPlayerPopup} 
-        selectedPlayer={selectedPlayer} 
-        setSelectedPlayer={setSelectedPlayer} 
-        playerData={playerData} 
-        setPlayerData={setPlayerData} 
-        loadingPlayerData={loadingPlayerData} 
-        loading={loadingMatches} 
+    <div className="space-y-6">
+      <PageHeader
+        title="Match History"
+        description="View detailed match history, analyze performance, and track the team's progress"
       />
-      {/* Row 3: Summary (auto height) */}
-      <div className="max-w-full">
-        <Card className="h-fit mb-0">
-          <CardContent className="p-6">
-            <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading summary...</div>}>
-              <MatchHistorySummary summary={summary} trends={trends} loading={loadingMatches} />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </div>
-      {/* Row 4: Hero statistics (auto height) */}
-      <div className="max-w-full">
-        <Card className="h-fit mt-0">
-          <CardContent className="p-6 overflow-x-auto">
-            <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading hero stats...</div>}>
-              <HeroStatsTables 
-                heroStats={heroStats ?? emptyHeroStats}
-                currentTeam={currentTeam}
-                getHighlightStyle={(hero: string, type: string) => getHighlightStyle(hero, type, heroStats ?? emptyHeroStats)}
-                loading={loadingMatches || isPending || !heroStats}
-              />
-            </Suspense>
-          </CardContent>
-        </Card>
+      
+      <div className="dashboard-content">
+        {/* Main grid and content */}
+        <MatchHistoryGrid 
+          gridHeight={gridHeight} 
+          gridRef={gridRef} 
+          isLoaded={isLoaded} 
+          currentTeam={currentTeam} 
+          filteredMatches={filteredMatches} 
+          selectedMatch={selectedMatch} 
+          handleSelectMatch={handleSelectMatch} 
+          selectedMatchObj={selectedMatchObj} 
+          showPlayerPopup={showPlayerPopup} 
+          setShowPlayerPopup={setShowPlayerPopup} 
+          selectedPlayer={selectedPlayer} 
+          setSelectedPlayer={setSelectedPlayer} 
+          playerData={playerData} 
+          setPlayerData={setPlayerData} 
+          loadingPlayerData={loadingPlayerData} 
+          loading={loadingMatches} 
+        />
+        {/* Row 3: Summary (auto height) */}
+        <div className="max-w-full">
+          <Card className="h-fit mb-0">
+            <CardContent className="p-6">
+              <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading summary...</div>}>
+                <MatchHistorySummary summary={summary} trends={trends} loading={loadingMatches} />
+              </Suspense>
+            </CardContent>
+          </Card>
+        </div>
+        {/* Row 4: Hero statistics (auto height) */}
+        <div className="max-w-full">
+          <Card className="h-fit mt-0">
+            <CardContent className="p-6 overflow-x-auto">
+              <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading hero stats...</div>}>
+                <HeroStatsTables 
+                  heroStats={heroStats ?? emptyHeroStats}
+                  currentTeam={currentTeam}
+                  getHighlightStyle={(hero: string, type: string) => getHighlightStyle(hero, type, heroStats ?? emptyHeroStats)}
+                  loading={loadingMatches || isPending || !heroStats}
+                />
+              </Suspense>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 }
 
 export default function ClientMatchHistoryPage({ selectedMatchId }: { selectedMatchId?: string | null }) {
-  const _toast = useToast();
   const { matches, loadingMatches, isLoaded, currentTeam } = useMatchData();
   const {
     selectedMatch,
@@ -192,19 +206,12 @@ export default function ClientMatchHistoryPage({ selectedMatchId }: { selectedMa
     handleSelectMatch
   } = useMatchHistoryState(selectedMatchId);
 
-  // Defer heavy hero stats calculation
-  const [heroStats, setHeroStats] = useState<HeroStatsData | null>(null);
-  const [isPending, startTransition] = useTransition();
-  
-  // Start hero stats calculation after initial render
-  useEffect(() => {
-    if (!loadingMatches && matches.length > 0) {
-      startTransition(() => {
-        setHeroStats(calculateHeroStats(matches));
-      });
-    } else {
-      setHeroStats(null);
+  // Memoize hero stats calculation to prevent unnecessary recalculations
+  const heroStats = useMemo(() => {
+    if (loadingMatches || matches.length === 0) {
+      return null;
     }
+    return calculateHeroStats(matches);
   }, [matches, loadingMatches]);
 
   // Filtering logic
@@ -251,7 +258,7 @@ export default function ClientMatchHistoryPage({ selectedMatchId }: { selectedMa
       loadingPlayerData={_loadingPlayerData}
       loadingMatches={loadingMatches}
       heroStats={heroStats}
-      isPending={isPending}
+      isPending={false}
       summary={summary}
       trends={trends}
       emptyHeroStats={emptyHeroStats}

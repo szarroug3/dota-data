@@ -1,70 +1,26 @@
 import { Badge } from "@/components/ui/badge";
-import { getHeroImageUrl, getHeroNameSync, getLeagueNameFromUrl, getMatchResult, getTeamSide } from "@/lib/utils";
+import { getHeroImageUrl, getHeroNameSync, getLeagueNameFromUrl, getDashboardMatchResult, getTeamSide } from "@/lib/utils";
 import type { Team } from "@/types/team";
+import type { OpenDotaFullMatch, OpenDotaMatch, OpenDotaPlayer } from "@/types/opendota";
 import { BarChart, User } from "lucide-react";
 import type { Match } from "./match-utils";
 
 interface MatchDetailsProps {
   match: Match;
   currentTeam: Team;
-  _isLoading?: boolean;
-  onShowPlayerPopup?: (player: unknown) => void;
+  isLoading?: boolean;
+  error?: string | null;
+  onShowPlayerPopup?: (player: OpenDotaFullMatch['players'][0]) => void;
 }
 
 export default function MatchDetails({ 
   match, 
   currentTeam, 
-  _isLoading = false,
+  isLoading = false,
+  error = null,
   onShowPlayerPopup 
 }: MatchDetailsProps) {
-  // Extract basic match info
-  const _league = match.league;
-  const _matchId = match.match_id || match.id;
-  
-  // Get OpenDota data
-  const openDotaData = match.openDota;
-  
-  // Extract player data
-  const radiantPlayers = openDotaData?.players?.filter((player: unknown) => 
-    (player as { player_slot: number }).player_slot < 128
-  ) || [];
-  const _direPlayers = openDotaData?.players?.filter((player: unknown) => 
-    (player as { player_slot: number }).player_slot >= 128
-  ) || [];
-  
-  // Get team sides
-  const radiantSide = getTeamSide(currentTeam, match);
-  const _direSide = radiantSide === 'radiant' ? 'dire' : 'radiant';
-  
-  // Calculate match duration
-  const duration = openDotaData?.duration ? Math.floor(openDotaData.duration / 60) : 0;
-  const _minutes = Math.floor(duration);
-  const _seconds = duration % 60;
-  
-  // Determine winner
-  const radiantWin = openDotaData?.radiant_win;
-  const _winner = radiantWin ? 'Radiant' : 'Dire';
-  
-  // Get hero stats data
-  const _heroStats = {
-    ourPicks: {},
-    ourBans: {},
-    opponentPicks: {},
-    opponentBans: {}
-  };
-  
-  // Helper function to get highlight style
-  const _getHighlightStyle = (_hero: string, _type: string) => {
-    // Implementation for highlight styling
-    return '';
-  };
-
-  if (error) {
-    return (
-      <p className="text-red-500 text-sm font-semibold p-4">{error}</p>
-    );
-  }
-
+  // Early return if match is undefined or null
   if (!match) {
     return (
       <div className="text-center text-muted-foreground">
@@ -76,17 +32,60 @@ export default function MatchDetails({
     );
   }
 
+  // Extract basic match info
+  const openDotaData = match.openDota;
+  
+  // Extract player data
+  const radiantPlayers = openDotaData?.players?.filter((player: OpenDotaFullMatch['players'][0]) => 
+    player.player_slot < 128
+  ) || [];
+  const direPlayers = openDotaData?.players?.filter((player: OpenDotaFullMatch['players'][0]) => 
+    player.player_slot >= 128
+  ) || [];
+  
+  // Get team sides
+  const radiantSide = getTeamSide(match, currentTeam);
+  const direSide = radiantSide === 'Radiant' ? 'Dire' : 'Radiant';
+  
+  // Calculate match duration
+  const duration = openDotaData?.duration ? Math.floor(openDotaData.duration / 60) : 0;
+  const minutes = Math.floor(duration);
+  const seconds = duration % 60;
+  
+  // Determine winner
+  const radiantWin = openDotaData?.radiant_win;
+  const winner = radiantWin ? 'Radiant' : 'Dire';
+  
+  // Get hero stats data
+  const heroStats = {
+    ourPicks: {},
+    ourBans: {},
+    opponentPicks: {},
+    opponentBans: {}
+  };
+  
+  // Helper function to get highlight style
+  const getHighlightStyle = (hero: string, type: string) => {
+    // Implementation for highlight styling
+    return '';
+  };
+
+  if (error) {
+    return (
+      <p className="text-red-500 text-sm font-semibold p-4">{error}</p>
+    );
+  }
+
   // Extract OpenDota data if available
-  const od = openDotaData || {};
-  const radiantName = od.radiant_name || "Radiant";
-  const direName = od.dire_name || "Dire";
-  const radiantScore = od.radiant_score ?? "?";
-  const direScore = od.dire_score ?? "?";
-  const _league = getLeagueNameFromUrl(match.league);
-  const result = getMatchResult(match, currentTeam);
+  const od = openDotaData as OpenDotaFullMatch | undefined;
+  const radiantName = od?.radiant_name || "Radiant";
+  const direName = od?.dire_name || "Dire";
+  const radiantScore = od?.radiant_score ?? "?";
+  const direScore = od?.dire_score ?? "?";
+  const result = getDashboardMatchResult(match, currentTeam);
   const teamSide = getTeamSide(match, currentTeam);
-  const matchDate = match.date || (od.start_time ? new Date(od.start_time * 1000).toISOString() : "");
-  const _matchId = od.match_id || match.id || "?";
+  const matchDate = (od?.start_time ? new Date(od.start_time * 1000).toISOString() : "");
+  const matchId = od?.match_id || match.id || "?";
 
   // Format date as 12/7/2024 10:17 PM (no comma)
   const formatMatchDate = (dateString: string) => {
@@ -106,16 +105,15 @@ export default function MatchDetails({
   };
 
   // Extract picks and bans
-  const picksBans = od.picks_bans || [];
+  const picksBans = od?.picks_bans || [];
   const radiantPicks = picksBans.filter((pb: { is_pick: boolean; team: number }) => pb.is_pick && pb.team === 0).map((pb: { hero_id: number }) => pb.hero_id);
   const radiantBans = picksBans.filter((pb: { is_pick: boolean; team: number }) => !pb.is_pick && pb.team === 0).map((pb: { hero_id: number }) => pb.hero_id);
   const direPicks = picksBans.filter((pb: { is_pick: boolean; team: number }) => pb.is_pick && pb.team === 1).map((pb: { hero_id: number }) => pb.hero_id);
   const direBans = picksBans.filter((pb: { is_pick: boolean; team: number }) => !pb.is_pick && pb.team === 1).map((pb: { hero_id: number }) => pb.hero_id);
 
   // Helper to get player name
-  const getPlayerName = (player: unknown) => {
-    const p = player as { name?: string; personaname?: string; account_id?: number };
-    return p.name || p.personaname || `Player ${p.account_id}` || 'Unknown';
+  const getPlayerName = (player: OpenDotaFullMatch['players'][0]) => {
+    return player.name || player.personaname || `Player ${player.account_id}` || 'Unknown';
   };
 
   // Helper to get hero name
@@ -124,7 +122,7 @@ export default function MatchDetails({
   };
 
   // Helper for quick and full stats buttons
-  function _PlayerButtons({ player, onShowPlayerPopup }: { player: unknown, onShowPlayerPopup: (player: unknown) => void }) {
+  function PlayerButtons({ player, onShowPlayerPopup }: { player: OpenDotaFullMatch['players'][0], onShowPlayerPopup: (player: OpenDotaFullMatch['players'][0]) => void }) {
     const handleQuickInfo = () => {
       onShowPlayerPopup(player);
     };
@@ -268,27 +266,37 @@ export default function MatchDetails({
                 </tr>
               </thead>
               <tbody>
-                {radiantPlayers.map((p: unknown, i: number) => {
+                {radiantPlayers.map((p: OpenDotaFullMatch['players'][0], i: number) => {
                   const handleFullInfo = () => {
                     const event = new CustomEvent('showPlayerStatsTab', { detail: { player: p } });
                     window.dispatchEvent(event);
+                  };
+                  const player = p as unknown as OpenDotaPlayer & { 
+                    player_slot: number; 
+                    isRadiant?: boolean;
+                    hero_id: number;
+                    kills: number;
+                    deaths: number;
+                    assists: number;
+                    gold_per_min?: number;
+                    xp_per_min?: number;
                   };
                   return (
                     <tr key={i} className={`bg-blue-950/10`}>
                       <td className="py-1 px-2">{getPlayerName(p)}</td>
                       <td className="py-1 px-2">
                         <img
-                          src={getHeroImageUrl(getHeroName((p as { hero_id: number }).hero_id))}
-                          alt={getHeroName((p as { hero_id: number }).hero_id)}
+                          src={getHeroImageUrl(getHeroName(player.hero_id))}
+                          alt={getHeroName(player.hero_id)}
                           className="w-6 h-6 rounded object-cover bg-gray-200 dark:bg-gray-700"
-                          title={getHeroName((p as { hero_id: number }).hero_id)}
+                          title={getHeroName(player.hero_id)}
                         />
                       </td>
-                      <td className="py-1 px-2">{(p as { kills?: number }).kills || 0}</td>
-                      <td className="py-1 px-2">{(p as { deaths?: number }).deaths || 0}</td>
-                      <td className="py-1 px-2">{(p as { assists?: number }).assists || 0}</td>
-                      <td className="py-1 px-2">{(p as { gold_per_min?: number }).gold_per_min || 0}</td>
-                      <td className="py-1 px-2">{(p as { xp_per_min?: number }).xp_per_min || 0}</td>
+                      <td className="py-1 px-2">{player.kills || 0}</td>
+                      <td className="py-1 px-2">{player.deaths || 0}</td>
+                      <td className="py-1 px-2">{player.assists || 0}</td>
+                      <td className="py-1 px-2">{player.gold_per_min || 0}</td>
+                      <td className="py-1 px-2">{player.xp_per_min || 0}</td>
                       <td className="py-1 px-2">
                         {onShowPlayerPopup && (
                           <button

@@ -311,35 +311,154 @@ export function usePlayerStats(
   return useDataFetching<PlayerStats>(url, fetchKey);
 }
 
-// Hook for fetching match history
+// Hook for fetching match history from individual player endpoints
 export function useMatchHistory(accountIds: string[] | null) {
-  const { currentTeam } = useTeam();
-  const teamId = currentTeam?.id;
-  const url =
-    accountIds && accountIds.length > 0 && teamId
-      ? `/api/teams/${teamId}/match-history?accountIds=${accountIds.join(",")}`
-      : null;
-  const fetchKey = 'match-history';
-  
-  // Debug logging
-  console.log('[useMatchHistory] Hook called with:', {
-    accountIds,
-    teamId,
-    url,
-    hasCurrentTeam: !!currentTeam
-  });
-  
-  const result = useDataFetching<MatchHistory>(url, fetchKey);
-  
-  // Debug logging for result
-  console.log('[useMatchHistory] Hook result:', {
-    loading: result.loading,
-    error: result.error,
-    hasData: !!result.data,
-    dataKeys: result.data ? Object.keys(result.data) : null
-  });
-  
-  return result;
+  const [combinedData, setCombinedData] = useState<MatchHistory | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!accountIds || accountIds.length === 0) {
+      setCombinedData(null);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    const fetchPlayerData = async () => {
+      try {
+        // Fetch data for all players in parallel
+        const playerPromises = accountIds.map(async (accountId) => {
+          const response = await fetch(`/api/players/${accountId}/data`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ force: false })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch player ${accountId}`);
+          }
+          
+          return response.json();
+        });
+
+        const playerResults = await Promise.all(playerPromises);
+        
+        if (!isMounted) return;
+
+        // Combine match data from all players
+        const allMatches: any[] = [];
+        const seenMatches = new Set<string>();
+
+        playerResults.forEach(playerData => {
+          if (playerData && playerData.recent_matches) {
+            playerData.recent_matches.forEach((match: any) => {
+              if (!seenMatches.has(match.match_id.toString())) {
+                seenMatches.add(match.match_id.toString());
+                allMatches.push(match);
+              }
+            });
+          }
+        });
+
+        // Sort by date (newest first)
+        const sortedMatches = allMatches.sort((a, b) => b.start_time - a.start_time);
+
+        // Process matches into the expected format
+        const processedMatches = sortedMatches.slice(0, 50).map(match => ({
+          id: match.match_id.toString(),
+          date: new Date(match.start_time * 1000).toLocaleDateString(),
+          opponent: 'Unknown Team',
+          result: match.radiant_win ? 'Win' : 'Loss',
+          score: `${match.kills || 0}/${match.deaths || 0}/${match.assists || 0}`,
+          duration: `${Math.floor(match.duration / 60)}:${(match.duration % 60).toString().padStart(2, '0')}`,
+          league: 'Unknown League',
+          map: 'Dota 2',
+          picks: [],
+          bans: [],
+          opponentPicks: [],
+          opponentBans: [],
+          draftOrder: [],
+          highlights: [],
+          playerStats: {
+            kills: match.kills || 0,
+            deaths: match.deaths || 0,
+            assists: match.assists || 0,
+            gpm: match.gold_per_min,
+            xpm: match.xp_per_min,
+            hero: match.hero_name || 'Unknown',
+            heroDamage: match.hero_damage,
+            towerDamage: match.tower_damage,
+            lastHits: match.last_hits,
+            denies: match.denies
+          },
+          games: [{
+            picks: [],
+            bans: [],
+            opponentPicks: [],
+            opponentBans: [],
+            draftOrder: [],
+            highlights: [],
+            playerStats: {
+              kills: match.kills || 0,
+              deaths: match.deaths || 0,
+              assists: match.assists || 0,
+              gpm: match.gold_per_min,
+              xpm: match.xp_per_min
+            },
+            duration: `${Math.floor(match.duration / 60)}:${(match.duration % 60).toString().padStart(2, '0')}`,
+            score: `${match.kills || 0}/${match.deaths || 0}/${match.assists || 0}`
+          }]
+        }));
+
+        // Calculate summary statistics
+        const totalMatches = processedMatches.length;
+        const wins = processedMatches.filter(m => m.result === 'Win').length;
+        const winRate = totalMatches > 0 ? (wins / totalMatches) * 100 : 0;
+
+        const summary = {
+          totalMatches,
+          wins,
+          losses: totalMatches - wins,
+          winRate,
+          avgGameLength: '30:00', // Placeholder
+          longestWinStreak: 0, // Placeholder
+          currentStreak: 0 // Placeholder
+        };
+
+        // Calculate trends (placeholder)
+        const trends = [
+          { metric: 'Win Rate', value: `${winRate.toFixed(1)}%`, trend: 'stable', direction: 'neutral' as const },
+          { metric: 'Avg KDA', value: '2.5', trend: 'stable', direction: 'neutral' as const }
+        ];
+
+        setCombinedData({
+          summary,
+          matches: processedMatches,
+          trends
+        });
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch match history');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPlayerData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [JSON.stringify(accountIds)]);
+
+  return { data: combinedData, loading, error };
 }
 
 // Hook for fetching draft suggestions
@@ -417,7 +536,7 @@ export function useBatchMatchDetails(matchIds: string[] | null) {
       fetch(`/api/matches/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId: 'batch' }),
+        body: JSON.stringify({}),
       })
         .then(res => res.ok ? res.json() : null)
         .then(data => {

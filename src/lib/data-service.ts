@@ -27,7 +27,7 @@ export {
 
 // Export main service functions
 export { getDraftSuggestions } from './services/draft-suggestions-service';
-export { getMatchHistory } from './services/match-history-service';
+
 export { getMetaInsights } from './services/meta-insights-service';
 export { getPlayerStats } from './services/player-stats-service';
 export { getTeamAnalysis } from './services/team-analysis-service';

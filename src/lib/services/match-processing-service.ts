@@ -1,4 +1,4 @@
-import type { OpenDotaMatch } from '@/types/opendota';
+import type { OpenDotaMatch, OpenDotaFullMatch } from '@/types/opendota';
 
 // Types for processed match data
 export interface Match {
@@ -80,7 +80,9 @@ function getOpponentName(match: OpenDotaMatch, teamId: string): string {
 
 // Helper function to extract picks and bans
 function extractPicksAndBans(match: OpenDotaMatch, teamSide: 'radiant' | 'dire') {
-  if (!match.picks_bans) {
+  // Check if the match has picks_bans (OpenDotaFullMatch)
+  const fullMatch = match as OpenDotaFullMatch;
+  if (!fullMatch.picks_bans) {
     return {
       picks: [],
       bans: [],
@@ -94,7 +96,7 @@ function extractPicksAndBans(match: OpenDotaMatch, teamSide: 'radiant' | 'dire')
   const opponentPicks: string[] = [];
   const opponentBans: string[] = [];
 
-  match.picks_bans.forEach(pickBan => {
+  fullMatch.picks_bans.forEach((pickBan: { is_pick: boolean; hero_id: number; team: number; order: number }) => {
     const isRadiant = pickBan.team === 0;
     const isPick = pickBan.is_pick;
     const heroId = pickBan.hero_id.toString();
@@ -126,8 +128,10 @@ function extractPicksAndBans(match: OpenDotaMatch, teamSide: 'radiant' | 'dire')
 
 // Helper function to create score string
 function createScoreString(match: OpenDotaMatch): string {
-  if (match.radiant_score !== undefined && match.dire_score !== undefined) {
-    return `${match.radiant_score}-${match.dire_score}`;
+  // Check if the match has score properties (OpenDotaFullMatch)
+  const fullMatch = match as OpenDotaFullMatch;
+  if (fullMatch.radiant_score !== undefined && fullMatch.dire_score !== undefined) {
+    return `${fullMatch.radiant_score}-${fullMatch.dire_score}`;
   }
   return 'N/A';
 }
@@ -168,6 +172,46 @@ export function processMatch(match: OpenDotaMatch, teamId: string): Match {
     }],
     openDota: {
       isRadiant: teamSide === 'radiant',
+      radiantWin: match.radiant_win,
+      startTime: match.start_time,
+      matchId: match.match_id
+    }
+  };
+}
+
+// Decoupled function to process a match without team context
+export function processMatchDecoupled(match: OpenDotaMatch): Match {
+  const { picks, bans, opponentPicks, opponentBans } = extractPicksAndBans(match, 'radiant'); // Default to radiant for processing
+
+  return {
+    id: match.match_id.toString(),
+    date: formatMatchDate(match.start_time),
+    opponent: `Team ${match.match_id % 1000}`, // Generic opponent name
+    result: match.radiant_win ? 'W' : 'L', // Simplified result based on radiant win
+    score: createScoreString(match),
+    duration: formatMatchDuration(match.duration),
+    league: 'Unknown League',
+    map: 'dota2',
+    picks,
+    bans,
+    opponentPicks,
+    opponentBans,
+    draftOrder: [],
+    highlights: [],
+    playerStats: {},
+    games: [{
+      picks,
+      bans,
+      opponentPicks,
+      opponentBans,
+      draftOrder: [],
+      highlights: [],
+      playerStats: {},
+      duration: formatMatchDuration(match.duration),
+      score: createScoreString(match)
+    }],
+    openDota: {
+      isRadiant: true, // Default to radiant
       radiantWin: match.radiant_win,
       startTime: match.start_time,
       matchId: match.match_id

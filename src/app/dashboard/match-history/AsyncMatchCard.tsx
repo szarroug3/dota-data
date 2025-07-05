@@ -23,7 +23,7 @@ export default function AsyncMatchCard(props: AsyncMatchCardProps) {
   // Use suspense-enabled hook
   const teamContext = useTeam();
   const team = currentTeam || teamContext.currentTeam;
-  const processedMatch = useSuspenseMatchData(match.id!, team?.id || '');
+  const processedMatch = useSuspenseMatchData(match.id!);
 
   return (
     <MatchCard

@@ -61,13 +61,7 @@ const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[PLAYER DATA POLL]', ...args);
 };
 
-async function isPlayerFilePresent(playerId: string, debug: (...args: unknown[]) => void): Promise<boolean> {
-  const playerCacheKey = `opendota-player-${playerId}`;
-  const playerFilename = `opendota-player-${playerId}.json`;
-  debug('Checking for player file:', playerFilename);
-  const playerData = await cacheService.get<OpenDotaPlayer>(playerCacheKey, playerFilename);
-  return !!playerData;
-}
+
 
 
 

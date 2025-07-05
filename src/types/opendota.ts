@@ -20,6 +20,13 @@ export interface OpenDotaPlayer {
     stdDev: number;
     n: number;
   };
+  // Additional properties used in services
+  total_matches?: number;
+  win?: number;
+  kda?: number;
+  gpm?: number;
+  xpm?: number;
+  avg_seconds_per_match?: number;
 }
 
 export interface OpenDotaMatch {
@@ -77,6 +84,8 @@ export interface OpenDotaMatch {
   rank_tier: number;
   cosmetics: number[];
   benchmarks: { [key: string]: number };
+  // Additional properties used in services
+  hero_name?: string;
 }
 
 export interface OpenDotaHero {

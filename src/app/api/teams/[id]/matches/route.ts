@@ -4,10 +4,10 @@
  *   post:
  *     tags:
  *       - Teams
- *     summary: Import Dotabuff matches for a team
+ *     summary: Get team name and match list from Dotabuff
  *     description: |
- *       Returns team name and match IDs immediately if cached, or waits for import to complete.
- *       Always returns 200 with the actual data.
+ *       Returns team name and match IDs from Dotabuff API.
+ *       Fetches team data and returns structured team information with match IDs.
  *     parameters:
  *       - in: path
  *         name: id
@@ -38,21 +38,12 @@
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: string
- *                   description: Unique team-league identifier
- *                 teamId:
- *                   type: string
  *                 teamName:
  *                   type: string
- *                 leagueId:
- *                   type: string
- *                 leagueName:
- *                   type: string
- *                 matchIds:
- *                   type: array
- *                   items:
- *                     type: string
+ *                   description: Team name from Dotabuff
+ *                 matchIdsByLeague:
+ *                   type: object
+ *                   description: Match IDs organized by league
  *       400:
  *         description: Invalid input
  *         content:
@@ -77,21 +68,18 @@ import { cacheService } from '@/lib/cache-service';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getTeamCacheFilename, getTeamCacheKey } from '@/lib/utils/cache-keys';
 import { NextRequest } from 'next/server';
+import { TeamMatchesRequest, TeamMatchesResponse, ApiErrorResponse } from '@/types/api';
+
 
 const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[TEAM IMPORT POLL]', ...args);
 };
 
-interface RequestBody {
-  leagueId: string;
-  force?: boolean;
+async function parseRequestBody(request: NextRequest): Promise<TeamMatchesRequest> {
+  return await request.json() as TeamMatchesRequest;
 }
 
-async function parseRequestBody(request: NextRequest): Promise<RequestBody> {
-  return await request.json() as RequestBody;
-}
-
-function validateRequestBody(body: RequestBody): string | null {
+function validateRequestBody(body: TeamMatchesRequest): string | null {
   if (!body.leagueId) {
     return 'Missing leagueId in body';
   }
@@ -102,14 +90,10 @@ async function getCachedTeamData(teamCacheKey: string, teamFilename: string): Pr
   const cachedData = await cacheService.get<string>(teamCacheKey, teamFilename);
   if (cachedData) {
     try {
-      // Parse the cached JSON data
       const parsed = typeof cachedData === 'string' ? JSON.parse(cachedData) : cachedData;
       if (parsed && typeof parsed === 'object' && 'teamName' in parsed && 'matchIdsByLeague' in parsed) {
         debug('POST: Team data found in cache, returning parsed data');
-        return new Response(JSON.stringify(parsed), { 
-          status: 200, 
-          headers: { 'Content-Type': 'application/json' } 
-        });
+        return createSuccessResponse(parsed as TeamMatchesResponse);
       }
     } catch (parseErr) {
       debug('POST: Failed to parse cached data:', parseErr);
@@ -119,54 +103,55 @@ async function getCachedTeamData(teamCacheKey: string, teamFilename: string): Pr
 }
 
 function createErrorResponse(message: string, status: number): Response {
-  return new Response(JSON.stringify({ error: message }), { 
-    status, 
-    headers: { 'Content-Type': 'application/json' } 
+  return new Response(JSON.stringify({ error: message, status } as ApiErrorResponse), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 
-function createSuccessResponse(data: unknown): Response {
-  return new Response(JSON.stringify(data), { 
-    status: 200, 
-    headers: { 'Content-Type': 'application/json' } 
+function createSuccessResponse(data: TeamMatchesResponse): Response {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 
 async function fetchAndProcessTeamData(id: string, leagueId: string, _teamCacheKey: string, _teamFilename: string): Promise<Response> {
   try {
-    // Wait for the background job to complete
     const result = await getTeamNameAndMatches(id, leagueId, true);
-    
-    // Check if we got a valid result
     if (result && typeof result === 'object' && 'teamName' in result && 'matchIdsByLeague' in result) {
       debug('POST: Team data fetched successfully');
-      return createSuccessResponse(result);
-    } else if (result && typeof result === 'object' && 'status' in result) {
-      // Handle queued status
-      debug('POST: Request queued, returning status');
-      return createSuccessResponse(result);
+      return createSuccessResponse(result as TeamMatchesResponse);
+    } else if (isApiErrorResponse(result)) {
+      return createErrorResponse(result.error, 500);
     } else {
-      throw new Error('Invalid result format from getTeamNameAndMatches');
+      // If result is a status response, wait for completion and retry
+      debug('POST: Request queued, waiting for completion');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      return await fetchAndProcessTeamData(id, leagueId, _teamCacheKey, _teamFilename);
     }
   } catch (err) {
     debug('POST: Error fetching team data:', err);
-    console.error('[API ERROR] /api/teams/[id]/matches:', err);
     return createErrorResponse('Failed to fetch team data', 500);
   }
+}
+
+function isApiErrorResponse(obj: unknown): obj is ApiErrorResponse {
+  return obj !== null && typeof obj === 'object' && 'error' in obj && typeof (obj as Record<string, unknown>).error === 'string';
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   debug('POST: Handler called');
   const { id } = await params;
-  
-  let body: RequestBody;
+
+  let body: TeamMatchesRequest;
   try {
     body = await parseRequestBody(request);
   } catch (err) {
     debug('POST: Failed to parse JSON body', err);
     return createErrorResponse('Invalid JSON body', 400);
   }
-  
+
   const validationError = validateRequestBody(body);
   if (validationError) {
     debug('POST: Missing leagueId in body');
@@ -176,7 +161,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { leagueId, force = false } = body;
   const teamCacheKey = getTeamCacheKey(id);
   const teamFilename = getTeamCacheFilename(id);
-  
+
   // Check cache first (unless force refresh)
   if (!force) {
     const cachedResponse = await getCachedTeamData(teamCacheKey, teamFilename);
@@ -192,6 +177,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   debug('POST: Team data not in cache, fetching and waiting for completion');
-  
+
   return await fetchAndProcessTeamData(id, leagueId, teamCacheKey, teamFilename);
 }

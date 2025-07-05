@@ -1,41 +1,6 @@
 import { useTeam } from '@/contexts/team-context';
 import { useCallback, useEffect, useState } from 'react';
-
-// Types for processed match data
-export interface MatchData {
-  id: string;
-  date: string;
-  opponent: string;
-  result: 'W' | 'L';
-  score: string;
-  duration: string;
-  league: string;
-  map: string;
-  picks: string[];
-  bans: string[];
-  opponentPicks: string[];
-  opponentBans: string[];
-  draftOrder: unknown[];
-  highlights: string[];
-  playerStats: Record<string, unknown>;
-  games: Array<{
-    picks: string[];
-    bans: string[];
-    opponentPicks: string[];
-    opponentBans: string[];
-    draftOrder: unknown[];
-    highlights: string[];
-    playerStats: Record<string, unknown>;
-    duration: string;
-    score: string;
-  }>;
-  openDota?: {
-    isRadiant: boolean;
-    radiantWin: boolean;
-    startTime: number;
-    matchId: number;
-  };
-}
+import type { MatchData } from '@/types/contexts';
 
 interface UseMatchDataResult {
   data: MatchData | null;
@@ -44,80 +9,21 @@ interface UseMatchDataResult {
   refetch: () => void;
 }
 
-// Helper function to handle response status
-async function handleResponseStatus(
-  response: Response, 
-  matchId: string, 
-  teamId: string
-): Promise<MatchData> {
-  if (response.status === 200) {
-    const data = await response.json();
-    if (data.status === 'ready') {
-      // Data is ready, fetch the actual processed data
-      const processedResponse = await fetch(`/api/matches/${matchId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId }),
-      });
-      if (processedResponse.ok) {
-        return await processedResponse.json();
-      }
-    } else {
-      // Return the processed data directly
-      return data;
-    }
-  } else if (response.status === 202) {
-    // Still queued, will be handled by polling
-    throw new Error('Processing');
-  }
-  
-  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-}
-
-// Helper function to poll for processed match data
-async function pollMatchData(matchId: string, teamId: string): Promise<MatchData> {
-  const maxAttempts = 30; // 30 seconds max
-  const pollInterval = 1000; // 1 second
-  
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const response = await fetch(`/api/matches/${matchId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teamId }),
-      });
-      return await handleResponseStatus(response, matchId, teamId);
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Processing') {
-        // Still queued, wait and try again
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-        continue;
-      }
-      console.error('Error polling processed match data:', error);
-    }
-    
-    // Wait before next attempt
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-  }
-  
-  throw new Error('Timeout waiting for processed match data');
-}
-
 // Helper function to fetch single match data
-async function fetchSingleMatchData(
-  matchId: string, 
-  teamId: string
-): Promise<MatchData> {
+async function fetchSingleMatchData(matchId: string): Promise<MatchData> {
   const response = await fetch(`/api/matches/${matchId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ teamId })
+    body: JSON.stringify({})
   });
   if (response.status === 200) {
     return await response.json();
   }
   throw new Error(`HTTP ${response.status} for match ${matchId}`);
 }
+
+// Simple cache to prevent repeated requests for the same match
+const matchDataCache = new Map<string, MatchData>();
 
 // Hook for fetching processed match data
 export function useMatchData(matchId: string | null): UseMatchDataResult {
@@ -134,6 +40,17 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
       return;
     }
 
+    // Check cache first
+    const cacheKey = `${matchId}-${currentTeam.id}`;
+    const cachedData = matchDataCache.get(cacheKey);
+    if (cachedData) {
+      console.log('[useMatchData] Using cached data for match:', matchId);
+      setData(cachedData);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -143,7 +60,11 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
         teamId: currentTeam.id
       });
 
-      const result = await fetchSingleMatchData(matchId, currentTeam.id);
+      const result = await fetchSingleMatchData(matchId);
+      
+      // Cache the result
+      matchDataCache.set(cacheKey, result);
+      
       setData(result);
       setLoading(false);
     } catch (err) {
@@ -165,20 +86,16 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
 }
 
 // Helper function to fetch multiple matches
-async function fetchMultipleMatches(
-  matchIds: string[], 
-  teamId: string
-): Promise<MatchData[]> {
+async function fetchMultipleMatches(matchIds: string[]): Promise<MatchData[]> {
   console.log('[useMatchesData] Fetching processed matches data:', {
-    matchIds: matchIds.length,
-    teamId
+    matchIds: matchIds.length
   });
 
   // Fetch all matches in parallel
   const fetchPromises = matchIds.map(async (matchId) => {
     console.log('[useMatchesData] Fetching match:', matchId);
     try {
-      return await fetchSingleMatchData(matchId, teamId);
+      return await fetchSingleMatchData(matchId);
     } catch (err) {
       console.error(`Error fetching match ${matchId}:`, err);
       return null;
@@ -220,7 +137,7 @@ export function useMatchesData(matchIds: string[] | null): {
       setLoading(true);
       setError(null);
 
-      const validResults = await fetchMultipleMatches(matchIds, currentTeam.id);
+      const validResults = await fetchMultipleMatches(matchIds);
       setData(validResults);
       setLoading(false);
     } catch (err) {

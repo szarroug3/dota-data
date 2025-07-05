@@ -81,7 +81,7 @@ export class OrchestrationService {
     
     try {
       const result = await orchestrateTeamImportAndQueue(teamId, leagueId, forceRefresh, refresh);
-      return this.handleImportTeamResult(result, teamId, leagueId);
+      return this.handleImportTeamResult(result, teamId);
     } catch (error) {
       return this.handleImportTeamError(error, teamId, leagueId);
     }
@@ -148,20 +148,20 @@ export class OrchestrationService {
    * Invalidate cache for a team and all related data
    */
   async invalidateTeamCache(
-    _teamId: string,
-    _leagueId: string,
+    teamId: string,
+    leagueId: string,
     matchIds: string[] = [],
     playerIds: string[] = []
   ): Promise<void> {
-    logWithTimestampToFile('log', `[ORCHESTRATION_SERVICE] Invalidating team cache: teamId=${_teamId}, leagueId=${_leagueId}, matches=${matchIds.length}, players=${playerIds.length}`);
+    logWithTimestampToFile('log', `[ORCHESTRATION_SERVICE] Invalidating team cache: teamId=${teamId}, leagueId=${leagueId}, matches=${matchIds.length}, players=${playerIds.length}`);
     try {
       // Invalidate team cache
-      const teamCacheKey = `dotabuff-team-${_teamId}-matches`;
+      const teamCacheKey = `dotabuff-team-${teamId}-matches`;
       const teamFilename = `${teamCacheKey}.json`;
       await cacheService.invalidate(teamCacheKey, teamFilename);
       // Invalidate league cache
-      if (_leagueId) {
-        const leagueCacheKey = `dotabuff-league-${_leagueId}`;
+      if (leagueId) {
+        const leagueCacheKey = `dotabuff-league-${leagueId}`;
         const leagueFilename = `${leagueCacheKey}.html`;
         await cacheService.invalidate(leagueCacheKey, leagueFilename);
       }
@@ -213,7 +213,7 @@ export class OrchestrationService {
     logWithTimestampToFile('log', `[ORCHESTRATION_SERVICE] Configuration updated: ${JSON.stringify(this.config)}`);
   }
 
-  private handleImportTeamResult(result: unknown, _teamId: string, _leagueId: string): TeamImportResult | { status: string; signature: string } {
+  private handleImportTeamResult(result: unknown, _teamId: string): TeamImportResult | { status: string; signature: string } {
     if (result && typeof result === 'object' && 'status' in result && result.status === 'queued' && 'signature' in result) {
       logWithTimestampToFile('log', `[ORCHESTRATION_SERVICE] Team import queued: ${JSON.stringify(result)}`);
       return result as { status: string; signature: string };

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getMatchResult, getOpponentName, getScoreWithResult, getTeamSide } from "@/lib/utils";
+import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getDashboardMatchResult, getOpponentName, getDashboardScoreWithResult, getTeamSide } from "@/lib/utils";
 import type { Team } from "@/types/team";
 import { EyeOff, RefreshCw } from "lucide-react";
 import type { Match } from "./match-utils";
@@ -223,12 +223,12 @@ export default function MatchCard({
             <Badge
               variant="static"
               className={
-                getMatchResult(match, currentTeam) === "W"
+                getDashboardMatchResult(match, currentTeam) === "W"
                   ? "bg-green-600 text-white px-2 py-0.5 text-xs font-bold rounded"
                   : "bg-red-600 text-white px-2 py-0.5 text-xs font-bold rounded"
               }
             >
-              {getMatchResult(match, currentTeam)}
+              {getDashboardMatchResult(match, currentTeam)}
             </Badge>
             {/* R/D badge */}
             {teamSide && (
@@ -249,7 +249,7 @@ export default function MatchCard({
               </Badge>
             )}
             <span className="text-xs text-muted-foreground">
-              {getScoreWithResult(match, currentTeam)}
+              {getDashboardScoreWithResult(match, currentTeam)}
             </span>
             <span className="text-xs text-muted-foreground">
               •{" "}

@@ -3,7 +3,7 @@ description: summarizing for the next chat
 globs: 
 alwaysApply: false
 ---
-summarize all of these decisions and changes so i can start a new chat. include:
+summarize all of these decisions and changes we made during the conversation so i can start a new chat. include:
 - what we did
 - what decisions we made
 - where to read docs

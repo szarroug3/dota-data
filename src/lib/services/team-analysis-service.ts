@@ -23,9 +23,9 @@ export type HeroStat = {
  */
 export async function getTeamAnalysis(
   accountIds: number[]
-): Promise<TeamAnalysis | { status: string; signature: string }> {
+): Promise<TeamAnalysis | { error: string }> {
   try {
-    logWithTimestamp(`Generating team analysis for ${accountIds.length} players`);
+    logWithTimestamp('log', `Generating team analysis for ${accountIds.length} players`);
 
     // Fetch all data in parallel
     const [playerDataResults, heroResults, matchResults] = await Promise.all([
@@ -40,11 +40,11 @@ export async function getTeamAnalysis(
                     matchResults.some(r => 'error' in r);
     
     if (hasError) {
-      return { status: 'error', signature: 'Failed to fetch team data' };
+      return { error: 'Failed to fetch team data' };
     }
 
     const players = playerDataResults as OpenDotaPlayer[];
-    const allHeroes = heroResults.flat() as OpenDotaPlayerHeroes;
+    const allHeroes = heroResults.flat() as OpenDotaPlayerHeroes[];
     const allMatches = matchResults.flat() as OpenDotaMatch[];
 
     // Calculate overall team stats
@@ -70,8 +70,8 @@ export async function getTeamAnalysis(
       trends
     };
   } catch (error) {
-    logWithTimestamp(`Error generating team analysis:`, error);
-    return { status: 'error', signature: 'Failed to generate team analysis' };
+    logWithTimestamp('error', `Error generating team analysis:`, error);
+    return { error: 'Failed to generate team analysis' };
   }
 }
 
@@ -180,7 +180,7 @@ function calculatePhaseStats(matches: OpenDotaMatch[]) {
 /**
  * Analyze hero pool
  */
-function analyzeHeroPool(heroes: OpenDotaPlayerHeroes[]): { mostPicked: Array<{ hero: string; games: number; winRate: number }>; } {
+function analyzeHeroPool(heroes: OpenDotaPlayerHeroes[]): { mostPicked: Array<{ hero: string; games: number; winRate: number }>; mostBanned: Array<{ hero: string; bans: number; banRate: number }> } {
   const heroStats: HeroStat[] = aggregateHeroStats(heroes);
   const mostPicked = heroStats
     .sort((a, b) => b.games - a.games)
@@ -190,8 +190,13 @@ function analyzeHeroPool(heroes: OpenDotaPlayerHeroes[]): { mostPicked: Array<{ 
       games: hero.games,
       winRate: hero.winRate
     }));
+  
+  // For now, return empty mostBanned array since we don't have ban data
+  const mostBanned: Array<{ hero: string; bans: number; banRate: number }> = [];
+  
   return {
-    mostPicked
+    mostPicked,
+    mostBanned
   };
 }
 

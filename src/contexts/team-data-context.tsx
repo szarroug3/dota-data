@@ -1,73 +1,53 @@
-import { Team } from '@/types/team';
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import * as React from 'react';
+import { Team } from '../types/team';
+import { createContext, useCallback, useContext, useState } from 'react';
+import { TeamDataContextType } from '../types/contexts';
 
-interface TeamDataContextType {
-  // Cached team data by team ID
-  teamDataByTeam: Record<string, Team>;
-  // Loading states by team ID
-  loadingByTeam: Record<string, boolean>;
-  // Error states by team ID
-  errorByTeam: Record<string, string | null>;
-  // Trigger fetching for a specific team
-  fetchTeamData: (teamId: string) => void;
-  // Get team data for a team (from cache or trigger fetch)
-  getTeamData: (teamId: string) => Team | null;
-  // Check if team data is loading
-  isTeamLoading: (teamId: string) => boolean;
-  // Get error for a team
-  getTeamError: (teamId: string) => string | null;
-  // Update team data in cache
-  updateTeamData: (teamId: string, teamData: Team) => void;
-  // Remove team data from cache
-  removeTeamData: (teamId: string) => void;
-}
+// ============================================================================
+// API HELPERS
+// ============================================================================
 
-const TeamDataContext = createContext<TeamDataContextType | null>(null);
-
-// Helper function to fetch team data
-async function _fetchTeamData(teamId: string): Promise<Team> {
+async function fetchTeamDataHelper(teamId: string): Promise<Team> {
   const response = await fetch(`/api/teams/${teamId}`);
   if (response.status === 200) {
-    return await response.json();
+    return await response.json() as Promise<Team>;
   }
   throw new Error(`HTTP ${response.status} for team ${teamId}`);
 }
 
-export function useTeamData() {
-  const context = useContext(TeamDataContext);
-  if (!context) {
-    throw new Error('useTeamData must be used within a TeamDataProvider');
-  }
-  return context;
-}
+// ============================================================================
+// CONTEXT
+// ============================================================================
+
+const TeamDataContext = createContext<TeamDataContextType | null>(null);
 
 export function TeamDataProvider({ children }: { children: React.ReactNode }) {
   const [teamDataByTeam, setTeamDataByTeam] = useState<Record<string, Team>>({});
   const [loadingByTeam, setLoadingByTeam] = useState<Record<string, boolean>>({});
   const [errorByTeam, setErrorByTeam] = useState<Record<string, string | null>>({});
 
-  const fetchTeamData = useCallback(async (teamId: string) => {
+  const fetchTeamData = useCallback(async (teamId: string): Promise<void> => {
     // Don't fetch if already loading
     if (loadingByTeam[teamId]) {
       return;
     }
 
     // Set loading state
-    setLoadingByTeam(prev => ({ ...prev, [teamId]: true }));
-    setErrorByTeam(prev => ({ ...prev, [teamId]: null }));
+    setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: true }));
+    setErrorByTeam((prev: Record<string, string | null>) => ({ ...prev, [teamId]: null }));
 
     try {
-      const teamData = await _fetchTeamData(teamId);
+      const teamData = await fetchTeamDataHelper(teamId);
       
-      setTeamDataByTeam(prev => ({ ...prev, [teamId]: teamData }));
-      setLoadingByTeam(prev => ({ ...prev, [teamId]: false }));
+      setTeamDataByTeam((prev: Record<string, Team>) => ({ ...prev, [teamId]: teamData }));
+      setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: false }));
     } catch (err) {
       console.error(`[TeamDataContext] Error fetching team data for team ${teamId}:`, err);
-      setErrorByTeam(prev => ({ 
+      setErrorByTeam((prev: Record<string, string | null>) => ({ 
         ...prev, 
         [teamId]: err instanceof Error ? err.message : 'Failed to fetch team data' 
       }));
-      setLoadingByTeam(prev => ({ ...prev, [teamId]: false }));
+      setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: false }));
     }
   }, [loadingByTeam]);
 
@@ -94,22 +74,22 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
     return errorByTeam[teamId] || null;
   }, [errorByTeam]);
 
-  const updateTeamData = useCallback((teamId: string, teamData: Team) => {
-    setTeamDataByTeam(prev => ({ ...prev, [teamId]: teamData }));
+  const updateTeamData = useCallback((teamId: string, teamData: Team): void => {
+    setTeamDataByTeam((prev: Record<string, Team>) => ({ ...prev, [teamId]: teamData }));
   }, []);
 
-  const removeTeamData = useCallback((teamId: string) => {
-    setTeamDataByTeam(prev => {
+  const removeTeamData = useCallback((teamId: string): void => {
+    setTeamDataByTeam((prev: Record<string, Team>) => {
       const newData = { ...prev };
       delete newData[teamId];
       return newData;
     });
-    setLoadingByTeam(prev => {
+    setLoadingByTeam((prev: Record<string, boolean>) => {
       const newLoading = { ...prev };
       delete newLoading[teamId];
       return newLoading;
     });
-    setErrorByTeam(prev => {
+    setErrorByTeam((prev: Record<string, string | null>) => {
       const newError = { ...prev };
       delete newError[teamId];
       return newError;
@@ -133,4 +113,12 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
       {children}
     </TeamDataContext.Provider>
   );
+}
+
+export function useTeamData() {
+  const context = useContext(TeamDataContext);
+  if (!context) {
+    throw new Error('useTeamData must be used within a TeamDataProvider');
+  }
+  return context;
 } 

@@ -1,73 +1,61 @@
-import { PlayerStats } from '@/lib/types/data-service';
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import * as React from 'react';
+import { PlayerStats } from '../lib/types/data-service';
+import { createContext, useCallback, useContext, useState } from 'react';
+import { 
+  PlayerDataContextType
+} from '../types/contexts';
 
-interface PlayerDataContextType {
-  // Cached player data by player ID
-  playerDataByPlayer: Record<string, PlayerStats>;
-  // Loading states by player ID
-  loadingByPlayer: Record<string, boolean>;
-  // Error states by player ID
-  errorByPlayer: Record<string, string | null>;
-  // Trigger fetching for a specific player
-  fetchPlayerData: (playerId: string, playerName: string, role: string) => void;
-  // Get player data for a player (from cache or trigger fetch)
-  getPlayerData: (playerId: string) => PlayerStats | null;
-  // Check if player data is loading
-  isPlayerLoading: (playerId: string) => boolean;
-  // Get error for a player
-  getPlayerError: (playerId: string) => string | null;
-  // Update player data in cache
-  updatePlayerData: (playerId: string, playerData: PlayerStats) => void;
-  // Remove player data from cache
-  removePlayerData: (playerId: string) => void;
-}
+// ============================================================================
+// API HELPERS
+// ============================================================================
 
-const PlayerDataContext = createContext<PlayerDataContextType | null>(null);
-
-// Helper function to fetch player data
-async function _fetchPlayerData(playerId: string, playerName: string, role: string): Promise<PlayerStats> {
-  const response = await fetch(`/api/players/${playerId}/stats?name=${encodeURIComponent(playerName)}&role=${encodeURIComponent(role)}`);
+async function fetchPlayerDataHelper(playerId: string, playerName: string, role: string): Promise<PlayerStats> {
+  const response = await fetch(`/api/players/${playerId}/stats`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ force: false }),
+  });
   if (response.status === 200) {
-    return await response.json();
+    return await response.json() as Promise<PlayerStats>;
   }
   throw new Error(`HTTP ${response.status} for player ${playerId}`);
 }
 
-export function usePlayerData() {
-  const context = useContext(PlayerDataContext);
-  if (!context) {
-    throw new Error('usePlayerData must be used within a PlayerDataProvider');
-  }
-  return context;
-}
+// ============================================================================
+// CONTEXT
+// ============================================================================
+
+const PlayerDataContext = createContext<PlayerDataContextType | null>(null);
 
 export function PlayerDataProvider({ children }: { children: React.ReactNode }) {
   const [playerDataByPlayer, setPlayerDataByPlayer] = useState<Record<string, PlayerStats>>({});
   const [loadingByPlayer, setLoadingByPlayer] = useState<Record<string, boolean>>({});
   const [errorByPlayer, setErrorByPlayer] = useState<Record<string, string | null>>({});
 
-  const fetchPlayerData = useCallback(async (playerId: string, playerName: string, role: string) => {
+  const fetchPlayerData = useCallback(async (playerId: string, playerName: string, role: string): Promise<void> => {
     // Don't fetch if already loading
     if (loadingByPlayer[playerId]) {
       return;
     }
 
     // Set loading state
-    setLoadingByPlayer(prev => ({ ...prev, [playerId]: true }));
-    setErrorByPlayer(prev => ({ ...prev, [playerId]: null }));
+    setLoadingByPlayer((prev: Record<string, boolean>) => ({ ...prev, [playerId]: true }));
+    setErrorByPlayer((prev: Record<string, string | null>) => ({ ...prev, [playerId]: null }));
 
     try {
-      const playerData = await _fetchPlayerData(playerId, playerName, role);
+      const playerData = await fetchPlayerDataHelper(playerId, playerName, role);
       
-      setPlayerDataByPlayer(prev => ({ ...prev, [playerId]: playerData }));
-      setLoadingByPlayer(prev => ({ ...prev, [playerId]: false }));
+      setPlayerDataByPlayer((prev: Record<string, PlayerStats>) => ({ ...prev, [playerId]: playerData }));
+      setLoadingByPlayer((prev: Record<string, boolean>) => ({ ...prev, [playerId]: false }));
     } catch (err) {
       console.error(`[PlayerDataContext] Error fetching player data for player ${playerId}:`, err);
-      setErrorByPlayer(prev => ({ 
+      setErrorByPlayer((prev: Record<string, string | null>) => ({ 
         ...prev, 
         [playerId]: err instanceof Error ? err.message : 'Failed to fetch player data' 
       }));
-      setLoadingByPlayer(prev => ({ ...prev, [playerId]: false }));
+      setLoadingByPlayer((prev: Record<string, boolean>) => ({ ...prev, [playerId]: false }));
     }
   }, [loadingByPlayer]);
 
@@ -89,22 +77,22 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     return errorByPlayer[playerId] || null;
   }, [errorByPlayer]);
 
-  const updatePlayerData = useCallback((playerId: string, playerData: PlayerStats) => {
-    setPlayerDataByPlayer(prev => ({ ...prev, [playerId]: playerData }));
+  const updatePlayerData = useCallback((playerId: string, playerData: PlayerStats): void => {
+    setPlayerDataByPlayer((prev: Record<string, PlayerStats>) => ({ ...prev, [playerId]: playerData }));
   }, []);
 
-  const removePlayerData = useCallback((playerId: string) => {
-    setPlayerDataByPlayer(prev => {
+  const removePlayerData = useCallback((playerId: string): void => {
+    setPlayerDataByPlayer((prev: Record<string, PlayerStats>) => {
       const newData = { ...prev };
       delete newData[playerId];
       return newData;
     });
-    setLoadingByPlayer(prev => {
+    setLoadingByPlayer((prev: Record<string, boolean>) => {
       const newLoading = { ...prev };
       delete newLoading[playerId];
       return newLoading;
     });
-    setErrorByPlayer(prev => {
+    setErrorByPlayer((prev: Record<string, string | null>) => {
       const newError = { ...prev };
       delete newError[playerId];
       return newError;
@@ -128,4 +116,12 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
       {children}
     </PlayerDataContext.Provider>
   );
+}
+
+export function usePlayerData() {
+  const context = useContext(PlayerDataContext);
+  if (!context) {
+    throw new Error('usePlayerData must be used within a PlayerDataProvider');
+  }
+  return context;
 } 

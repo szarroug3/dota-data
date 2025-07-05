@@ -14,7 +14,7 @@ export async function getMetaInsights(
   timeRange: "week" | "month" | "patch" = "week"
 ): Promise<MetaInsights> {
   try {
-    logWithTimestamp(`Generating meta insights for time range: ${timeRange}`);
+    logWithTimestamp('log', `Generating meta insights for time range: ${timeRange}`);
 
     // Generate current meta analysis
     const currentMeta = generateCurrentMeta(timeRange);
@@ -31,7 +31,7 @@ export async function getMetaInsights(
       roleStats
     };
   } catch (error) {
-    logWithTimestamp(`Error generating meta insights:`, error);
+    logWithTimestamp('error', `Error generating meta insights:`, error);
     return generateDefaultMetaInsights();
   }
 }

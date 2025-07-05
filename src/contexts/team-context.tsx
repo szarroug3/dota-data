@@ -1,596 +1,512 @@
 "use client";
-import { Award, Sword, Trophy, User, Users } from "lucide-react";
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import * as React from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { logWithTimestamp } from '../lib/utils';
-import type { Match, Player, Team } from '../types/team';
-import { useMatchData } from './match-data-context';
+import { TeamContextType } from '../types/contexts';
+import { TeamMatchesResponse, TeamMatchesRequest } from '../types/api';
+import { Team, Player, Match } from '../types/team';
 
-interface TeamContextType {
-  currentTeam: Team | null;
-  matches: Match[];
-  allMatches: Match[];
-  setCurrentTeam: (team: Team | string | null) => Promise<void>;
-  addStandinPlayer: (
-    player: Omit<Player, "isStandin" | "addedDate">,
-    standinForId?: string,
-  ) => void;
-  removeStandinPlayer: (playerId: string) => void;
-  addMatch: (match: Omit<Match, "id">) => Promise<void>;
-  removeMatch: (matchId: string) => void;
-  unhideMatch: (matchId: string) => void;
-  getTeamSlug: () => string;
-  getExternalLinks: () => Array<{
-    href: string;
-    label: string;
-    icon: React.ReactNode;
-  }>;
-  isLoaded: boolean;
-  hiddenMatchIds: string[];
-  setHiddenMatchIds: (ids: string[]) => void;
-  // Refreshing state management
-  refreshingTeamId: string | null;
-  setRefreshingTeamId: (teamId: string | null) => void;
-  refreshProgress: { completed: number; total: number } | null;
-  setRefreshProgress: (progress: { completed: number; total: number } | null) => void;
-  cancelRefresh: () => void;
-  // Button state management
-  spinningButton: "refresh" | "force" | null;
-  setSpinningButton: (button: "refresh" | "force" | null) => void;
-  // Force clear matches
-  clearMatches: () => void;
-  // Refresh matches from API
-  refreshMatches: () => Promise<void>;
-  refreshingMatches: Set<string>;
-  setRefreshingMatches: (matches: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
-  // Force refresh state
-  isForceRefreshing: boolean;
-  setIsForceRefreshing: (isForceRefreshing: boolean) => void;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const TEAMS_STORAGE_KEY = "dotaDashboardTeams";
+const ACTIVE_TEAM_KEY = "activeTeamId";
+
+// ============================================================================
+// LOCAL STORAGE HELPERS
+// ============================================================================
+
+function saveTeamsToLocalStorage(teams: Team[]): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teams));
+  }
 }
+
+function loadTeamsFromLocalStorage(): Team[] {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem(TEAMS_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as Team[];
+      } catch (error) {
+        logWithTimestamp('error', "[TeamContext] Error parsing teams from localStorage:", error);
+      }
+    }
+  }
+  return [];
+}
+
+function saveActiveTeamToLocalStorage(teamId: string | null): void {
+  if (typeof window !== "undefined") {
+    if (teamId) {
+      localStorage.setItem(ACTIVE_TEAM_KEY, teamId);
+    } else {
+      localStorage.removeItem(ACTIVE_TEAM_KEY);
+    }
+  }
+}
+
+function loadActiveTeamFromLocalStorage(): string | null {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(ACTIVE_TEAM_KEY);
+  }
+  return null;
+}
+
+// ============================================================================
+// API HELPERS
+// ============================================================================
+
+async function fetchTeamData(teamId: string, leagueId: string): Promise<TeamMatchesResponse> {
+  const response = await fetch(`/api/teams/${teamId}/matches`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ leagueId } as TeamMatchesRequest),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch team data for ${teamId}`);
+  }
+  return response.json() as Promise<TeamMatchesResponse>;
+}
+
+async function fetchLeagueData(leagueId: string): Promise<{ leagueName: string }> {
+  const response = await fetch(`/api/leagues/${leagueId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch league data for ${leagueId}`);
+  }
+  return response.json() as Promise<{ leagueName: string }>;
+}
+
+// ============================================================================
+// CONTEXT
+// ============================================================================
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
 
-// Custom hook for loading teams and active team from localStorage
-function useLoadTeamsFromLocalStorage(setCurrentTeamState: (team: Team | null) => void, setIsLoaded: (loaded: boolean) => void) {
+function useTeamManagement() {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [activeTeam, setActiveTeamState] = useState<Team | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load teams and active team from localStorage on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setTimeout(() => {
-        try {
-          const teamsData = localStorage.getItem("dota-dashboard-teams");
-          if (teamsData) {
-            const teams: Team[] = JSON.parse(teamsData);
-            if (teams.length > 0) {
-              const activeTeamId = localStorage.getItem("activeTeamId");
-              if (activeTeamId) {
-                const foundTeam = teams.find(team => team.id === activeTeamId);
-                if (foundTeam) {
-                  setCurrentTeamState(foundTeam);
-                } else {
-                  // Active team not found, set first team as active
-                  setCurrentTeamState(teams[0]);
-                  localStorage.setItem("activeTeamId", teams[0].id);
-                }
-              } else {
-                // No active team ID saved, set first team as active
-                setCurrentTeamState(teams[0]);
-                localStorage.setItem("activeTeamId", teams[0].id);
-              }
-            }
-          }
-        } catch (error) {
-          logWithTimestamp('error', "[TeamContext] Error loading teams from localStorage:", error);
-        } finally {
-          setIsLoaded(true);
+    const loadTeams = (): void => {
+      const storedTeams = loadTeamsFromLocalStorage();
+      const activeTeamId = loadActiveTeamFromLocalStorage();
+      
+      setTeams(storedTeams);
+      
+      if (activeTeamId && storedTeams.length > 0) {
+        const foundTeam = storedTeams.find(team => team.id === activeTeamId);
+        if (foundTeam) {
+          setActiveTeamState(foundTeam);
+        } else {
+          // Active team not found, set first team as active
+          setActiveTeamState(storedTeams[0]);
+          saveActiveTeamToLocalStorage(storedTeams[0].id);
         }
-      }, 0);
-    } else {
+      } else if (storedTeams.length > 0) {
+        // No active team saved, set first team as active
+        setActiveTeamState(storedTeams[0]);
+        saveActiveTeamToLocalStorage(storedTeams[0].id);
+      }
+      
       setIsLoaded(true);
+    };
+
+    // Delay loading to ensure we're on client side
+    setTimeout(loadTeams, 0);
+  }, []);
+
+  // Save teams to localStorage whenever teams change
+  useEffect(() => {
+    if (isLoaded) {
+      saveTeamsToLocalStorage(teams);
     }
-  }, [setCurrentTeamState, setIsLoaded]);
+  }, [teams, isLoaded]);
+
+  // Helper function to update teams state
+  const updateTeams = (updater: (teams: Team[]) => Team[]): void => {
+    setTeams((prevTeams: Team[]) => {
+      const newTeams = updater(prevTeams);
+      return newTeams;
+    });
+  };
+
+  // Helper function to find team by ID
+  const getTeamById = (teamId: string): Team | null => {
+    return teams.find((team: Team) => team.id === teamId) || null;
+  };
+
+  return {
+    teams,
+    activeTeam,
+    isLoaded,
+    setActiveTeamState,
+    updateTeams,
+    getTeamById
+  };
 }
 
-// Custom hook for loading hidden matches from localStorage
-function useLoadHiddenMatches(currentTeam: Team | null, setHiddenMatchIds: (ids: string[]) => void) {
-  useEffect(() => {
-    if (currentTeam) {
-      const key = `hiddenMatches-${currentTeam.id}`;
-      const stored = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-      if (stored) {
-        try {
-          setHiddenMatchIds(JSON.parse(stored));
-        } catch {
-          setHiddenMatchIds([]);
-        }
-      } else {
-        setHiddenMatchIds([]);
-      }
-    } else {
-      setHiddenMatchIds([]);
-    }
-  }, [currentTeam, setHiddenMatchIds]);
-}
+export function TeamProvider({ children }: { children: ReactNode }) {
+  const {
+    teams,
+    activeTeam,
+    isLoaded,
+    setActiveTeamState,
+    updateTeams,
+    getTeamById
+  } = useTeamManagement();
 
-// Custom hook for fetching matches from API when team changes
-function useFetchMatches(currentTeam: Team | null, hiddenMatchIds: string[], setAllMatches: (matches: Match[]) => void, setMatches: (matches: Match[]) => void) {
-  useEffect(() => {
-    logWithTimestamp('log', "[TEAM CONTEXT] ===== FETCHING MATCHES FROM API =====");
-    logWithTimestamp('log', "[TEAM CONTEXT] Current team:", currentTeam);
-    logWithTimestamp('log', "[TEAM CONTEXT] Current team ID:", currentTeam?.id);
+  // Add a new team
+  const addTeam = async (teamId: string, leagueId: string): Promise<void> => {
+    const uniqueId = `${teamId}-${leagueId}`;
     
-    if (currentTeam) {
-      // Check if we have matchIdsByLeague data first
-      if (currentTeam.matchIdsByLeague && currentTeam.leagueId) {
-        const matchIds = currentTeam.matchIdsByLeague[currentTeam.leagueId] || [];
-        logWithTimestamp('log', "[TEAM CONTEXT] Using matchIdsByLeague data:", matchIds);
-        
-        if (matchIds.length > 0) {
-          // Convert match IDs to match objects with required properties
-          const matchObjects: Match[] = matchIds.map(id => ({ 
-            id,
-            date: '',
-            opponent: '',
-            result: '',
-            score: '',
-            league: currentTeam.leagueName || currentTeam.leagueId || ''
-          }));
-          logWithTimestamp('log', "[TEAM CONTEXT] Setting matches from matchIdsByLeague:", matchObjects);
-          setAllMatches(matchObjects);
-          setMatches(matchObjects.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
-          return;
-        }
-      }
-      
-      // Fallback to old matchIds property
-      if (currentTeam.matchIds && currentTeam.matchIds.length > 0) {
-        logWithTimestamp('log', "[TEAM CONTEXT] Using fallback matchIds data:", currentTeam.matchIds);
-        
-        // Convert match IDs to match objects with required properties
-        const matchObjects: Match[] = currentTeam.matchIds.map(id => ({ 
-          id,
-          date: '',
-          opponent: '',
-          result: '',
-          score: '',
-          league: currentTeam.leagueName || currentTeam.leagueId || ''
-        }));
-        logWithTimestamp('log', "[TEAM CONTEXT] Setting matches from fallback matchIds:", matchObjects);
-        setAllMatches(matchObjects);
-        setMatches(matchObjects.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
-        return;
-      }
-      
-      // Fallback to fetching by player account IDs if no matchIdsByLeague data
-      logWithTimestamp('log', `[TEAM CONTEXT] No matchIdsByLeague data, falling back to player account IDs`);
-      if (!currentTeam.players || currentTeam.players.length === 0) {
-        setAllMatches([]);
-        setMatches([]);
-        return;
-      }
-      const accountIds = currentTeam.players.map((p) => p.id).filter(Boolean).join(',');
-      if (!accountIds) {
-        setAllMatches([]);
-        setMatches([]);
-        return;
-      }
-      const url = `/api/teams/${currentTeam.teamId}/match-history?accountIds=${encodeURIComponent(accountIds)}`;
-      fetch(url)
-        .then(async (res) => {
-          logWithTimestamp('log', "[TEAM CONTEXT] API response status:", res.status);
-          logWithTimestamp('log', "[TEAM CONTEXT] API response ok:", res.ok);
-          let data;
-          try {
-            data = await res.json();
-          } catch (jsonErr) {
-            logWithTimestamp('error', "[TEAM CONTEXT] Error parsing JSON from matches API:", jsonErr);
-            setAllMatches([]);
-            setMatches([]);
-            return;
-          }
-          logWithTimestamp('log', "[TEAM CONTEXT] API response data:", data);
-          const apiMatches = data.matches || (Array.isArray(data.matchIds) ? data.matchIds.map((id: string) => ({ id })) : []);
-          logWithTimestamp('log', "[TEAM CONTEXT] Setting matches from API:", apiMatches);
-          logWithTimestamp('log', "[TEAM CONTEXT] API matches count:", apiMatches.length);
-          setAllMatches(apiMatches);
-          setMatches(apiMatches.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
-        })
-        .catch((error) => {
-          logWithTimestamp('error', "[TEAM CONTEXT] Error fetching matches:", error);
-          logWithTimestamp('log', "[TEAM CONTEXT] Setting empty matches array due to error");
-          setAllMatches([]);
-          setMatches([]);
-        });
-    } else {
-      logWithTimestamp('log', "[TEAM CONTEXT] No current team, setting empty matches array");
-      setAllMatches([]);
-      setMatches([]);
+    // Check if team already exists
+    if (teams.some((team: Team) => team.id === uniqueId)) {
+      logWithTimestamp('warn', `[TeamContext] Team ${uniqueId} already exists`);
+      return;
     }
-  }, [currentTeam, hiddenMatchIds, setAllMatches, setMatches]);
-}
 
-// Standin player handlers
-function useStandinPlayerHandlers(currentTeam: Team | null, setCurrentTeamState: (team: Team | null) => void) {
-  const addStandinPlayer = (
-    player: Omit<Player, "isStandin" | "addedDate">,
-    standinForId?: string,
-  ) => {
-    if (!currentTeam) return;
-    const standinPlayer: Player = {
+    // Create optimistic team entry
+    const optimisticTeam: Team = {
+      id: uniqueId,
+      teamId,
+      teamName: `Team ${teamId}`, // Show ID until name is available
+      leagueId,
+      leagueName: `League ${leagueId}`, // Show ID until name is available
+      players: [],
+      matchIds: [],
+      manualMatches: [],
+      manualPlayers: [],
+      hiddenMatches: [],
+      hiddenPlayers: [],
+      loading: true // Mark as loading
+    };
+
+    // Add optimistically to the list
+    updateTeams(prevTeams => [...prevTeams, optimisticTeam]);
+    
+    // Set as active team
+    setActiveTeamState(optimisticTeam);
+    saveActiveTeamToLocalStorage(uniqueId);
+
+    try {
+      // Fetch team data and league data in parallel
+      const [teamData, leagueData] = await Promise.all([
+        fetchTeamData(teamId, leagueId),
+        fetchLeagueData(leagueId)
+      ]);
+      
+      const teamName = teamData.teamName || `Team ${teamId}`;
+      const leagueName = leagueData.leagueName || `League ${leagueId}`;
+      const matchIds = Object.values(teamData.matchIdsByLeague).flat() || [];
+
+      // Update the team with real data
+      updateTeams(prevTeams =>
+        prevTeams.map(team =>
+          team.id === uniqueId
+            ? {
+                ...team,
+                teamName,
+                leagueName,
+                matchIds,
+                matchIdsByLeague: teamData.matchIdsByLeague,
+                loading: false
+              }
+            : team
+        )
+      );
+
+      logWithTimestamp('log', `[TeamContext] Added team ${uniqueId} with name "${teamName}" and league "${leagueName}"`);
+    } catch (error) {
+      logWithTimestamp('error', `[TeamContext] Error adding team ${uniqueId}:`, error);
+      
+      // Remove the optimistic entry on error
+      updateTeams(prevTeams => prevTeams.filter(team => team.id !== uniqueId));
+      
+      // If this was the only team, clear active team
+      if (teams.length === 0) {
+        setActiveTeamState(null);
+        saveActiveTeamToLocalStorage(null);
+      }
+      
+      throw error;
+    }
+  };
+
+  // Remove a team
+  const removeTeam = (teamId: string): void => {
+    updateTeams((prevTeams: Team[]) => prevTeams.filter((team: Team) => team.id !== teamId));
+    
+    // If removing active team, set first remaining team as active
+    if (activeTeam?.id === teamId) {
+      const remainingTeams = teams.filter((team: Team) => team.id !== teamId);
+      if (remainingTeams.length > 0) {
+        setActiveTeamState(remainingTeams[0]);
+        saveActiveTeamToLocalStorage(remainingTeams[0].id);
+      } else {
+        setActiveTeamState(null);
+        saveActiveTeamToLocalStorage(null);
+      }
+    }
+  };
+
+  // Set active team
+  const setActiveTeam = (teamId: string | null): void => {
+    if (teamId) {
+      const team: Team | null = getTeamById(teamId);
+      if (team) {
+        setActiveTeamState(team);
+        saveActiveTeamToLocalStorage(teamId);
+      }
+    } else {
+      setActiveTeamState(null);
+      saveActiveTeamToLocalStorage(null);
+    }
+  };
+
+  // Update team name
+  const updateTeamName = (teamId: string, teamName: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId ? { ...team, teamName } : team
+      )
+    );
+  };
+
+  // Update match IDs from API
+  const updateMatchIds = (teamId: string, matchIds: string[]): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId ? { ...team, matchIds } : team
+      )
+    );
+  };
+
+  // Add manual player
+  const addManualPlayer = (teamId: string, player: Omit<Player, "addedDate">): void => {
+    const newPlayer: Player = {
+      ...player,
+      addedDate: new Date().toISOString()
+    };
+
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, manualPlayers: [...team.manualPlayers, newPlayer] }
+          : team
+      )
+    );
+  };
+
+  // Remove manual player
+  const removeManualPlayer = (teamId: string, playerId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, manualPlayers: team.manualPlayers.filter(p => p.id !== playerId) }
+          : team
+      )
+    );
+  };
+
+  // Hide player
+  const hidePlayer = (teamId: string, playerId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, hiddenPlayers: [...team.hiddenPlayers, playerId] }
+          : team
+      )
+    );
+  };
+
+  // Unhide player
+  const unhidePlayer = (teamId: string, playerId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, hiddenPlayers: team.hiddenPlayers.filter(id => id !== playerId) }
+          : team
+      )
+    );
+  };
+
+  // Add manual match
+  const addManualMatch = (teamId: string, match: Omit<Match, "id">): void => {
+    const newMatch: Match = {
+      ...match,
+      id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    };
+
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, manualMatches: [...team.manualMatches, newMatch] }
+          : team
+      )
+    );
+  };
+
+  // Remove manual match
+  const removeManualMatch = (teamId: string, matchId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, manualMatches: team.manualMatches.filter(m => m.id !== matchId) }
+          : team
+      )
+    );
+  };
+
+  // Hide match
+  const hideMatch = (teamId: string, matchId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, hiddenMatches: [...team.hiddenMatches, matchId] }
+          : team
+      )
+    );
+  };
+
+  // Unhide match
+  const unhideMatch = (teamId: string, matchId: string): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId
+          ? { ...team, hiddenMatches: team.hiddenMatches.filter(id => id !== matchId) }
+          : team
+      )
+    );
+  };
+
+  // Get visible matches (API matches + manual matches, excluding hidden)
+  const getVisibleMatches = (teamId: string): Match[] => {
+    const team = getTeamById(teamId);
+    if (!team) return [];
+
+    const allMatches = [
+      ...team.manualMatches,
+      // Note: API matches would need to be fetched separately since we only store IDs
+    ];
+
+    return allMatches.filter(match => !team.hiddenMatches.includes(match.id));
+  };
+
+  // Get visible players (API players + manual players, excluding hidden)
+  const getVisiblePlayers = (teamId: string): Player[] => {
+    const team = getTeamById(teamId);
+    if (!team) return [];
+
+    const allPlayers = [
+      ...team.players,
+      ...team.manualPlayers
+    ];
+
+    return allPlayers.filter(player => !team.hiddenPlayers.includes(player.id));
+  };
+
+  // Legacy compatibility functions
+  const addMatch = async (match: Omit<Match, "id">): Promise<void> => {
+    if (!activeTeam) return;
+    addManualMatch(activeTeam.id, match);
+  };
+
+  const removeMatch = (matchId: string): void => {
+    if (!activeTeam) return;
+    removeManualMatch(activeTeam.id, matchId);
+  };
+
+  const setCurrentTeam = async (team: Team | string | null): Promise<void> => {
+    if (typeof team === 'string') {
+      setActiveTeam(team);
+    } else if (team) {
+      setActiveTeam(team.id);
+    } else {
+      setActiveTeam(null);
+    }
+  };
+
+  const addStandinPlayer = (player: Omit<Player, "isStandin" | "addedDate">, standinForId?: string): void => {
+    if (!activeTeam) return;
+    const newPlayer: Player = {
       ...player,
       isStandin: true,
       standinFor: standinForId,
-      addedDate: new Date().toISOString().split("T")[0],
+      addedDate: new Date().toISOString()
     };
-    const updatedTeam = {
-      ...currentTeam,
-      players: [...currentTeam.players, standinPlayer],
-    };
-    setCurrentTeamState(updatedTeam);
+    addManualPlayer(activeTeam.id, newPlayer);
   };
 
-  const removeStandinPlayer = (playerId: string) => {
-    if (!currentTeam) return;
-    const updatedTeam = {
-      ...currentTeam,
-      players: currentTeam.players.filter((player) => player.id !== playerId),
-    };
-    setCurrentTeamState(updatedTeam);
+  const removeStandinPlayer = (playerId: string): void => {
+    if (!activeTeam) return;
+    removeManualPlayer(activeTeam.id, playerId);
   };
 
-  return { addStandinPlayer, removeStandinPlayer };
-}
-
-// Match handlers
-function useMatchHandlers(currentTeam: Team | null, matches: Match[], setMatches: (matches: Match[]) => void, allMatches: Match[], setAllMatches: (matches: Match[]) => void, hiddenMatchIds: string[], setHiddenMatchIds: (ids: string[]) => void) {
-  const addMatch = async (match: Omit<Match, "id">) => {
-    if (!currentTeam) return;
-    const newMatch: Match = { ...match, id: Date.now().toString() };
-    const updatedMatches = [...matches, newMatch];
-    await fetch(`/api/teams/${currentTeam.teamId}/match-history`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matches: updatedMatches }),
-    });
-    setMatches(updatedMatches);
-  };
-
-  const removeMatch = (matchId: string) => {
-    if (!currentTeam) return;
-    const key = `hiddenMatches-${currentTeam.id}`;
-    const updatedHidden = [...hiddenMatchIds, matchId];
-    setHiddenMatchIds(updatedHidden);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(key, JSON.stringify(updatedHidden));
-    }
-  };
-
-  const unhideMatch = (matchId: string) => {
-    if (!currentTeam) return;
-    const key = `hiddenMatches-${currentTeam.id}`;
-    const updatedHidden = hiddenMatchIds.filter((id) => id !== matchId);
-    setHiddenMatchIds(updatedHidden);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(key, JSON.stringify(updatedHidden));
-    }
-  };
-
-  return { addMatch, removeMatch, unhideMatch };
-}
-
-// Misc handlers
-function useMiscTeamHandlers(currentTeam: Team | null, matches: Match[], setMatches: (matches: Match[]) => void, setRefreshingTeamId: (id: string | null) => void, setRefreshProgress: (progress: { completed: number; total: number } | null) => void, setSpinningButton: (button: "refresh" | "force" | null) => void) {
-  const getTeamSlug = () => {
-    if (!currentTeam) return "";
-    return currentTeam.teamId || currentTeam.id;
-  };
-
-  const getExternalLinks = () => {
-    if (!currentTeam) {
-      return [
-        {
-          href: "https://www.dotabuff.com/esports/teams",
-          label: "Teams on Dotabuff",
-          icon: <Trophy className="w-5 h-5 text-red-500" />,
-        },
-        {
-          href: "https://www.dotabuff.com/esports/leagues",
-          label: "Leagues on Dotabuff",
-          icon: <Award className="w-5 h-5 text-orange-500" />,
-        },
-      ];
-    }
-    const links = [];
-    if (currentTeam.teamId) {
-      links.push({
-        href: `https://www.dotabuff.com/esports/teams/${currentTeam.teamId}`,
-        label: "Team on Dotabuff",
-        icon: <Trophy className="w-5 h-5 text-red-500" />,
-      });
-    } else if (currentTeam.dotabuffUrl) {
-      links.push({
-        href: currentTeam.dotabuffUrl,
-        label: "Team on Dotabuff",
-        icon: <Trophy className="w-5 h-5 text-red-500" />,
-      });
-    } else {
-      const teamSlug = currentTeam.id;
-      if (teamSlug) {
-        links.push({
-          href: `https://www.dotabuff.com/esports/teams/${teamSlug}`,
-          label: "Team on Dotabuff",
-          icon: <Trophy className="w-5 h-5 text-red-500" />,
-        });
+  const getExternalLinks = (): Array<{ href: string; label: string; icon: string }> => {
+    if (!activeTeam) return [];
+    return [
+      {
+        href: `https://dotabuff.com/teams/${activeTeam.teamId}`,
+        label: 'Dotabuff',
+        icon: '📊'
       }
-    }
-    if (currentTeam.leagueId) {
-      links.push({
-        href: `https://www.dotabuff.com/esports/leagues/${currentTeam.leagueId}`,
-        label: "League on Dotabuff",
-        icon: <Award className="w-5 h-5 text-orange-500" />,
-      });
-    } else if (currentTeam.leagueUrl) {
-      links.push({
-        href: currentTeam.leagueUrl,
-        label: "League on Dotabuff",
-        icon: <Award className="w-5 h-5 text-orange-500" />,
-      });
-    } else if (currentTeam.league) {
-      if (currentTeam.league.startsWith("http")) {
-        links.push({
-          href: currentTeam.league,
-          label: "League on Dotabuff",
-          icon: <Award className="w-5 h-5 text-orange-500" />,
-        });
-      } else {
-        const leagueSlug = currentTeam.league.toLowerCase().replace(/\s+/g, "-");
-        links.push({
-          href: `https://www.dotabuff.com/esports/leagues/${leagueSlug}`,
-          label: "League on Dotabuff",
-          icon: <Award className="w-5 h-5 text-orange-500" />,
-        });
-      }
-    }
-    links.push(
-      {
-        href: "https://www.dotabuff.com/players",
-        label: "Player Search",
-        icon: <User className="w-5 h-5 text-blue-500" />,
-      },
-      {
-        href: "https://www.opendota.com/players",
-        label: "Player Database",
-        icon: <Users className="w-5 h-5 text-purple-500" />,
-      },
-      {
-        href: "https://www.dotabuff.com/heroes",
-        label: "Hero Statistics",
-        icon: <Sword className="w-5 h-5 text-gray-600" />,
-      },
-    );
-    return links;
+    ];
   };
 
-  const cancelRefresh = () => {
-    setRefreshingTeamId(null);
-    setRefreshProgress(null);
-    setSpinningButton(null);
+  const value: TeamContextType = {
+    teams,
+    activeTeam,
+    isLoaded,
+    addTeam,
+    removeTeam,
+    setActiveTeam,
+    updateTeamName,
+    updateMatchIds,
+    addManualPlayer,
+    removeManualPlayer,
+    hidePlayer,
+    unhidePlayer,
+    addManualMatch,
+    removeManualMatch,
+    hideMatch,
+    unhideMatch,
+    getTeamById,
+    getVisibleMatches,
+    getVisiblePlayers,
+    currentTeam: activeTeam,
+    matches: getVisibleMatches(activeTeam?.id || ''),
+    addMatch,
+    removeMatch,
+    hiddenMatchIds: activeTeam?.hiddenMatches || [],
+    setCurrentTeam,
+    addStandinPlayer,
+    removeStandinPlayer,
+    getExternalLinks
   };
 
-  const clearMatches = () => {
-    setMatches([]);
-  };
-
-  return { getTeamSlug, getExternalLinks, cancelRefresh, clearMatches };
-}
-
-function useRefreshMatchesHandler(currentTeam: Team | null, hiddenMatchIds: string[], setAllMatches: (matches: Match[]) => void, setMatches: (matches: Match[]) => void) {
-  const refreshMatches = async () => {
-    if (!currentTeam) return;
-    if (!currentTeam.players || currentTeam.players.length === 0) {
-      setAllMatches([]);
-      setMatches([]);
-      return;
-    }
-    const accountIds = currentTeam.players.map((p) => p.id).filter(Boolean).join(',');
-    if (!accountIds) {
-      setAllMatches([]);
-      setMatches([]);
-      return;
-    }
-    const url = `/api/teams/${currentTeam.teamId}/match-history?accountIds=${encodeURIComponent(accountIds)}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const apiMatches = data.matches || [];
-    setAllMatches(apiMatches);
-    setMatches(apiMatches.filter((m: Match) => !hiddenMatchIds.includes(m.id)));
-  };
-  return refreshMatches;
-}
-
-function useSetRefreshingMatchesWrapper(setRefreshingMatches: (matches: Set<string> | ((prev: Set<string>) => Set<string>)) => void) {
-  return (matches: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-    setRefreshingMatches(matches);
-  };
-}
-
-function getTeamContextValue(
-  currentTeam: Team | null,
-  matches: Match[],
-  allMatches: Match[],
-  setCurrentTeam: (team: Team | string | null) => Promise<void>,
-  addStandinPlayer: (
-    player: Omit<Player, "isStandin" | "addedDate">,
-    standinForId?: string,
-  ) => void,
-  removeStandinPlayer: (playerId: string) => void,
-  addMatch: (match: Omit<Match, "id">) => Promise<void>,
-  removeMatch: (matchId: string) => void,
-  unhideMatch: (matchId: string) => void,
-  getTeamSlug: () => string,
-  getExternalLinks: () => Array<{ href: string; label: string; icon: React.ReactNode }>,
-  isLoaded: boolean,
-  hiddenMatchIds: string[],
-  setHiddenMatchIds: (ids: string[]) => void,
-  refreshingTeamId: string | null,
-  setRefreshingTeamId: (teamId: string | null) => void,
-  refreshProgress: { completed: number; total: number } | null,
-  setRefreshProgress: (progress: { completed: number; total: number } | null) => void,
-  cancelRefresh: () => void,
-  spinningButton: "refresh" | "force" | null,
-  setSpinningButton: (button: "refresh" | "force" | null) => void,
-  clearMatches: () => void,
-  refreshMatches: () => Promise<void>,
-  refreshingMatches: Set<string>,
-  setRefreshingMatches: (matches: Set<string> | ((prev: Set<string>) => Set<string>)) => void,
-  isForceRefreshing: boolean,
-  setIsForceRefreshing: (isForceRefreshing: boolean) => void,
-  children: ReactNode
-) {
   return (
-    <TeamContext.Provider
-      value={{
-        currentTeam,
-        matches,
-        allMatches,
-        setCurrentTeam,
-        addStandinPlayer,
-        removeStandinPlayer,
-        addMatch,
-        removeMatch,
-        unhideMatch,
-        getTeamSlug,
-        getExternalLinks,
-        isLoaded,
-        hiddenMatchIds,
-        setHiddenMatchIds,
-        refreshingTeamId,
-        setRefreshingTeamId,
-        refreshProgress,
-        setRefreshProgress,
-        cancelRefresh,
-        spinningButton,
-        setSpinningButton,
-        clearMatches,
-        refreshMatches,
-        refreshingMatches,
-        setRefreshingMatches,
-        isForceRefreshing,
-        setIsForceRefreshing,
-      }}
-    >
+    <TeamContext.Provider value={value}>
       {children}
     </TeamContext.Provider>
   );
 }
 
-export function TeamProvider({ children }: { children: ReactNode }) {
-  const [currentTeam, setCurrentTeamState] = useState<Team | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [allMatches, setAllMatches] = useState<Match[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hiddenMatchIds, setHiddenMatchIds] = useState<string[]>([]);
-  const [refreshingTeamId, setRefreshingTeamId] = useState<string | null>(null);
-  const [refreshProgress, setRefreshProgress] = useState<{ completed: number; total: number } | null>(null);
-  const [spinningButton, setSpinningButton] = useState<"refresh" | "force" | null>(null);
-  const [refreshingMatches, setRefreshingMatches] = useState<Set<string>>(new Set());
-  const [isForceRefreshing, setIsForceRefreshing] = useState(false);
-
-  // Get match data context
-  const { fetchTeamMatches } = useMatchData();
-
-  useLoadTeamsFromLocalStorage(setCurrentTeamState, setIsLoaded);
-  useLoadHiddenMatches(currentTeam, setHiddenMatchIds);
-  useFetchMatches(currentTeam, hiddenMatchIds, setAllMatches, setMatches);
-
-  const { addStandinPlayer, removeStandinPlayer } = useStandinPlayerHandlers(currentTeam, setCurrentTeamState);
-  const { addMatch, removeMatch, unhideMatch } = useMatchHandlers(currentTeam, matches, setMatches, allMatches, setAllMatches, hiddenMatchIds, setHiddenMatchIds);
-  const { getTeamSlug, getExternalLinks, cancelRefresh, clearMatches } = useMiscTeamHandlers(currentTeam, matches, setMatches, setRefreshingTeamId, setRefreshProgress, setSpinningButton);
-  const refreshMatches = useRefreshMatchesHandler(currentTeam, hiddenMatchIds, setAllMatches, setMatches);
-  const setRefreshingMatchesWrapper = useSetRefreshingMatchesWrapper(setRefreshingMatches);
-
-  const setCurrentTeam: (team: Team | string | null) => Promise<void> = async (teamOrId) => {
-    if (typeof teamOrId === "string") {
-      // Load team by ID from localStorage
-      const teamsData = localStorage.getItem("dota-dashboard-teams");
-      if (teamsData) {
-        const teams: Team[] = JSON.parse(teamsData);
-        const foundTeam = teams.find(team => team.id === teamOrId);
-        if (foundTeam) {
-          setCurrentTeamState(foundTeam);
-          localStorage.setItem("activeTeamId", foundTeam.id);
-          
-          // Trigger match data fetching for the new team
-          if (foundTeam.matchIdsByLeague && foundTeam.leagueId) {
-            const matchIds = foundTeam.matchIdsByLeague[foundTeam.leagueId] || [];
-            if (matchIds.length > 0) {
-              fetchTeamMatches(foundTeam.id, matchIds);
-            }
-          } else if (foundTeam.matchIds && foundTeam.matchIds.length > 0) {
-            fetchTeamMatches(foundTeam.id, foundTeam.matchIds);
-          }
-        }
-      }
-    } else if (teamOrId) {
-      // Direct team object
-      setCurrentTeamState(teamOrId);
-      localStorage.setItem("activeTeamId", teamOrId.id);
-      
-      // Trigger match data fetching for the new team
-      if (teamOrId.matchIdsByLeague && teamOrId.leagueId) {
-        const matchIds = teamOrId.matchIdsByLeague[teamOrId.leagueId] || [];
-        if (matchIds.length > 0) {
-          fetchTeamMatches(teamOrId.id, matchIds);
-        }
-      } else if (teamOrId.matchIds && teamOrId.matchIds.length > 0) {
-        fetchTeamMatches(teamOrId.id, teamOrId.matchIds);
-      }
-    } else {
-      // Clear current team
-      setCurrentTeamState(null);
-      localStorage.removeItem("activeTeamId");
-    }
-  };
-
-  return getTeamContextValue(
-    currentTeam,
-    matches,
-    allMatches,
-    setCurrentTeam,
-    addStandinPlayer,
-    removeStandinPlayer,
-    addMatch,
-    removeMatch,
-    unhideMatch,
-    getTeamSlug,
-    getExternalLinks,
-    isLoaded,
-    hiddenMatchIds,
-    setHiddenMatchIds,
-    refreshingTeamId,
-    setRefreshingTeamId,
-    refreshProgress,
-    setRefreshProgress,
-    cancelRefresh,
-    spinningButton,
-    setSpinningButton,
-    clearMatches,
-    refreshMatches,
-    refreshingMatches,
-    setRefreshingMatchesWrapper,
-    isForceRefreshing,
-    setIsForceRefreshing,
-    children
-  );
-}
-
 export function useTeam() {
   const context = useContext(TeamContext);
-  if (context === undefined) {
-    throw new Error("useTeam must be used within a TeamProvider");
+  if (!context) {
+    throw new Error('useTeam must be used within a TeamProvider');
   }
   return context;
 }

@@ -1,45 +1,24 @@
 "use client";
 
+import * as React from 'react';
 import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { 
+  DataFetchingContextType, 
+  FetchingState, 
+  FetchTrackerReturn 
+} from '../types/contexts';
 
-interface FetchingState {
-  [key: string]: {
-    isLoading: boolean;
-    startTime: number;
-    error?: string;
-  };
-}
-
-interface DataFetchingContextType {
-  // Track fetching states
-  fetchingStates: FetchingState;
-  
-  // Start a fetch operation
-  startFetch: (key: string) => void;
-  
-  // Complete a fetch operation
-  completeFetch: (key: string, error?: string) => void;
-  
-  // Check if something is currently fetching
-  isFetching: (key: string) => boolean;
-  
-  // Get all currently fetching keys
-  getFetchingKeys: () => string[];
-  
-  // Clear a specific fetch state
-  clearFetch: (key: string) => void;
-  
-  // Clear all fetch states
-  clearAllFetches: () => void;
-}
+// ============================================================================
+// CONTEXT
+// ============================================================================
 
 const DataFetchingContext = createContext<DataFetchingContextType | undefined>(undefined);
 
 export function DataFetchingProvider({ children }: { children: ReactNode }) {
   const [fetchingStates, setFetchingStates] = useState<FetchingState>({});
 
-  const startFetch = useCallback((key: string) => {
-    setFetchingStates(prev => ({
+  const startFetch = useCallback((key: string): void => {
+    setFetchingStates((prev: FetchingState) => ({
       ...prev,
       [key]: {
         isLoading: true,
@@ -48,8 +27,8 @@ export function DataFetchingProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const completeFetch = useCallback((key: string, error?: string) => {
-    setFetchingStates(prev => {
+  const completeFetch = useCallback((key: string, error?: string): void => {
+    setFetchingStates((prev: FetchingState) => {
       const newState = { ...prev };
       if (newState[key]) {
         newState[key] = {
@@ -62,23 +41,23 @@ export function DataFetchingProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const isFetching = useCallback((key: string) => {
+  const isFetching = useCallback((key: string): boolean => {
     return fetchingStates[key]?.isLoading || false;
   }, [fetchingStates]);
 
-  const getFetchingKeys = useCallback(() => {
+  const getFetchingKeys = useCallback((): string[] => {
     return Object.keys(fetchingStates).filter(key => fetchingStates[key].isLoading);
   }, [fetchingStates]);
 
-  const clearFetch = useCallback((key: string) => {
-    setFetchingStates(prev => {
+  const clearFetch = useCallback((key: string): void => {
+    setFetchingStates((prev: FetchingState) => {
       const newState = { ...prev };
       delete newState[key];
       return newState;
     });
   }, []);
 
-  const clearAllFetches = useCallback(() => {
+  const clearAllFetches = useCallback((): void => {
     setFetchingStates({});
   }, []);
 
@@ -108,7 +87,7 @@ export function useDataFetching() {
 }
 
 // Hook for tracking specific fetch operations
-export function useFetchTracker(key: string) {
+export function useFetchTracker(key: string): FetchTrackerReturn {
   const { startFetch, completeFetch, isFetching } = useDataFetching();
   
   const trackFetch = useCallback(async <T,>(
@@ -120,7 +99,8 @@ export function useFetchTracker(key: string) {
       completeFetch(key);
       return result;
     } catch (error) {
-      completeFetch(key, error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      completeFetch(key, errorMessage);
       throw error;
     }
   }, [key, startFetch, completeFetch]);

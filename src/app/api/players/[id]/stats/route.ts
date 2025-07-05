@@ -51,50 +51,43 @@
  *                 error:
  *                   type: string
  */
-import { cacheService } from '@/lib/cache-service';
 import { corsOptionsHandler } from '@/lib/cors';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getPlayerStats as getPlayerStatsFromService } from '@/lib/services/player-stats-service';
-import type { PlayerStats } from '@/lib/types/data-service';
-import { getPlayerStatsCacheKeyAndFilename } from '@/lib/utils/cache-keys';
+import { PlayerStatsRequest, PlayerStatsResponse, ApiErrorResponse } from '@/types/api';
 
 const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[PLAYER STATS POLL]', ...args);
 };
 
-async function isPlayerStatsFilePresent(playerId: string, debug: (...args: unknown[]) => void): Promise<boolean> {
-  const { key, filename } = getPlayerStatsCacheKeyAndFilename(playerId);
-  debug('Checking for player stats file:', filename);
-  const statsData = await cacheService.get<PlayerStats>(key, filename);
-  return !!statsData;
-}
+
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: _id } = await params;
   debug('POST: Handler called for player stats', _id);
   
-  let force = false;
+  let _force = false;
   try {
     const body = await request.json();
-    force = body.force || false;
+    const requestBody = body as PlayerStatsRequest;
+    _force = requestBody.force || false;
   } catch (err) {
     debug('POST: Failed to parse JSON body, using default force=false', err);
   }
 
   try {
-    // Always call the player stats service, which will use cache/mocks for underlying data
     const statsData = await getPlayerStatsFromService(Number(_id));
     if (!statsData || (typeof statsData === 'object' && 'status' in statsData && statsData.status === 'error')) {
       throw new Error('Failed to fetch player stats');
     }
     debug('POST: Player stats fetched and combined successfully');
-    return new Response(JSON.stringify(statsData), { 
+    return new Response(JSON.stringify(statsData as PlayerStatsResponse), { 
       status: 200, 
       headers: { 'Content-Type': 'application/json' } 
     });
   } catch (err) {
     debug('POST: Error fetching player stats:', err);
-    return new Response(JSON.stringify({ error: 'Failed to fetch player stats' }), { 
+    return new Response(JSON.stringify({ error: 'Failed to fetch player stats' } as ApiErrorResponse), { 
       status: 500, 
       headers: { 'Content-Type': 'application/json' } 
     });

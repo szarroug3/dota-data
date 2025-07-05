@@ -19,7 +19,7 @@ interface HeroStatsTablesProps {
 
 export default function HeroStatsTables({ 
   heroStats, 
-  _currentTeam, 
+  currentTeam, 
   getHighlightStyle, 
   loading = false 
 }: HeroStatsTablesProps) {
@@ -32,7 +32,16 @@ export default function HeroStatsTables({
     });
   };
 
-  if (loading) {
+  // Only show loading skeleton if we have no hero stats data and are loading
+  const shouldShowLoading = loading && (
+    !heroStats || 
+    (Object.keys(heroStats.ourPicks).length === 0 && 
+     Object.keys(heroStats.ourBans).length === 0 && 
+     Object.keys(heroStats.opponentPicks).length === 0 && 
+     Object.keys(heroStats.opponentBans).length === 0)
+  );
+
+  if (shouldShowLoading) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-48 bg-muted animate-pulse rounded" />

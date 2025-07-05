@@ -2,7 +2,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useTeam } from "@/contexts/team-context";
 import { getTeamSide } from "@/lib/utils";
-import type { Team, Match as TeamMatch } from "@/types/team";
+import type { Team } from "@/types/team";
+import type { Match as DashboardMatch } from "./match-utils";
 import { Loader2 } from "lucide-react";
 import { Suspense } from 'react';
 import AsyncMatchCard from "./AsyncMatchCard";
@@ -36,7 +37,7 @@ export default function MatchList({
   loading = false,
   _updateQueueStats,
 }: {
-  matches: TeamMatch[];
+  matches: DashboardMatch[];
   selectedMatch: string | null;
   setSelectedMatch: (matchId: string) => void;
   _selectedMatchObj: unknown;
@@ -54,8 +55,8 @@ export default function MatchList({
   setShowPlayerPopup: (show: boolean) => void;
   selectedPlayer: unknown;
   _setSelectedPlayer: (player: unknown) => void;
-  playerData: unknown;
-  setPlayerData: (data: unknown) => void;
+  playerData: any;
+  setPlayerData: (data: any) => void;
   loadingPlayerData: boolean;
   _prefetchedPlayerData: unknown;
   _prefetchingPlayers: boolean;
@@ -78,7 +79,7 @@ export default function MatchList({
 
     try {
       // Find the match in the current team's matches
-      const matchIndex = currentTeam?.manualMatches?.findIndex((m: TeamMatch) => m.id === matchId);
+      const matchIndex = currentTeam?.manualMatches?.findIndex((m: any) => m.id === matchId);
       
       if (matchIndex === -1 || matchIndex === undefined) {
         throw new Error("Match not found in team data");
@@ -127,7 +128,7 @@ export default function MatchList({
   };
 
   // Get hidden matches for popup
-  const _hiddenMatches = currentTeam?.manualMatches?.filter((match: TeamMatch) => 
+  const _hiddenMatches = currentTeam?.manualMatches?.filter((match: any) => 
     teamHiddenMatchIds.includes(match.id!)
   ) || [];
 
@@ -145,7 +146,7 @@ export default function MatchList({
         </div>
       ) : (
         <div className="h-full overflow-y-auto">
-          {matches.map((match: TeamMatch, index: number) => (
+          {matches.map((match: DashboardMatch, index: number) => (
             <Suspense key={match.id || index} fallback={<MatchCardSkeleton />}>
               <AsyncMatchCard
                 match={match}
@@ -168,7 +169,7 @@ export default function MatchList({
           setShowPlayerPopup(false);
           setPlayerData(null);
         }}
-        selectedPlayer={selectedPlayer}
+        player={selectedPlayer as any}
         playerData={playerData}
         loadingPlayerData={loadingPlayerData}
         onNavigateToPlayer={(player) => window.open(`/dashboard/player-stats?player=${player.account_id}`, '_blank')}

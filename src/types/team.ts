@@ -21,11 +21,11 @@ export interface Match {
 
 export interface Team {
   id: string;
-  teamId?: string;
-  teamName?: string;
+  teamId: string; // API team ID
+  teamName: string;
   leagueId?: string;
   leagueName?: string;
-  matchIds?: string[];
+  matchIds: string[]; // From API
   matchIdsByLeague?: Record<string, string[]>;
   players: Player[];
   winRate?: number;
@@ -35,7 +35,10 @@ export interface Team {
   season?: string;
   founded?: string;
   record?: string;
-  manualMatches?: Match[];
+  manualMatches: Match[]; // Manually added matches
+  manualPlayers: Player[]; // Manually added players
+  hiddenMatches: string[]; // Hidden match IDs
+  hiddenPlayers: string[]; // Hidden player IDs
   dotabuffUrl?: string;
   leagueUrl?: string;
   standings?: any[];

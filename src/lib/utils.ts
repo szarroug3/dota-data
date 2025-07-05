@@ -515,3 +515,28 @@ export function getScoreWithResult(match: OpenDotaFullMatch & { result?: string;
   if (!match.score) return getMatchResult(match, currentTeam);
   return `${match.score} (${getMatchResult(match, currentTeam)})`;
 }
+
+// Dashboard-specific utility functions that work with Match from match-utils.ts
+import type { Match as DashboardMatch } from '@/app/dashboard/match-history/match-utils';
+
+export function getDashboardMatchResult(match: DashboardMatch, currentTeam?: Team): string {
+  if (match.result === 'W') return 'W';
+  if (match.result === 'L') return 'L';
+  if (match.openDota && currentTeam) {
+    const teamSide = getTeamSide(match, currentTeam);
+    if (teamSide === 'Radiant') {
+      return match.openDota.radiant_win ? 'W' : 'L';
+    } else if (teamSide === 'Dire') {
+      return !match.openDota.radiant_win ? 'W' : 'L';
+    }
+  }
+  return '';
+}
+
+export function getDashboardScoreWithResult(match: DashboardMatch, currentTeam?: Team): string {
+  const result = getDashboardMatchResult(match, currentTeam);
+  if (match.openDota?.radiant_score !== undefined && match.openDota?.dire_score !== undefined) {
+    return `${match.openDota.radiant_score}-${match.openDota.dire_score} (${result})`;
+  }
+  return result;
+}

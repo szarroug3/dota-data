@@ -13,6 +13,9 @@ interface MatchTrend {
   type: string;
   value: number;
   change: number;
+  direction: "up" | "down";
+  metric: string;
+  trend: string;
 }
 
 interface MatchHistorySummaryProps {

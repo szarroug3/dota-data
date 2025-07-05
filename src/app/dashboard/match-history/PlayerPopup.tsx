@@ -133,6 +133,25 @@ interface PlayerData {
     time: number;
     key: string;
   }>;
+  // Additional properties
+  heroes?: Array<{
+    hero_id: number;
+    games: number;
+    last_played: number;
+  }>;
+  rank_tier?: number;
+  topHeroes?: Array<{
+    hero_id: number;
+    name: string;
+    games: number;
+    winRate: number;
+  }>;
+  topRecentHeroes?: Array<{
+    hero_id: number;
+    name: string;
+    games: number;
+    winRate: number;
+  }>;
 }
 
 interface PlayerPopupProps {
@@ -184,9 +203,6 @@ export default function PlayerPopup({
       : name;
   };
 
-  const topAllTime = getTopHeroes(playerData);
-  const topRecent = getTopHeroes(playerData, 3);
-
   // Helper to get item name
   const getItemName = (itemId: number) => {
     // This would need to be implemented with actual item data
@@ -219,6 +235,9 @@ export default function PlayerPopup({
     // For now, return empty array
     return [];
   };
+
+  const topAllTime = getTopHeroes(playerData);
+  const topRecent = getTopHeroes(playerData, 3);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

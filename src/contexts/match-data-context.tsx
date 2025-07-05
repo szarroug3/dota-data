@@ -1,40 +1,54 @@
-import { MatchData } from '@/lib/hooks/useMatchData';
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import * as React from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
+import { 
+  MatchDataContextType, 
+  NetworkError, 
+  TimeoutError,
+  MatchData
+} from '../types/contexts';
+import { MatchRequest } from '../types/api';
 
-interface MatchDataContextType {
-  // Cached match data by team ID
-  matchDataByTeam: Record<string, MatchData[]>;
-  // Loading states by team ID
-  loadingByTeam: Record<string, boolean>;
-  // Error states by team ID
-  errorByTeam: Record<string, string | null>;
-  // Trigger fetching for a specific team
-  fetchTeamMatches: (teamId: string, matchIds: string[]) => void;
-  // Get matches for a team (from cache or trigger fetch)
-  getTeamMatches: (teamId: string, matchIds: string[]) => MatchData[];
-  // Check if team data is loading
-  isTeamLoading: (teamId: string) => boolean;
-  // Get error for a team
-  getTeamError: (teamId: string) => string | null;
-}
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-const MatchDataContext = createContext<MatchDataContextType | null>(null);
+const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const MAX_RETRY_DELAY_MS = 5000;
 
-// Helper function to fetch single match data
-async function fetchSingleMatchData(matchId: string, teamId: string): Promise<MatchData> {
+// ============================================================================
+// CACHE
+// ============================================================================
+
+// Simple cache to prevent repeated requests
+const matchDataCache = new Map<string, MatchData>();
+
+// ============================================================================
+// API HELPERS
+// ============================================================================
+
+async function fetchSingleMatchData(matchId: string): Promise<MatchData> {
+  // Check cache first
+  const cacheKey = matchId;
+  const cachedData = matchDataCache.get(cacheKey);
+  if (cachedData) {
+    console.log(`[MatchDataContext] Using cached data for match ${matchId}`);
+    return cachedData;
+  }
+
   try {
-    console.log(`[MatchDataContext] Starting fetch for match ${matchId} with teamId ${teamId}`);
+    console.log(`[MatchDataContext] Starting fetch for match ${matchId}`);
     
     // Create an AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     
     const response = await fetch(`/api/matches/${matchId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ teamId }),
+      body: JSON.stringify({} as MatchRequest),
       signal: controller.signal,
     });
     
@@ -42,50 +56,58 @@ async function fetchSingleMatchData(matchId: string, teamId: string): Promise<Ma
     console.log(`[MatchDataContext] Response status for match ${matchId}:`, response.status);
     
     if (response.status === 200) {
-      const data = await response.json();
+      const data = await response.json() as MatchData;
       console.log(`[MatchDataContext] Successfully fetched match ${matchId}`);
+      
+      // Cache the result
+      matchDataCache.set(cacheKey, data);
+      
       return data;
     }
     
     throw new Error(`HTTP ${response.status} for match ${matchId}`);
   } catch (err) {
     console.error(`[MatchDataContext] Network error fetching match ${matchId}:`, err);
+    
     if (err instanceof TypeError && err.message.includes('NetworkError')) {
-      throw new Error(`Network error: Unable to connect to server for match ${matchId}. Please check your connection and try again.`);
+      const networkError = new Error(`Network error: Unable to connect to server for match ${matchId}. Please check your connection and try again.`) as NetworkError;
+      networkError.name = 'NetworkError';
+      throw networkError;
     }
+    
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error(`Request timeout: The request for match ${matchId} took too long to complete. Please try again.`);
+      const timeoutError = new Error(`Request timeout: The request for match ${matchId} took too long to complete. Please try again.`) as TimeoutError;
+      timeoutError.name = 'AbortError';
+      throw timeoutError;
     }
+    
     throw err;
   }
 }
 
-// Helper function to fetch multiple matches
-async function fetchMultipleMatches(matchIds: string[], teamId: string): Promise<MatchData[]> {
+async function fetchMultipleMatches(matchIds: string[]): Promise<MatchData[]> {
   console.log('[MatchDataContext] Fetching processed matches data:', {
-    matchIds: matchIds.length,
-    teamId
+    matchIds: matchIds.length
   });
 
   // Fetch all matches in parallel with retry logic
-  const fetchPromises = matchIds.map(async (matchId) => {
+  const fetchPromises = matchIds.map(async (matchId): Promise<MatchData | null> => {
     console.log('[MatchDataContext] Fetching match:', matchId);
     
     // Retry logic for network errors
-    const maxRetries = 3;
     let lastError: Error | null = null;
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         console.log(`[MatchDataContext] Attempt ${attempt} for match ${matchId}`);
-        return await fetchSingleMatchData(matchId, teamId);
+        return await fetchSingleMatchData(matchId);
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
         console.error(`[MatchDataContext] Attempt ${attempt} failed for match ${matchId}:`, lastError);
         
         // If it's a network error and we have more retries, wait before retrying
-        if (attempt < maxRetries && lastError.message.includes('Network error')) {
-          const delay = Math.min(1000 * attempt, 5000); // Exponential backoff, max 5 seconds
+        if (attempt < MAX_RETRIES && lastError.message.includes('Network error')) {
+          const delay = Math.min(1000 * attempt, MAX_RETRY_DELAY_MS); // Exponential backoff, max 5 seconds
           console.log(`[MatchDataContext] Retrying match ${matchId} in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
@@ -99,56 +121,57 @@ async function fetchMultipleMatches(matchIds: string[], teamId: string): Promise
   });
 
   const results = await Promise.all(fetchPromises);
-  const successfulResults = results.filter(result => result !== null) as MatchData[];
+  const successfulResults = results.filter((result): result is MatchData => result !== null);
   
   console.log(`[MatchDataContext] Successfully fetched ${successfulResults.length}/${matchIds.length} matches`);
   return successfulResults;
 }
+
+// ============================================================================
+// CONTEXT
+// ============================================================================
+
+const MatchDataContext = createContext<MatchDataContextType | null>(null);
 
 export function MatchDataProvider({ children }: { children: React.ReactNode }) {
   const [matchDataByTeam, setMatchDataByTeam] = useState<Record<string, MatchData[]>>({});
   const [loadingByTeam, setLoadingByTeam] = useState<Record<string, boolean>>({});
   const [errorByTeam, setErrorByTeam] = useState<Record<string, string | null>>({});
 
-  const fetchTeamMatches = useCallback(async (teamId: string, matchIds: string[]) => {
+  const fetchTeamMatches = useCallback(async (teamId: string, matchIds: string[]): Promise<void> => {
     // Don't fetch if already loading or if no match IDs
     if (loadingByTeam[teamId] || matchIds.length === 0) {
       return;
     }
 
     // Set loading state
-    setLoadingByTeam(prev => ({ ...prev, [teamId]: true }));
-    setErrorByTeam(prev => ({ ...prev, [teamId]: null }));
+    setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: true }));
+    setErrorByTeam((prev: Record<string, string | null>) => ({ ...prev, [teamId]: null }));
 
     try {
-      const matches = await fetchMultipleMatches(matchIds, teamId);
+      const matches = await fetchMultipleMatches(matchIds);
       
-      setMatchDataByTeam(prev => ({ ...prev, [teamId]: matches }));
-      setLoadingByTeam(prev => ({ ...prev, [teamId]: false }));
+      setMatchDataByTeam((prev: Record<string, MatchData[]>) => ({ ...prev, [teamId]: matches }));
+      setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: false }));
     } catch (err) {
       console.error(`[MatchDataContext] Error fetching matches for team ${teamId}:`, err);
-      setErrorByTeam(prev => ({ 
+      setErrorByTeam((prev: Record<string, string | null>) => ({ 
         ...prev, 
         [teamId]: err instanceof Error ? err.message : 'Failed to fetch matches' 
       }));
-      setLoadingByTeam(prev => ({ ...prev, [teamId]: false }));
+      setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: false }));
     }
   }, [loadingByTeam]);
 
-  const getTeamMatches = useCallback((teamId: string, matchIds: string[]): MatchData[] => {
+  const getTeamMatches = useCallback((teamId: string): MatchData[] => {
     // Return cached data if available
     if (matchDataByTeam[teamId]) {
       return matchDataByTeam[teamId];
     }
 
-    // Trigger fetch if not already loading and we have match IDs
-    if (!loadingByTeam[teamId] && matchIds.length > 0) {
-      // Use setTimeout to avoid blocking the render
-      setTimeout(() => fetchTeamMatches(teamId, matchIds), 0);
-    }
-
+    // Don't automatically trigger fetch - let components call fetchTeamMatches explicitly
     return [];
-  }, [matchDataByTeam, loadingByTeam, fetchTeamMatches]);
+  }, [matchDataByTeam]);
 
   const isTeamLoading = useCallback((teamId: string): boolean => {
     return loadingByTeam[teamId] || false;
@@ -175,7 +198,7 @@ export function MatchDataProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMatchData() {
+export function useMatchDataContext() {
   const context = useContext(MatchDataContext);
   if (!context) {
     throw new Error('useMatchData must be used within a MatchDataProvider');

@@ -2,6 +2,11 @@ import { cacheService } from '@/lib/cache-service';
 import { getCacheKeyAndFilename } from '@/lib/utils/cache-keys';
 import { NextRequest } from 'next/server';
 
+interface CacheInvalidationItem {
+  type: string;
+  id: string;
+}
+
 /**
  * @openapi
  * /cache/invalidate:
@@ -65,7 +70,7 @@ import { NextRequest } from 'next/server';
  *                   type: string
  */
 
-async function invalidateItems(items: any[]): Promise<{ invalidated: string[]; errors: string[] }> {
+async function invalidateItems(items: CacheInvalidationItem[]): Promise<{ invalidated: string[]; errors: string[] }> {
   const invalidated: string[] = [];
   const errors: string[] = [];
   for (const item of items) {

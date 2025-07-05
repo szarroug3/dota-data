@@ -51,13 +51,13 @@ import { cacheService } from '@/lib/cache-service';
 import { corsOptionsHandler, withCORS } from '@/lib/cors';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getHeroesCacheKeyAndFilename } from '@/lib/utils/cache-keys';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const debug = (...args: unknown[]) => {
   logWithTimestampToFile('log', '[HEROES POLL]', ...args);
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const { key: cacheKey, filename } = getHeroesCacheKeyAndFilename();
   const HEROES_TTL = 60 * 60 * 24 * 90; // 90 days in seconds
 
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
   return withCORS(NextResponse.json({ error: 'Heroes data not found' }, { status: 404 }));
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   debug('POST: Handler called for heroes');
   const { key: cacheKey, filename } = getHeroesCacheKeyAndFilename();
   const HEROES_TTL = 60 * 60 * 24 * 90; // 90 days in seconds

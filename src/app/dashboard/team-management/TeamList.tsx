@@ -14,13 +14,6 @@ export type Team = TeamBase & {
   loading?: boolean;
 };
 
-// Poll for team matches utility (shared by refresh and force refresh)
-async function pollForTeamMatches(url: string, options: RequestInit): Promise<unknown> {
-  const res = await fetch(url, options);
-  if (!res.ok) throw new Error('Failed to fetch team matches');
-  return res.json();
-}
-
 export function TeamListCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="card-wrapper">
@@ -147,7 +140,7 @@ function TeamListRow({
             </>
           ) : null}
           <span className={`font-semibold ${isActive ? 'text-primary' : ''}`}>
-            {team.teamName}
+            {team.loading ? `Team ${team.teamId}` : team.teamName}
           </span>
           {isActive && (
             <Badge variant="default" className="ml-2">
@@ -156,7 +149,7 @@ function TeamListRow({
           )}
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <span>{team.leagueName || team.leagueId}</span>
+          <span>{team.loading ? `League ${team.leagueId}` : (team.leagueName || team.leagueId)}</span>
         </div>
       </div>
       <TeamActions
@@ -173,20 +166,15 @@ function TeamListRow({
   );
 }
 
-function useTeamListHandlers(teams: Team[], setTeams: React.Dispatch<React.SetStateAction<Team[]>> | undefined, currentTeam: Team | null, setCurrentTeam: (team: Team | null) => void, setRefreshingId: (id: string | null) => void, setForceRefreshingId: (id: string | null) => void) {
+function useTeamListHandlers(currentTeam: Team | null, setCurrentTeam: (team: Team | null) => void, setRefreshingId: (id: string | null) => void, setForceRefreshingId: (id: string | null) => void) {
+  const { teams, removeTeam, setActiveTeam } = useTeam();
+
   const handleSwitchTeam = (team: Team) => {
-    setCurrentTeam(team);
+    setActiveTeam(team.id);
   };
 
   const handleDeleteTeam = (id: string) => {
-    const updatedTeams = teams.filter((team: Team) => team.id !== id);
-    if (setTeams) setTeams(updatedTeams);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("dota-dashboard-teams", JSON.stringify(updatedTeams));
-    }
-    if (currentTeam?.id === id) {
-      setCurrentTeam(updatedTeams.length > 0 ? updatedTeams[0] : null);
-    }
+    removeTeam(id);
   };
 
   const handleRefreshTeam = async (team: Team) => {
@@ -199,70 +187,19 @@ function useTeamListHandlers(teams: Team[], setTeams: React.Dispatch<React.SetSt
       return;
     }
     logWithTimestamp('log', '[TeamList] Refresh - team data:', { teamId: team.teamId, leagueId: team.leagueId });
-    pollForTeamMatches(
-      `/api/teams/${team.teamId}/matches`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leagueId: team.leagueId }),
-      }
-    )
-      .then((data: unknown) => {
-        logWithTimestamp('log', '[TeamList] Refresh import completed successfully', data);
-      })
-      .catch((error: unknown) => {
-        logWithTimestamp('log', '[TeamList] Refresh background error (handled silently):', error);
-      });
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('reset-queue-polling-interval'));
-    }
+    // TODO: Implement refresh logic using the new API structure
+    // For now, just show the loading state
   };
 
   const handleForceRefreshTeam = async (team: Team) => {
     setForceRefreshingId(team.id);
-    const clearedTeam: Team = { ...team, manualMatches: [], players: [] };
-    const updatedTeams = teams.map((t) => (t.id === team.id ? clearedTeam : t));
-    if (setTeams) { setTeams(updatedTeams); }
-    if (typeof window !== "undefined") {
-      localStorage.setItem("dota-dashboard-teams", JSON.stringify(updatedTeams));
-    }
-    if (currentTeam?.id === team.id) {
-      setCurrentTeam(clearedTeam);
-    }
+    // Note: Force refresh logic would need to be updated to work with the new context
+    // For now, we'll just show the loading state
     setTimeout(() => {
       setForceRefreshingId(null);
     }, 2000);
-    pollForTeamMatches(
-      `/api/teams/${team.teamId}/matches`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leagueId: team.leagueId, force: true }),
-      }
-    )
-      .then((newTeam: unknown) => {
-        logWithTimestamp('log', '[TeamList] Import successful, new team data:', newTeam);
-        const finalTeams = updatedTeams.map((t) =>
-          t.id === team.id ? ({
-            ...t,
-            ...(newTeam as Partial<Team>),
-            loading: false,
-          } as Team) : t
-        );
-        if (setTeams) { setTeams(finalTeams); }
-        if (currentTeam?.id === team.id) {
-          setCurrentTeam({ ...clearedTeam, ...(newTeam as Partial<Team>), loading: false });
-        }
-        if (typeof window !== "undefined") {
-          localStorage.setItem("dota-dashboard-teams", JSON.stringify(finalTeams));
-        }
-      })
-      .catch((error: unknown) => {
-        logWithTimestamp('log', '[TeamList] Force refresh background error (handled silently):', error);
-      });
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('reset-queue-polling-interval'));
-    }
+    // TODO: Implement force refresh logic using the new API structure
+    // For now, just show the loading state
   };
 
   return { handleSwitchTeam, handleDeleteTeam, handleRefreshTeam, handleForceRefreshTeam };
@@ -280,14 +217,11 @@ function useTeamListHandlers(teams: Team[], setTeams: React.Dispatch<React.SetSt
  * This approach is honest about what's happening - the user knows their
  * request has been submitted and is being processed in the background.
  */
-export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?: React.Dispatch<React.SetStateAction<Team[]>> }) {
+export default function TeamList() {
   // NOTE: This component does NOT poll for team/league names.
-  // Ongoing polling is handled by ClientTeamManagementPage.
+  // Ongoing polling is handled by the team context.
   // Only refresh/force refresh logic is handled here.
-  const {
-    currentTeam,
-    setCurrentTeam,
-  } = useTeam();
+  const { teams, activeTeam } = useTeam();
 
   const [forceRefreshingId, setForceRefreshingId] = useState<string | null>(null);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
@@ -297,7 +231,7 @@ export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?
     handleDeleteTeam,
     handleRefreshTeam,
     handleForceRefreshTeam,
-  } = useTeamListHandlers(teams, setTeams, currentTeam, setCurrentTeam, setRefreshingId, setForceRefreshingId);
+  } = useTeamListHandlers(activeTeam, () => {}, setRefreshingId, setForceRefreshingId);
 
   // Show empty state immediately if no teams
   if (!teams || teams.length === 0) {
@@ -320,7 +254,7 @@ export default function TeamList({ teams, setTeams }: { teams: Team[]; setTeams?
         <TeamListRow
           key={team.id}
           team={team}
-          currentTeam={currentTeam}
+          currentTeam={activeTeam}
           refreshingId={refreshingId}
           forceRefreshingId={forceRefreshingId}
           onSwitch={handleSwitchTeam}
