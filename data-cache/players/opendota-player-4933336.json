@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4933336,
+    "personaname": "Akke",
+    "name": "Akke",
+    "plus": true,
+    "cheese": 156,
+    "steamid": "76561198137655764",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/6/85.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/37/98_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/71/25_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4933336",
+    "last_login": "2025-07-02T14:09:17.079Z",
+    "loccountrycode": "SEA",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 79,
+  "leaderboard_rank": 397,
+  "total_matches": 4249,
+  "win": 1554,
+  "kda": 5.79,
+  "gpm": 734,
+  "xpm": 541,
+  "avg_seconds_per_match": 2020
+}

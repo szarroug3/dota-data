@@ -72,24 +72,44 @@ export async function GET() {
   return withCORS(NextResponse.json({ error: 'Heroes data not found' }, { status: 404 }));
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   debug('POST: Handler called for heroes');
-  const { key: cacheKey, filename } = getHeroesCacheKeyAndFilename();
-  const HEROES_TTL = 60 * 60 * 24 * 90; // 90 days in seconds
-
+  
+  // 1. Parse request body for force option
+  let force = false;
   try {
-    // Always fetch and cache fresh data synchronously
-    await getHeroes(true); // Force refresh
-    const cached = await cacheService.get(cacheKey, filename, HEROES_TTL);
-    if (cached) {
-      debug('POST: Heroes data fetched and ready, returning 200');
-      return withCORS(NextResponse.json(cached));
-    } else {
-      debug('POST: Heroes data fetch failed, not found after refresh');
-      return withCORS(NextResponse.json({ error: 'Heroes data not found after refresh' }, { status: 500 }));
-    }
+    const body = await request.json();
+    force = body.force || false;
   } catch (err) {
-    debug('POST: Heroes data fetch error:', err);
+    debug('POST: Failed to parse JSON body, using default force=false', err);
+  }
+
+  const { key: cacheKey, filename } = getHeroesCacheKeyAndFilename();
+  const TTL = 7 * 24 * 60 * 60; // 7 days
+
+  // 2. Check cache first (unless force=true)
+  if (!force) {
+    const cached = await cacheService.get(cacheKey, filename, TTL);
+    if (cached) {
+      debug('POST: Cache hit, returning data');
+      return withCORS(NextResponse.json(cached));
+    }
+  }
+
+  // 3. Invalidate cache if force refresh
+  if (force) {
+    debug('POST: Force refresh requested, invalidating cache');
+    await cacheService.invalidate(cacheKey, filename);
+  }
+
+  // 4. Call service layer
+  try {
+    debug('POST: Fetching heroes data');
+    const data = await getHeroes(force);
+    debug('POST: Heroes data fetched successfully');
+    return withCORS(NextResponse.json(data));
+  } catch (err) {
+    debug('POST: Error fetching heroes data:', err);
     return withCORS(NextResponse.json({ error: 'Failed to fetch heroes data' }, { status: 500 }));
   }
 }

@@ -9,6 +9,16 @@ if (typeof window !== 'undefined') {
   throw new Error('[cache-service.ts] Mocking logic should never run on the client!');
 }
 
+// Helper function to determine the entity type from filename
+function getEntityTypeFromFilename(filename: string): 'players' | 'matches' | 'heroes' | 'teams' | 'leagues' | 'unknown' {
+  if (filename.includes('player')) return 'players';
+  if (filename.includes('match')) return 'matches';
+  if (filename.includes('hero')) return 'heroes';
+  if (filename.includes('team')) return 'teams';
+  if (filename.includes('league')) return 'leagues';
+  return 'unknown';
+}
+
 /**
  * CacheService manages caching, queueing, and rate limiting for API data.
  * Supports both Redis (production) and in-memory/file-based mock cache (development/testing).
@@ -19,7 +29,7 @@ class CacheService {
   private redis: Redis | null = null;
   private rateLimiter: typeof rateLimiter;
   private mockMemoryCache: Map<string, unknown> = new Map(); // In-memory cache for mock mode
-  private mockCacheDir = 'mock-data';
+  private mockCacheDir = 'data-cache';
   private pendingRequests: Map<string, { status: string; result?: unknown }> = new Map();
 
   constructor(config: { ttl: number; maxAge: number } = {
@@ -304,7 +314,12 @@ class CacheService {
 
   private getMockCacheFilePath(filename: string): string {
     if (!fs || !path) throw new Error('fs/path not available');
-    return path.join(process.cwd(), this.mockCacheDir, `cache-${filename}`);
+    
+    // Determine entity type and organize into subfolders
+    const entityType = getEntityTypeFromFilename(filename);
+    const baseDir = entityType !== 'unknown' ? entityType : 'misc';
+    
+    return path.join(process.cwd(), this.mockCacheDir, baseDir, filename);
   }
 
   private async readMockCacheFile(filename: string): Promise<unknown | null> {
@@ -334,7 +349,7 @@ class CacheService {
     } else {
       dataToWrite = JSON.stringify(value, null, 2);
     }
-    logWithTimestampToFile('log', `[CacheService] [MOCK] Writing to file ${filename}: ${dataToWrite.substring(0, 200)}${dataToWrite.length > 200 ? '...' : ''}`);
+    logWithTimestampToFile('log', `[CacheService] [MOCK] Writing to file ${filePath}: ${dataToWrite.substring(0, 200)}${dataToWrite.length > 200 ? '...' : ''}`);
     await fs.promises.writeFile(filePath, dataToWrite);
   }
 
@@ -355,9 +370,18 @@ class CacheService {
     if (!fs || !path) return;
     const dir = path.join(process.cwd(), this.mockCacheDir);
     try {
-      const files: string[] = await fs.promises.readdir(dir);
+      const subdirs = await fs.promises.readdir(dir);
       await Promise.all(
-        files.map((f: string) => fs.promises.unlink(path.join(dir, f)))
+        subdirs.map(async (subdir: string) => {
+          const subdirPath = path.join(dir, subdir);
+          const stat = await fs.promises.stat(subdirPath);
+          if (stat.isDirectory()) {
+            const files = await fs.promises.readdir(subdirPath);
+            await Promise.all(
+              files.map((file: string) => fs.promises.unlink(path.join(subdirPath, file)))
+            );
+          }
+        })
       );
     } catch {
       // Ignore if dir doesn't exist

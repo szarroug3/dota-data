@@ -2,7 +2,7 @@ import { shouldMockService, tryMock } from '@/lib/api';
 import { getPlayerData } from '@/lib/api/opendota/players';
 import { fetchPage, isAlreadyQueuedResult } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
-import { generateFakeDotabuffTeamMatchesHtml, generateFakeMatchDetails } from '@/lib/fake-data-generator';
+import { generateFakeDotabuffTeamMatchesHtml, generateFakeMatchDetails } from '@/lib/fake-data-generators/team-generator';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getOpendotaMatchCacheKey, getTeamCacheFilename, getTeamCacheKey } from '@/lib/utils/cache-keys';
 import * as cheerio from 'cheerio';
@@ -26,8 +26,7 @@ async function fetchTeamMatchesPage(teamId: string, pageNum: number, endpoint: s
   if (shouldMockService('dotabuff')) {
     logWithTimestampToFile('log', `[fetchTeamMatchesPage] Generating fake data for page ${pageNum}`);
     try {
-      const fakeData = generateFakeDotabuffTeamMatchesHtml(teamId, pageNum, pageFilename);
-      return fakeData;
+      return generateFakeDotabuffTeamMatchesHtml(teamId, pageNum, pageFilename);
     } catch {
       logWithTimestampToFile('warn', `[fetchTeamMatchesPage] No fake data available for teamId=${teamId}, pageNum=${pageNum}`);
       return null;
@@ -49,7 +48,22 @@ async function fetchTeamMatchesPage(teamId: string, pageNum: number, endpoint: s
 }
 
 // Extracted helper: checkTeamMatchesCache
-async function checkTeamMatchesCache(cacheKey: string, filename: string): Promise<{ teamName: string; matchIdsByLeague: Record<string, string[]> } | null> {
+async function checkTeamMatchesCache(cacheKey: string, filename: string): Promise<{ teamName: string; matchIdsByLeague: Record<string, Array<{
+  matchId: string;
+  result: 'win' | 'loss';
+  seriesId: string;
+  seriesRegion: string;
+  duration: string;
+  heroes: string[];
+  opponent: {
+    teamId: string;
+    teamName: string;
+    teamTag: string;
+  };
+  date: string;
+  leagueId: string;
+  leagueName: string;
+}>> } | null> {
   let cached = await cacheService.get<string>(cacheKey, filename);
   if (typeof cached === 'string') {
     try { cached = JSON.parse(cached); } catch {
@@ -57,7 +71,22 @@ async function checkTeamMatchesCache(cacheKey: string, filename: string): Promis
     }
   }
   if (cached && typeof cached === 'object' && 'teamName' in cached && 'matchIdsByLeague' in cached) {
-    return cached as { teamName: string; matchIdsByLeague: Record<string, string[]> };
+    return cached as { teamName: string; matchIdsByLeague: Record<string, Array<{
+      matchId: string;
+      result: 'win' | 'loss';
+      seriesId: string;
+      seriesRegion: string;
+      duration: string;
+      heroes: string[];
+      opponent: {
+        teamId: string;
+        teamName: string;
+        teamTag: string;
+      };
+      date: string;
+      leagueId: string;
+      leagueName: string;
+    }>> };
   }
   return null;
 }
@@ -66,7 +95,6 @@ async function checkTeamMatchesCache(cacheKey: string, filename: string): Promis
 async function queueTeamMatchesRequest(
   endpoint: string,
   teamId: string,
-  leagueId: string,
   cacheKey: string,
   CACHE_TTL: number,
   filename: string
@@ -80,14 +108,17 @@ async function queueTeamMatchesRequest(
       const joinedHtml = htmlPages.join('');
       logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Fetched and joined HTML, length=${joinedHtml.length}`);
       // Parse the HTML to get processed data
-      const parsed = parseTeamMatchesHtml(joinedHtml, leagueId, teamId);
+      const parsed = parseTeamMatchesHtml(joinedHtml, teamId);
       // Store the processed data as JSON in the cache
       await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), CACHE_TTL, filename);
       logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Cached processed team matches for ${teamId}`);
       // Enqueue match jobs as before
-      if (parsed && parsed.matchIdsByLeague && parsed.matchIdsByLeague[leagueId]) {
-        for (const matchId of parsed.matchIdsByLeague[leagueId]) {
-          logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Enqueuing matchId=${matchId}`);
+      if (parsed && parsed.matchIdsByLeague) {
+        // Iterate through all leagues and their matches
+        for (const [leagueId, matches] of Object.entries(parsed.matchIdsByLeague)) {
+          for (const match of matches) {
+            const matchId = match.matchId;
+            logWithTimestampToFile('log', `[getTeamNameAndMatches] [queueRequest] Enqueuing matchId=${matchId} from league=${leagueId}`);
           cacheService.queueRequest(
             'opendota',
             `opendota-match-${matchId}`,
@@ -135,6 +166,7 @@ async function queueTeamMatchesRequest(
             CACHE_TTL,
             `opendota-match-${matchId}.json`
           );
+          }
         }
       }
       // Only return the processed JSON for caching
@@ -146,8 +178,23 @@ async function queueTeamMatchesRequest(
 }
 
 // Extracted helper: handleTeamMatchesResult
-function handleTeamMatchesResult(result: unknown, leagueId: string, teamId: string, cacheKey: string):
-  | { teamName: string; matchIdsByLeague: Record<string, string[]> }
+function handleTeamMatchesResult(result: unknown, teamId: string, cacheKey: string):
+  | { teamName: string; matchIdsByLeague: Record<string, Array<{
+    matchId: string;
+    result: 'win' | 'loss';
+    seriesId: string;
+    seriesRegion: string;
+    duration: string;
+    heroes: string[];
+    opponent: {
+      teamId: string;
+      teamName: string;
+      teamTag: string;
+    };
+    date: string;
+    leagueId: string;
+    leagueName: string;
+  }>> }
   | { status: string; signature: string }
   | { error: string; status: number }
 {
@@ -155,7 +202,7 @@ function handleTeamMatchesResult(result: unknown, leagueId: string, teamId: stri
     return { status: 'queued', signature: cacheKey };
   }
   if (typeof result === 'string') {
-    return parseTeamMatchesHtml(result, leagueId, teamId);
+    return parseTeamMatchesHtml(result, teamId);
   }
   // Sleep for 10 seconds to simulate a long-running queue
    
@@ -167,14 +214,28 @@ function handleTeamMatchesResult(result: unknown, leagueId: string, teamId: stri
 // Refactored main function
 export async function getTeamNameAndMatches(
   teamId: string,
-  leagueId: string,
   forceRefresh = false
 ): Promise<
-  | { teamName: string; matchIdsByLeague: Record<string, string[]> }
+  { teamName: string; matchIdsByLeague: Record<string, Array<{
+    matchId: string;
+    result: 'win' | 'loss';
+    seriesId: string;
+    seriesRegion: string;
+    duration: string;
+    heroes: string[];
+    opponent: {
+      teamId: string;
+      teamName: string;
+      teamTag: string;
+    };
+    date: string;
+    leagueId: string;
+    leagueName: string;
+  }>> }
   | { status: string; signature: string }
   | { error: string; status: number }
 > {
-  logWithTimestampToFile('log', `[getTeamNameAndMatches] Called with teamId=${teamId}, leagueId=${leagueId}, forceRefresh=${forceRefresh}`);
+  logWithTimestampToFile('log', `[getTeamNameAndMatches] Called with teamId=${teamId}, forceRefresh=${forceRefresh}`);
   const endpoint = `/esports/teams/${teamId}/matches`;
   const cacheKey = getTeamCacheKey(teamId);
   const CACHE_TTL = 60 * 60 * 2; // 2 hours in seconds
@@ -188,8 +249,8 @@ export async function getTeamNameAndMatches(
   }
 
   // 2. Queue the fetch for all pages if not cached
-  const result = await queueTeamMatchesRequest(endpoint, teamId, leagueId, cacheKey, CACHE_TTL, filename);
-  return handleTeamMatchesResult(result, leagueId, teamId, cacheKey);
+  const result = await queueTeamMatchesRequest(endpoint, teamId, cacheKey, CACHE_TTL, filename);
+  return handleTeamMatchesResult(result, teamId, cacheKey);
 }
 
 // Helper for extracting img alt from HTML
@@ -223,23 +284,110 @@ function extractTeamNameFromHtml(html: string, teamId: string): string {
   return teamName || teamId;
 }
 
-// Helper for extracting match IDs by league
-function extractMatchIdsByLeague(html: string, leagueId: string): Record<string, string[]> {
-  const matchIdsByLeague: Record<string, string[]> = {};
-  const matchIdRegex = /<a[^>]+href=["']\/matches\/(\d+)["'][^>]*>/g;
-  let match;
-  while ((match = matchIdRegex.exec(html)) !== null) {
+
+
+export function parseTeamMatchesHtml(html: string, teamId: string): { teamName: string; matchIdsByLeague: Record<string, Array<{
+  matchId: string;
+  result: 'win' | 'loss';
+  seriesId: string;
+  seriesRegion: string;
+  duration: string;
+  heroes: string[];
+  opponent: {
+    teamId: string;
+    teamName: string;
+    teamTag: string;
+  };
+  date: string;
+  leagueId: string;
+  leagueName: string;
+}>> } {
+  const teamName = extractTeamNameFromHtml(html, teamId);
+  const matchIdsByLeague: Record<string, Array<{
+    matchId: string;
+    result: 'win' | 'loss';
+    seriesId: string;
+    seriesRegion: string;
+    duration: string;
+    heroes: string[];
+    opponent: {
+      teamId: string;
+      teamName: string;
+      teamTag: string;
+    };
+    date: string;
+    leagueId: string;
+    leagueName: string;
+  }>> = {};
+  
+  const $ = cheerio.load(html);
+  $('table.table tbody tr').each((_, row) => {
+    const $row = $(row);
+    
+    // Extract league info
+    const leagueLink = $row.find('td:first-child a.esports-league');
+    const leagueHref = leagueLink.attr('href') || '';
+    const leagueId = leagueHref.split('/').pop()?.split('-')[0] || 'unknown';
+    const leagueName = leagueLink.find('img').attr('alt') || 'Unknown League';
+    
+    // Extract match result and ID
+    const resultLink = $row.find('td:nth-child(2) a');
+    const matchHref = resultLink.attr('href') || '';
+    const matchId = matchHref.split('/').pop() || '';
+    const result: 'win' | 'loss' = resultLink.hasClass('won') ? 'win' : 'loss';
+    
+    // Extract series info
+    const seriesLink = $row.find('td:nth-child(3) a');
+    const seriesHref = seriesLink.attr('href') || '';
+    const seriesId = seriesHref.split('/').pop() || '';
+    const seriesRegion = $row.find('td:nth-child(3) small').text().trim();
+    
+    // Extract duration
+    const duration = $row.find('td:nth-child(4)').text().trim();
+    
+    // Extract heroes
+    const heroes: string[] = [];
+    $row.find('td:nth-child(5) .image-container-hero img').each((_, heroImg) => {
+      const heroName = $(heroImg).attr('title') || '';
+      if (heroName) heroes.push(heroName);
+    });
+    
+    // Extract opponent info
+    const opponentLink = $row.find('td:last-child a.esports-team');
+    const opponentHref = opponentLink.attr('href') || '';
+    const opponentTeamId = opponentHref.split('/').pop()?.split('-')[0] || '';
+    const opponentTeamName = opponentLink.find('.team-text').text().trim();
+    const opponentTeamTag = opponentLink.find('img').attr('alt') || '';
+    
+    // Extract date
+    const dateElement = $row.find('td:nth-child(2) time');
+    const date = dateElement.attr('datetime') || dateElement.text().trim();
+    
+    // Create match object
+    const matchData = {
+      matchId,
+      result,
+      seriesId,
+      seriesRegion,
+      duration,
+      heroes,
+      opponent: {
+        teamId: opponentTeamId,
+        teamName: opponentTeamName,
+        teamTag: opponentTeamTag
+      },
+      date,
+      leagueId,
+      leagueName
+    };
+    
+    // Group by league
     if (!matchIdsByLeague[leagueId]) {
       matchIdsByLeague[leagueId] = [];
     }
-    matchIdsByLeague[leagueId].push(match[1]);
-  }
-  return { [leagueId]: matchIdsByLeague[leagueId] || [] };
-}
-
-export function parseTeamMatchesHtml(html: string, leagueId: string, teamId: string): { teamName: string; matchIdsByLeague: Record<string, string[]> } {
-  const teamName = extractTeamNameFromHtml(html, teamId);
-  const matchIdsByLeague = extractMatchIdsByLeague(html, leagueId);
+    matchIdsByLeague[leagueId].push(matchData);
+  });
+  
   return { teamName, matchIdsByLeague };
 }
 
@@ -280,7 +428,7 @@ async function getTeamAndMatchIds(
   | { error: string }
 > {
   logWithTimestampToFile('log', `[ORCHESTRATION] getTeamAndMatchIds: teamId=${teamId}, leagueId=${leagueId}, forceRefresh=${forceRefresh}`);
-  const teamResult = await getTeamNameAndMatches(teamId, leagueId, forceRefresh);
+  const teamResult = await getTeamNameAndMatches(teamId, forceRefresh);
   logWithTimestampToFile('log', `[ORCHESTRATION] getTeamAndMatchIds: teamResult=${JSON.stringify(teamResult)}`);
   const early = getEarlyReturn(teamResult);
   if (early) return early;

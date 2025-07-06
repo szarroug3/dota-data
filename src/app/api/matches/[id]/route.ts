@@ -6,8 +6,8 @@
  *       - Matches
  *     summary: Get match data from OpenDota
  *     description: |
- *       Returns processed match data from OpenDota API.
- *       Fetches match details, processes them, and returns structured match data.
+ *       Returns match data immediately if cached, or waits for fetch to complete.
+ *       Always returns 200 with the actual data.
  *     parameters:
  *       - in: path
  *         name: id
@@ -16,7 +16,7 @@
  *           type: string
  *         description: Match ID
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -27,11 +27,11 @@
  *                 description: Force refresh - bypass cache and fetch fresh data
  *     responses:
  *       200:
- *         description: Processed match data
+ *         description: Match data
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MatchResponse'
+ *               $ref: '#/components/schemas/OpenDotaMatch'
  *       400:
  *         description: Invalid input
  *         content:
@@ -54,75 +54,53 @@
 import { getMatch } from '@/lib/api/opendota/matches';
 import { cacheService } from '@/lib/cache-service';
 import { logWithTimestampToFile } from '@/lib/server-logger';
-import { processMatchDecoupled } from '@/lib/services/match-processing-service';
+import { getMatchCacheFilename, getMatchCacheKey } from '@/lib/utils/cache-keys';
 import type { OpenDotaMatch } from '@/types/opendota';
-import { MatchRequest, MatchResponse, ApiErrorResponse } from '@/types/api';
 
 const debug = (...args: unknown[]) => {
-  logWithTimestampToFile('log', '[MATCH DATA POLL]', ...args);
+  logWithTimestampToFile('log', '[MATCH DATA]', ...args);
 };
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id: _id } = await params;
-  debug('POST: Handler called for match', _id);
+  const { id } = await params;
+  debug('POST: Handler called for match', id);
   
+  // 1. Parse request body for force option
   let force = false;
   try {
     const body = await request.json();
-    const requestBody = body as MatchRequest;
-    force = requestBody.force || false;
-    debug('POST: Parsed request body', { force });
+    force = body.force || false;
   } catch (err) {
-    debug('POST: Failed to parse JSON body', err);
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' } as ApiErrorResponse), { 
-      status: 400, 
-      headers: { 'Content-Type': 'application/json' } 
-    });
+    debug('POST: Failed to parse JSON body, using default force=false', err);
   }
 
-  const matchCacheKey = `opendota-match-${_id}`;
-  const matchFilename = `opendota-match-${_id}.json`;
-  
-  // Check cache first (unless force refresh)
+  const cacheKey = getMatchCacheKey(id);
+  const filename = getMatchCacheFilename(id);
+  const TTL = 14 * 24 * 60 * 60; // 14 days
+
+  // 2. Check cache first (unless force=true)
   if (!force) {
-    debug('POST: Checking cache for match', _id);
-    const matchData = await cacheService.get<OpenDotaMatch>(matchCacheKey, matchFilename);
-    if (matchData) {
-      debug('POST: Match file present, returning processed data');
-      const processed = processMatchDecoupled(matchData);
-      return new Response(JSON.stringify(processed as MatchResponse), { 
-        status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
-      });
+    const cached = await cacheService.get<OpenDotaMatch>(cacheKey, filename, TTL);
+    if (cached) {
+      debug('POST: Cache hit, returning data');
+      return new Response(JSON.stringify(cached), { status: 200 });
     }
   }
 
+  // 3. Invalidate cache if force refresh
   if (force) {
     debug('POST: Force refresh requested, invalidating cache');
-    await cacheService.invalidate(matchCacheKey, matchFilename);
+    await cacheService.invalidate(cacheKey, filename);
   }
 
-  debug('POST: Match data not in cache, fetching and waiting for completion');
-  
+  // 4. Call service layer
   try {
-    debug('POST: Calling getMatch for match', _id);
-    await getMatch(Number(_id), true);
-    debug('POST: getMatch completed for match', _id);
-    const matchData = await cacheService.get<OpenDotaMatch>(matchCacheKey, matchFilename);
-    if (!matchData) {
-      throw new Error('Failed to fetch match data');
-    }
-    const processed = processMatchDecoupled(matchData);
-    debug('POST: Match data fetched and processed successfully');
-    return new Response(JSON.stringify(processed as MatchResponse), { 
-      status: 200, 
-      headers: { 'Content-Type': 'application/json' } 
-    });
+    debug('POST: Fetching match data');
+    const data = await getMatch(Number(id), force);
+    debug('POST: Match data fetched successfully');
+    return new Response(JSON.stringify(data), { status: 200 });
   } catch (err) {
     debug('POST: Error fetching match data:', err);
-    return new Response(JSON.stringify({ error: 'Failed to fetch match data' } as ApiErrorResponse), { 
-      status: 500, 
-      headers: { 'Content-Type': 'application/json' } 
-    });
+    return new Response(JSON.stringify({ error: 'Failed to fetch match data' }), { status: 500 });
   }
 }

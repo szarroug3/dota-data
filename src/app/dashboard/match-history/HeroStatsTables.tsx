@@ -7,19 +7,16 @@
 import { HeroStatsFilterControls } from "@/components/dashboard/hero-stats/HeroStatsFilterControls";
 import { useHeroStatsFilters } from "@/components/dashboard/hero-stats/HeroStatsFilters";
 import { HeroStatsTable } from "@/components/dashboard/hero-stats/HeroStatsTable";
-import type { Team } from "@/types/team";
 import type { HeroStatsData } from "./match-utils";
 
 interface HeroStatsTablesProps {
   heroStats: HeroStatsData;
-  currentTeam: Team;
   getHighlightStyle: (hero: string, type: string) => string;
   loading?: boolean;
 }
 
 export default function HeroStatsTables({ 
   heroStats, 
-  currentTeam, 
   getHighlightStyle, 
   loading = false 
 }: HeroStatsTablesProps) {
@@ -60,6 +57,7 @@ export default function HeroStatsTables({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Left: Our Picks */}
         <HeroStatsTable
           title="Our Picks"
           data={heroStats.ourPicks}
@@ -70,16 +68,7 @@ export default function HeroStatsTables({
           getHighlightStyle={getHighlightStyle}
         />
 
-        <HeroStatsTable
-          title="Our Bans"
-          data={heroStats.ourBans}
-          sortBy={filters.ourBansSortBy}
-          sortOrder={filters.ourBansSortOrder}
-          onSortChange={(sortBy, sortOrder) => handleSortChange("ourBans", sortBy, sortOrder)}
-          filters={filters}
-          getHighlightStyle={getHighlightStyle}
-        />
-
+        {/* Top Right: Opponent Picks */}
         <HeroStatsTable
           title="Opponent Picks"
           data={heroStats.opponentPicks}
@@ -90,6 +79,18 @@ export default function HeroStatsTables({
           getHighlightStyle={getHighlightStyle}
         />
 
+        {/* Bottom Left: Our Bans */}
+        <HeroStatsTable
+          title="Our Bans"
+          data={heroStats.ourBans}
+          sortBy={filters.ourBansSortBy}
+          sortOrder={filters.ourBansSortOrder}
+          onSortChange={(sortBy, sortOrder) => handleSortChange("ourBans", sortBy, sortOrder)}
+          filters={filters}
+          getHighlightStyle={getHighlightStyle}
+        />
+
+        {/* Bottom Right: Opponent Bans */}
         <HeroStatsTable
           title="Opponent Bans"
           data={heroStats.opponentBans}

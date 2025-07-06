@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4456480,
+    "personaname": "EternalEnvy",
+    "name": "EternalEnvy",
+    "plus": true,
+    "cheese": 517,
+    "steamid": "76561198460042655",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/20/53.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/62/45_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/45/99_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4456480",
+    "last_login": "2025-07-03T12:25:35.116Z",
+    "loccountrycode": "EU",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 76,
+  "leaderboard_rank": 440,
+  "total_matches": 4387,
+  "win": 1817,
+  "kda": 6.38,
+  "gpm": 585,
+  "xpm": 525,
+  "avg_seconds_per_match": 1808
+}

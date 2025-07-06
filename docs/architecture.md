@@ -33,6 +33,32 @@ The previous GET/POST pattern has been simplified:
 - **Removed**: POST endpoints that returned 202 "queued" status
 - **Simplified**: Single POST endpoint that always returns data
 
+## Frontend Integration Architecture
+
+### League Filtering Pattern
+The frontend implements league filtering while the backend provides comprehensive data:
+
+1. **Backend Data Provision**: `/api/teams/[id]` returns all matches organized by league
+2. **Frontend Filtering**: Frontend selects league and filters displayed data
+3. **League Validation**: Frontend validates league exists using `/api/leagues/[id]`
+4. **Background Processing**: Frontend starts background fetching of filtered matches
+
+### Real-Time Updates
+The frontend implements real-time updates with the following patterns:
+
+1. **Immediate Response**: All endpoints return data immediately (no polling)
+2. **Background Processing**: Frontend can start background jobs for additional data
+3. **Context Updates**: Frontend contexts update in real-time as data loads
+4. **Loading States**: Frontend shows skeleton loading states during data fetching
+
+### Error Handling Patterns
+Standardized error handling for frontend integration:
+
+1. **HTTP Status Codes**: 200 (success), 400 (bad request), 500 (server error)
+2. **Error Messages**: Clear error messages for debugging
+3. **League Validation**: Specific errors for missing leagues
+4. **Empty States**: Support for empty data scenarios
+
 ## Data Flow Diagrams
 
 ### 1. Synchronous Data Loading Flow
@@ -75,8 +101,8 @@ flowchart TD
     PROCESS -.-> N3
 ```
 
-### 2. Team Import Flow
-The following sequence diagram shows the team import process:
+### 2. Team Import Flow with League Filtering
+The following sequence diagram shows the team import process with league filtering:
 
 ```mermaid
 sequenceDiagram
@@ -87,430 +113,247 @@ sequenceDiagram
     participant D as Dotabuff API
     participant O as OpenDota API
     
-    F->>A: POST /api/teams/{id}/matches
-    Note over F,A: { leagueId: "1234", force: false }
+    F->>A: POST /api/teams/{id}
+    Note over F,A: { force: false }
+    
+    F->>A: POST /api/leagues/{id}
+    Note over F,A: { force: false }
     
     A->>C: Check cache for team data
+    A->>C: Check cache for league data
     
     alt Data in cache
         C->>A: Return cached data
-        A->>F: Return team name + match IDs immediately
+        A->>F: Return team + league data immediately
     else Data not in cache
         A->>Q: Queue team import job
+        A->>Q: Queue league import job
         Q->>D: Fetch team HTML from Dotabuff
+        Q->>D: Fetch league HTML from Dotabuff
         D->>Q: Return team HTML
-        Q->>Q: Parse team name and match IDs
-        Q->>C: Store team name and match IDs in cache
+        D->>Q: Return league HTML
+        Q->>Q: Parse team name and match IDs by league
+        Q->>C: Store team and league data in cache
         
-        Note over Q: Start background jobs before returning:
-        Q->>Q: Queue match data fetching for each match ID
+        Note over Q: Start background jobs:
+        Q->>Q: Queue match data fetching for filtered matches
         Q->>O: Fetch match data (background)
         O->>Q: Return match data
         Q->>Q: Parse player IDs from match data
-        Q->>Q: Queue player data fetching for each player ID
+        Q->>Q: Queue player data fetching for active team players
         Q->>O: Fetch player data (background)
         
-        C->>A: Team data ready
-        A->>F: Return team name + match IDs
+        C->>A: Team and league data ready
+        A->>F: Return team + league data
     end
+    
+    Note over F: Frontend filters by league
+    Note over F: Frontend starts background fetching
 ```
 
-### 3. Force Refresh Flow
-The following flowchart shows how force refresh works:
+### 3. Frontend League Filtering Flow
+The following flowchart shows how the frontend handles league filtering:
 
 ```mermaid
 flowchart TD
-    %% Force Refresh Request
-    FRONTEND[Frontend POST with force=true] --> API[API Route Handler]
+    %% User Input
+    USER[User enters Team ID + League ID] --> VALIDATE[Validate Input]
     
-    %% Force Refresh Logic
-    API --> FORCE{Force Refresh?}
-    FORCE -->|Yes| INVALIDATE[Invalidate Cache]
-    FORCE -->|No| CACHE{Cache Check}
-    
-    %% Cache Invalidation
-    INVALIDATE --> QUEUE[Queue Background Job]
-    QUEUE --> WAIT[Wait for Completion]
-    WAIT --> PROCESS[Process Background Job]
-    
-    %% Normal Cache Check
-    CACHE -->|Data Found| RETURN[Return Data 200]
-    CACHE -->|Data Missing| QUEUE
-    
-    %% Background Processing
-    PROCESS --> FETCH[Fetch Fresh Data]
-    FETCH --> STORE[Store in Cache]
-    STORE --> RETURN
-    
-    %% Response
-    RETURN --> FRONTEND_RESPONSE[Frontend Receives Fresh Data]
-    
-    %% Notes
-    N1[Force refresh bypasses cache]
-    N2[Always fetches fresh data]
-    N3[Updates cache with new data]
-    
-    INVALIDATE -.-> N1
-    FETCH -.-> N2
-    STORE -.-> N3
-```
-
-### 4. Error Handling Flow
-The following flowchart shows error handling patterns:
-
-```mermaid
-flowchart TD
-    %% Request Flow
-    REQUEST[POST Request] --> API[API Route Handler]
+    %% Parallel API Calls
+    VALIDATE --> PARALLEL[Call APIs in Parallel]
+    PARALLEL --> TEAM_API[POST /api/teams/{id}]
+    PARALLEL --> LEAGUE_API[POST /api/leagues/{id}]
     
     %% Validation
-    API --> VALIDATE{Valid Request?}
-    VALIDATE -->|No| ERROR_400[Return 400 Bad Request]
+    TEAM_API --> CHECK_LEAGUE{League in Team Data?}
+    LEAGUE_API --> CHECK_LEAGUE
     
-    %% Processing
-    VALIDATE -->|Yes| PROCESS[Process Request]
-    PROCESS --> SUCCESS{Success?}
+    %% Error Path
+    CHECK_LEAGUE -->|No| ERROR[Show Error: No matches for league]
     
     %% Success Path
-    SUCCESS -->|Yes| RETURN_200[Return 200 with Data]
+    CHECK_LEAGUE -->|Yes| FILTER[Filter Matches by League]
     
-    %% Error Paths
-    SUCCESS -->|No| ERROR_TYPE{Error Type?}
-    ERROR_TYPE -->|Rate Limited| ERROR_429[Return 429 Rate Limited]
-    ERROR_TYPE -->|External API Error| ERROR_502[Return 502 Bad Gateway]
-    ERROR_TYPE -->|Internal Error| ERROR_500[Return 500 Internal Error]
+    %% Background Processing
+    FILTER --> BACKGROUND[Start Background Fetching]
+    BACKGROUND --> FETCH_MATCHES[Fetch Match Details]
+    FETCH_MATCHES --> EXTRACT_PLAYERS[Extract Player IDs]
+    EXTRACT_PLAYERS --> FETCH_PLAYERS[Fetch Player Data]
     
-    %% Response
-    RETURN_200 --> FRONTEND[Frontend Success]
-    ERROR_400 --> FRONTEND_ERROR[Frontend Error]
-    ERROR_429 --> FRONTEND_ERROR
-    ERROR_502 --> FRONTEND_ERROR
-    ERROR_500 --> FRONTEND_ERROR
+    %% Real-Time Updates
+    FETCH_MATCHES --> UPDATE_MATCHES[Update Match Context]
+    FETCH_PLAYERS --> UPDATE_PLAYERS[Update Player Context]
+    
+    %% UI Updates
+    UPDATE_MATCHES --> DISPLAY_MATCHES[Display Matches]
+    UPDATE_PLAYERS --> DISPLAY_PLAYERS[Display Players]
     
     %% Notes
-    N1[No 404 responses - data is fetched if missing]
-    N2[Clear error messages for debugging]
-    N3[Graceful degradation on errors]
+    N1[Real-time updates]
+    N2[Skeleton loading states]
+    N3[League-specific display]
     
-    VALIDATE -.-> N1
-    ERROR_TYPE -.-> N2
-    FRONTEND_ERROR -.-> N3
+    UPDATE_MATCHES -.-> N1
+    DISPLAY_MATCHES -.-> N2
+    DISPLAY_MATCHES -.-> N3
+```
+
+### 4. Real-Time Update Flow
+The following flowchart shows how real-time updates work:
+
+```mermaid
+flowchart TD
+    %% Data Loading
+    LOAD[Data Loading Starts] --> CONTEXT[Update Context]
+    
+    %% Context Updates
+    CONTEXT --> UI_UPDATE[Trigger UI Update]
+    UI_UPDATE --> SKELETON[Show Skeleton Loading]
+    
+    %% Data Arrives
+    DATA[Data Arrives] --> UPDATE[Update Context with Data]
+    UPDATE --> RENDER[Render Actual Data]
+    
+    %% Progressive Updates
+    RENDER --> MORE_DATA{More Data Coming?}
+    MORE_DATA -->|Yes| CONTEXT
+    MORE_DATA -->|No| COMPLETE[Loading Complete]
+    
+    %% Notes
+    N1[Progressive display]
+    N2[Responsive UI]
+    N3[No blocking]
+    
+    RENDER -.-> N1
+    SKELETON -.-> N2
+    CONTEXT -.-> N3
 ```
 
 ## System Architecture Diagrams
 
-### Simplified API Orchestration Flow
-The following diagram shows the simplified orchestration pattern used across all API endpoints:
-
-```mermaid
-flowchart TD
-    %% API Layer
-    POST([POST Request])
-    
-    %% Cache Check Layer
-    POST --> CC{Check Cache}
-    
-    %% Cache Hit Path
-    CC --> CACHED[Return Data 200]
-    
-    %% Cache Miss Path
-    CC --> QUEUE[Queue Background Job]
-    QUEUE --> WAIT[Wait for Completion]
-    WAIT --> PROCESS[Process Background Job]
-    
-    %% Background Job System
-    PROCESS --> BJ[Background Job Queue]
-    BJ --> WJ[Worker Process]
-    WJ --> DC{Data Source Decision}
-    
-    %% Mock vs Real Data Sources
-    DC --> MOCK{Is Mock Enabled?}
-    MOCK -- Yes --> MG[Mock Data Generator]
-    MOCK -- No --> RE[Real API Endpoint]
-    
-    %% Data Flow
-    MG --> MF[Generate Mock Data]
-    RE --> RF[Fetch Real Data]
-    MF --> CACHE[Write to Cache]
-    RF --> CACHE
-    
-    %% Rate Limiting
-    RF --> RL{Rate Limited?}
-    RL -- Yes --> RETRY[Wait & Retry]
-    RETRY --> RF
-    RL -- No --> CACHE
-    
-    %% Response Flow
-    CACHED --> RESP[API Response 200]
-    CACHE --> RESP
-    
-    %% Notes
-    N1[POST: Always returns data]
-    N2[POST: Waits for background jobs to complete]
-    N3[Rate limiting is instance-local]
-    N4[Queue state is instance-local]
-    N5[Synchronous data loading]
-    
-    POST -.-> N1
-    WAIT -.-> N2
-    RL -.-> N3
-    BJ -.-> N4
-    PROCESS -.-> N5
+### Frontend Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend Components                     │
+├─────────────────────────────────────────────────────────────┤
+│  Pages                    │  Components                   │
+│  ├─ Team Management       │  ├─ Match Cards              │
+│  ├─ Match History         │  ├─ Player Stats              │
+│  ├─ Player Stats          │  ├─ League Filter             │
+│  └─ Other Pages           │  └─ Loading States            │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Context Layer                           │
+├─────────────────────────────────────────────────────────────┤
+│  Team Data Context        │  Match Data Context           │
+│  ├─ Team Data            │  ├─ Matches                   │
+│  ├─ League Data          │  ├─ Loading States            │
+│  ├─ League Selection     │  └─ Real-time Updates        │
+│  └─ Background Fetching  │                               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    API Layer                               │
+├─────────────────────────────────────────────────────────────┤
+│  POST /api/teams/[id]    │  POST /api/matches/[id]       │
+│  POST /api/leagues/[id]  │  POST /api/players/[id]       │
+│  POST /api/heroes        │  POST /api/items              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Frontend Data Loading Pattern
-The following diagram shows how the frontend handles data loading with the simplified synchronous approach:
-
-```mermaid
-flowchart TD
-    %% Initial Page Load
-    LOAD([Page Load])
-    LOAD --> POST[POST Request]
-    POST --> LOADING[Show Loading State]
-    
-    %% Backend Processing
-    POST --> CACHE{Check Cache}
-    CACHE --> CACHED[Return Data Immediately]
-    CACHE --> QUEUE[Queue Background Job]
-    QUEUE --> WAIT[Wait for Completion]
-    WAIT --> PROCESS[Process Background Job]
-    PROCESS --> COMPLETE[Data Ready]
-    
-    %% UI Updates
-    CACHED --> UI1[Show Data Immediately]
-    COMPLETE --> UI2[Show Data After Loading]
-    
-    %% Error Handling
-    POST --> ERROR[Error State]
-    ERROR --> UI3[Show Error Message]
-    
-    %% Examples
-    TEAM_LOAD([Team Management Page])
-    TEAM_LOAD --> TEAM_POST[POST api teams id matches]
-    TEAM_POST --> TEAM_DATA[Show Team Data]
-    
-    MATCH_REQ([Match History Page])
-    MATCH_REQ --> MATCH_POST[POST api matches id]
-    MATCH_POST --> MATCH_DATA[Show Match Data]
-    
-    PLAYER_REQ([Player Stats Page])
-    PLAYER_REQ --> PLAYER_POST[POST api players id data]
-    PLAYER_POST --> PLAYER_DATA[Show Player Data]
-    
-    %% Notes
-    N1[All endpoints use POST]
-    N2[No polling required]
-    N3[Synchronous data loading]
-    N4[Simple error handling]
-    
-    POST -.-> N1
-    LOADING -.-> N2
-    WAIT -.-> N3
-    ERROR -.-> N4
+### Data Flow Architecture
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   User Input    │    │  League Filter  │    │  Background     │
+│                 │    │                 │    │  Processing     │
+│ • Team ID       │───▶│ • League ID     │───▶│ • Match Data    │
+│ • League ID     │    │ • Validation    │    │ • Player Data   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  API Calls      │    │  Context        │    │  Real-time      │
+│                 │    │  Updates        │    │  UI Updates     │
+│ • Parallel      │    │ • Team Data     │    │ • Skeleton      │
+│ • Validation    │    │ • Match Data    │    │ • Player Data   │
+│ • Error Handle  │    │ • Player Data   │    │ • Real-time     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### Rate Limiting and Queue Management
-The following diagram shows how rate limiting and queue management work in the serverless environment:
+## Key Architectural Decisions
 
-```mermaid
-flowchart TD
-    %% Request Flow
-    REQ([API Request])
-    REQ --> INSTANCE{Which Instance?}
-    
-    %% Instance A
-    INSTANCE --> A[Instance A]
-    A --> RL_A[Rate Limiter A]
-    RL_A --> CHECK_A{Can Make Request?}
-    
-    %% Instance B
-    INSTANCE --> B[Instance B]
-    B --> RL_B[Rate Limiter B]
-    RL_B --> CHECK_B{Can Make Request?}
-    
-    %% Rate Limit Checks
-    CHECK_A --> ALLOW_A[Allow Request]
-    CHECK_A --> BLOCK_A[Rate Limited]
-    CHECK_B --> ALLOW_B[Allow Request]
-    CHECK_B --> BLOCK_B[Rate Limited]
-    
-    %% Queue Management
-    ALLOW_A --> Q_A[Queue A]
-    ALLOW_B --> Q_B[Queue B]
-    
-    %% Background Processing
-    Q_A --> PROC_A[Process A]
-    Q_B --> PROC_B[Process B]
-    
-    %% External API
-    PROC_A --> API[External API]
-    PROC_B --> API
-    
-    %% Rate Limit Response
-    API --> RATE_LIMIT[429 Rate Limited]
-    RATE_LIMIT --> RETRY[Wait and Retry]
-    RETRY --> API
-    
-    %% Success Path
-    API --> SUCCESS[200 Success]
-    SUCCESS --> CACHE[Update Cache]
-    
-    %% Notes
-    N1[Rate limiters are instance-local]
-    N2[Queues are instance-local]
-    N3[No cross-instance coordination]
-    N4[Higher rate limit usage]
-    N5[Graceful 429 handling]
-    
-    RL_A -.-> N1
-    Q_A -.-> N2
-    INSTANCE -.-> N3
-    API -.-> N4
-    RATE_LIMIT -.-> N5
-```
+### 1. League Filtering Strategy
+- **Backend**: Provides comprehensive data for all leagues
+- **Frontend**: Filters and displays league-specific data
+- **Validation**: Frontend validates league exists before proceeding
+- **Flexibility**: Easy to switch between leagues without re-fetching
 
-## Current Architecture Decisions
+### 2. Real-Time Updates
+- **Context Updates**: React contexts update as data loads
+- **Skeleton Loading**: Show loading states during data fetching
+- **Progressive Display**: Display data as it becomes available
+- **Responsive UI**: Maintain responsive interface throughout
 
-### Simplified GET/POST Pattern
-All data endpoints follow a consistent pattern:
+### 3. Background Processing
+- **Parallel Fetching**: Fetch all matches in parallel
+- **Player Extraction**: Extract player IDs from match data
+- **Active Team Only**: Only fetch data for active team players
+- **Deduplication**: Avoid duplicate player data requests
 
-- **GET**: Check cache and return data if available, 404 if not found
-- **POST**: Check cache and return ready status if available, or queue background job and return queued status
+### 4. Error Handling
+- **League Validation**: Specific errors for missing leagues
+- **Empty States**: Generic messages for no data scenarios
+- **Manual Add**: Support for manual data addition
+- **Clear Messages**: Specific error messages for debugging
 
-### Instance-Local Rate Limiting
-Rate limiting is implemented per-instance using in-memory storage:
+## Implementation Benefits
 
-```typescript
-// rate-limiter.ts
-private requestCounts: Map<string, number[]> = new Map();
-private lastRequestTimes: Map<string, number> = new Map();
-private backoffTimes: Map<string, number> = new Map();
-```
+### 1. Simplified Frontend Code
+- No complex polling logic
+- Direct data loading patterns
+- Clear error handling
+- Standardized API calls
 
-### Fire-and-Forget Background Jobs
-Background jobs are queued and processed asynchronously:
+### 2. Better User Experience
+- Immediate data availability
+- Real-time updates
+- Responsive loading states
+- League-specific filtering
 
-1. **Route enqueues request** and returns immediately
-2. **Queue processor handles** the actual API call
-3. **Results are cached** for future requests
-4. **No blocking** of the main request flow
+### 3. Improved Performance
+- No unnecessary polling requests
+- Parallel data fetching
+- Efficient caching
+- Background processing
 
-### Serverless Environment Constraints
-The application is deployed on Vercel's free tier, which means:
-- Multiple serverless instances may handle requests simultaneously
-- No shared memory between instances
-- Limited external service dependencies
+### 4. Easier Maintenance
+- Standardized API patterns
+- Clear separation of concerns
+- Modular component structure
+- Comprehensive error handling
 
-### Trade-offs Accepted
-- **Higher rate limit usage** (multiple instances)
-- **Potential duplicate processing** (mitigated by queue deduplication)
-- **No cross-instance coordination** (each instance operates independently)
-- **Imperfect rate limiting** (but functional for most use cases)
+## Testing Strategy
 
-## Team Management Flow
+### 1. API Testing
+- Test all endpoints with standardized POST pattern
+- Verify error handling scenarios
+- Test cache behavior and force refresh
+- Validate league filtering functionality
 
-### Hybrid Loading Pattern
-The frontend uses a hybrid approach for data loading:
+### 2. Frontend Testing
+- Test league filtering functionality
+- Test real-time data updates
+- Test error handling scenarios
+- Test empty state handling
+- Test background data fetching
 
-1. **Immediate responses** when data is cached
-2. **Background loading** for heavy operations
-3. **Suspense/lazy loading** for responsive UI
-4. **Independent endpoints** for different data types
+### 3. Integration Testing
+- Test end-to-end data flow
+- Test league validation
+- Test background processing
+- Test real-time updates
 
-### Example Implementation
-```typescript
-// Team management page
-const loadTeam = async () => {
-  // Kick off team import (returns immediately if cached)
-  const response = await fetch('/api/teams/123/matches', {
-    method: 'POST',
-    body: JSON.stringify({ leagueId: '456' })
-  });
-  
-  if (response.status === 200) {
-    const data = await response.json();
-    setTeamData(data); // Team name, league name available immediately
-  }
-  
-  // Match/player data loaded independently via other endpoints
-};
-```
-
-## Graceful Rate Limit Handling
-
-When external services return 429 (rate limited), the application:
-
-1. **Uses retry headers** if provided by the service
-2. **Waits default amount of time** (60 seconds) if no retry header
-3. **Implements exponential backoff** for repeated failures
-4. **Logs rate limit events** for monitoring
-
-```typescript
-async function fetchWithRetry(url: string, options: RequestInit) {
-  const maxRetries = 3;
-  let attempt = 0;
-  
-  while (attempt < maxRetries) {
-    try {
-      const response = await fetch(url, options);
-      
-      if (response.status === 429) { // Rate limited
-        const retryAfter = response.headers.get('Retry-After');
-        const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 60000;
-        
-        console.log(`Rate limited, waiting ${waitTime}ms before retry`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        attempt++;
-        continue;
-      }
-      
-      return response;
-    } catch (error) {
-      attempt++;
-      if (attempt >= maxRetries) throw error;
-      
-      // Exponential backoff
-      const waitTime = Math.pow(2, attempt) * 1000;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-  }
-}
-```
-
-## Future Considerations
-
-### When to Upgrade
-Consider upgrading to external services when:
-- **Rate limiting becomes problematic** (frequent 429s)
-- **Queue coordination is needed** (cross-instance state)
-- **Higher reliability required** (persistent queue state)
-- **Budget allows** for paid services
-
-### Potential Upgrades
-- **Redis-based rate limiting** for cross-instance coordination
-- **Bull/BullMQ** for robust queue management
-- **Database persistence** for critical state
-- **External queue services** (AWS SQS, Google Cloud Tasks)
-
-## Monitoring and Debugging
-
-### Logging
-All rate limiting and queue operations are logged:
-
-```typescript
-logWithTimestampToFile('log', `[RateLimiter] Rate limit check for ${service}: ${requests.length}/${config.maxRequests}`);
-logWithTimestampToFile('log', `[RequestQueue] Enqueued request ${requestId} for ${service}`);
-```
-
-### Queue Stats
-Queue statistics are available for monitoring:
-
-```typescript
-const stats = cacheService.getQueueStats();
-const activeSignatures = cacheService.getActiveSignatures();
-```
-
-### Error Handling
-- **Rate limit events** are logged and handled gracefully
-- **Queue failures** are logged and retried
-- **Cache misses** are logged for debugging 
+This architecture provides a robust foundation for the Dota Data dashboard with simplified API patterns, efficient data loading, and excellent user experience. 

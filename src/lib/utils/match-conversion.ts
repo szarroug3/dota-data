@@ -5,8 +5,9 @@
  * used throughout the application.
  */
 
-import type { Match as TeamMatch } from '@/types/team';
 import type { Match as DashboardMatch, PickBan } from '@/app/dashboard/match-history/match-utils';
+import type { OpenDotaFullMatch } from '@/types/opendota';
+import type { Match as TeamMatch } from '@/types/team';
 
 /**
  * Convert TeamMatch to DashboardMatch for use in dashboard components
@@ -16,8 +17,11 @@ export function convertTeamMatchToDashboardMatch(teamMatch: TeamMatch): Dashboar
     id: teamMatch.id,
     match_id: teamMatch.openDota?.match_id?.toString(),
     result: teamMatch.result,
-    openDota: teamMatch.openDota as any, // Type assertion for compatibility
-    picks_bans: (teamMatch.openDota?.picks_bans || []) as PickBan[]
+    openDota: teamMatch.openDota as OpenDotaFullMatch,
+    picks_bans: (teamMatch.openDota?.picks_bans || []).map(pb => ({
+      ...pb,
+      hero_id: pb.hero_id.toString(),
+    })) as PickBan[],
   };
 }
 

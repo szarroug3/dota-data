@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4891053,
+    "personaname": "Taiga",
+    "name": "Taiga",
+    "plus": true,
+    "cheese": 734,
+    "steamid": "76561198669899724",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/75/72.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/9/22_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/57/26_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4891053",
+    "last_login": "2025-07-01T01:14:02.579Z",
+    "loccountrycode": "CIS",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 77,
+  "leaderboard_rank": 998,
+  "total_matches": 1565,
+  "win": 1342,
+  "kda": 3.95,
+  "gpm": 520,
+  "xpm": 763,
+  "avg_seconds_per_match": 2386
+}

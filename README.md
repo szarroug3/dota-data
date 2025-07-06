@@ -97,7 +97,7 @@ const loadTeam = async () => {
   const response = await fetch('/api/teams/123/matches', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ leagueId: '456' })
+    body: JSON.stringify({ force: false })
   });
   
   if (response.ok) {

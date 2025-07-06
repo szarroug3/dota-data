@@ -1,6 +1,6 @@
 import { usePlayerData } from '@/contexts/player-data-context';
 import { PlayerStats } from '@/lib/types/data-service';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 
 export function usePlayerStats(playerId: string | null, playerName: string, role: string) {
   const { 
@@ -11,30 +11,27 @@ export function usePlayerStats(playerId: string | null, playerName: string, role
     updatePlayerData 
   } = usePlayerData();
 
-  const [shouldFetch, setShouldFetch] = useState(false);
-
   // Get player data
   const playerData = playerId ? getPlayerData(playerId) : null;
   const loading = playerId ? isPlayerLoading(playerId) : false;
   const error = playerId ? getPlayerError(playerId) : null;
 
-  // Trigger fetch when playerId changes or when we need to fetch
+  // Trigger fetch when playerId changes
   useEffect(() => {
-    if (playerId && playerName && role && !playerData && !loading && shouldFetch) {
+    if (playerId && playerName && role && !playerData && !loading) {
       fetchPlayerData(playerId, playerName, role);
-      setShouldFetch(false);
     }
-  }, [playerId, playerName, role, playerData, loading, shouldFetch, fetchPlayerData]);
+  }, [playerId, playerName, role, playerData, loading, fetchPlayerData]);
 
-  // Function to trigger fetch
-  const triggerFetch = useCallback(() => {
+  // Function to trigger refetch
+  const refetch = useCallback(() => {
     if (playerId && playerName && role) {
-      setShouldFetch(true);
+      fetchPlayerData(playerId, playerName, role);
     }
-  }, [playerId, playerName, role]);
+  }, [playerId, playerName, role, fetchPlayerData]);
 
   // Update player data
-  const updatePlayerDataCallback = useCallback((data: PlayerStats) => {
+  const updateData = useCallback((data: PlayerStats) => {
     if (playerId) {
       updatePlayerData(playerId, data);
     }
@@ -44,7 +41,7 @@ export function usePlayerStats(playerId: string | null, playerName: string, role
     data: playerData,
     loading,
     error,
-    refetch: triggerFetch,
-    updateData: updatePlayerDataCallback,
+    refetch,
+    updateData,
   };
 } 

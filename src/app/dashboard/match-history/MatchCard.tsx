@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatDuration, getHeroImageUrl, getHeroNameSync, getDashboardMatchResult, getOpponentName, getDashboardScoreWithResult, getTeamSide } from "@/lib/utils";
+import { formatDuration, getDashboardMatchResult, getDashboardScoreWithResult, getHeroImageUrl, getHeroNameSync, getOpponentName } from "@/lib/utils";
+import type { OpenDotaMatch, OpenDotaMatchPlayer } from "@/types/opendota";
 import type { Team } from "@/types/team";
 import { EyeOff, RefreshCw } from "lucide-react";
 import type { Match } from "./match-utils";
+import { getPickOrder } from "./match-utils";
 
 // Custom icon components from sidebar
 const DotabuffIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -60,27 +62,20 @@ interface MatchCardProps {
   teamSide?: string;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+  loading?: boolean;
 }
 
-function getHeroPicks(match: Match, _currentTeam: Team) {
+function getHeroPicks(match: Match) {
   if (!match.openDota?.players) return { radiant: [], dire: [] };
   const radiantHeroes = match.openDota.players
     .filter((p) => p.isRadiant === true)
-    .map((p) => getHeroNameSync((p as any).hero_id))
+    .map((p) => getHeroNameSync((p as OpenDotaMatchPlayer).hero_id))
     .slice(0, 5);
   const direHeroes = match.openDota.players
     .filter((p) => p.isRadiant === false)
-    .map((p) => getHeroNameSync((p as any).hero_id))
+    .map((p) => getHeroNameSync((p as OpenDotaMatchPlayer).hero_id))
     .slice(0, 5);
   return { radiant: radiantHeroes, dire: direHeroes };
-}
-
-function getPickOrder(match: Match, currentTeam: Team) {
-  if (!match.openDota?.picks_bans) return null;
-  const firstPick = match.openDota.picks_bans.find((pb: { is_pick: boolean }) => pb.is_pick);
-  if (!firstPick) return null;
-  const ourTeam = getTeamSide(match, currentTeam) === "Radiant" ? 0 : 1;
-  return firstPick.team === ourTeam ? "FP" : "SP";
 }
 
 function HeroPicksDisplay({ heroPicks }: { heroPicks: { radiant: string[]; dire: string[] } }) {
@@ -180,6 +175,7 @@ export default function MatchCard({
   teamSide,
   isRefreshing = false,
   onRefresh,
+  loading = false,
 }: MatchCardProps) {
   let matchUrl = "";
   let matchLogo = null;
@@ -192,19 +188,28 @@ export default function MatchCard({
     matchLogo = <OpenDotaIcon className="w-5 h-5" />;
   }
 
-  const heroPicks = getHeroPicks(match, currentTeam);
+  const heroPicks = getHeroPicks(match);
   const pickOrder = getPickOrder(match, currentTeam);
 
   // Use openDota date/duration if available, otherwise fallback
-  const matchDate = (match.openDota && (match.openDota as any).start_time)
-    ? new Date((match.openDota as any).start_time * 1000).toISOString()
-    : (match as any).date || "";
-  const matchDuration = match.openDota?.duration ?? (match as any).duration ?? 0;
+  let matchDate: Date | undefined = undefined;
+  if (match.openDota && (match.openDota as OpenDotaMatch).start_time) {
+    matchDate = new Date((match.openDota as OpenDotaMatch).start_time * 1000);
+  } else if ('date' in match && match.date) {
+    matchDate = new Date(match.date as string);
+  }
+
+  let formattedDate = "?";
+  if (matchDate instanceof Date && !isNaN(matchDate.getTime())) {
+    formattedDate = matchDate.toLocaleDateString('en-US');
+  }
+
+  const matchDuration = match.openDota?.duration ?? (match as { duration?: number }).duration ?? 0;
 
   return (
     <div
-      className={`p-4 border-b cursor-pointer hover:bg-muted/30 transition-colors relative ${isSelected ? "bg-primary/10 border-l-4 border-l-primary" : "border-l-4 !border-l-transparent"} ${isRefreshing ? "opacity-75" : ""}`}
-      onClick={() => onSelect(match.id!)}
+      className={`p-4 border-b transition-colors relative ${isSelected ? "bg-primary/10 border-l-4 border-l-primary" : "border-l-4 !border-l-transparent"} ${isRefreshing || loading ? "opacity-75" : ""} ${!loading ? "cursor-pointer hover:bg-muted/30" : "cursor-not-allowed"}`}
+      onClick={() => !loading && onSelect(match.id!)}
     >
       <div className="flex justify-between items-start">
         <div className="flex-1">
@@ -217,7 +222,7 @@ export default function MatchCard({
             )}
           </div>
           <div className="text-xs text-muted-foreground">
-            {formatDate(matchDate)}
+            {formattedDate}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Badge

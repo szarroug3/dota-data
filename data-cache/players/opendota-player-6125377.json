@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 6125377,
+    "personaname": "KheZu",
+    "name": "KheZu",
+    "plus": false,
+    "cheese": 201,
+    "steamid": "76561198365922947",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/22/40.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/21/13_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/75/22_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/6125377",
+    "last_login": "2025-07-03T04:43:09.331Z",
+    "loccountrycode": "CN",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 80,
+  "leaderboard_rank": 228,
+  "total_matches": 1913,
+  "win": 2242,
+  "kda": 2.49,
+  "gpm": 790,
+  "xpm": 842,
+  "avg_seconds_per_match": 3533
+}

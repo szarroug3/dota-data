@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 8657112,
+    "personaname": "Universe",
+    "name": "Universe",
+    "plus": false,
+    "cheese": 952,
+    "steamid": "76561198502626649",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/8/67.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/34/53_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/68/69_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/8657112",
+    "last_login": "2025-07-04T20:02:47.907Z",
+    "loccountrycode": "CN",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 70,
+  "leaderboard_rank": 297,
+  "total_matches": 2976,
+  "win": 1669,
+  "kda": 7.23,
+  "gpm": 514,
+  "xpm": 756,
+  "avg_seconds_per_match": 2632
+}

@@ -8,7 +8,7 @@ import type { OpenDotaMatch, OpenDotaPlayer, OpenDotaPlayerHeroes } from '@/type
 import { getPlayerData, getPlayerHeroes, getPlayerMatches } from "../api";
 import type { TeamAnalysis } from "../types/data-service";
 import { formatDuration, logWithTimestamp } from "../utils";
-import { calculateKDA, getHeroDisplayName } from "../utils/data-calculations";
+import { calculateKDA } from "../utils/data-calculations";
 
 // Aggregated hero stats type
 export type HeroStat = {
@@ -159,22 +159,42 @@ function calculateGamePhaseStats(matches: OpenDotaMatch[]) {
 /**
  * Calculate statistics for a game phase
  */
-function calculatePhaseStats(matches: OpenDotaMatch[]) {
+function calculatePhaseStats(matches: OpenDotaMatch[], currentTeam?: { id: string }) {
   if (matches.length === 0) {
     return { winRate: 0, avgDuration: '0:00' };
   }
 
-  const wins = matches.filter(m => {
-    const isRadiant = m.player_slot < 128;
-    return (isRadiant && m.radiant_win) || (!isRadiant && !m.radiant_win);
-  }).length;
+  let winRate = 0;
+  if (currentTeam) {
+    winRate = getTeamWinRate(matches, currentTeam);
+  } else {
+    // fallback: just count radiant wins
+    winRate = (matches.filter(m => m.radiant_win).length / matches.length) * 100;
+  }
 
   const avgDuration = matches.reduce((sum, m) => sum + m.duration, 0) / matches.length;
 
   return {
-    winRate: (wins / matches.length) * 100,
+    winRate,
     avgDuration: formatDuration(avgDuration)
   };
+}
+
+/**
+ * Calculate win rate for a team given matches and the team object
+ */
+function getTeamWinRate(matches: OpenDotaMatch[], currentTeam: { id: string }): number {
+  if (!currentTeam || matches.length === 0) return 0;
+
+  const wins = matches.filter(match => {
+    const isRadiant = match.radiant_team_id?.toString() === currentTeam.id;
+    const isDire = match.dire_team_id?.toString() === currentTeam.id;
+    if (isRadiant) return match.radiant_win;
+    if (isDire) return !match.radiant_win;
+    return false;
+  }).length;
+
+  return (wins / matches.length) * 100;
 }
 
 /**
@@ -276,43 +296,45 @@ function determinePlayerRole(player: OpenDotaPlayer): string {
 }
 
 /**
- * Calculate win rate from matches
+ * Calculate win rate from matches for a team
  */
-function calculateMatchWinRate(matches: OpenDotaMatch[]): number {
-  if (matches.length === 0) return 0;
-  
-  const wins = matches.filter(match => {
-    const isRadiant = match.player_slot < 128;
-    return (isRadiant && match.radiant_win) || (!isRadiant && !match.radiant_win);
-  }).length;
-  
+function calculateMatchWinRate(matches: OpenDotaMatch[], currentTeam?: { id: string }): number {
+  if (!matches.length) return 0;
+  if (currentTeam) {
+    return getTeamWinRate(matches, currentTeam);
+  }
+  // fallback: just count radiant wins
+  const wins = matches.filter(match => match.radiant_win).length;
   return (wins / matches.length) * 100;
 }
 
 /**
- * Calculate average KDA from matches
+ * Calculate average KDA from matches (all players)
  */
 function calculateAverageKDA(matches: OpenDotaMatch[]): number {
   if (matches.length === 0) return 0;
-  
-  const totalKDA = matches.reduce((sum, match) => {
-    return sum + calculateKDA(match.kills, match.deaths, match.assists);
-  }, 0);
-  
-  return totalKDA / matches.length;
+  let totalKDA = 0;
+  let playerCount = 0;
+  for (const match of matches) {
+    for (const player of match.players) {
+      totalKDA += calculateKDA(player.kills, player.deaths, player.assists);
+      playerCount++;
+    }
+  }
+  return playerCount > 0 ? totalKDA / playerCount : 0;
 }
 
 /**
- * Get unique heroes from matches
+ * Get unique heroes from matches (all players)
  */
 function getUniqueHeroes(matches: OpenDotaMatch[]): string[] {
   const heroes = new Set<string>();
-  
   for (const match of matches) {
-    if (match.hero_name) {
-      heroes.add(getHeroDisplayName(match.hero_name));
+    for (const player of match.players) {
+      if (player.hero_id) {
+        heroes.add(String(player.hero_id));
+      }
     }
   }
-  
   return Array.from(heroes);
 } 

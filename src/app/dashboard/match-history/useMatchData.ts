@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
-import { useMatchDataContext } from "@/contexts/match-data-context";
+import { useMatchData as useMatchDataContext } from "@/contexts/match-data-context";
 import { useTeam } from "@/contexts/team-context";
 import { convertTeamMatchesToDashboardMatches } from "@/lib/utils/match-conversion";
+import type { OpenDotaMatch } from "@/types/opendota";
+import { useEffect } from "react";
 import { type Match } from "./match-utils";
 
 export function useMatchData() {
@@ -31,77 +32,28 @@ export function useMatchData() {
         fetchTeamMatches(currentTeam.id, matchIds);
       }
     }
-  }, [currentTeam?.id, matchIds.join(','), loadingMatches, fetchTeamMatches]);
+  }, [currentTeam, matchIds, loadingMatches, processedMatches.length, fetchTeamMatches]);
 
   // Determine which matches to use
   let matches: Match[] = [];
   if (processedMatches && processedMatches.length > 0) {
     // Convert MatchData to Match (dashboard type)
-    matches = processedMatches.map(matchData => ({
-      id: matchData.id,
-      match_id: matchData.openDota?.matchId?.toString(),
-      result: matchData.result,
-      openDota: matchData.openDota ? {
-        match_id: matchData.openDota.matchId,
-        radiant_win: matchData.openDota.radiantWin,
-        start_time: matchData.openDota.startTime,
-        isRadiant: matchData.openDota.isRadiant,
-        // Add minimal required properties
-        player_slot: 0,
-        duration: 0,
-        game_mode: 0,
-        lobby_type: 0,
-        hero_id: 0,
-        version: 0,
-        kills: 0,
-        deaths: 0,
-        assists: 0,
-        skill: 0,
-        leaver_status: 0,
-        party_size: 0,
-        cluster: 0,
-        patch: 0,
-        region: 0,
-        win: 0,
-        lose: 0,
-        total_gold: 0,
-        total_xp: 0,
-        kills_per_min: 0,
-        kda: 0,
-        abandons: 0,
-        neutral_kills: 0,
-        tower_kills: 0,
-        courier_kills: 0,
-        lane_kills: 0,
-        hero_kills: 0,
-        observer_kills: 0,
-        sentry_kills: 0,
-        roshan_kills: 0,
-        necronomicon_kills: 0,
-        ancient_kills: 0,
-        buyback_count: 0,
-        observer_uses: 0,
-        sentry_uses: 0,
-        lane_efficiency: 0,
-        lane_efficiency_pct: 0,
-        lane: 0,
-        lane_role: 0,
-        is_roaming: false,
-        purchase_time: {},
-        first_purchase_time: {},
-        item_win: {},
-        item_usage: {},
-        purchase_tpscroll: {},
-        actions_per_min: 0,
-        life_state_dead: 0,
-        rank_tier: 0,
-        cosmetics: [],
-        benchmarks: {},
-        players: [],
-        picks_bans: []
-      } : undefined,
-      picks_bans: []
-    }));
+    matches = processedMatches.map(matchData => {
+      // The API returns OpenDotaMatch data, so we need to convert it to the expected format
+      const openDotaData = matchData as unknown as OpenDotaMatch;
+      
+      return {
+        id: matchData.id,
+        match_id: openDotaData.match_id?.toString(),
+        result: matchData.result,
+        openDota: openDotaData,
+        picks_bans: openDotaData.picks_bans?.map(pb => ({
+          hero_id: pb.hero_id.toString(),
+          is_pick: pb.is_pick,
+          team: pb.team
+        })) || []
+      };
+    });
   } else if (teamMatches.length > 0) {
     matches = convertTeamMatchesToDashboardMatches(teamMatches);
   } else {

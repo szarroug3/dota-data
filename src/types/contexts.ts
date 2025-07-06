@@ -9,8 +9,9 @@
 // IMPORTS
 // ============================================================================
 
-import type { Team, Player, Match } from './team';
+import type React from 'react';
 import type { PlayerStats } from '../lib/types/data-service';
+import type { Match, Player, Team } from './team';
 
 // ============================================================================
 // DATA FETCHING CONTEXT TYPES
@@ -157,6 +158,17 @@ export interface PlayerDataContextType {
 // TEAM DATA CONTEXT TYPES
 // ============================================================================
 
+export interface LeagueData {
+  league_id: number;
+  name: string;
+  description?: string;
+  tournament_url?: string;
+  item_def?: number;
+  is_cup: boolean;
+  is_qualifier: boolean;
+  is_playoff: boolean;
+}
+
 export interface TeamDataContextType {
   // Cached team data by team ID
   teamDataByTeam: Record<string, Team>;
@@ -164,14 +176,22 @@ export interface TeamDataContextType {
   loadingByTeam: Record<string, boolean>;
   // Error states by team ID
   errorByTeam: Record<string, string | null>;
-  // Trigger fetching for a specific team
-  fetchTeamData: (teamId: string) => Promise<void>;
+  // Cached league data by league ID
+  leagueDataByLeague: Record<string, LeagueData>;
+  // Active team player IDs
+  activeTeamPlayerIds: Set<string>;
+  // Trigger fetching for a specific team with league
+  fetchTeamData: (teamId: string, leagueId: string) => Promise<void>;
   // Get team data for a team (from cache or trigger fetch)
   getTeamData: (teamId: string) => Team | null;
+  // Get league data for a league
+  getLeagueData: (leagueId: string) => LeagueData | null;
   // Check if team data is loading
   isTeamLoading: (teamId: string) => boolean;
   // Get error for a team
   getTeamError: (teamId: string) => string | null;
+  // Get active team player IDs
+  getActiveTeamPlayerIds: () => Set<string>;
   // Update team data in cache
   updateTeamData: (teamId: string, teamData: Team) => void;
   // Remove team data from cache
@@ -209,6 +229,7 @@ export interface TeamContextType {
   // Team data operations
   updateTeamName: (teamId: string, teamName: string) => void;
   updateMatchIds: (teamId: string, matchIds: string[]) => void;
+  updateTeamData: (teamId: string, updates: Partial<Team>) => void;
   
   // Player operations
   addManualPlayer: (teamId: string, player: Omit<Player, "addedDate">) => void;
@@ -236,7 +257,7 @@ export interface TeamContextType {
   setCurrentTeam: (team: Team | string | null) => Promise<void>; // Legacy setCurrentTeam
   addStandinPlayer: (player: Omit<Player, "isStandin" | "addedDate">, standinForId?: string) => void;
   removeStandinPlayer: (playerId: string) => void;
-  getExternalLinks: () => Array<{ href: string; label: string; icon: string }>;
+  getExternalLinks: () => Array<{ href: string; label: string; icon: React.ReactElement }>;
 }
 
  

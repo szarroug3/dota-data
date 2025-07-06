@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 9907055,
+    "personaname": "Fata",
+    "name": "Fata",
+    "plus": true,
+    "cheese": 135,
+    "steamid": "76561198841266401",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/20/76.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/86/35_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/95/39_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/9907055",
+    "last_login": "2025-07-06T01:55:16.913Z",
+    "loccountrycode": "EU",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 78,
+  "leaderboard_rank": 403,
+  "total_matches": 3485,
+  "win": 2162,
+  "kda": 6.94,
+  "gpm": 554,
+  "xpm": 409,
+  "avg_seconds_per_match": 1995
+}

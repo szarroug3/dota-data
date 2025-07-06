@@ -1,179 +1,193 @@
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/contexts/sidebar-context";
 import { useTeam } from "@/contexts/team-context";
 import { getTeamSide } from "@/lib/utils";
 import type { Team } from "@/types/team";
-import type { Match as DashboardMatch } from "./match-utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Users } from "lucide-react";
 import { Suspense } from 'react';
 import AsyncMatchCard from "./AsyncMatchCard";
+import type { Match } from "./match-utils";
 import MatchCardSkeleton from './MatchCardSkeleton';
 import PlayerPopup from "./PlayerPopup";
+
+interface PlayerData {
+  [key: string]: unknown;
+}
+
+// Extract empty state components to reduce complexity
+function NoTeamSelected() {
+  return (
+    <div className="p-8 text-center text-muted-foreground">
+      <div className="mb-4">
+        <Users className="w-12 h-12 mx-auto text-muted-foreground/50" />
+      </div>
+      <h3 className="text-lg font-medium mb-2">No team selected</h3>
+      <p className="text-sm mb-4">Please select or import a team to view match history.</p>
+      <Button
+        variant="outline"
+        onClick={() => window.open('/dashboard/team-management', '_blank')}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Import Team
+      </Button>
+    </div>
+  );
+}
+
+function NoMatchesFound({ onAddMatch }: { onAddMatch?: () => void }) {
+  return (
+    <div className="p-8 text-center text-muted-foreground">
+      <div className="mb-4">
+        <svg className="w-12 h-12 mx-auto text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-medium mb-2">No matches found</h3>
+      <p className="text-sm mb-4">Add matches to start tracking the team&apos;s performance.</p>
+      <Button
+        variant="outline"
+        onClick={onAddMatch}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Add Match
+      </Button>
+    </div>
+  );
+}
+
+function MatchListError({ error }: { error: unknown }) {
+  if (!error) return null;
+  return <p className="text-red-500 text-sm font-semibold p-4">{error as string}</p>;
+}
+
+function MatchListLoading() {
+  return (
+    <div className="flex items-center justify-center h-full py-8">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function MatchListContent({
+  matches,
+  selectedMatch,
+  setSelectedMatch,
+  currentTeam,
+  handleRemoveMatch,
+  loading,
+  preferredSite
+}: {
+  matches: Match[];
+  selectedMatch: string | null;
+  setSelectedMatch: (matchId: string) => void;
+  currentTeam: Team;
+  handleRemoveMatch: (matchId: string) => void;
+  loading: boolean;
+  preferredSite: string;
+  }) {
+  return (
+    <div className="h-full overflow-y-auto">
+      {matches.map((match, index) => (
+        <Suspense key={match.id || index} fallback={<MatchCardSkeleton />}>
+          <AsyncMatchCard
+            match={match}
+            currentTeam={currentTeam}
+            preferredSite={preferredSite}
+            isSelected={selectedMatch === (match.id || "")}
+            onSelect={setSelectedMatch}
+            onHide={handleRemoveMatch}
+            teamSide={getTeamSide(match, currentTeam)}
+            loading={loading}
+          />
+        </Suspense>
+      ))}
+    </div>
+  );
+}
 
 export default function MatchList({
   matches,
   selectedMatch,
   setSelectedMatch,
-  _selectedMatchObj,
-  _selectedGameIndex,
-  _setSelectedGameIndex,
   currentTeam,
   _error,
   _onAddMatch,
-  _hiddenMatchIds,
-  _onHideMatch,
-  _onUnhideMatch,
-  _showHidden,
   className,
   showPlayerPopup,
   setShowPlayerPopup,
   selectedPlayer,
-  _setSelectedPlayer,
   playerData,
   setPlayerData,
   loadingPlayerData,
-  _prefetchedPlayerData,
-  _prefetchingPlayers,
   loading = false,
   _updateQueueStats,
 }: {
-  matches: DashboardMatch[];
+  matches: Match[];
   selectedMatch: string | null;
   setSelectedMatch: (matchId: string) => void;
-  _selectedMatchObj: unknown;
-  _selectedGameIndex: number;
-  _setSelectedGameIndex: (index: number) => void;
   currentTeam: Team;
-  _error: string | null;
-  _onAddMatch: () => void;
-  _hiddenMatchIds: string[];
-  _onHideMatch: (matchId: string) => void;
-  _onUnhideMatch: (matchId: string) => void;
-  _showHidden: boolean;
+  _error: unknown;
+  _onAddMatch?: () => void;
   className?: string;
   showPlayerPopup: boolean;
   setShowPlayerPopup: (show: boolean) => void;
   selectedPlayer: unknown;
-  _setSelectedPlayer: (player: unknown) => void;
-  playerData: any;
-  setPlayerData: (data: any) => void;
+  playerData: PlayerData | null;
+  setPlayerData: (data: PlayerData | null) => void;
   loadingPlayerData: boolean;
-  _prefetchedPlayerData: unknown;
-  _prefetchingPlayers: boolean;
   loading?: boolean;
   _updateQueueStats: () => void;
 }) {
   const { toast } = useToast();
-  const { setCurrentTeam, removeMatch, hiddenMatchIds: teamHiddenMatchIds } = useTeam();
+  const { removeMatch, hiddenMatchIds: _teamHiddenMatchIds } = useTeam();
   const { preferredSite } = useSidebar();
 
-  const handleRefreshMatch = async (matchId: string) => {
-    if (!matchId) {
-      toast({
-        title: "Error",
-        description: "No match ID provided for refresh",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Find the match in the current team's matches
-      const matchIndex = currentTeam?.manualMatches?.findIndex((m: any) => m.id === matchId);
-      
-      if (matchIndex === -1 || matchIndex === undefined) {
-        throw new Error("Match not found in team data");
-      }
-
-      // Get the match object
-      const match = currentTeam.manualMatches![matchIndex];
-      
-      // Enrich the match with fresh OpenDota data
-      const response = await fetch('/api/refresh-match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: match.id, team: currentTeam }),
-      });
-      if (!response.ok) throw new Error('Failed to refresh match');
-      const enrichedMatch = await response.json();
-      
-      // Update the match in the team's matches array
-      const updatedMatches = [...(currentTeam.manualMatches || [])];
-      updatedMatches[matchIndex] = enrichedMatch;
-      
-      // Update the team with the new matches
-      const updatedTeam = {
-        ...currentTeam,
-        manualMatches: updatedMatches,
-      };
-      
-      setCurrentTeam(updatedTeam);
-      
-      toast({
-        title: "Success",
-        description: "Match data refreshed successfully",
-      });
-      
-    } catch (_error) {
-      toast({
-        title: "Error",
-        description: "Failed to refresh match data",
-        variant: "destructive",
-      });
-    } finally {
-      if (typeof _updateQueueStats === 'function') {
-        _updateQueueStats();
-      }
-    }
+  const handleRemoveMatch = (matchId: string) => {
+    removeMatch(matchId);
+    toast({
+      title: "Match Removed",
+      description: "Match has been removed from the team's history.",
+    });
   };
 
-  // Get hidden matches for popup
-  const _hiddenMatches = currentTeam?.manualMatches?.filter((match: any) => 
-    teamHiddenMatchIds.includes(match.id!)
-  ) || [];
+  if (!currentTeam) {
+    return <NoTeamSelected />;
+  }
+
+  if (matches.length === 0 && !loading) {
+    return <NoMatchesFound onAddMatch={_onAddMatch} />;
+  }
 
   return (
     <div className={`overflow-y-auto ${className || ''}`}>
-      {_error ? (
-        <p className="text-red-500 text-sm font-semibold p-4">{_error}</p>
-      ) : loading ? (
-        <div className="flex items-center justify-center h-full py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : matches.length === 0 ? (
-        <div className="p-4 text-center text-muted-foreground text-sm">
-          No matches found
-        </div>
+      <MatchListError error={_error} />
+      {loading ? (
+        <MatchListLoading />
       ) : (
-        <div className="h-full overflow-y-auto">
-          {matches.map((match: DashboardMatch, index: number) => (
-            <Suspense key={match.id || index} fallback={<MatchCardSkeleton />}>
-              <AsyncMatchCard
-                match={match}
-                currentTeam={currentTeam}
-                preferredSite={preferredSite}
-                isSelected={selectedMatch === match.id}
-                onSelect={setSelectedMatch}
-                onHide={removeMatch}
-                teamSide={getTeamSide(match, currentTeam)}
-                isRefreshing={false}
-                onRefresh={() => handleRefreshMatch(match.id!)}
-              />
-            </Suspense>
-          ))}
-        </div>
+        <MatchListContent
+          matches={matches}
+          selectedMatch={selectedMatch}
+          setSelectedMatch={setSelectedMatch}
+          currentTeam={currentTeam}
+          handleRemoveMatch={handleRemoveMatch}
+          loading={loading}
+          preferredSite={preferredSite}
+        />
       )}
-      <PlayerPopup
-        isOpen={showPlayerPopup}
-        onClose={() => {
-          setShowPlayerPopup(false);
-          setPlayerData(null);
-        }}
-        player={selectedPlayer as any}
-        playerData={playerData}
-        loadingPlayerData={loadingPlayerData}
-        onNavigateToPlayer={(player) => window.open(`/dashboard/player-stats?player=${player.account_id}`, '_blank')}
-      />
+      {showPlayerPopup && selectedPlayer !== null && selectedPlayer !== undefined && (
+        <PlayerPopup
+          player={selectedPlayer as PlayerData}
+          isOpen={showPlayerPopup}
+          onClose={() => {
+            setShowPlayerPopup(false);
+            setPlayerData(null);
+          }}
+          playerData={playerData}
+          loadingPlayerData={loadingPlayerData}
+          onNavigateToPlayer={(player) => window.open(`/dashboard/player-stats?player=${player.account_id}`, '_blank')}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 6845169,
+    "personaname": "Puppey",
+    "name": "Puppey",
+    "plus": true,
+    "cheese": 66,
+    "steamid": "76561198797184746",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/85/98.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/13/98_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/99/92_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/6845169",
+    "last_login": "2025-07-04T20:00:14.208Z",
+    "loccountrycode": "CIS",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 80,
+  "leaderboard_rank": 739,
+  "total_matches": 4408,
+  "win": 941,
+  "kda": 6.35,
+  "gpm": 649,
+  "xpm": 413,
+  "avg_seconds_per_match": 3354
+}

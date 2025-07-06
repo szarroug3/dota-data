@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 1317048,
+    "personaname": "FLUFFNSTUFF",
+    "name": "FLUFFNSTUFF",
+    "plus": true,
+    "cheese": 187,
+    "steamid": "76561198711369736",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/64/36.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/23/16_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/5/94_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/1317048",
+    "last_login": "2025-07-05T06:12:07.237Z",
+    "loccountrycode": "US",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 70,
+  "leaderboard_rank": 368,
+  "total_matches": 4134,
+  "win": 2301,
+  "kda": 6.97,
+  "gpm": 365,
+  "xpm": 485,
+  "avg_seconds_per_match": 2324
+}

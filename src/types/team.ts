@@ -1,3 +1,5 @@
+import type { OpenDotaFullMatch } from '@/types/opendota';
+
 export interface Player {
   name: string;
   id: string;
@@ -16,7 +18,7 @@ export interface Match {
   score: string;
   league: string;
   notes?: string;
-  openDota?: Record<string, unknown>;
+  openDota?: OpenDotaFullMatch;
 }
 
 export interface Team {
@@ -27,6 +29,8 @@ export interface Team {
   leagueName?: string;
   matchIds: string[]; // From API
   matchIdsByLeague?: Record<string, string[]>;
+  // New Dotabuff structure
+  dotabuffMatches?: Record<string, any>; // Matches organized by league ID
   players: Player[];
   winRate?: number;
   totalMatches?: number;

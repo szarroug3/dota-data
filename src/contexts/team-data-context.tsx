@@ -1,19 +1,8 @@
+import { fetchTeamData, startBackgroundDataFetching } from '@/lib/fetch-data';
 import * as React from 'react';
-import { Team } from '../types/team';
 import { createContext, useCallback, useContext, useState } from 'react';
 import { TeamDataContextType } from '../types/contexts';
-
-// ============================================================================
-// API HELPERS
-// ============================================================================
-
-async function fetchTeamDataHelper(teamId: string): Promise<Team> {
-  const response = await fetch(`/api/teams/${teamId}`);
-  if (response.status === 200) {
-    return await response.json() as Promise<Team>;
-  }
-  throw new Error(`HTTP ${response.status} for team ${teamId}`);
-}
+import { Team } from '../types/team';
 
 // ============================================================================
 // CONTEXT
@@ -25,8 +14,10 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
   const [teamDataByTeam, setTeamDataByTeam] = useState<Record<string, Team>>({});
   const [loadingByTeam, setLoadingByTeam] = useState<Record<string, boolean>>({});
   const [errorByTeam, setErrorByTeam] = useState<Record<string, string | null>>({});
+  const [leagueDataByLeague, setLeagueDataByLeague] = useState<Record<string, any>>({});
+  const [activeTeamPlayerIds, setActiveTeamPlayerIds] = useState<Set<string>>(new Set());
 
-  const fetchTeamData = useCallback(async (teamId: string): Promise<void> => {
+  const fetchTeamDataWithLeague = useCallback(async (teamId: string, leagueId: string): Promise<void> => {
     // Don't fetch if already loading
     if (loadingByTeam[teamId]) {
       return;
@@ -37,10 +28,27 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
     setErrorByTeam((prev: Record<string, string | null>) => ({ ...prev, [teamId]: null }));
 
     try {
-      const teamData = await fetchTeamDataHelper(teamId);
+      const { teamData, leagueData } = await fetchTeamData(teamId, leagueId);
       
+      // Store team and league data
       setTeamDataByTeam((prev: Record<string, Team>) => ({ ...prev, [teamId]: teamData }));
+      setLeagueDataByLeague((prev: Record<string, any>) => ({ ...prev, [leagueId]: leagueData }));
       setLoadingByTeam((prev: Record<string, boolean>) => ({ ...prev, [teamId]: false }));
+
+      // Extract active team player IDs from team data
+      const playerIds = new Set<string>();
+      if (teamData.players) {
+        teamData.players.forEach((player: any) => {
+          if (player.account_id) {
+            playerIds.add(player.account_id.toString());
+          }
+        });
+      }
+      setActiveTeamPlayerIds(playerIds);
+
+      // Start background data fetching for matches and players
+      startBackgroundDataFetching(teamData, leagueId, playerIds);
+
     } catch (err) {
       console.error(`[TeamDataContext] Error fetching team data for team ${teamId}:`, err);
       setErrorByTeam((prev: Record<string, string | null>) => ({ 
@@ -57,14 +65,12 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
       return teamDataByTeam[teamId];
     }
 
-    // Trigger fetch if not already loading
-    if (!loadingByTeam[teamId]) {
-      // Use setTimeout to avoid blocking the render
-      setTimeout(() => fetchTeamData(teamId), 0);
-    }
-
     return null;
-  }, [teamDataByTeam, loadingByTeam, fetchTeamData]);
+  }, [teamDataByTeam]);
+
+  const getLeagueData = useCallback((leagueId: string): any => {
+    return leagueDataByLeague[leagueId] || null;
+  }, [leagueDataByLeague]);
 
   const isTeamLoading = useCallback((teamId: string): boolean => {
     return loadingByTeam[teamId] || false;
@@ -73,6 +79,10 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
   const getTeamError = useCallback((teamId: string): string | null => {
     return errorByTeam[teamId] || null;
   }, [errorByTeam]);
+
+  const getActiveTeamPlayerIds = useCallback((): Set<string> => {
+    return activeTeamPlayerIds;
+  }, [activeTeamPlayerIds]);
 
   const updateTeamData = useCallback((teamId: string, teamData: Team): void => {
     setTeamDataByTeam((prev: Record<string, Team>) => ({ ...prev, [teamId]: teamData }));
@@ -100,10 +110,14 @@ export function TeamDataProvider({ children }: { children: React.ReactNode }) {
     teamDataByTeam,
     loadingByTeam,
     errorByTeam,
-    fetchTeamData,
+    leagueDataByLeague,
+    activeTeamPlayerIds,
+    fetchTeamData: fetchTeamDataWithLeague,
     getTeamData,
+    getLeagueData,
     isTeamLoading,
     getTeamError,
+    getActiveTeamPlayerIds,
     updateTeamData,
     removeTeamData,
   };

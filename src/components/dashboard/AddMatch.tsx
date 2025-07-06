@@ -13,21 +13,61 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useTeam } from "@/contexts/team-context";
 import { logWithTimestamp } from '@/lib/utils';
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-
-async function fetchOpenDotaMatch(matchId: string) {
-  const res = await fetch(`/api/matches/${matchId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ teamId: 'manual' }),
-  });
-  if (!res.ok) throw new Error("Match not found");
-  return res.json();
-}
 
 interface AddMatchProps {
   onClose: () => void;
+}
+
+interface OpenDotaMatch {
+  radiant_win: boolean;
+  radiant_team?: { team_id?: number; name?: string };
+  dire_team?: { team_id?: number; name?: string };
+  radiant_score?: number;
+  dire_score?: number;
+  start_time?: number;
+}
+
+interface Team {
+  id?: string;
+  league?: string;
+}
+
+function getMatchResult(match: OpenDotaMatch, currentTeam: Team) {
+  const radiantWin = match.radiant_win;
+  const currentTeamInRadiant = match.radiant_team?.team_id?.toString() === currentTeam?.id;
+  return (radiantWin && currentTeamInRadiant) || (!radiantWin && !currentTeamInRadiant) ? "W" : "L";
+}
+
+function getOpponentTeam(match: OpenDotaMatch, currentTeam: Team) {
+  const currentTeamInRadiant = match.radiant_team?.team_id?.toString() === currentTeam?.id;
+  return currentTeamInRadiant ? match.dire_team : match.radiant_team;
+}
+
+function getMatchScore(match: OpenDotaMatch) {
+  return `${match.radiant_score || 0}-${match.dire_score || 0}`;
+}
+
+function getMatchDate(match: OpenDotaMatch) {
+  return match.start_time ? new Date(match.start_time * 1000).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+}
+
+function processMatchData(match: OpenDotaMatch, currentTeam: Team, matchId: string) {
+  const result = getMatchResult(match, currentTeam);
+  const opponentTeam = getOpponentTeam(match, currentTeam);
+  const opponent = opponentTeam?.name || "Unknown Team";
+  const score = getMatchScore(match);
+  const date = getMatchDate(match);
+
+  return {
+    opponent,
+    date,
+    result,
+    score,
+    league: currentTeam?.league || "",
+    notes: `Match ID: ${matchId}`,
+  };
 }
 
 export default function AddMatch({ onClose }: AddMatchProps) {
@@ -35,7 +75,6 @@ export default function AddMatch({ onClose }: AddMatchProps) {
   const [matchId, setMatchId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fetchedMatch, setFetchedMatch] = useState<unknown>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +82,9 @@ export default function AddMatch({ onClose }: AddMatchProps) {
     if (!matchId.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
+      // Fetch match data from OpenDota
       const res = await fetch(
         `/api/matches/${matchId}`,
         {
@@ -53,14 +94,21 @@ export default function AddMatch({ onClose }: AddMatchProps) {
         }
       );
       if (!res.ok) throw new Error("Failed to fetch match data");
+      const match = await res.json();
+
+      // Process match data
+      const matchData = processMatchData(match, currentTeam || { id: 'manual', league: '' }, matchId);
+      await addMatch(matchData);
 
       toast({
         title: "Match Added",
-        description: `Successfully fetched match ${matchId}`,
+        description: `Successfully added match ${matchId}`,
       });
       setMatchId("");
+      onClose();
     } catch (error) {
       logWithTimestamp('error', "Error adding match:", error);
+      setError("Failed to add match. Please check the match ID.");
       toast({
         title: "Error",
         description: "Failed to add match. Please check the match ID.",
@@ -70,82 +118,6 @@ export default function AddMatch({ onClose }: AddMatchProps) {
       setLoading(false);
     }
   };
-
-  const handleFetchMatch = async () => {
-    setError(null);
-    setLoading(true);
-    setFetchedMatch(null);
-    try {
-      const data: unknown = await fetchOpenDotaMatch(matchId);
-      setFetchedMatch(data);
-
-      toast({
-        title: "Match Added",
-        description: `Successfully fetched match ${matchId}`,
-      });
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to fetch match info");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddMatch = () => {
-    if (!fetchedMatch || typeof fetchedMatch !== "object") return;
-
-    const match = fetchedMatch as {
-      radiant_win?: boolean;
-      radiant_team?: { team_id?: number; name?: string };
-      dire_team?: { team_id?: number; name?: string };
-      radiant_score?: number;
-      dire_score?: number;
-      start_time?: number;
-      duration?: number;
-      match_id?: number;
-    };
-
-    // Determine if current team won or lost
-    const radiantWin = match.radiant_win;
-    const currentTeamInRadiant =
-      match.radiant_team?.team_id?.toString() === currentTeam?.id;
-    const result =
-      (radiantWin && currentTeamInRadiant) ||
-      (!radiantWin && !currentTeamInRadiant)
-        ? "W"
-        : "L";
-
-    // Get opponent team info
-    const opponentTeam = currentTeamInRadiant
-      ? match.dire_team
-      : match.radiant_team;
-    const opponent = opponentTeam?.name || "Unknown Team";
-
-    // Format score (radiant_score - dire_score)
-    const score = `${match.radiant_score || 0}-${match.dire_score || 0}`;
-
-    // Format date
-    const date = match.start_time
-      ? new Date(match.start_time * 1000).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
-
-    addMatch({
-      opponent,
-      date,
-      result,
-      score,
-      league: currentTeam?.league || "",
-      notes: `Match ID: ${matchId}`,
-    });
-
-    setFetchedMatch(null);
-    setMatchId("");
-    onClose();
-  };
-
-  let matchObj: Record<string, any> | null = null;
-  if (typeof fetchedMatch === "object" && fetchedMatch !== null) {
-    matchObj = fetchedMatch as Record<string, any>;
-  }
 
   if (!currentTeam) return null;
 
@@ -157,7 +129,7 @@ export default function AddMatch({ onClose }: AddMatchProps) {
           Add Match
         </CardTitle>
         <CardDescription>
-          Add a match to your team's history using OpenDota match ID
+          Add a match to the team&apos;s history using a match ID
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -167,7 +139,7 @@ export default function AddMatch({ onClose }: AddMatchProps) {
             <Input
               id="matchId"
               type="text"
-              placeholder="Enter OpenDota match ID"
+              placeholder="1234567890"
               value={matchId}
               onChange={(e) => setMatchId(e.target.value)}
               disabled={loading}
@@ -176,72 +148,13 @@ export default function AddMatch({ onClose }: AddMatchProps) {
           <Button type="submit" disabled={loading || !matchId.trim()}>
             {loading ? "Adding..." : "Add Match"}
           </Button>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
         </form>
         {error && (
           <div className="text-red-500 text-sm font-semibold">{error}</div>
         )}
-        {loading && (
-          <div className="text-muted-foreground text-sm">
-            Fetching match info...
-          </div>
-        )}
-        {matchObj && (
-          <div className="p-3 border rounded bg-muted/50">
-            <div className="font-medium">
-              Match #{matchObj.match_id ?? "Unknown"}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {matchObj.radiant_team?.name || "Radiant"} vs{" "}
-              {matchObj.dire_team?.name || "Dire"}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Score: {matchObj.radiant_score ?? 0} - {matchObj.dire_score ?? 0}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Result: {matchObj.radiant_win ? "Radiant Victory" : "Dire Victory"}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Date: {matchObj.start_time
-                ? new Date(matchObj.start_time * 1000).toLocaleDateString()
-                : "Unknown"}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Duration: {matchObj.duration
-                ? `${Math.floor(matchObj.duration / 60)}:${(matchObj.duration % 60)
-                    .toString()
-                    .padStart(2, "0")}`
-                : "Unknown"}
-            </div>
-          </div>
-        )}
-        <div className="flex gap-2">
-          {!fetchedMatch ? (
-            <Button onClick={handleFetchMatch} disabled={!matchId || loading}>
-              <Plus className="w-4 h-4 mr-2" />
-              Fetch Match
-            </Button>
-          ) : (
-            <Button onClick={handleAddMatch}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Match
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => {
-              onClose();
-              setFetchedMatch(null);
-              setMatchId("");
-            }}
-            disabled={loading}
-          >
-            <X className="w-4 h-4 mr-2" />
-            Cancel
-          </Button>
-        </div>
-        <p className="text-center text-muted-foreground">
-          Can&apos;t find your match? Try a different ID.
-        </p>
       </CardContent>
     </Card>
   );

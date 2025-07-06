@@ -1,81 +1,10 @@
-import { getLeagueName } from '@/lib/api/dotabuff/leagues';
-import { cacheService } from '@/lib/cache-service';
-import { logWithTimestampToFile } from '@/lib/server-logger';
-import { getLeagueCacheKey } from '@/lib/utils/cache-keys';
-import * as cheerio from 'cheerio';
-import { NextRequest } from 'next/server';
-
-const debug = (...args: unknown[]) => {
-  logWithTimestampToFile('log', '[LEAGUE DATA POLL]', ...args);
-};
-
-function parseLeagueNameHtml(html: string, leagueId: string) {
-  const $ = cheerio.load(html);
-  const img = $('img.img-league.img-avatar').first();
-  let leagueName = '';
-  if (img.length) {
-    leagueName = img.attr('alt') || '';
-  }
-  if (!leagueName) {
-    leagueName = leagueId;
-  }
-  return { leagueName };
-}
-
-function parseForceFlag(request: NextRequest): Promise<boolean> {
-  return request.json()
-    .then(body => body.force || false)
-    .catch(() => false);
-}
-
-async function getCachedLeagueData(leagueCacheKey: string, leagueFilename: string) {
-  let cached = await cacheService.get(leagueCacheKey, leagueFilename);
-  if (typeof cached === 'string') {
-    try { cached = JSON.parse(cached); }
-    catch {
-      // Ignore JSON parse errors: return the raw string if not valid JSON
-    }
-  }
-  return cached;
-}
-
-async function invalidateLeagueCache(leagueCacheKey: string, leagueFilename: string) {
-  await cacheService.invalidate(leagueCacheKey, leagueFilename);
-}
-
-function parseLeagueNameResult(htmlOrStatus: unknown, id: string): { leagueName: string } {
-  if (typeof htmlOrStatus === 'string') {
-    return parseLeagueNameHtml(htmlOrStatus, id);
-  } else if (typeof htmlOrStatus === 'object' && htmlOrStatus !== null && 'leagueName' in htmlOrStatus) {
-    return htmlOrStatus as { leagueName: string };
-  } else {
-    throw new Error('Unexpected response from getLeagueName');
-  }
-}
-
-async function fetchAndCacheLeagueData(id: string, leagueCacheKey: string, leagueFilename: string, debug: (...args: unknown[]) => void) {
-  const htmlOrStatus = await getLeagueName(id, true);
-  if (typeof htmlOrStatus === 'object' && htmlOrStatus !== null && 'status' in htmlOrStatus) {
-    // Still queued or processing
-    return { status: 202, body: htmlOrStatus };
-  }
-  const parsed = parseLeagueNameResult(htmlOrStatus, id);
-  if (parsed && typeof parsed === 'object' && 'leagueName' in parsed) {
-    debug('POST: Setting cache with parsed leagueName', parsed.leagueName, leagueCacheKey, leagueFilename);
-    await cacheService.set('league', leagueCacheKey, JSON.stringify(parsed), undefined, leagueFilename);
-    debug('POST: Cache set complete', leagueCacheKey, leagueFilename);
-  }
-  debug('POST: League data fetched and cached successfully');
-  return { status: 200, body: parsed };
-}
-
 /**
  * @openapi
  * /leagues/{id}:
  *   post:
  *     tags:
- *       - League
- *     summary: Get league name from Dotabuff
+ *       - Leagues
+ *     summary: Get league data
  *     description: |
  *       Returns league data immediately if cached, or waits for fetch to complete.
  *       Always returns 200 with the actual data.
@@ -103,9 +32,6 @@ async function fetchAndCacheLeagueData(id: string, leagueCacheKey: string, leagu
  *           application/json:
  *             schema:
  *               type: object
- *               properties:
- *                 leagueName:
- *                   type: string
  *       400:
  *         description: Invalid input
  *         content:
@@ -125,52 +51,55 @@ async function fetchAndCacheLeagueData(id: string, leagueCacheKey: string, leagu
  *                 error:
  *                   type: string
  */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+import { getLeagueName } from '@/lib/api/dotabuff/leagues';
+import { cacheService } from '@/lib/cache-service';
+import { logWithTimestampToFile } from '@/lib/server-logger';
+import { getLeagueCacheFilename, getLeagueCacheKey } from '@/lib/utils/cache-keys';
+
+const debug = (...args: unknown[]) => {
+  logWithTimestampToFile('log', '[LEAGUE DATA]', ...args);
+};
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   debug('POST: Handler called for league', id);
-
-  const leagueCacheKey = getLeagueCacheKey(id);
-  const leagueFilename = `${leagueCacheKey}.json`;
-
+  
+  // 1. Parse request body for force option
   let force = false;
-  force = await parseForceFlag(request);
-
-  if (!force) {
-    const cached = await getCachedLeagueData(leagueCacheKey, leagueFilename);
-    if (cached) {
-      debug('POST: League data present in cache, returning data');
-      return new Response(JSON.stringify(cached), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-  }
-
-  if (force) {
-    debug('POST: Force refresh requested, invalidating cache', leagueCacheKey, leagueFilename);
-    await invalidateLeagueCache(leagueCacheKey, leagueFilename);
-    debug('POST: Cache invalidated', leagueCacheKey, leagueFilename);
-  }
-
-  debug('POST: League data not in cache, fetching and waiting for completion');
-
   try {
-    const result = await fetchAndCacheLeagueData(id, leagueCacheKey, leagueFilename, debug);
-    if ('status' in result && result.status === 202) {
-      return new Response(JSON.stringify(result.body), {
-        status: 202,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    const body = await request.json();
+    force = body.force || false;
+  } catch (err) {
+    debug('POST: Failed to parse JSON body, using default force=false', err);
+  }
+
+  const cacheKey = getLeagueCacheKey(id);
+  const filename = getLeagueCacheFilename(id);
+  const TTL = 24 * 60 * 60; // 24 hours
+
+  // 2. Check cache first (unless force=true)
+  if (!force) {
+    const cached = await cacheService.get(cacheKey, filename, TTL);
+    if (cached) {
+      debug('POST: Cache hit, returning data');
+      return new Response(JSON.stringify(cached), { status: 200 });
     }
-    return new Response(JSON.stringify(result.body), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+  }
+
+  // 3. Invalidate cache if force refresh
+  if (force) {
+    debug('POST: Force refresh requested, invalidating cache');
+    await cacheService.invalidate(cacheKey, filename);
+  }
+
+  // 4. Call service layer
+  try {
+    debug('POST: Fetching league data');
+    const data = await getLeagueName(id, force);
+    debug('POST: League data fetched successfully');
+    return new Response(JSON.stringify(data), { status: 200 });
   } catch (err) {
     debug('POST: Error fetching league data:', err);
-    return new Response(JSON.stringify({ error: 'Failed to fetch league data' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(JSON.stringify({ error: 'Failed to fetch league data' }), { status: 500 });
   }
 }

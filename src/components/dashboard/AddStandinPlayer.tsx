@@ -5,11 +5,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useTeam } from "@/contexts/team-context";
@@ -23,7 +23,13 @@ async function fetchOpenDotaPlayer(playerId: string) {
     // Convert Steam64 to Steam32
     id = (BigInt(playerId) - 76561197960265728n).toString();
   }
-  const res = await fetch(`/api/players/${id}/data`);
+  const res = await fetch(`/api/players/${id}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ force: false }),
+  });
   if (!res.ok) throw new Error("Player not found");
   return res.json();
 }

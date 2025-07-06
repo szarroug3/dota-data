@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4356458,
+    "personaname": "PieLieDie",
+    "name": "PieLieDie",
+    "plus": false,
+    "cheese": 514,
+    "steamid": "76561198620430683",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/13/72.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/42/38_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/29/2_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4356458",
+    "last_login": "2025-06-30T06:30:37.206Z",
+    "loccountrycode": "US",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 80,
+  "leaderboard_rank": 622,
+  "total_matches": 1289,
+  "win": 2339,
+  "kda": 5.65,
+  "gpm": 742,
+  "xpm": 727,
+  "avg_seconds_per_match": 2172
+}

@@ -1,21 +1,12 @@
 import { shouldMockService, tryMock } from '@/lib/api';
 import { fetchAPI } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
-import { generateFakeMatch, generateFakeMatchDetails } from '@/lib/fake-data-generator';
+import { generateFakeMatch } from '@/lib/fake-data-generators/match-generator';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getOpendotaMatchCacheKey, getOpendotaPublicMatchesCacheKey } from '@/lib/utils/cache-keys';
 import { getPlayerData } from '../opendota/players';
 
-// Helper function to check if result is already queued
-function isAlreadyQueuedResult(obj: unknown): obj is { status: string; signature: string } {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'status' in obj &&
-    (obj as { status?: string }).status === 'queued' &&
-    'signature' in obj
-  );
-}
+
 
 // Define explicit types for player and match data
 export interface Player {
@@ -104,12 +95,12 @@ export async function getMatch(
   matchId: number, 
   forceRefresh = false,
   teamId?: string
-): Promise<unknown | { status: string; signature: string }> {
+): Promise<unknown> {
   const cacheKey = getOpendotaMatchCacheKey(matchId.toString());
   const filename = `${cacheKey}.json`;
   const MATCH_TTL = 60 * 60 * 24 * 14; // 14 days in seconds
 
-  // 1. Check cache for data
+  // 1. Check cache for data (unless force refresh)
   if (!forceRefresh) {
     const cached = await cacheService.get<unknown>(cacheKey, filename, MATCH_TTL);
     if (cached) {
@@ -119,107 +110,80 @@ export async function getMatch(
     }
   }
 
-  // 2. Queue the fetch
-  const queueResult = await cacheService.queueRequest(
-    'opendota',
-    cacheKey,
-    async () => {
-      // 1. Try mock data if available
-      const mockRes = await tryMock('opendota', cacheKey + ".json");
-      if (mockRes) {
-        const data = await mockRes.json();
-        // Queue players if teamId is provided
-        await handleQueuePlayersForMatch(data, teamId, matchId, forceRefresh);
-        return data;
-      }
-      
-      // 2. Check if we should use mock service
-      if (shouldMockService('opendota')) {
-        const fakeData = generateFakeMatchDetails(matchId, filename);
-        // Write mock data to cache and disk immediately
-        await cacheService.set('opendota', cacheKey, fakeData, MATCH_TTL, filename);
-        // Queue players if teamId is provided
-        await handleQueuePlayersForMatch(fakeData, teamId, matchId, forceRefresh);
-        // Always return the real data, never a status object
-        return fakeData;
-      }
-      
-      // 3. Fetch real data
-      const data = await fetchAPI<unknown>('opendota', `/matches/${matchId}`, cacheKey);
-      
-      // 4. Write processed data to cache (not HTML, so write processed data)
-      await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
-      
-      // 5. Queue players if teamId is provided (after data is cached)
-      await handleQueuePlayersForMatch(data, teamId, matchId, forceRefresh);
-      
-      // 6. Return processed data
-      return data;
-    },
-    MATCH_TTL,
-    filename
-  );
-
-  if (isAlreadyQueuedResult(queueResult)) {
-    return { status: 'queued', signature: queueResult.signature };
+  // 2. Try mock data if available
+  const mockRes = await tryMock('opendota', filename);
+  if (mockRes) {
+    const data = await mockRes.json();
+    await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
+    // Queue players if teamId is provided
+    await handleQueuePlayersForMatch(data, teamId, matchId, forceRefresh);
+    return data;
   }
-  return queueResult;
+  
+  // 3. Check if we should use mock service
+  if (shouldMockService('opendota')) {
+    const fakeData = generateFakeMatch(matchId, filename);
+    await cacheService.set('opendota', cacheKey, fakeData, MATCH_TTL, filename);
+    // Queue players if teamId is provided
+    await handleQueuePlayersForMatch(fakeData, teamId, matchId, forceRefresh);
+    return fakeData;
+  }
+  
+  // 4. Fetch real data
+  const data = await fetchAPI<unknown>('opendota', `/matches/${matchId}`, cacheKey);
+  
+  // 5. Write processed data to cache
+  await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
+  
+  // 6. Queue players if teamId is provided (after data is cached)
+  await handleQueuePlayersForMatch(data, teamId, matchId, forceRefresh);
+  
+  // 7. Return processed data
+  return data;
 }
 
 export async function refreshMatchDetails(
   matchId: number,
   teamId?: string
-): Promise<unknown | { status: string; signature: string }> {
+): Promise<unknown> {
   const cacheKey = getOpendotaMatchCacheKey(matchId.toString());
   const filename = `${cacheKey}.json`;
   const MATCH_TTL = 60 * 60 * 24 * 14; // 14 days in seconds
   await cacheService.invalidate(cacheKey, filename);
   
-  // 2. Queue the fetch
-  const queueResult = await cacheService.queueRequest(
-    'opendota',
-    cacheKey,
-    async () => {
-      // 1. Try mock data if available
-      const mockRes = await tryMock('opendota', cacheKey + ".json");
-      if (mockRes) {
-        const data = await mockRes.json();
-        // Queue players if teamId is provided
-        await handleQueuePlayersForMatch(data, teamId, matchId, false);
-        return data;
-      }
-      
-      // 2. Check if we should use mock service
-      if (shouldMockService('opendota')) {
-        const fakeData = generateFakeMatchDetails(matchId, filename);
-        // Queue players if teamId is provided
-        await handleQueuePlayersForMatch(fakeData, teamId, matchId, false);
-        return fakeData;
-      }
-      
-      // 3. Fetch real data
-      const data = await fetchAPI<unknown>('opendota', `/matches/${matchId}`, cacheKey);
-      
-      // 4. Write processed data to cache (not HTML, so write processed data)
-      await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
-      
-      // 5. Queue players if teamId is provided (after data is cached)
-      await handleQueuePlayersForMatch(data, teamId, matchId, false);
-      
-      // 6. Return processed data
-      return data;
-    },
-    MATCH_TTL,
-    filename
-  );
-
-  if (isAlreadyQueuedResult(queueResult)) {
-    return { status: 'queued', signature: queueResult.signature };
+  // 2. Try mock data if available
+  const mockRes = await tryMock('opendota', filename);
+  if (mockRes) {
+    const data = await mockRes.json();
+    await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
+    // Queue players if teamId is provided
+    await handleQueuePlayersForMatch(data, teamId, matchId, false);
+    return data;
   }
-  return queueResult;
+  
+  // 3. Check if we should use mock service
+  if (shouldMockService('opendota')) {
+    const fakeData = generateFakeMatch(matchId, filename);
+    await cacheService.set('opendota', cacheKey, fakeData, MATCH_TTL, filename);
+    // Queue players if teamId is provided
+    await handleQueuePlayersForMatch(fakeData, teamId, matchId, false);
+    return fakeData;
+  }
+  
+  // 4. Fetch real data
+  const data = await fetchAPI<unknown>('opendota', `/matches/${matchId}`, cacheKey);
+  
+  // 5. Write processed data to cache
+  await cacheService.set('opendota', cacheKey, data, MATCH_TTL, filename);
+  
+  // 6. Queue players if teamId is provided (after data is cached)
+  await handleQueuePlayersForMatch(data, teamId, matchId, false);
+  
+  // 7. Return processed data
+  return data;
 }
 
-export async function getPublicMatches(limit: number = 100): Promise<unknown[] | { status: string; signature: string }> {
+export async function getPublicMatches(limit: number = 100): Promise<unknown[]> {
   const cacheKey = getOpendotaPublicMatchesCacheKey(limit.toString());
   const filename = `${cacheKey}.json`;
   const MATCHES_TTL = 60 * 60; // 1 hour in seconds
@@ -228,38 +192,27 @@ export async function getPublicMatches(limit: number = 100): Promise<unknown[] |
   const cached = await cacheService.get<unknown[]>(cacheKey, filename, MATCHES_TTL);
   if (cached) return cached;
 
-  // 2. Queue the fetch
-  const queueResult = await cacheService.queueRequest(
-    'opendota',
-    cacheKey,
-    async () => {
-      // 1. Try mock data if available
-      const mockRes = await tryMock('opendota', cacheKey + ".json");
-      if (mockRes) {
-        return await mockRes.json();
-      }
-      
-      // 2. Check if we should use mock service
-      if (shouldMockService('opendota')) {
-        const fakeData = Array.from({ length: limit }, (_, i) => generateFakeMatch(9000000000 + i, `${9000000000 + i}.json`));
-        return fakeData;
-      }
-      
-      // 3. Fetch real data
-      const data = await fetchAPI<unknown[]>("opendota", `/publicMatches?limit=${limit}`, cacheKey);
-      
-      // 4. Write processed data to cache (not HTML, so write processed data)
-      await cacheService.set('opendota', cacheKey, data, MATCHES_TTL, filename);
-      
-      // 5. Return processed data
-      return data;
-    },
-    MATCHES_TTL,
-    filename
-  );
-
-  if (isAlreadyQueuedResult(queueResult)) {
-    return { status: 'queued', signature: queueResult.signature };
+  // 2. Try mock data if available
+  const mockRes = await tryMock('opendota', filename);
+  if (mockRes) {
+    const data = await mockRes.json();
+    await cacheService.set('opendota', cacheKey, data, MATCHES_TTL, filename);
+    return data;
   }
-  return queueResult;
+  
+  // 3. Check if we should use mock service
+  if (shouldMockService('opendota')) {
+    const fakeData = Array.from({ length: limit }, (_, i) => generateFakeMatch(9000000000 + i, `${9000000000 + i}.json`));
+    await cacheService.set('opendota', cacheKey, fakeData, MATCHES_TTL, filename);
+    return fakeData;
+  }
+  
+  // 4. Fetch real data
+  const data = await fetchAPI<unknown[]>("opendota", `/publicMatches?limit=${limit}`, cacheKey);
+  
+  // 5. Write processed data to cache
+  await cacheService.set('opendota', cacheKey, data, MATCHES_TTL, filename);
+  
+  // 6. Return processed data
+  return data;
 } 

@@ -928,23 +928,6 @@
                   }
                 }
               },
-              "bestWinRate": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "hero": {
-                      "type": "string"
-                    },
-                    "games": {
-                      "type": "integer"
-                    },
-                    "winRate": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
               "mostBanned": {
                 "type": "array",
                 "items": {
@@ -963,373 +946,19 @@
                 }
               }
             }
-          },
-          "trends": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "metric": {
-                  "type": "string"
-                },
-                "value": {
-                  "oneOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
-                },
-                "trend": {
-                  "type": "string"
-                },
-                "direction": {
-                  "type": "string",
-                  "enum": [
-                    "up",
-                    "down",
-                    "neutral"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      },
-      "MetaInsights": {
-        "type": "object",
-        "properties": {
-          "currentMeta": {
-            "type": "object",
-            "properties": {
-              "description": {
-                "type": "string"
-              },
-              "keyHeroes": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "hero": {
-                      "type": "string"
-                    },
-                    "pickRate": {
-                      "type": "number"
-                    },
-                    "winRate": {
-                      "type": "number"
-                    },
-                    "banRate": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
-              "strategies": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "metaTrends": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "title": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "impact": {
-                  "type": "string"
-                },
-                "trend": {
-                  "type": "string",
-                  "enum": [
-                    "up",
-                    "down",
-                    "neutral"
-                  ]
-                },
-                "details": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "roleStats": {
-            "type": "object",
-            "properties": {
-              "carry": {
-                "type": "object",
-                "properties": {
-                  "avgGPM": {
-                    "type": "number"
-                  },
-                  "avgKDA": {
-                    "type": "string"
-                  },
-                  "winRate": {
-                    "type": "number"
-                  }
-                }
-              },
-              "mid": {
-                "type": "object",
-                "properties": {
-                  "avgGPM": {
-                    "type": "number"
-                  },
-                  "avgKDA": {
-                    "type": "string"
-                  },
-                  "winRate": {
-                    "type": "number"
-                  }
-                }
-              },
-              "offlane": {
-                "type": "object",
-                "properties": {
-                  "avgGPM": {
-                    "type": "number"
-                  },
-                  "avgKDA": {
-                    "type": "string"
-                  },
-                  "winRate": {
-                    "type": "number"
-                  }
-                }
-              },
-              "support": {
-                "type": "object",
-                "properties": {
-                  "avgGPM": {
-                    "type": "number"
-                  },
-                  "avgKDA": {
-                    "type": "string"
-                  },
-                  "winRate": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "Team": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "tag": {
-            "type": "string"
-          },
-          "players": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "id": {
-                  "type": "string"
-                },
-                "role": {
-                  "type": "string"
-                },
-                "mmr": {
-                  "type": "number"
-                },
-                "isStandin": {
-                  "type": "boolean"
-                },
-                "standinFor": {
-                  "type": "string"
-                },
-                "addedDate": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "winRate": {
-            "type": "number"
-          },
-          "totalMatches": {
-            "type": "number"
-          },
-          "lastMatch": {
-            "type": "string"
-          },
-          "league": {
-            "type": "string"
-          },
-          "season": {
-            "type": "string"
-          },
-          "founded": {
-            "type": "string"
-          },
-          "record": {
-            "type": "string"
-          },
-          "manualMatches": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "date": {
-                  "type": "string"
-                },
-                "opponent": {
-                  "type": "string"
-                },
-                "result": {
-                  "type": "string"
-                },
-                "score": {
-                  "type": "string"
-                },
-                "league": {
-                  "type": "string"
-                },
-                "notes": {
-                  "type": "string"
-                },
-                "openDota": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          },
-          "dotabuffUrl": {
-            "type": "string"
-          },
-          "leagueUrl": {
-            "type": "string"
-          },
-          "standings": {
-            "type": "array",
-            "items": {}
-          },
-          "topHeroes": {
-            "type": "array",
-            "items": {}
           }
         }
       }
     }
   },
   "paths": {
-    "/cache/invalidate/{type}": {
-      "post": {
-        "tags": [
-          "Cache"
-        ],
-        "summary": "Invalidate a specific cache entry by type and key",
-        "parameters": [
-          {
-            "name": "type",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "type": "string",
-                    "description": "The cache key"
-                  }
-                },
-                "required": [
-                  "key"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Cache invalidated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/cache/invalidate": {
       "post": {
         "tags": [
           "Cache"
         ],
-        "summary": "Invalidate multiple cache entries",
+        "summary": "Invalidate cache keys/files",
+        "description": "Invalidate one or more cache keys/files immediately (not queued).",
         "requestBody": {
           "required": true,
           "content": {
@@ -1343,33 +972,41 @@
                       "type": "object",
                       "properties": {
                         "type": {
-                          "type": "string"
+                          "type": "string",
+                          "description": "The cache type (e.g. 'player', 'team', 'match', 'league')"
                         },
-                        "key": {
-                          "type": "string"
+                        "id": {
+                          "type": "string",
+                          "description": "The id for the entity (e.g. playerId, teamId, matchId, leagueId)"
                         }
                       }
                     },
-                    "description": "List of cache entries to invalidate"
+                    "description": "List of cache items to invalidate"
                   }
-                },
-                "required": [
-                  "items"
-                ]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Cache invalidated",
+            "description": "Cache invalidation result",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": {
-                      "type": "boolean"
+                    "invalidated": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
@@ -1405,19 +1042,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/cache": {
-      "get": {
-        "tags": [
-          "Cache"
-        ],
-        "summary": "Get cache status",
-        "responses": {
-          "200": {
-            "description": "Cache status"
           }
         }
       }
@@ -1511,17 +1135,135 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Hero data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Heroes"
+        ],
+        "summary": "Fetch and return all heroes (synchronous)",
+        "responses": {
+          "200": {
+            "description": "List of heroes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenDotaHero"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items": {
+      "post": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Get all items",
+        "description": "Returns items data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Items data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
     "/leagues/{id}": {
-      "get": {
+      "post": {
         "tags": [
           "Leagues"
         ],
-        "summary": "Get league name from Dotabuff",
-        "description": "This endpoint uses an async/polling pattern. If the data is not available yet, it will queue the fetch and return a 202 response with `{ status: 'queued', signature }`. The client should poll this endpoint until a 200 response with the data is returned.\n",
+        "summary": "Get league data",
+        "description": "Returns league data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1533,37 +1275,29 @@
             "description": "League ID"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "League data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "leagueName": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "202": {
-            "description": "Data is being fetched; client should poll until 200 is returned.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "queued"
-                    },
-                    "signature": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -1602,12 +1336,12 @@
       }
     },
     "/matches/{id}": {
-      "get": {
+      "post": {
         "tags": [
           "Matches"
         ],
-        "summary": "Get match data",
-        "description": "To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.\n",
+        "summary": "Get match data from OpenDota",
+        "description": "Returns match data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1617,39 +1351,64 @@
               "type": "string"
             },
             "description": "Match ID"
-          },
-          {
-            "in": "query",
-            "name": "force",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Force refresh - bypass cache and fetch fresh data"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Match data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/OpenDotaMatch"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid match id"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Match not found"
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Server error"
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1667,13 +1426,13 @@
         }
       }
     },
-    "/players/{id}/data": {
-      "get": {
+    "/players/{id}/counts": {
+      "post": {
         "tags": [
           "Players"
         ],
-        "summary": "Get player data",
-        "description": "To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.\n",
+        "summary": "Get player counts",
+        "description": "Returns player counts data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1683,17 +1442,345 @@
               "type": "string"
             },
             "description": "Player ID"
-          },
-          {
-            "in": "query",
-            "name": "force",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Force refresh - bypass cache and fetch fresh data"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player counts data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}/heroes": {
+      "post": {
+        "tags": [
+          "Players"
+        ],
+        "summary": "Get player heroes",
+        "description": "Returns player heroes data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Player ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player heroes data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenDotaPlayerHeroes"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}/matches": {
+      "post": {
+        "tags": [
+          "Players"
+        ],
+        "summary": "Get player matches",
+        "description": "Returns player matches data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Player ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player matches data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenDotaMatch"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}/recentMatches": {
+      "post": {
+        "tags": [
+          "Players"
+        ],
+        "summary": "Get player recent matches",
+        "description": "Returns player recent matches data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Player ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player recent matches data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenDotaMatch"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}": {
+      "post": {
+        "tags": [
+          "Players"
+        ],
+        "summary": "Get player data",
+        "description": "Returns player data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Player ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Player data",
@@ -1704,17 +1791,47 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/players/{id}/stats": {
-      "get": {
+    "/players/{id}/totals": {
+      "post": {
         "tags": [
           "Players"
         ],
-        "summary": "Get player stats",
-        "description": "To force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.\n",
+        "summary": "Get player totals",
+        "description": "Returns player totals data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1724,56 +1841,6 @@
               "type": "string"
             },
             "description": "Player ID"
-          },
-          {
-            "in": "query",
-            "name": "force",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Force refresh - bypass cache and fetch fresh data"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Player stats",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PlayerStats"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/teams/{id}/matches": {
-      "post": {
-        "tags": [
-          "Teams"
-        ],
-        "summary": "Import Dotabuff matches for a team",
-        "description": "This endpoint uses an async/polling pattern. If the data is not available yet, it will queue the fetch and return a 202 response with `{ status: 'queued', signature }`. The client should poll this endpoint until a 200 response with the data is returned.\nTo force a refresh and bypass the cache, add `?force=true` to the request URL. All cache invalidation and refresh is now handled via this query parameter.\n",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Team ID"
-          },
-          {
-            "in": "query",
-            "name": "force",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Force refresh - bypass cache and fetch fresh data"
           }
         ],
         "requestBody": {
@@ -1783,80 +1850,178 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "leagueId": {
-                    "type": "string",
-                    "description": "The Dotabuff league ID"
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
                   }
-                },
-                "required": [
-                  "leagueId"
-                ]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Import result",
+            "description": "Player totals data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "description": "Unique team-league identifier"
-                    },
-                    "teamId": {
+                    "error": {
                       "type": "string"
-                    },
-                    "teamName": {
-                      "type": "string"
-                    },
-                    "leagueId": {
-                      "type": "string"
-                    },
-                    "leagueName": {
-                      "type": "string"
-                    },
-                    "matchIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "matches": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "players": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
                     }
                   }
                 }
               }
             }
           },
-          "202": {
-            "description": "Data is being fetched; client should poll until 200 is returned.",
+          "500": {
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "queued"
-                    },
-                    "signature": {
+                    "error": {
                       "type": "string"
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/players/{id}/wl": {
+      "post": {
+        "tags": [
+          "Players"
+        ],
+        "summary": "Get player win/loss record",
+        "description": "Returns player win/loss data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Player ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player win/loss data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teams/{id}": {
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Get team data with matches",
+        "description": "Returns team data with matches immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Team ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "force": {
+                    "type": "boolean",
+                    "description": "Force refresh - bypass cache and fetch fresh data"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Team data with matches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DotabuffTeam"
                 }
               }
             }

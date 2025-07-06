@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 2162026,
+    "personaname": "Lacoste",
+    "name": "Lacoste",
+    "plus": true,
+    "cheese": 287,
+    "steamid": "76561198281115670",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/57/68.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/58/40_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/30/38_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/2162026",
+    "last_login": "2025-06-29T15:01:02.465Z",
+    "loccountrycode": "CIS",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 80,
+  "leaderboard_rank": 63,
+  "total_matches": 2314,
+  "win": 1694,
+  "kda": 6.66,
+  "gpm": 655,
+  "xpm": 659,
+  "avg_seconds_per_match": 3251
+}

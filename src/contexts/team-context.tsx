@@ -1,10 +1,10 @@
 "use client";
-import * as React from 'react';
+import { fetchTeamData } from '@/lib/fetch-data';
+import { Trophy, Users } from 'lucide-react';
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { logWithTimestamp } from '../lib/utils';
 import { TeamContextType } from '../types/contexts';
-import { TeamMatchesResponse, TeamMatchesRequest } from '../types/api';
-import { Team, Player, Match } from '../types/team';
+import { Match, Player, Team } from '../types/team';
 
 // ============================================================================
 // CONSTANTS
@@ -58,33 +58,7 @@ function loadActiveTeamFromLocalStorage(): string | null {
 // API HELPERS
 // ============================================================================
 
-async function fetchTeamData(teamId: string, leagueId: string): Promise<TeamMatchesResponse> {
-  const response = await fetch(`/api/teams/${teamId}/matches`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ leagueId } as TeamMatchesRequest),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch team data for ${teamId}`);
-  }
-  return response.json() as Promise<TeamMatchesResponse>;
-}
-
-async function fetchLeagueData(leagueId: string): Promise<{ leagueName: string }> {
-  const response = await fetch(`/api/leagues/${leagueId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({}),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch league data for ${leagueId}`);
-  }
-  return response.json() as Promise<{ leagueName: string }>;
-}
+// Note: fetchTeamData is now imported from @/lib/fetch-data
 
 // ============================================================================
 // CONTEXT
@@ -201,15 +175,14 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     saveActiveTeamToLocalStorage(uniqueId);
 
     try {
-      // Fetch team data and league data in parallel
-      const [teamData, leagueData] = await Promise.all([
-        fetchTeamData(teamId, leagueId),
-        fetchLeagueData(leagueId)
-      ]);
+      // Use the new standardized API to fetch team and league data
+      const { teamData, leagueData } = await fetchTeamData(teamId, leagueId);
       
       const teamName = teamData.teamName || `Team ${teamId}`;
       const leagueName = leagueData.leagueName || `League ${leagueId}`;
-      const matchIds = Object.values(teamData.matchIdsByLeague).flat() || [];
+      
+      // Extract match IDs from the new structure
+      const matchIds = teamData.matchIdsByLeague?.[leagueId] || [];
 
       // Update the team with real data
       updateTeams(prevTeams =>
@@ -220,7 +193,6 @@ export function TeamProvider({ children }: { children: ReactNode }) {
                 teamName,
                 leagueName,
                 matchIds,
-                matchIdsByLeague: teamData.matchIdsByLeague,
                 loading: false
               }
             : team
@@ -289,6 +261,15 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     updateTeams(prevTeams =>
       prevTeams.map(team =>
         team.id === teamId ? { ...team, matchIds } : team
+      )
+    );
+  };
+
+  // Update team data from API
+  const updateTeamData = (teamId: string, updates: Partial<Team>): void => {
+    updateTeams(prevTeams =>
+      prevTeams.map(team =>
+        team.id === teamId ? { ...team, ...updates } : team
       )
     );
   };
@@ -454,15 +435,28 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     removeManualPlayer(activeTeam.id, playerId);
   };
 
-  const getExternalLinks = (): Array<{ href: string; label: string; icon: string }> => {
+  const getExternalLinks = (): Array<{ href: string; label: string; icon: React.ReactElement }> => {
     if (!activeTeam) return [];
-    return [
-      {
-        href: `https://dotabuff.com/teams/${activeTeam.teamId}`,
-        label: 'Dotabuff',
-        icon: '📊'
-      }
-    ];
+    
+    const links = [];
+    
+    // Add team's Dotabuff page
+    links.push({
+      href: `https://www.dotabuff.com/esports/teams/${activeTeam.teamId}`,
+      label: `${activeTeam.teamName} on Dotabuff`,
+      icon: <Users className="w-5 h-5 text-blue-500" />
+    });
+    
+    // Add league's Dotabuff page if leagueId exists
+    if (activeTeam.leagueId) {
+      links.push({
+        href: `https://www.dotabuff.com/esports/leagues/${activeTeam.leagueId}`,
+        label: `${activeTeam.leagueName || 'League'} on Dotabuff`,
+        icon: <Trophy className="w-5 h-5 text-yellow-500" />
+      });
+    }
+    
+    return links;
   };
 
   const value: TeamContextType = {
@@ -474,6 +468,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     setActiveTeam,
     updateTeamName,
     updateMatchIds,
+    updateTeamData,
     addManualPlayer,
     removeManualPlayer,
     hidePlayer,

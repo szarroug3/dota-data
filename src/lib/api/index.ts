@@ -2,6 +2,7 @@
 export * from './dotabuff/leagues';
 export * from './dotabuff/teams';
 export * from './opendota/heroes';
+export * from './opendota/items';
 export * from './opendota/matches';
 export * from './opendota/players';
 

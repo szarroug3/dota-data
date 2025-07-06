@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 2099455,
+    "personaname": "SumaiL",
+    "name": "SumaiL",
+    "plus": true,
+    "cheese": 249,
+    "steamid": "76561198299213903",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/83/64.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/55/28_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/22/63_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/2099455",
+    "last_login": "2025-07-02T02:19:04.783Z",
+    "loccountrycode": "CIS",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 72,
+  "leaderboard_rank": 619,
+  "total_matches": 3538,
+  "win": 2350,
+  "kda": 7.8,
+  "gpm": 626,
+  "xpm": 514,
+  "avg_seconds_per_match": 2414
+}

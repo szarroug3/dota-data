@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 9179752,
+    "personaname": "Bulba",
+    "name": "Bulba",
+    "plus": false,
+    "cheese": 995,
+    "steamid": "76561198716805696",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/51/24.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/13/20_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/92/9_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/9179752",
+    "last_login": "2025-07-03T20:06:13.647Z",
+    "loccountrycode": "EU",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 79,
+  "leaderboard_rank": 41,
+  "total_matches": 1010,
+  "win": 1602,
+  "kda": 4.2,
+  "gpm": 644,
+  "xpm": 474,
+  "avg_seconds_per_match": 3190
+}

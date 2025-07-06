@@ -10,7 +10,21 @@ const __dirname = path.dirname(__filename);
  * @param {string} description
  * @returns {{ filesCleaned: number, errors: number }}
  */
-export function cleanDirectory(dirPath, description) {
+function cleanSubdirectory(dirPath) {
+  let filesCleaned = 0;
+  const subFiles = fs.readdirSync(dirPath);
+  for (const subFile of subFiles) {
+    const subFilePath = path.join(dirPath, subFile);
+    if (fs.statSync(subFilePath).isFile()) {
+      fs.unlinkSync(subFilePath);
+      filesCleaned++;
+    }
+  }
+  fs.rmdirSync(dirPath);
+  return filesCleaned;
+}
+
+export function cleanDirectory(dirPath) {
   let filesCleaned = 0;
   let errors = 0;
   if (!fs.existsSync(dirPath)) {
@@ -20,7 +34,7 @@ export function cleanDirectory(dirPath, description) {
     try {
       fs.unlinkSync(dirPath);
       filesCleaned++;
-    } catch (error) {
+    } catch {
       errors++;
     }
     return { filesCleaned, errors };
@@ -33,18 +47,9 @@ export function cleanDirectory(dirPath, description) {
         fs.unlinkSync(filePath);
         filesCleaned++;
       } else if (fs.statSync(filePath).isDirectory()) {
-        // Recursively clean subdirectories
-        const subFiles = fs.readdirSync(filePath);
-        for (const subFile of subFiles) {
-          const subFilePath = path.join(filePath, subFile);
-          if (fs.statSync(subFilePath).isFile()) {
-            fs.unlinkSync(subFilePath);
-            filesCleaned++;
-          }
-        }
-        fs.rmdirSync(filePath);
+        filesCleaned += cleanSubdirectory(filePath);
       }
-    } catch (fileError) {
+    } catch {
       errors++;
     }
   }
@@ -72,7 +77,7 @@ export function cleanPatternFiles(patterns) {
       try {
         fs.unlinkSync(filePath);
         filesCleaned++;
-      } catch (fileError) {
+      } catch {
         errors++;
       }
     }
@@ -101,7 +106,7 @@ export async function cleanupTestFiles(appDirectories, testArtifactDirectories, 
   let totalFilesCleaned = 0;
   let totalErrors = 0;
   for (const task of cleanupTasks) {
-    const { filesCleaned, errors } = cleanDirectory(task.path, task.description);
+    const { filesCleaned, errors } = cleanDirectory(task.path);
     totalFilesCleaned += filesCleaned;
     totalErrors += errors;
   }
@@ -127,7 +132,7 @@ export function verifyCleanup(verificationTasks) {
           totalRemainingFiles += files.length;
         }
       }
-    } catch (error) {
+    } catch {
       verificationErrors++;
     }
   }
@@ -174,7 +179,7 @@ export function validateJsonContent(content) {
   try {
     JSON.parse(content);
     return { valid: true };
-  } catch (_) {
+  } catch {
     return { valid: false, reason: 'Invalid JSON' };
   }
 }
@@ -226,7 +231,7 @@ export async function makeRequest(url, options = {}) {
     const text = await response.text();
     try {
       data = JSON.parse(text);
-    } catch (_) {
+    } catch {
       data = text;
     }
   } catch (err) {

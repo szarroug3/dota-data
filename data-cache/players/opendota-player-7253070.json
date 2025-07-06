@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 7253070,
+    "personaname": "Boxi",
+    "name": "Boxi",
+    "plus": false,
+    "cheese": 996,
+    "steamid": "76561198781275484",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/5/66.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/85/84_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/30/89_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/7253070",
+    "last_login": "2025-07-04T22:11:28.836Z",
+    "loccountrycode": "EU",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 75,
+  "leaderboard_rank": 657,
+  "total_matches": 2745,
+  "win": 1698,
+  "kda": 6.8,
+  "gpm": 615,
+  "xpm": 460,
+  "avg_seconds_per_match": 3209
+}

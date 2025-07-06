@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 8828231,
+    "personaname": "Fear",
+    "name": "Fear",
+    "plus": true,
+    "cheese": 919,
+    "steamid": "76561198707781938",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/11/85.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/45/86_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/10/59_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/8828231",
+    "last_login": "2025-07-06T05:36:31.812Z",
+    "loccountrycode": "CN",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 72,
+  "leaderboard_rank": 364,
+  "total_matches": 2854,
+  "win": 1675,
+  "kda": 6.48,
+  "gpm": 366,
+  "xpm": 732,
+  "avg_seconds_per_match": 2064
+}

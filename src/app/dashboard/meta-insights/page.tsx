@@ -4,49 +4,56 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
+import { useTeam } from "@/contexts/team-context";
+import { useTeamData } from "@/contexts/team-data-context";
 import { useMetaInsights } from "@/lib/hooks/useDataFetching";
 import {
-    Calendar,
-    Clock,
-    Minus,
-    Tag,
-    Target,
-    TrendingDown,
-    TrendingUp,
-    Users
+  Calendar,
+  Clock,
+  Minus,
+  Tag,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users
 } from "lucide-react";
 import { useState } from "react";
 
+// Types extracted from inline usage
+export type HeroBan = { banRate: number };
+export type HeroPick = { hero: string; pickRate: number; winRate: number };
+
 export default function MetaInsightsPage() {
+  const { currentTeam } = useTeam();
+  const { getLeagueData } = useTeamData();
   const [timeRange, setTimeRange] = useState<"week" | "month" | "patch">(
     "week",
   );
-  const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
-  const [isSwitching, setIsSwitching] = useState(false);
 
   const { data: metaData, loading, error } = useMetaInsights(timeRange);
 
   const handleTimeRangeChange = (newTimeRange: "week" | "month" | "patch") => {
     if (newTimeRange !== timeRange) {
-      setIsSwitching(true);
       setTimeRange(newTimeRange);
-      // Reset switching state after a short delay to allow data to load
-      setTimeout(() => setIsSwitching(false), 300);
     }
   };
+
+  // Get league data for the current team
+  const leagueData = currentTeam?.leagueId ? getLeagueData(currentTeam.leagueId) : null;
+  const leagueName = leagueData?.leagueName || (currentTeam?.leagueId ? `League ${currentTeam.leagueId}` : 'Unknown League');
 
   if (loading && !metaData) {
     return (
       <div className="space-y-6">
         <PageHeader
           title="Meta Insights"
-          description="Loading meta insights..."
+          description={`Loading meta insights for ${currentTeam?.teamName || 'team'} in ${leagueName}...`}
         />
         <div className="grid gap-6">
           <div className="h-32 bg-muted animate-pulse rounded" />
@@ -77,7 +84,7 @@ export default function MetaInsightsPage() {
       <div className="space-y-6">
         <PageHeader
           title="Meta Insights"
-          description="No meta insights available"
+          description={`No meta insights available for ${currentTeam?.teamName || 'team'} in ${leagueName}`}
         />
         <div className="text-center text-muted-foreground p-8">
           <div className="text-lg font-medium mb-2">No meta data available</div>
@@ -114,15 +121,15 @@ export default function MetaInsightsPage() {
 
   // Get top bans (heroes with highest ban rates)
   const topBans = metaData.currentMeta.keyHeroes
-    .filter((hero: any) => hero.banRate > 0)
-    .sort((a: any, b: any) => b.banRate - a.banRate)
+    .filter((hero: HeroBan) => hero.banRate > 0)
+    .sort((a: HeroBan, b: HeroBan) => b.banRate - a.banRate)
     .slice(0, 6);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Meta Insights"
-        description="Current meta trends and strategic analysis"
+        description={`Current meta trends and strategic analysis for ${currentTeam?.teamName || 'team'} in ${leagueName}`}
       />
 
       <div className="flex items-center justify-between">
@@ -130,7 +137,7 @@ export default function MetaInsightsPage() {
           <Button
             variant={timeRange === "week" ? "default" : "outline"}
             onClick={() => handleTimeRangeChange("week")}
-            disabled={isSwitching}
+            disabled={loading}
           >
             <Calendar className="w-4 h-4 mr-2" />
             Week
@@ -138,7 +145,7 @@ export default function MetaInsightsPage() {
           <Button
             variant={timeRange === "month" ? "default" : "outline"}
             onClick={() => handleTimeRangeChange("month")}
-            disabled={isSwitching}
+            disabled={loading}
           >
             <Clock className="w-4 h-4 mr-2" />
             Month
@@ -146,13 +153,13 @@ export default function MetaInsightsPage() {
           <Button
             variant={timeRange === "patch" ? "default" : "outline"}
             onClick={() => handleTimeRangeChange("patch")}
-            disabled={isSwitching}
+            disabled={loading}
           >
             <Tag className="w-4 h-4 mr-2" />
             Patch
           </Button>
         </div>
-        {isSwitching && (
+        {loading && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             <span>Loading...</span>
@@ -161,7 +168,7 @@ export default function MetaInsightsPage() {
       </div>
 
       {/* Content with subtle loading overlay */}
-      <div className={`relative space-y-6 ${isSwitching ? "opacity-50" : ""}`}>
+      <div className={`relative space-y-6 ${loading ? "opacity-50" : ""}`}>
         {/* Meta Trends Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
@@ -211,7 +218,7 @@ export default function MetaInsightsPage() {
           <CardContent>
             <div className="space-y-4">
               {metaData.currentMeta.keyHeroes.map(
-                (hero: any, index: number) => {
+                (hero: HeroPick, index: number) => {
                   const heroInternalName =
                     heroInternalNameMap[hero.hero] ||
                     hero.hero.toLowerCase().replace(/\s+/g, "_");
@@ -274,7 +281,7 @@ export default function MetaInsightsPage() {
           <CardContent>
             {topBans.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {topBans.map((hero: any) => {
+                {topBans.map((hero: HeroBan) => {
                   const heroInternalName =
                     heroInternalNameMap[hero.hero] ||
                     hero.hero.toLowerCase().replace(/\s+/g, "_");

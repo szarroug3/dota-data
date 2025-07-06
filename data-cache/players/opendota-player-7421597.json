@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 7421597,
+    "personaname": "AdmiralBulldog",
+    "name": "AdmiralBulldog",
+    "plus": false,
+    "cheese": 294,
+    "steamid": "76561198737633861",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/94/20.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/34/100_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/97/17_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/7421597",
+    "last_login": "2025-06-30T23:27:09.393Z",
+    "loccountrycode": "CIS",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 78,
+  "leaderboard_rank": 226,
+  "total_matches": 1001,
+  "win": 1079,
+  "kda": 6.4,
+  "gpm": 754,
+  "xpm": 787,
+  "avg_seconds_per_match": 3265
+}

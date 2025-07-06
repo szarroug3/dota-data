@@ -1,89 +1,143 @@
 "use client";
-import React, { Suspense, useEffect, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
-import type { Team } from "@/types/team";
 import PageHeader from "@/components/dashboard/PageHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { getHeroNameSync } from "@/lib/utils";
+import type { OpenDotaMatchPlayer, OpenDotaPlayer } from "@/types/opendota";
+import type { Team } from "@/types/team";
+import React, { Suspense, useMemo } from "react";
 import HeroStatsTables from "./HeroStatsTables";
+import { useMatchHistoryFilters } from "./MatchHistoryFilters";
 import MatchHistoryGrid from "./MatchHistoryGrid";
 import MatchHistorySummary from "./MatchHistorySummary";
-import { calculateHeroStats, getHighlightStyle, getMatchSummary, useFilteredMatches, type HeroStatsData, type Match } from "./match-utils";
+import { calculateHeroStats, getHighlightStyle, getMatchSummary, getMatchTrends, useFilteredMatches, type HeroStatsData, type Match } from "./match-utils";
 import { useGridHeight } from "./useGridHeight";
 import { useMatchData } from "./useMatchData";
 import { useMatchHistoryState } from "./useMatchHistoryState";
 
-function MatchHistorySkeleton() {
+// Define the return types from utility functions
+interface MatchSummary {
+  totalMatches: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  avgGameLength: string;
+  currentStreak: number;
+}
+
+interface MatchTrend {
+  type: string;
+  value: number;
+  change: number;
+  direction: "up" | "down";
+  metric: string;
+  trend: string;
+}
+
+// Extracted component for summary section
+function MatchSummarySection({ 
+  summary, 
+  trends, 
+  loadingMatches 
+}: { 
+  summary: MatchSummary; 
+  trends: MatchTrend[]; 
+  loadingMatches: boolean; 
+}) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Match History"
-        description="View detailed match history, analyze performance, and track your team's progress"
-      />
-      
-      <div className="dashboard-content">
-        {/* Main grid skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 w-full min-h-0" style={{ height: 600 }}>
-          {/* Left column skeleton */}
-          <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
-            <CardContent className="flex-1 flex flex-col p-0 min-h-0 h-full">
-              <div className="flex-1 min-h-0 overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="border rounded-lg p-4 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                      <Skeleton className="h-3 w-2/3" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Right column skeleton */}
-          <Card className="flex flex-col min-h-0" style={{ height: 600 }}>
-            <CardContent className="flex-1 flex flex-col p-6 min-h-0 h-full">
-              <div className="space-y-4">
-                <Skeleton className="h-6 w-1/3" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        {/* Summary skeleton */}
-        <div className="max-w-full">
-          <Card className="h-fit mb-0">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <Skeleton className="h-6 w-1/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        {/* Hero stats skeleton */}
-        <div className="max-w-full">
-          <Card className="h-fit mt-0">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <Skeleton className="h-6 w-1/3" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+    <div className="max-w-full">
+      <Card className="h-fit mb-0">
+        <CardContent className="p-6">
+          <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading summary...</div>}>
+            <MatchHistorySummary summary={summary} trends={trends} loading={loadingMatches} />
+          </Suspense>
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+// Extracted component for hero stats section
+function HeroStatsSection({ 
+  currentTeam, 
+  heroStats, 
+  emptyHeroStats, 
+  loadingMatches 
+}: { 
+  currentTeam: Team | null; 
+  heroStats: HeroStatsData | null; 
+  emptyHeroStats: HeroStatsData; 
+  loadingMatches: boolean; 
+}) {
+  return (
+    <div className="max-w-full">
+      <Card className="h-fit mt-0">
+        <CardContent className="p-6">
+          <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading hero stats...</div>}>
+            {currentTeam && (
+              <HeroStatsTables 
+                heroStats={heroStats || emptyHeroStats} 
+                getHighlightStyle={(hero: string, type: string) => getHighlightStyle(hero, type, heroStats || emptyHeroStats)}
+                loading={loadingMatches} 
+              />
+            )}
+          </Suspense>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Extracted component for add match functionality
+function useAddMatchState() {
+  const [showAddMatch, setShowAddMatch] = React.useState(false);
+  const [isClosing, setIsClosing] = React.useState(false);
+
+  const handleAddMatch = () => {
+    setShowAddMatch(true);
+    setIsClosing(false);
+  };
+
+  const handleCloseAddMatch = () => {
+    setIsClosing(true);
+    // Allow animation to complete before hiding
+    setTimeout(() => {
+      setShowAddMatch(false);
+      setIsClosing(false);
+    }, 500);
+  };
+
+  return {
+    showAddMatch,
+    isClosing,
+    handleAddMatch,
+    handleCloseAddMatch
+  };
+}
+
+// Extracted component for hero stats calculation
+function useHeroStatsCalculation(matches: Match[], loadingMatches: boolean) {
+  return useMemo(() => {
+    if (loadingMatches || matches.length === 0) {
+      return null;
+    }
+    return calculateHeroStats(matches);
+  }, [matches, loadingMatches]);
+}
+
+// Extracted component for available heroes calculation
+function useAvailableHeroes(matches: Match[]) {
+  return useMemo(() => {
+    const heroes = new Set<string>();
+    matches.forEach((match: Match) => {
+      if (match.openDota?.players) {
+        match.openDota.players.forEach((player: OpenDotaMatchPlayer) => {
+          const heroName = getHeroNameSync(player.hero_id);
+          if (heroName) heroes.add(heroName);
+        });
+      }
+    });
+    return Array.from(heroes).sort();
+  }, [matches]);
 }
 
 function MatchHistoryContent({ 
@@ -98,46 +152,65 @@ function MatchHistoryContent({
   showPlayerPopup, 
   setShowPlayerPopup, 
   selectedPlayer, 
-  setSelectedPlayer, 
   playerData, 
   setPlayerData, 
   loadingPlayerData, 
   loadingMatches,
   heroStats,
-  isPending,
   summary,
   trends,
-  emptyHeroStats
+  emptyHeroStats,
+  filters,
+  onFilterChange,
+  onClearFilters,
+  availableHeroes,
+  onAddMatch,
+  showAddMatch,
+  isClosing,
+  handleCloseAddMatch
 }: {
   gridHeight: number;
   gridRef: React.RefObject<HTMLDivElement | null>;
   isLoaded: boolean;
   currentTeam: Team | null;
-  filteredMatches: unknown[];
+  filteredMatches: Match[];
   selectedMatch: string | null;
   handleSelectMatch: (matchId: string) => void;
-  selectedMatchObj: unknown;
+  selectedMatchObj: Match | null;
   showPlayerPopup: boolean;
   setShowPlayerPopup: (show: boolean) => void;
-  selectedPlayer: unknown;
-  setSelectedPlayer: (player: unknown) => void;
-  playerData: unknown;
-  setPlayerData: (data: unknown) => void;
+  selectedPlayer: OpenDotaPlayer | null;
+  playerData: Record<string, unknown> | null;
+  setPlayerData: (data: Record<string, unknown> | null) => void;
   loadingPlayerData: boolean;
   loadingMatches: boolean;
   heroStats: HeroStatsData | null;
-  isPending: boolean;
-  summary: unknown;
-  trends: unknown[];
+  summary: MatchSummary;
+  trends: MatchTrend[];
   emptyHeroStats: HeroStatsData;
+  filters: {
+    opponentFilter: string;
+    heroFilter: string[];
+    resultFilter: string;
+    sideFilter: string;
+    pickFilter: string;
+  };
+  onFilterChange: (filters: Partial<{
+    opponentFilter: string;
+    heroFilter: string[];
+    resultFilter: string;
+    sideFilter: string;
+    pickFilter: string;
+  }>) => void;
+  onClearFilters: () => void;
+  availableHeroes: string[];
+  onAddMatch?: () => void;
+  showAddMatch: boolean;
+  isClosing: boolean;
+  handleCloseAddMatch: () => void;
 }) {
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Match History"
-        description="View detailed match history, analyze performance, and track the team's progress"
-      />
-      
       <div className="dashboard-content">
         {/* Main grid and content */}
         <MatchHistoryGrid 
@@ -151,38 +224,33 @@ function MatchHistoryContent({
           selectedMatchObj={selectedMatchObj} 
           showPlayerPopup={showPlayerPopup} 
           setShowPlayerPopup={setShowPlayerPopup} 
-          selectedPlayer={selectedPlayer} 
-          setSelectedPlayer={setSelectedPlayer} 
-          playerData={playerData} 
-          setPlayerData={setPlayerData} 
+          selectedPlayer={selectedPlayer as OpenDotaPlayer | null}
+          playerData={playerData as { [key: string]: unknown } | null}
+          setPlayerData={setPlayerData as (data: { [key: string]: unknown } | null) => void}
           loadingPlayerData={loadingPlayerData} 
-          loading={loadingMatches} 
+          loading={loadingMatches}
+          filters={filters}
+          onFilterChange={onFilterChange}
+          onClearFilters={onClearFilters}
+          availableHeroes={availableHeroes}
+          onAddMatch={onAddMatch}
+          showAddMatch={showAddMatch}
+          isClosing={isClosing}
+          handleCloseAddMatch={handleCloseAddMatch}
         />
         {/* Row 3: Summary (auto height) */}
-        <div className="max-w-full">
-          <Card className="h-fit mb-0">
-            <CardContent className="p-6">
-              <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading summary...</div>}>
-                <MatchHistorySummary summary={summary} trends={trends} loading={loadingMatches} />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </div>
+        <MatchSummarySection 
+          summary={summary} 
+          trends={trends} 
+          loadingMatches={loadingMatches} 
+        />
         {/* Row 4: Hero statistics (auto height) */}
-        <div className="max-w-full">
-          <Card className="h-fit mt-0">
-            <CardContent className="p-6 overflow-x-auto">
-              <Suspense fallback={<div className="p-4 text-center text-muted-foreground">Loading hero stats...</div>}>
-                <HeroStatsTables 
-                  heroStats={heroStats ?? emptyHeroStats}
-                  currentTeam={currentTeam}
-                  getHighlightStyle={(hero: string, type: string) => getHighlightStyle(hero, type, heroStats ?? emptyHeroStats)}
-                  loading={loadingMatches || isPending || !heroStats}
-                />
-              </Suspense>
-            </CardContent>
-          </Card>
-        </div>
+        <HeroStatsSection 
+          currentTeam={currentTeam}
+          heroStats={heroStats}
+          emptyHeroStats={emptyHeroStats}
+          loadingMatches={loadingMatches}
+        />
       </div>
     </div>
   );
@@ -195,34 +263,32 @@ export default function ClientMatchHistoryPage({ selectedMatchId }: { selectedMa
     showPlayerPopup,
     setShowPlayerPopup,
     selectedPlayer,
-    setSelectedPlayer,
     playerData,
     setPlayerData,
-    _loadingPlayerData,
-    _selectedHeroes,
-    _resultFilter,
-    _sideFilter,
-    _pickFilter,
     handleSelectMatch
   } = useMatchHistoryState(selectedMatchId);
 
-  // Memoize hero stats calculation to prevent unnecessary recalculations
-  const heroStats = useMemo(() => {
-    if (loadingMatches || matches.length === 0) {
-      return null;
-    }
-    return calculateHeroStats(matches);
-  }, [matches, loadingMatches]);
+  // Use the new filter hook
+  const { filters, updateFilters, clearFilters } = useMatchHistoryFilters();
 
-  // Filtering logic
-  const filteredMatches = useFilteredMatches(matches, _selectedHeroes, _resultFilter, _sideFilter, _pickFilter);
+  // Add match functionality
+  const { showAddMatch, isClosing, handleAddMatch, handleCloseAddMatch } = useAddMatchState();
+
+  // Memoize hero stats calculation to prevent unnecessary recalculations
+  const heroStats = useHeroStatsCalculation(matches, loadingMatches);
+
+  // Get available heroes for filter dropdown
+  const availableHeroes = useAvailableHeroes(matches);
+
+  // Filtering logic with new filters
+  const filteredMatches = useFilteredMatches(matches, filters, currentTeam);
 
   // Find the selected match object
   const selectedMatchObj = matches.find((m: Match) => m.id === selectedMatch) || null;
 
   // Summary calculation (can be fast, so not deferred)
   const summary = getMatchSummary(matches);
-  const trends: unknown[] = [];
+  const trends = getMatchTrends(matches) as MatchTrend[];
 
   const [gridHeight, gridRef] = useGridHeight(selectedMatch);
 
@@ -234,34 +300,54 @@ export default function ClientMatchHistoryPage({ selectedMatchId }: { selectedMa
     opponentBans: {},
   };
 
-  // Show skeleton while loading initial data
-  if (!isLoaded || loadingMatches) {
-    return <MatchHistorySkeleton />;
-  }
-
   return (
-    <MatchHistoryContent
-      gridHeight={gridHeight}
-      gridRef={gridRef}
-      isLoaded={isLoaded}
-      currentTeam={currentTeam}
-      filteredMatches={filteredMatches}
-      selectedMatch={selectedMatch}
-      handleSelectMatch={handleSelectMatch}
-      selectedMatchObj={selectedMatchObj}
-      showPlayerPopup={showPlayerPopup}
-      setShowPlayerPopup={setShowPlayerPopup}
-      selectedPlayer={selectedPlayer}
-      setSelectedPlayer={setSelectedPlayer}
-      playerData={playerData}
-      setPlayerData={setPlayerData}
-      loadingPlayerData={_loadingPlayerData}
-      loadingMatches={loadingMatches}
-      heroStats={heroStats}
-      isPending={false}
-      summary={summary}
-      trends={trends}
-      emptyHeroStats={emptyHeroStats}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Match History"
+        description="View detailed match history, analyze performance, and track your team's progress"
+      />
+      {/* Main content below header */}
+      <MatchHistoryContent
+        gridHeight={gridHeight}
+        gridRef={gridRef}
+        isLoaded={isLoaded}
+        currentTeam={currentTeam}
+        filteredMatches={filteredMatches}
+        selectedMatch={selectedMatch}
+        handleSelectMatch={handleSelectMatch}
+        selectedMatchObj={selectedMatchObj}
+        showPlayerPopup={showPlayerPopup}
+        setShowPlayerPopup={setShowPlayerPopup}
+        selectedPlayer={selectedPlayer as OpenDotaPlayer | null}
+        playerData={playerData as { [key: string]: unknown } | null}
+        setPlayerData={setPlayerData as (data: { [key: string]: unknown } | null) => void}
+        loadingPlayerData={false}
+        loadingMatches={loadingMatches}
+        heroStats={heroStats}
+        summary={summary}
+        trends={trends}
+        emptyHeroStats={emptyHeroStats}
+        filters={filters}
+        onFilterChange={updateFilters}
+        onClearFilters={clearFilters}
+        availableHeroes={availableHeroes}
+        onAddMatch={handleAddMatch}
+        showAddMatch={showAddMatch}
+        isClosing={isClosing}
+        handleCloseAddMatch={handleCloseAddMatch}
+      />
+      <style>{`
+        .add-match-slide-open {
+          max-height: 400px !important;
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+        }
+        .add-match-slide-closed {
+          max-height: 0 !important;
+          opacity: 0 !important;
+          transform: translateY(-16px) !important;
+        }
+      `}</style>
+    </div>
   );
 } 

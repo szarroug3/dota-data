@@ -1,27 +1,8 @@
+import { fetchPlayerData, fetchPlayerHeroes, fetchPlayerMatches, fetchPlayerTotals, fetchPlayerWL } from '@/lib/fetch-data';
 import * as React from 'react';
-import { PlayerStats } from '../lib/types/data-service';
 import { createContext, useCallback, useContext, useState } from 'react';
-import { 
-  PlayerDataContextType
-} from '../types/contexts';
-
-// ============================================================================
-// API HELPERS
-// ============================================================================
-
-async function fetchPlayerDataHelper(playerId: string, playerName: string, role: string): Promise<PlayerStats> {
-  const response = await fetch(`/api/players/${playerId}/stats`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ force: false }),
-  });
-  if (response.status === 200) {
-    return await response.json() as Promise<PlayerStats>;
-  }
-  throw new Error(`HTTP ${response.status} for player ${playerId}`);
-}
+import { PlayerStats } from '../lib/types/data-service';
+import { PlayerDataContextType } from '../types/contexts';
 
 // ============================================================================
 // CONTEXT
@@ -34,7 +15,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
   const [loadingByPlayer, setLoadingByPlayer] = useState<Record<string, boolean>>({});
   const [errorByPlayer, setErrorByPlayer] = useState<Record<string, string | null>>({});
 
-  const fetchPlayerData = useCallback(async (playerId: string, playerName: string, role: string): Promise<void> => {
+  const fetchPlayerDataWithDetails = useCallback(async (playerId: string, _playerName: string, _role: string): Promise<void> => {
     // Don't fetch if already loading
     if (loadingByPlayer[playerId]) {
       return;
@@ -45,10 +26,48 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     setErrorByPlayer((prev: Record<string, string | null>) => ({ ...prev, [playerId]: null }));
 
     try {
-      const playerData = await fetchPlayerDataHelper(playerId, playerName, role);
+      // Fetch player data using the new standardized API
+      const playerData = await fetchPlayerData(playerId);
       
       setPlayerDataByPlayer((prev: Record<string, PlayerStats>) => ({ ...prev, [playerId]: playerData }));
       setLoadingByPlayer((prev: Record<string, boolean>) => ({ ...prev, [playerId]: false }));
+
+      // Start background fetching of additional player data
+      Promise.allSettled([
+        fetchPlayerMatches(playerId),
+        fetchPlayerHeroes(playerId),
+        fetchPlayerTotals(playerId),
+        fetchPlayerWL(playerId)
+      ]).then((results) => {
+        // Update player data with additional details as they come in
+        const updatedData = { ...playerData };
+        
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            const data = result.value;
+            switch (index) {
+              case 0: // matches
+                updatedData.recentMatches = data;
+                break;
+              case 1: // heroes
+                updatedData.heroes = data;
+                break;
+              case 2: // totals
+                updatedData.totals = data;
+                break;
+              case 3: // wl
+                updatedData.winLoss = data;
+                break;
+            }
+          }
+        });
+
+        setPlayerDataByPlayer((prev: Record<string, PlayerStats>) => ({ 
+          ...prev, 
+          [playerId]: updatedData 
+        }));
+      });
+
     } catch (err) {
       console.error(`[PlayerDataContext] Error fetching player data for player ${playerId}:`, err);
       setErrorByPlayer((prev: Record<string, string | null>) => ({ 
@@ -60,13 +79,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
   }, [loadingByPlayer]);
 
   const getPlayerData = useCallback((playerId: string): PlayerStats | null => {
-    // Return cached data if available
-    if (playerDataByPlayer[playerId]) {
-      return playerDataByPlayer[playerId];
-    }
-
-    // Don't auto-trigger fetch for player data since we need playerName and role
-    return null;
+    return playerDataByPlayer[playerId] || null;
   }, [playerDataByPlayer]);
 
   const isPlayerLoading = useCallback((playerId: string): boolean => {
@@ -103,7 +116,7 @@ export function PlayerDataProvider({ children }: { children: React.ReactNode }) 
     playerDataByPlayer,
     loadingByPlayer,
     errorByPlayer,
-    fetchPlayerData,
+    fetchPlayerData: fetchPlayerDataWithDetails,
     getPlayerData,
     isPlayerLoading,
     getPlayerError,

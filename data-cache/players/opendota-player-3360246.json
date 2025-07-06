@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 3360246,
+    "personaname": "Ceb",
+    "name": "Ceb",
+    "plus": false,
+    "cheese": 738,
+    "steamid": "76561198695094483",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/36/49.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/51/27_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/64/25_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/3360246",
+    "last_login": "2025-07-05T02:34:36.508Z",
+    "loccountrycode": "US",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 71,
+  "leaderboard_rank": 831,
+  "total_matches": 3249,
+  "win": 915,
+  "kda": 6.56,
+  "gpm": 698,
+  "xpm": 888,
+  "avg_seconds_per_match": 3379
+}

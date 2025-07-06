@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4868265,
+    "personaname": "Merlini",
+    "name": "Merlini",
+    "plus": false,
+    "cheese": 53,
+    "steamid": "76561198536753401",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/61/30.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/51/3_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/72/79_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4868265",
+    "last_login": "2025-07-01T04:06:40.676Z",
+    "loccountrycode": "EU",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 75,
+  "leaderboard_rank": 444,
+  "total_matches": 2787,
+  "win": 1373,
+  "kda": 6.35,
+  "gpm": 659,
+  "xpm": 689,
+  "avg_seconds_per_match": 2995
+}

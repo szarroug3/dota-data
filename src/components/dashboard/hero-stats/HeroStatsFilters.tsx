@@ -7,6 +7,13 @@
 import { logWithTimestamp } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
+// Types for hero stats data
+interface HeroStats {
+  count: number;
+  wins: number;
+  winRate: number;
+}
+
 export interface HeroStatsFilters {
   heroFilter: string;
   countFilter: string;
@@ -121,45 +128,52 @@ export function parseNumberFilter(filter: string) {
 }
 
 /**
+ * Helper to check if a value matches a filter condition
+ */
+function matchesFilter(value: number, filter: string): boolean {
+  const f = parseNumberFilter(filter);
+  if (!f) return true;
+  
+  switch (f.op) {
+    case ">":
+      return value > f.num;
+    case ">=":
+      return value >= f.num;
+    case "<":
+      return value < f.num;
+    case "<=":
+      return value <= f.num;
+    case "=":
+    case "":
+      return value === f.num;
+    default:
+      return true;
+  }
+}
+
+/**
  * Helper to apply all filters to a hero stats row
  */
-export function filterHeroRows(rows: [string, any][], filters: HeroStatsFilters) {
+export function filterHeroRows(rows: [string, HeroStats][], filters: HeroStatsFilters) {
   return rows.filter(([hero, stats]) => {
+    // Hero name filter
     if (filters.heroFilter && !hero.toLowerCase().includes(filters.heroFilter.toLowerCase())) {
       return false;
     }
     
-    if (filters.countFilter) {
-      const f = parseNumberFilter(filters.countFilter);
-      if (f) {
-        if (f.op === ">" && !(stats.count > f.num)) return false;
-        if (f.op === ">=" && !(stats.count >= f.num)) return false;
-        if (f.op === "<" && !(stats.count < f.num)) return false;
-        if (f.op === "<=" && !(stats.count <= f.num)) return false;
-        if ((f.op === "=" || f.op === "") && !(stats.count === f.num)) return false;
-      }
+    // Count filter
+    if (filters.countFilter && !matchesFilter(stats.count, filters.countFilter)) {
+      return false;
     }
     
-    if (filters.winsFilter) {
-      const f = parseNumberFilter(filters.winsFilter);
-      if (f) {
-        if (f.op === ">" && !(stats.wins > f.num)) return false;
-        if (f.op === ">=" && !(stats.wins >= f.num)) return false;
-        if (f.op === "<" && !(stats.wins < f.num)) return false;
-        if (f.op === "<=" && !(stats.wins <= f.num)) return false;
-        if ((f.op === "=" || f.op === "") && !(stats.wins === f.num)) return false;
-      }
+    // Wins filter
+    if (filters.winsFilter && !matchesFilter(stats.wins, filters.winsFilter)) {
+      return false;
     }
     
-    if (filters.winRateFilter) {
-      const f = parseNumberFilter(filters.winRateFilter);
-      if (f) {
-        if (f.op === ">" && !(stats.winRate > f.num)) return false;
-        if (f.op === ">=" && !(stats.winRate >= f.num)) return false;
-        if (f.op === "<" && !(stats.winRate < f.num)) return false;
-        if (f.op === "<=" && !(stats.winRate <= f.num)) return false;
-        if ((f.op === "=" || f.op === "") && !(stats.winRate === f.num)) return false;
-      }
+    // Win rate filter
+    if (filters.winRateFilter && !matchesFilter(stats.winRate, filters.winRateFilter)) {
+      return false;
     }
     
     return true;
@@ -169,23 +183,27 @@ export function filterHeroRows(rows: [string, any][], filters: HeroStatsFilters)
 /**
  * Sorting helper for hero stats rows
  */
-export function sortHeroRows(rows: [string, any][], sortBy: string, sortOrder: string) {
+export function sortHeroRows(rows: [string, HeroStats][], sortBy: string, sortOrder: string) {
   return rows.slice().sort(([heroA, a], [heroB, b]) => {
     if (sortBy !== "default") {
-      let valA, valB;
+      let valA: string | number, valB: string | number;
+      
       if (sortBy === "name") {
         valA = heroA.toLowerCase();
         valB = heroB.toLowerCase();
       } else {
-        valA = a[sortBy];
-        valB = b[sortBy];
+        valA = a[sortBy as keyof HeroStats];
+        valB = b[sortBy as keyof HeroStats];
+        
         if (typeof valA === "string") valA = valA.toLowerCase();
         if (typeof valB === "string") valB = valB.toLowerCase();
       }
+      
       if (valA < valB) return sortOrder === "asc" ? -1 : 1;
       if (valA > valB) return sortOrder === "asc" ? 1 : -1;
       return 0;
     }
+    
     // Default: win rate desc, picks/games desc, wins desc, name asc
     if (a.winRate !== b.winRate) return b.winRate - a.winRate;
     if (a.count !== b.count) return b.count - a.count;

@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 9232638,
+    "personaname": "EGM",
+    "name": "EGM",
+    "plus": true,
+    "cheese": 978,
+    "steamid": "76561198878673010",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/54/79.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/27/29_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/18/42_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/9232638",
+    "last_login": "2025-07-03T06:03:42.628Z",
+    "loccountrycode": "CIS",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 77,
+  "leaderboard_rank": 529,
+  "total_matches": 1216,
+  "win": 648,
+  "kda": 2.84,
+  "gpm": 484,
+  "xpm": 569,
+  "avg_seconds_per_match": 3530
+}

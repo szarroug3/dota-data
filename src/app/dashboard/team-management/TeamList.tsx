@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { useTeam } from "@/contexts/team-context";
+import { fetchTeamData } from "@/lib/fetch-data";
 import { logWithTimestamp } from "@/lib/utils";
 import type { Team as TeamBase } from "@/types/team";
 import { Check, FileText, Loader2, RefreshCw, Trash2, Zap } from "lucide-react";
@@ -40,7 +41,7 @@ function RefreshButton({ team, refreshingId, onRefresh }: { team: Team; refreshi
       size="sm"
       onClick={() => onRefresh(team)}
       disabled={refreshingId === team.id}
-      title={!team.dotabuffUrl ? "No Dotabuff URL available for refresh" : "Refresh team data and matches"}
+      title="Refresh team data from Dotabuff"
       className="w-10"
     >
       {refreshingId === team.id ? <Check className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
@@ -56,7 +57,7 @@ function ForceRefreshButton({ team, forceRefreshingId, onForceRefresh }: { team:
       size="sm"
       onClick={() => onForceRefresh(team)}
       disabled={forceRefreshingId === team.id}
-      title={!team.dotabuffUrl ? "No Dotabuff URL available for force refresh" : "Force refresh all team data and matches"}
+      title="Force refresh all team data from Dotabuff"
       className="w-10"
     >
       {forceRefreshingId === team.id ? <Check className="w-4 h-4 text-green-500" /> : <Zap className="w-4 h-4" />}
@@ -150,6 +151,9 @@ function TeamListRow({
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <span>{team.loading ? `League ${team.leagueId}` : (team.leagueName || team.leagueId)}</span>
+          {team.matchIds && team.matchIds.length > 0 && (
+            <span>{team.matchIds.length} matches</span>
+          )}
         </div>
       </div>
       <TeamActions
@@ -167,7 +171,7 @@ function TeamListRow({
 }
 
 function useTeamListHandlers(currentTeam: Team | null, setCurrentTeam: (team: Team | null) => void, setRefreshingId: (id: string | null) => void, setForceRefreshingId: (id: string | null) => void) {
-  const { teams, removeTeam, setActiveTeam } = useTeam();
+  const { removeTeam, setActiveTeam, updateTeamData } = useTeam();
 
   const handleSwitchTeam = (team: Team) => {
     setActiveTeam(team.id);
@@ -179,27 +183,73 @@ function useTeamListHandlers(currentTeam: Team | null, setCurrentTeam: (team: Te
 
   const handleRefreshTeam = async (team: Team) => {
     setRefreshingId(team.id);
-    setTimeout(() => {
-      setRefreshingId(null);
-    }, 2000);
-    if (!team.teamId || !team.leagueId) {
-      logWithTimestamp('error', '[TeamList] Refresh failed: Missing teamId or leagueId', { teamId: team.teamId, leagueId: team.leagueId });
-      return;
+    try {
+      if (!team.teamId || !team.leagueId) {
+        logWithTimestamp('error', '[TeamList] Refresh failed: Missing teamId or leagueId', { teamId: team.teamId, leagueId: team.leagueId });
+        return;
+      }
+      
+      logWithTimestamp('log', '[TeamList] Refresh - team data:', { teamId: team.teamId, leagueId: team.leagueId });
+      
+      // Use the new standardized API
+      const { teamData, leagueData } = await fetchTeamData(team.teamId, team.leagueId);
+      
+      // Update the team with new data
+      updateTeamData(team.id, {
+        teamName: teamData.teamName || team.teamName,
+        leagueName: leagueData.leagueName || team.leagueName,
+        matchIds: teamData.matchIdsByLeague?.[team.leagueId] || [],
+      });
+      
+      logWithTimestamp('log', '[TeamList] Refresh completed successfully');
+    } catch (error) {
+      logWithTimestamp('error', '[TeamList] Refresh failed:', error);
+    } finally {
+      setTimeout(() => {
+        setRefreshingId(null);
+      }, 2000);
     }
-    logWithTimestamp('log', '[TeamList] Refresh - team data:', { teamId: team.teamId, leagueId: team.leagueId });
-    // TODO: Implement refresh logic using the new API structure
-    // For now, just show the loading state
   };
 
   const handleForceRefreshTeam = async (team: Team) => {
     setForceRefreshingId(team.id);
-    // Note: Force refresh logic would need to be updated to work with the new context
-    // For now, we'll just show the loading state
-    setTimeout(() => {
-      setForceRefreshingId(null);
-    }, 2000);
-    // TODO: Implement force refresh logic using the new API structure
-    // For now, just show the loading state
+    try {
+      if (!team.teamId || !team.leagueId) {
+        logWithTimestamp('error', '[TeamList] Force refresh failed: Missing teamId or leagueId', { teamId: team.teamId, leagueId: team.leagueId });
+        return;
+      }
+      
+      logWithTimestamp('log', '[TeamList] Force refresh - team data:', { teamId: team.teamId, leagueId: team.leagueId });
+      
+      // Use the new standardized API with force=true
+      const response = await fetch(`/api/teams/${team.teamId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ force: true }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to scrape team data for ${team.teamId}`);
+      }
+      
+      const teamData = await response.json();
+      
+      // Update the team with new data
+      updateTeamData(team.id, {
+        teamName: teamData.teamName || team.teamName,
+        matchIds: teamData.matchIdsByLeague?.[team.leagueId] || [],
+      });
+      
+      logWithTimestamp('log', '[TeamList] Force refresh completed successfully');
+    } catch (error) {
+      logWithTimestamp('error', '[TeamList] Force refresh failed:', error);
+    } finally {
+      setTimeout(() => {
+        setForceRefreshingId(null);
+      }, 2000);
+    }
   };
 
   return { handleSwitchTeam, handleDeleteTeam, handleRefreshTeam, handleForceRefreshTeam };

@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 1505040,
+    "personaname": "Arteezy",
+    "name": "Arteezy",
+    "plus": false,
+    "cheese": 260,
+    "steamid": "76561198919542854",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/41/3.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/100/26_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/21/29_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/1505040",
+    "last_login": "2025-07-04T03:15:09.534Z",
+    "loccountrycode": "EU",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 76,
+  "leaderboard_rank": 587,
+  "total_matches": 1443,
+  "win": 1866,
+  "kda": 2.77,
+  "gpm": 722,
+  "xpm": 425,
+  "avg_seconds_per_match": 2398
+}

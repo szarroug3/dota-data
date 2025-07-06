@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 5840263,
+    "personaname": "Fogged",
+    "name": "Fogged",
+    "plus": true,
+    "cheese": 760,
+    "steamid": "76561198656695735",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/80/79.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/61/60_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/74/47_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/5840263",
+    "last_login": "2025-06-29T21:58:45.894Z",
+    "loccountrycode": "US",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 76,
+  "leaderboard_rank": 490,
+  "total_matches": 1034,
+  "win": 1150,
+  "kda": 2.11,
+  "gpm": 739,
+  "xpm": 786,
+  "avg_seconds_per_match": 2408
+}

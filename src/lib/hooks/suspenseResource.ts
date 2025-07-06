@@ -1,6 +1,6 @@
-export function createResource(fetcher: () => Promise<any>) {
+export function createResource<T>(fetcher: () => Promise<T>) {
   let status = "pending";
-  let result: any;
+  let result: T | Error;
   const suspender = fetcher().then(
     r => {
       status = "success";
@@ -12,10 +12,10 @@ export function createResource(fetcher: () => Promise<any>) {
     }
   );
   return {
-    read() {
+    read(): T {
       if (status === "pending") throw suspender;
       if (status === "error") throw result;
-      return result;
+      return result as T;
     }
   };
 } 

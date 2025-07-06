@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 4008068,
+    "personaname": "KuroKy",
+    "name": "KuroKy",
+    "plus": true,
+    "cheese": 313,
+    "steamid": "76561198901720835",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/52/28.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/95/17_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/95/11_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/4008068",
+    "last_login": "2025-07-04T16:07:05.334Z",
+    "loccountrycode": "EU",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 73,
+  "leaderboard_rank": 419,
+  "total_matches": 1028,
+  "win": 1572,
+  "kda": 3.11,
+  "gpm": 418,
+  "xpm": 848,
+  "avg_seconds_per_match": 2838
+}

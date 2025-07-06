@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 8055610,
+    "personaname": "Dendi",
+    "name": "Dendi",
+    "plus": true,
+    "cheese": 732,
+    "steamid": "76561198266589280",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/47/40.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/12/25_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/92/25_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/8055610",
+    "last_login": "2025-07-01T16:39:53.495Z",
+    "loccountrycode": "EU",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 75,
+  "leaderboard_rank": 747,
+  "total_matches": 3393,
+  "win": 1231,
+  "kda": 2.14,
+  "gpm": 477,
+  "xpm": 693,
+  "avg_seconds_per_match": 3185
+}

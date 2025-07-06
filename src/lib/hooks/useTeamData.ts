@@ -20,8 +20,8 @@ export function useTeamData() {
 
   // Trigger fetch when current team changes
   useEffect(() => {
-    if (currentTeam && !teamData && !loading) {
-      fetchTeamData(currentTeam.id);
+    if (currentTeam && !teamData && !loading && currentTeam.leagueId) {
+      fetchTeamData(currentTeam.id, currentTeam.leagueId);
     }
   }, [currentTeam, teamData, loading, fetchTeamData]);
 

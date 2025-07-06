@@ -1,7 +1,6 @@
-import { shouldMockService, tryMock } from '@/lib/api';
+import { tryMock } from '@/lib/api';
 import { fetchPage, isAlreadyQueuedResult } from '@/lib/api/shared';
 import { cacheService } from '@/lib/cache-service';
-import { generateFakeDotabuffLeagueHtml } from '@/lib/fake-data-generator';
 import { logWithTimestampToFile } from '@/lib/server-logger';
 import { getLeagueCacheFilename, getLeagueCacheKey, getLeagueHtmlFilename } from '@/lib/utils/cache-keys';
 import * as cheerio from 'cheerio';
@@ -19,7 +18,11 @@ export async function getLeagueName(leagueId: string, forceRefresh = false): Pro
   if (!forceRefresh) {
     let cached = await cacheService.get<string>(cacheKey, filename, LEAGUE_TTL);
     if (typeof cached === 'string') {
-      try { cached = JSON.parse(cached); } catch {}
+      try { 
+        cached = JSON.parse(cached); 
+      } catch {
+        // Ignore parsing errors
+      }
     }
     if (cached && typeof cached === 'object' && 'leagueName' in cached) {
       logWithTimestampToFile('log', `[getLeagueName] Cache hit for key: ${cacheKey}`);
@@ -41,20 +44,11 @@ export async function getLeagueName(leagueId: string, forceRefresh = false): Pro
         const html = await mockRes.text();
         const parsed = parseLeagueNameHtml(html, leagueId);
         console.log('[LEAGUE CACHE WRITE] (mock)', cacheKey, typeof parsed, JSON.stringify(parsed).slice(0, 200));
-        await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed) as any, LEAGUE_TTL, filename);
+        await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), LEAGUE_TTL, filename);
         logWithTimestampToFile('log', `[getLeagueName] Mock data processed and cached for key: ${cacheKey}`);
         return parsed;
       }
-      // 2. Check if we should use mock service
-      if (shouldMockService('dotabuff')) {
-        const html = generateFakeDotabuffLeagueHtml(leagueId, htmlFilename);
-        const parsed = parseLeagueNameHtml(html, leagueId);
-        console.log('[LEAGUE CACHE WRITE] (fake)', cacheKey, typeof parsed, JSON.stringify(parsed).slice(0, 200));
-        await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed) as any, LEAGUE_TTL, filename);
-        logWithTimestampToFile('log', `[getLeagueName] Fake data processed and cached for key: ${cacheKey}`);
-        return parsed;
-      }
-      // 3. Fetch real data
+      // 2. Fetch real data
       const html = await fetchPage('dotabuff', cacheKey, endpoint, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -63,7 +57,7 @@ export async function getLeagueName(leagueId: string, forceRefresh = false): Pro
       });
       const parsed = parseLeagueNameHtml(html, leagueId);
       console.log('[LEAGUE CACHE WRITE] (real)', cacheKey, typeof parsed, JSON.stringify(parsed).slice(0, 200));
-      await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed) as any, LEAGUE_TTL, filename);
+      await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), LEAGUE_TTL, filename);
       logWithTimestampToFile('log', `[getLeagueName] Real data fetched and cached for key: ${cacheKey}`);
       return parsed;
     },

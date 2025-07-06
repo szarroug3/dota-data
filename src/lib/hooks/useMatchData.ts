@@ -1,6 +1,6 @@
 import { useTeam } from '@/contexts/team-context';
-import { useCallback, useEffect, useState } from 'react';
 import type { MatchData } from '@/types/contexts';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseMatchDataResult {
   data: MatchData | null;
@@ -32,6 +32,25 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleCacheHit = useCallback((cachedData: MatchData) => {
+    console.log('[useMatchData] Using cached data for match:', matchId);
+    setData(cachedData);
+    setLoading(false);
+    setError(null);
+  }, [matchId]);
+
+  const handleFetchSuccess = useCallback((result: MatchData, cacheKey: string) => {
+    matchDataCache.set(cacheKey, result);
+    setData(result);
+    setLoading(false);
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    console.error('[useMatchData] Error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to fetch match data');
+    setLoading(false);
+  }, []);
+
   const fetchData = useCallback(async () => {
     if (!matchId || !currentTeam?.id) {
       setData(null);
@@ -44,10 +63,7 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
     const cacheKey = `${matchId}-${currentTeam.id}`;
     const cachedData = matchDataCache.get(cacheKey);
     if (cachedData) {
-      console.log('[useMatchData] Using cached data for match:', matchId);
-      setData(cachedData);
-      setLoading(false);
-      setError(null);
+      handleCacheHit(cachedData);
       return;
     }
 
@@ -61,18 +77,11 @@ export function useMatchData(matchId: string | null): UseMatchDataResult {
       });
 
       const result = await fetchSingleMatchData(matchId);
-      
-      // Cache the result
-      matchDataCache.set(cacheKey, result);
-      
-      setData(result);
-      setLoading(false);
+      handleFetchSuccess(result, cacheKey);
     } catch (err) {
-      console.error('[useMatchData] Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch match data');
-      setLoading(false);
+      handleFetchError(err);
     }
-  }, [matchId, currentTeam?.id]);
+  }, [matchId, currentTeam?.id, handleCacheHit, handleFetchSuccess, handleFetchError]);
 
   const refetch = useCallback(() => {
     fetchData();
@@ -118,6 +127,24 @@ export function useMatchesData(matchIds: string[] | null): {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleEarlyReturn = useCallback(() => {
+    console.log('[useMatchesData] Early return - no matchIds or teamId');
+    setData([]);
+    setLoading(false);
+    setError(null);
+  }, []);
+
+  const handleFetchSuccess = useCallback((validResults: MatchData[]) => {
+    setData(validResults);
+    setLoading(false);
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    console.error('[useMatchesData] Error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to fetch matches data');
+    setLoading(false);
+  }, []);
+
   const fetchData = useCallback(async () => {
     console.log('[useMatchesData] fetchData called with:', {
       matchIds: matchIds?.length || 0,
@@ -126,10 +153,7 @@ export function useMatchesData(matchIds: string[] | null): {
     });
     
     if (!matchIds || matchIds.length === 0 || !currentTeam?.id) {
-      console.log('[useMatchesData] Early return - no matchIds or teamId');
-      setData([]);
-      setLoading(false);
-      setError(null);
+      handleEarlyReturn();
       return;
     }
 
@@ -138,14 +162,11 @@ export function useMatchesData(matchIds: string[] | null): {
       setError(null);
 
       const validResults = await fetchMultipleMatches(matchIds);
-      setData(validResults);
-      setLoading(false);
+      handleFetchSuccess(validResults);
     } catch (err) {
-      console.error('[useMatchesData] Error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch matches data');
-      setLoading(false);
+      handleFetchError(err);
     }
-  }, [matchIds, currentTeam?.id]);
+  }, [matchIds, currentTeam?.id, handleEarlyReturn, handleFetchSuccess, handleFetchError]);
 
   const refetch = useCallback(() => {
     fetchData();

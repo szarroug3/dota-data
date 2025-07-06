@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 3743107,
+    "personaname": "JerAx",
+    "name": "JerAx",
+    "plus": false,
+    "cheese": 35,
+    "steamid": "76561198622603893",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/32/88.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/15/25_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/93/71_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/3743107",
+    "last_login": "2025-07-01T14:52:05.607Z",
+    "loccountrycode": "CN",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 76,
+  "leaderboard_rank": 240,
+  "total_matches": 3617,
+  "win": 1272,
+  "kda": 4.73,
+  "gpm": 385,
+  "xpm": 492,
+  "avg_seconds_per_match": 2860
+}

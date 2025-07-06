@@ -15,10 +15,11 @@ interface AsyncMatchCardProps {
   teamSide?: string;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+  loading?: boolean;
 }
 
 export default function AsyncMatchCard(props: AsyncMatchCardProps) {
-  const { match, currentTeam, ...otherProps } = props;
+  const { match, currentTeam, loading, ...otherProps } = props;
 
   // Use suspense-enabled hook
   const teamContext = useTeam();
@@ -29,6 +30,7 @@ export default function AsyncMatchCard(props: AsyncMatchCardProps) {
     <MatchCard
       match={processedMatch}
       currentTeam={team}
+      loading={loading}
       {...otherProps}
     />
   );

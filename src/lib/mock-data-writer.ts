@@ -25,6 +25,39 @@ function getServiceFromEndpoint(endpoint: string): 'opendota' | 'dotabuff' | 'st
   return 'unknown';
 }
 
+// Helper function to determine entity type from endpoint
+function getEntityTypeFromEndpointHelper(endpoint: string): 'players' | 'matches' | 'heroes' | 'teams' | 'leagues' | 'unknown' {
+  if (endpoint.includes('/players/')) return 'players';
+  if (endpoint.includes('/matches/')) return 'matches';
+  if (endpoint.includes('/heroes')) return 'heroes';
+  if (endpoint.includes('/teams/')) return 'teams';
+  if (endpoint.includes('/leagues/')) return 'leagues';
+  return 'unknown';
+}
+
+// Helper function to determine entity type from filename
+function getEntityTypeFromFilenameHelper(filename: string): 'players' | 'matches' | 'heroes' | 'teams' | 'leagues' | 'unknown' {
+  if (filename.includes('player')) return 'players';
+  if (filename.includes('match')) return 'matches';
+  if (filename.includes('hero')) return 'heroes';
+  if (filename.includes('team')) return 'teams';
+  if (filename.includes('league')) return 'leagues';
+  return 'unknown';
+}
+
+// Helper function to determine the entity type from endpoint or filename
+function getEntityTypeFromEndpoint(endpoint?: string, filename?: string): 'players' | 'matches' | 'heroes' | 'teams' | 'leagues' | 'unknown' {
+  if (endpoint) {
+    return getEntityTypeFromEndpointHelper(endpoint);
+  }
+  
+  if (filename) {
+    return getEntityTypeFromFilenameHelper(filename);
+  }
+  
+  return 'unknown';
+}
+
 // Check if a specific service should be mocked
 export function shouldMockService(service: 'opendota' | 'dotabuff' | 'stratz' | 'd2pt' | 'db' | 'unknown'): boolean {
   if (process.env.USE_MOCK_API === 'true') return true;
@@ -75,28 +108,44 @@ function logWriteMockData(endpoint: string | undefined, filePath: string, filena
   }
 }
 
+// Helper function to check if writing is enabled
+function shouldWriteMockDataEnabled(): boolean {
+  const shouldWriteReal = process.env.WRITE_REAL_DATA_TO_MOCK === 'true';
+  const shouldWriteFake = process.env.USE_MOCK_API === 'true';
+  return shouldWriteReal || shouldWriteFake;
+}
+
+// Helper function to get file path for writing
+function getMockDataFilePath(filename: string, endpoint?: string): string {
+  const entityType = getEntityTypeFromEndpoint(endpoint, filename);
+  const baseDir = entityType !== 'unknown' ? entityType : 'misc';
+  return path ? path.join(process.cwd(), "mock-data", baseDir, filename) : filename;
+}
+
 export async function writeMockData(
   filename: string,
   data: unknown,
   endpoint?: string,
 ): Promise<void> {
   logWithTimestamp('log', `[writeMockData] Called with filename: ${filename}, endpoint: ${endpoint}, data type: ${typeof data}, data length: ${typeof data === 'string' ? data.length : 'N/A'}`);
+  
   if (!config.enabled || !fs || !path) {
     logWithTimestamp('log', `[writeMockData] Not enabled or fs/path not available. enabled: ${config.enabled}, fs: ${!!fs}, path: ${!!path}`);
     return;
   }
-  const shouldWriteReal = process.env.WRITE_REAL_DATA_TO_MOCK === 'true';
-  const shouldWriteFake = process.env.USE_MOCK_API === 'true';
-  if (!shouldWriteReal && !shouldWriteFake) {
+  
+  if (!shouldWriteMockDataEnabled()) {
     logWithTimestamp('log', `[writeMockData] Neither WRITE_REAL_DATA_TO_MOCK nor USE_MOCK_API is true, skipping write for ${filename}`);
     return;
   }
+  
   if (!shouldWriteForService(endpoint)) {
     logWithTimestamp('log', `[writeMockData] Service should not be mocked for endpoint: ${endpoint}`);
     return;
   }
+  
   try {
-    const filePath = path ? path.join(process.cwd(), "mock-data", filename) : filename;
+    const filePath = getMockDataFilePath(filename, endpoint);
     logWithTimestamp('log', `[writeMockData] Writing to file: ${filePath}`);
     await ensureDirAndWriteFile(filePath, data);
     logWriteMockData(endpoint, filePath, filename);
@@ -129,7 +178,12 @@ export async function readMockData(filename: string, _params?: Record<string, st
     return null;
   }
   try {
-    const filePath = path ? path.join(process.cwd(), "mock-data", filename) : filename;
+    // Determine entity type and organize into subfolders
+    const entityType = getEntityTypeFromEndpoint(undefined, filename);
+    const baseDir = entityType !== 'unknown' ? entityType : 'misc';
+    
+    // Mock data reader only handles mock-data folder
+    const filePath = path ? path.join(process.cwd(), "mock-data", baseDir, filename) : filename;
     logWithTimestamp('log', `[readMockData] Checking file path: ${filePath}`);
     if (!fs.existsSync(filePath)) {
       logWithTimestamp('log', `[readMockData] File does not exist: ${filePath}`);

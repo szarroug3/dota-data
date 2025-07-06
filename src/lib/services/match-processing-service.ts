@@ -1,227 +1,157 @@
-import type { OpenDotaMatch, OpenDotaFullMatch } from '@/types/opendota';
+import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/opendota';
 
 // Types for processed match data
 export interface Match {
   id: string;
   date: string;
-  opponent: string;
-  result: 'W' | 'L';
-  score: string;
+  radiantId: string;
+  direId: string;
+  radiantName: string;
+  direName: string;
+  radiantWin: boolean;
+  radiantScore: number | null;
+  direScore: number | null;
   duration: string;
   league: string;
-  map: string;
-  picks: string[];
-  bans: string[];
-  opponentPicks: string[];
-  opponentBans: string[];
-  draftOrder: unknown[];
-  highlights: string[];
-  playerStats: Record<string, unknown>;
-  games: Array<{
-    picks: string[];
-    bans: string[];
-    opponentPicks: string[];
-    opponentBans: string[];
-    draftOrder: unknown[];
-    highlights: string[];
-    playerStats: Record<string, unknown>;
-    duration: string;
-    score: string;
+  radiantPicks: string[];
+  radiantBans: string[];
+  direPicks: string[];
+  direBans: string[];
+  draftOrder: Array<{
+    is_pick: boolean;
+    hero_id: number;
+    team: number;
+    order: number;
   }>;
-  // Additional fields for UI compatibility
-  openDota?: {
+  players: Array<{
+    account_id: number;
+    player_slot: number;
+    hero_id: number;
+    kills: number;
+    deaths: number;
+    assists: number;
+    last_hits: number;
+    denies: number;
+    gold_per_min: number;
+    xp_per_min: number;
+    level: number;
+    hero_damage: number;
+    tower_damage: number;
+    hero_healing: number;
     isRadiant: boolean;
-    radiantWin: boolean;
-    startTime: number;
-    matchId: number;
-  };
+    items: number[];
+    personaname: string;
+    rank_tier: number;
+  }>;
 }
 
-// Helper function to format date
-function formatMatchDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
 
-// Helper function to format duration
-function formatMatchDuration(duration: number): string {
-  const minutes = Math.floor(duration / 60);
-  const seconds = duration % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
 
-// Helper function to determine team side
-function getTeamSide(match: OpenDotaMatch, teamId: string): 'radiant' | 'dire' {
-  // For now, we'll use a simple heuristic based on team ID
-  // In a real implementation, you'd need to map team IDs to sides
-  const teamIdNum = parseInt(teamId, 10);
-  return teamIdNum % 2 === 0 ? 'radiant' : 'dire';
-}
-
-// Helper function to determine if team won
-function getTeamResult(match: OpenDotaMatch, teamSide: 'radiant' | 'dire'): 'W' | 'L' {
-  const isRadiantWin = match.radiant_win;
-  const isTeamRadiant = teamSide === 'radiant';
-  return (isRadiantWin === isTeamRadiant) ? 'W' : 'L';
-}
-
-// Helper function to get opponent name
-function getOpponentName(match: OpenDotaMatch, teamId: string): string {
-  // For now, return a placeholder
-  // In a real implementation, you'd need to look up team names
-  return `Team ${match.match_id % 1000}`;
-}
-
-// Helper function to extract picks and bans
-function extractPicksAndBans(match: OpenDotaMatch, teamSide: 'radiant' | 'dire') {
-  // Check if the match has picks_bans (OpenDotaFullMatch)
-  const fullMatch = match as OpenDotaFullMatch;
-  if (!fullMatch.picks_bans) {
-    return {
-      picks: [],
-      bans: [],
-      opponentPicks: [],
-      opponentBans: []
-    };
-  }
-
-  const teamPicks: string[] = [];
-  const teamBans: string[] = [];
-  const opponentPicks: string[] = [];
-  const opponentBans: string[] = [];
-
-  fullMatch.picks_bans.forEach((pickBan: { is_pick: boolean; hero_id: number; team: number; order: number }) => {
-    const isRadiant = pickBan.team === 0;
-    const isPick = pickBan.is_pick;
-    const heroId = pickBan.hero_id.toString();
-
-    if (isRadiant === (teamSide === 'radiant')) {
-      // Our team
-      if (isPick) {
-        teamPicks.push(heroId);
+function extractDraft(picks_bans: OpenDotaMatch['picks_bans'] | undefined) {
+  const radiantPicks: string[] = [];
+  const radiantBans: string[] = [];
+  const direPicks: string[] = [];
+  const direBans: string[] = [];
+  
+  if (Array.isArray(picks_bans)) {
+    for (const pb of picks_bans) {
+      if (pb.is_pick) {
+        (pb.team === 0 ? radiantPicks : direPicks).push(pb.hero_id.toString());
       } else {
-        teamBans.push(heroId);
-      }
-    } else {
-      // Opponent team
-      if (isPick) {
-        opponentPicks.push(heroId);
-      } else {
-        opponentBans.push(heroId);
+        (pb.team === 0 ? radiantBans : direBans).push(pb.hero_id.toString());
       }
     }
-  });
-
-  return {
-    picks: teamPicks,
-    bans: teamBans,
-    opponentPicks,
-    opponentBans
-  };
-}
-
-// Helper function to create score string
-function createScoreString(match: OpenDotaMatch): string {
-  // Check if the match has score properties (OpenDotaFullMatch)
-  const fullMatch = match as OpenDotaFullMatch;
-  if (fullMatch.radiant_score !== undefined && fullMatch.dire_score !== undefined) {
-    return `${fullMatch.radiant_score}-${fullMatch.dire_score}`;
   }
-  return 'N/A';
+  
+  return { radiantPicks, radiantBans, direPicks, direBans, draftOrder: picks_bans || [] };
 }
 
-// Main function to process a match
-export function processMatch(match: OpenDotaMatch, teamId: string): Match {
-  const teamSide = getTeamSide(match, teamId);
-  const result = getTeamResult(match, teamSide);
-  const opponent = getOpponentName(match, teamId);
-  const { picks, bans, opponentPicks, opponentBans } = extractPicksAndBans(match, teamSide);
+function processPlayers(players: OpenDotaMatchPlayer[]): Match['players'] {
+  return players.map((player: OpenDotaMatchPlayer) => ({
+    account_id: player.account_id,
+    player_slot: player.player_slot,
+    hero_id: player.hero_id,
+    kills: player.kills,
+    deaths: player.deaths,
+    assists: player.assists,
+    last_hits: player.last_hits,
+    denies: player.denies,
+    gold_per_min: player.gold_per_min,
+    xp_per_min: player.xp_per_min,
+    level: player.level,
+    hero_damage: player.hero_damage,
+    tower_damage: player.tower_damage,
+    hero_healing: player.hero_healing,
+    isRadiant: player.player_slot < 128,
+    items: [player.item_0, player.item_1, player.item_2, player.item_3, player.item_4, player.item_5].filter(item => item !== 0),
+    personaname: player.personaname || 'Unknown',
+    rank_tier: player.rank_tier || 0
+  }));
+}
 
+// Helper function to calculate match duration
+function calculateDuration(matchDuration: number): string {
+  if (typeof matchDuration === 'number' && matchDuration > 0) {
+    const minutes = Math.floor(matchDuration / 60);
+    const seconds = (matchDuration % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  }
+  return "?";
+}
+
+// Helper function to extract basic match info
+function extractBasicMatchInfo(match: OpenDotaMatch) {
+  const radiantWin = !!match.radiant_win;
+  const radiantScore = typeof match.radiant_score === 'number' ? match.radiant_score : null;
+  const direScore = typeof match.dire_score === 'number' ? match.dire_score : null;
+  const date = match.start_time ? new Date(match.start_time * 1000).toISOString() : "";
+  const duration = calculateDuration(match.duration as number);
+  
+  return { radiantWin, radiantScore, direScore, date, duration };
+}
+
+// Helper function to extract team info
+function extractTeamInfo(match: OpenDotaMatch) {
+  const league = match.leagueid ? `League ${match.leagueid}` : "Unknown League";
+  
   return {
-    id: match.match_id.toString(),
-    date: formatMatchDate(match.start_time),
-    opponent,
-    result,
-    score: createScoreString(match),
-    duration: formatMatchDuration(match.duration),
-    league: 'Unknown League', // Would need to be populated from league data
-    map: 'dota2', // Default map
-    picks,
-    bans,
-    opponentPicks,
-    opponentBans,
-    draftOrder: [], // Would need to be calculated from picks_bans order
-    highlights: [], // Would need to be generated from match events
-    playerStats: {}, // Would need to be populated from players array
-    games: [{
-      picks,
-      bans,
-      opponentPicks,
-      opponentBans,
-      draftOrder: [],
-      highlights: [],
-      playerStats: {},
-      duration: formatMatchDuration(match.duration),
-      score: createScoreString(match)
-    }],
-    openDota: {
-      isRadiant: teamSide === 'radiant',
-      radiantWin: match.radiant_win,
-      startTime: match.start_time,
-      matchId: match.match_id
-    }
+    radiantId: match.radiant_team_id?.toString() || "0",
+    direId: match.dire_team_id?.toString() || "0",
+    radiantName: match.radiant_name || "Radiant",
+    direName: match.dire_name || "Dire",
+    league
   };
 }
 
-// Decoupled function to process a match without team context
-export function processMatchDecoupled(match: OpenDotaMatch): Match {
-  const { picks, bans, opponentPicks, opponentBans } = extractPicksAndBans(match, 'radiant'); // Default to radiant for processing
+export function processMatch(match: OpenDotaMatch): Match {
+  const { radiantWin, radiantScore, direScore, date, duration } = extractBasicMatchInfo(match);
+  const { radiantId, direId, radiantName, direName, league } = extractTeamInfo(match);
+  const { radiantPicks, radiantBans, direPicks, direBans, draftOrder } = extractDraft(match.picks_bans);
 
   return {
-    id: match.match_id.toString(),
-    date: formatMatchDate(match.start_time),
-    opponent: `Team ${match.match_id % 1000}`, // Generic opponent name
-    result: match.radiant_win ? 'W' : 'L', // Simplified result based on radiant win
-    score: createScoreString(match),
-    duration: formatMatchDuration(match.duration),
-    league: 'Unknown League',
-    map: 'dota2',
-    picks,
-    bans,
-    opponentPicks,
-    opponentBans,
-    draftOrder: [],
-    highlights: [],
-    playerStats: {},
-    games: [{
-      picks,
-      bans,
-      opponentPicks,
-      opponentBans,
-      draftOrder: [],
-      highlights: [],
-      playerStats: {},
-      duration: formatMatchDuration(match.duration),
-      score: createScoreString(match)
-    }],
-    openDota: {
-      isRadiant: true, // Default to radiant
-      radiantWin: match.radiant_win,
-      startTime: match.start_time,
-      matchId: match.match_id
-    }
+    id: match.match_id?.toString() ?? "?",
+    date,
+    radiantId,
+    direId,
+    radiantName,
+    direName,
+    radiantWin,
+    radiantScore,
+    direScore,
+    duration,
+    league,
+    radiantPicks,
+    radiantBans,
+    direPicks,
+    direBans,
+    draftOrder,
+    players: processPlayers(match.players)
   };
 }
 
 // Function to process multiple matches
-export function processMatches(matches: OpenDotaMatch[], teamId: string): Match[] {
-  return matches.map(match => processMatch(match, teamId));
+export function processMatches(matches: OpenDotaMatch[]): Match[] {
+  return matches.map(match => processMatch(match));
 }
 
 // Function to validate match data before processing
@@ -230,7 +160,7 @@ export function validateMatchData(match: unknown): match is OpenDotaMatch {
     return false;
   }
 
-  const m = match as any;
+  const m = match as Record<string, unknown>;
   return (
     typeof m.match_id === 'number' &&
     typeof m.start_time === 'number' &&
@@ -242,16 +172,14 @@ export function validateMatchData(match: unknown): match is OpenDotaMatch {
 // Function to get match processing stats
 export function getMatchProcessingStats(matches: Match[]) {
   const totalMatches = matches.length;
-  const wins = matches.filter(m => m.result === 'W').length;
-  const losses = matches.filter(m => m.result === 'L').length;
+  const wins = matches.filter(m => m.radiantWin).length;
+  const losses = matches.filter(m => !m.radiantWin).length;
   const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
 
   return {
     totalMatches,
     wins,
     losses,
-    winRate,
-    avgGameLength: '--', // Would need to be calculated from durations
-    currentStreak: 0 // Would need to be calculated from recent matches
+    winRate
   };
 } 

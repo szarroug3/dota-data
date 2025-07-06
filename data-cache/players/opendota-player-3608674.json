@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 3608674,
+    "personaname": "mss",
+    "name": "mss",
+    "plus": false,
+    "cheese": 35,
+    "steamid": "76561198291556702",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/26/15.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/95/70_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/6/87_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/3608674",
+    "last_login": "2025-06-29T17:36:09.406Z",
+    "loccountrycode": "US",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 76,
+  "leaderboard_rank": 223,
+  "total_matches": 1780,
+  "win": 950,
+  "kda": 4.99,
+  "gpm": 585,
+  "xpm": 824,
+  "avg_seconds_per_match": 2655
+}

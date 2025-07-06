@@ -1,9 +1,9 @@
 "use client";
+import PageHeader from "@/components/dashboard/PageHeader";
+import { TeamDataDisplay } from "@/components/dashboard/TeamDataDisplay";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import PageHeader from "@/components/dashboard/PageHeader";
 import { useTeam } from "@/contexts/team-context";
-import React from "react";
 import TeamImportForm from "./TeamImportForm";
 import TeamList from "./TeamList";
 
@@ -33,11 +33,31 @@ function TeamListSkeleton() {
   );
 }
 
-function TeamManagementContent() {
-  const { teams, isLoaded } = useTeam();
+function ActiveTeamDisplay() {
+  const { activeTeam } = useTeam();
+
+  if (!activeTeam) {
+    return null;
+  }
+
+  // Extract teamId and leagueId from the active team ID
+  const [teamId, leagueId] = activeTeam.id.split('-');
 
   return (
-    <>
+    <div className="space-y-4">
+      <TeamDataDisplay teamId={teamId} leagueId={leagueId} />
+    </div>
+  );
+}
+
+function TeamManagementContent() {
+  const { isLoaded, activeTeam } = useTeam();
+
+  return (
+    <div className="space-y-6">
+      {/* Active Team Display */}
+      {activeTeam && <ActiveTeamDisplay />}
+      
       {/* Team List - show skeleton while loading, content when ready */}
       {!isLoaded ? (
         <TeamListSkeleton />
@@ -45,6 +65,9 @@ function TeamManagementContent() {
         <Card>
           <CardHeader>
             <CardTitle>All Teams</CardTitle>
+            <CardDescription>
+              Manage your imported teams and their league-specific data
+            </CardDescription>
           </CardHeader>
           <TeamList />
         </Card>
@@ -54,11 +77,13 @@ function TeamManagementContent() {
       <Card>
         <CardHeader>
           <CardTitle>Import Team from Dotabuff</CardTitle>
-          <CardDescription>Import a team and all their matches from Dotabuff</CardDescription>
+                      <CardDescription>
+              Import a team and scrape their match data from Dotabuff. You&apos;ll need both the Team ID and League ID.
+            </CardDescription>
         </CardHeader>
         <TeamImportForm />
       </Card>
-    </>
+    </div>
   );
 }
 
@@ -69,6 +94,7 @@ function TeamManagementContent() {
  * - Simplified state management - no more localStorage handling here
  * - No more polling - that's handled by the context
  * - Clean separation of concerns
+ * - Shows active team data with league-specific information
  */
 export default function ClientTeamManagementPage() {
   return (
@@ -76,7 +102,7 @@ export default function ClientTeamManagementPage() {
       {/* Page Header - always render immediately */}
       <PageHeader
         title="Team Management"
-        description="Manage your teams, import from Dotabuff, and refresh data."
+        description="Manage your teams, import from Dotabuff, and view league-specific data."
       />
       
       {/* Content - render immediately with loading states */}

@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 6579199,
+    "personaname": "H4nn1",
+    "name": "H4nn1",
+    "plus": true,
+    "cheese": 244,
+    "steamid": "76561198466899417",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/12/6.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/67/94_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/50/1_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/6579199",
+    "last_login": "2025-07-06T01:50:53.298Z",
+    "loccountrycode": "US",
+    "status": "online",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 75,
+  "leaderboard_rank": 582,
+  "total_matches": 1713,
+  "win": 1488,
+  "kda": 5.88,
+  "gpm": 478,
+  "xpm": 407,
+  "avg_seconds_per_match": 2418
+}

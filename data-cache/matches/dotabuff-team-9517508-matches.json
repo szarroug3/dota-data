@@ -1,0 +1,231 @@
+{
+  "teamName": "Team 9517508",
+  "matchIdsByLeague": {
+    "12345": [
+      {
+        "matchId": "5320527722",
+        "result": "loss",
+        "seriesId": "3665978",
+        "seriesRegion": "US East",
+        "duration": "37:40",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517703",
+          "teamName": "erock void pog",
+          "teamTag": "erock void pog"
+        },
+        "date": "2025-07-04T05:44:04.313Z",
+        "leagueId": "12345",
+        "leagueName": "BTS Pro Series 15"
+      },
+      {
+        "matchId": "8592982713",
+        "result": "loss",
+        "seriesId": "7039230",
+        "seriesRegion": "US East",
+        "duration": "24:36",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517703",
+          "teamName": "erock void pog",
+          "teamTag": "erock void pog"
+        },
+        "date": "2025-06-28T05:44:04.313Z",
+        "leagueId": "12345",
+        "leagueName": "BTS Pro Series 15"
+      },
+      {
+        "matchId": "9885800949",
+        "result": "loss",
+        "seriesId": "2687945",
+        "seriesRegion": "US East",
+        "duration": "40:25",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517703",
+          "teamName": "erock void pog",
+          "teamTag": "erock void pog"
+        },
+        "date": "2025-06-11T05:44:04.313Z",
+        "leagueId": "12345",
+        "leagueName": "BTS Pro Series 15"
+      }
+    ],
+    "16435": [
+      {
+        "matchId": "4303524883",
+        "result": "win",
+        "seriesId": "5220140",
+        "seriesRegion": "US East",
+        "duration": "48:13",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517701",
+          "teamName": "SEA10KMMR",
+          "teamTag": "SEA10KMMR"
+        },
+        "date": "2025-06-07T05:44:04.313Z",
+        "leagueId": "16435",
+        "leagueName": "RD2L Season 33"
+      },
+      {
+        "matchId": "2073501845",
+        "result": "loss",
+        "seriesId": "7367469",
+        "seriesRegion": "US East",
+        "duration": "43:47",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517701",
+          "teamName": "SEA10KMMR",
+          "teamTag": "SEA10KMMR"
+        },
+        "date": "2025-06-12T05:44:04.313Z",
+        "leagueId": "16435",
+        "leagueName": "RD2L Season 33"
+      },
+      {
+        "matchId": "9492405182",
+        "result": "win",
+        "seriesId": "3796515",
+        "seriesRegion": "US East",
+        "duration": "45:11",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517701",
+          "teamName": "SEA10KMMR",
+          "teamTag": "SEA10KMMR"
+        },
+        "date": "2025-07-04T05:44:04.313Z",
+        "leagueId": "16435",
+        "leagueName": "RD2L Season 33"
+      },
+      {
+        "matchId": "9096436736",
+        "result": "win",
+        "seriesId": "1107302",
+        "seriesRegion": "US East",
+        "duration": "58:53",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517701",
+          "teamName": "SEA10KMMR",
+          "teamTag": "SEA10KMMR"
+        },
+        "date": "2025-06-10T05:44:04.313Z",
+        "leagueId": "16435",
+        "leagueName": "RD2L Season 33"
+      }
+    ],
+    "67890": [
+      {
+        "matchId": "8623572332",
+        "result": "loss",
+        "seriesId": "5879866",
+        "seriesRegion": "US East",
+        "duration": "42:35",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517705",
+          "teamName": "Team Alpha",
+          "teamTag": "Alpha"
+        },
+        "date": "2025-06-14T05:44:04.313Z",
+        "leagueId": "67890",
+        "leagueName": "ESL One"
+      },
+      {
+        "matchId": "7352274987",
+        "result": "loss",
+        "seriesId": "5316915",
+        "seriesRegion": "US East",
+        "duration": "56:21",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517705",
+          "teamName": "Team Alpha",
+          "teamTag": "Alpha"
+        },
+        "date": "2025-06-06T05:44:04.313Z",
+        "leagueId": "67890",
+        "leagueName": "ESL One"
+      },
+      {
+        "matchId": "1057211224",
+        "result": "loss",
+        "seriesId": "6934443",
+        "seriesRegion": "US East",
+        "duration": "59:39",
+        "heroes": [
+          "Mars",
+          "Tusk",
+          "Medusa",
+          "Mirana",
+          "Ember Spirit"
+        ],
+        "opponent": {
+          "teamId": "9517705",
+          "teamName": "Team Alpha",
+          "teamTag": "Alpha"
+        },
+        "date": "2025-06-15T05:44:04.313Z",
+        "leagueId": "67890",
+        "leagueName": "ESL One"
+      }
+    ]
+  }
+}

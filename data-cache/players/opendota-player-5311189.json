@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 5311189,
+    "personaname": "MoonMeander",
+    "name": "MoonMeander",
+    "plus": true,
+    "cheese": 244,
+    "steamid": "76561198717722237",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/93/84.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/46/31_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/64/15_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/5311189",
+    "last_login": "2025-06-30T02:08:41.749Z",
+    "loccountrycode": "CN",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 73,
+  "leaderboard_rank": 375,
+  "total_matches": 4630,
+  "win": 1504,
+  "kda": 6.87,
+  "gpm": 508,
+  "xpm": 408,
+  "avg_seconds_per_match": 2451
+}

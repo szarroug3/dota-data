@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 5721855,
+    "personaname": "Loda",
+    "name": "Loda",
+    "plus": true,
+    "cheese": 979,
+    "steamid": "76561198972886561",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/76/80.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/91/18_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/31/76_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/5721855",
+    "last_login": "2025-07-02T11:15:50.551Z",
+    "loccountrycode": "SEA",
+    "status": "offline",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": false
+  },
+  "rank_tier": 77,
+  "leaderboard_rank": 174,
+  "total_matches": 4195,
+  "win": 650,
+  "kda": 7.43,
+  "gpm": 503,
+  "xpm": 814,
+  "avg_seconds_per_match": 3143
+}

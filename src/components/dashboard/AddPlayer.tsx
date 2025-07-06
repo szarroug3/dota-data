@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,7 @@ export default function AddPlayer({ onClose }: AddPlayerProps) {
 
     setLoading(true);
     try {
-      const newPlayer = {
+      const _newPlayer = {
         id: Date.now().toString(), // Simple ID generation
         name: name.trim(),
         role,

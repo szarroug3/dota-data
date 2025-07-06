@@ -1,0 +1,28 @@
+{
+  "profile": {
+    "account_id": 3633142,
+    "personaname": "Zai",
+    "name": "Zai",
+    "plus": true,
+    "cheese": 605,
+    "steamid": "76561198164873282",
+    "avatar": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/87/14.jpg",
+    "avatarmedium": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/67/43_medium.jpg",
+    "avatarfull": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/26/95_full.jpg",
+    "profileurl": "https://steamcommunity.com/profiles/3633142",
+    "last_login": "2025-07-03T00:58:55.415Z",
+    "loccountrycode": "EU",
+    "status": "away",
+    "fh_unavailable": false,
+    "is_contributor": false,
+    "is_subscriber": true
+  },
+  "rank_tier": 72,
+  "leaderboard_rank": 594,
+  "total_matches": 3395,
+  "win": 1903,
+  "kda": 3.16,
+  "gpm": 578,
+  "xpm": 776,
+  "avg_seconds_per_match": 2651
+}
