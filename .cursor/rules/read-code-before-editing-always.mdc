@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Before making any code changes or decisions, review the relevant code to understand its context and dependencies.
+- Do not make edits or decisions without first reading the code that will be affected.
+
+<example>
+Agent reads the implementation and usage of a function before refactoring it.
+</example>
+<example type="invalid">
+Agent changes a function signature without reviewing where and how it is used.
+</example>

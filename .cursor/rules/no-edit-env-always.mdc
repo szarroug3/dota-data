@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: No Edit Env Always
+---
+
+- Do not make changes to .env files.
+- If mock is enabled, do not disable it unless explicitly requested.
+
+<example>
+Agent leaves .env files unchanged and respects mock settings.
+</example>
+<example type="invalid">
+Agent disables mock mode or edits .env files without being asked.
+</example>

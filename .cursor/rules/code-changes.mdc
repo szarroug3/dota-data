@@ -1,5 +1,5 @@
 ---
-description: when making code changes
+description: This is for any making changes to any code
 globs: 
 alwaysApply: false
 ---
@@ -12,4 +12,9 @@ alwaysApply: false
 - Always keep code readable and maintable. If functions or files are long, refactor them to make break them up into smaller pieces and keep things organized.
 - Always try to use best practices and make recommendations based on real data.
 - Always try to avoid using "any" and "unknown" types. Create types when needed.
+- Do not use "any" or "unknown" types. If their use is absolutely necessary, you must provide a clear, well-justified comment explaining why, and prefer creating specific types or interfaces whenever possible.
 - Avoid using _ for variables. If a variable is not needed, remove it.
+- We do not need backwards compatibility.
+- Always fix up any relevant tests.
+- Imports should always use @ aliases instead of relative imports.
+- Do not supress or justify issues or warnings in linting, type checking or formatting.

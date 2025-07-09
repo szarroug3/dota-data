@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Remove any dead, commented-out, or unused code, variables, functions, or files from the codebase.
+- Regularly review and clean up code to maintain clarity and reduce technical debt.
+
+<example>
+Agent deletes an unused helper function and removes commented-out code blocks.
+</example>
+<example type="invalid">
+Agent leaves old, unused functions or commented-out code in the codebase after a refactor.
+</example>

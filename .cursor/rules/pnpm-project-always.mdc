@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: pnpm-project-always
+---
+
+- Use pnpm for all package management tasks.
+
+<example>
+Agent runs pnpm install instead of npm install.
+</example>
+<example type="invalid">
+Agent uses npm or yarn instead of pnpm.
+</example>

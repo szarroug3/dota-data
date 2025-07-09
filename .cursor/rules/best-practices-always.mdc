@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: Best Practices
+---
+
+- Follow industry and project best practices for code, architecture, and documentation.
+- Make recommendations based on real data and current standards.
+
+<example>
+Agent suggests using a well-supported library based on recent benchmarks.
+</example>
+<example type="invalid">
+Agent uses outdated or discouraged patterns without justification.
+</example>

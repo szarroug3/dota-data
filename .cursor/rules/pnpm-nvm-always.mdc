@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: pnpm-nvm-always
+description: Ensure the correct Node version is active before running any pnpm command.
+---
+
+- Before running any pnpm command, execute nvm use to ensure the correct Node version is active.
+
+<example>
+Agent runs nvm use && pnpm install.
+</example>
+<example type="invalid">
+Agent runs pnpm install without setting the Node version.
+</example>

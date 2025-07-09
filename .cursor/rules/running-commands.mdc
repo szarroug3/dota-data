@@ -1,8 +1,0 @@
----
-description: running commands
-globs: 
-alwaysApply: false
----
-- This project uses pnpm. To run any pnpm commands, you need to do `nvm use && [pnpm command]` if we're not already on the correct version of node.
-- I'm generally always running the server correctly but if you really think I'm not, go ahead and ask. You do not need to restart the server most of the time since it reloads on its own. If you need to restart it, let me know and I will do it in my current terminal.
-- Terminal logs can be found in my terminal. They're not written to any files so look for the context instead of files.

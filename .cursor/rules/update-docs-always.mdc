@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+name: Update Documentation Always
+description: Ensure all documentation and comments are up-to-date with the codebase.
+---
+
+- Update documentation and comments for any significant code, architecture, or design changes.
+- Ensure all related documents are up-to-date with the codebase.
+
+<example>
+Agent updates docs/architecture/backend-data-flow.md after changing backend data flow.
+</example>
+<example type="invalid">
+Agent changes backend data flow but does not update the documentation.
+</example>

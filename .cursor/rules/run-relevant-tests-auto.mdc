@@ -1,0 +1,25 @@
+---
+description: 
+globs: src/**/*.test.ts, src/**/*.test.tsx
+alwaysApply: false
+---
+---
+name: Run Relevant Tests Auto
+description: Automatically run relevant tests after code changes.
+globs:
+  - "**/*.tsx"
+  - "**/*.ts"
+  - "**/*.js"
+---
+
+- After making changes to code, run all relevant tests for affected files.
+- If any tests fail and you make fixes, rerun all relevant tests to confirm all issues are resolved. Only consider the task complete when all tests pass.
+- Tests should always be in a file that has directory structure that matches the file it's testing, under src/tests/.
+- For example, if the agent is writing a test for src/components/team/team-overview-stats/TeamOverviewStats.tsx, the test should be src/tests/components/team/team-overview-stats/TeamOverviewStats.test.tsx.
+
+<example>
+Agent runs tests in src/tests/components/team/team-overview-stats/TeamOverviewStats.test.tsx after editing src/components/team/team-overview-stats/TeamOverviewStats.tsx. If a test fails and is fixed, agent reruns the tests to confirm all pass.
+</example>
+<example type="invalid">
+Agent edits code but does not run the relevant tests, or the tests are not in the correct directory structure. Agent fixes a failing test but does not rerun the tests to confirm all pass.
+</example>

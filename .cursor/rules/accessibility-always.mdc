@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Ensure all user-facing components meet accessibility standards (e.g., WCAG 2.1).
+- Use semantic HTML and ARIA attributes where appropriate.
+- Test components for keyboard and screen reader accessibility.
+
+<example>
+Agent adds alt text to images and ensures buttons are accessible via keyboard.
+</example>
+<example type="invalid">
+Agent creates a custom button without keyboard support or omits alt text on images.
+</example>
