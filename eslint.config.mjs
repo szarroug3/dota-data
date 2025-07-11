@@ -24,6 +24,9 @@ export default defineConfig([
           project: './tsconfig.json',
         },
       },
+      react: {
+        version: 'detect'
+      },
     },
   },
   {
@@ -32,12 +35,24 @@ export default defineConfig([
     languageOptions: { globals: {...globals.browser, ...globals.node} }
   },
   tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
+  {
+    ...pluginReact.configs.flat.recommended,
+    settings: {
+      react: {
+        version: 'detect'
+      },
+    },
+  },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: { 
       'react-hooks': reactHooks,
       'import': pluginImport
+    },
+    settings: {
+      react: {
+        version: 'detect'
+      },
     },
     rules: {
       // TypeScript rules
