@@ -1,11 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
-name: Server Logs Always
 description: Always check logs/server.log and the terminal for server logs and errors.
+alwaysApply: true
 ---
 
 - Check logs/server.log and the terminal for server logs and errors.

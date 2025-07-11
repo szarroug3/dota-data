@@ -1,61 +1,65 @@
-import { Calendar, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import DataCard from "./DataCard";
+import React from 'react';
+
+// Define a minimal Match type for this component
+interface Match {
+  id: string;
+  opponentTeamName: string;
+  win: boolean;
+  date: string;
+}
 
 interface RecentMatchesProps {
-  matches: Array<{
-    date: string;
-    opponent: string;
-    result: string;
-    score: string;
-    league: string;
-  }>;
-  error?: string;
+  recentMatches: Match[];
+  onAddMatch?: () => void;
+  onViewAll?: () => void;
 }
 
-export default function RecentMatches({ matches, error }: RecentMatchesProps) {
+export const RecentMatches: React.FC<RecentMatchesProps> = ({ recentMatches, onAddMatch, onViewAll }) => {
+  if (!recentMatches || recentMatches.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center justify-center">
+        <p className="text-gray-600 dark:text-gray-400 mb-4">No matches found. Add your first match to get started!</p>
+        <button
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+          onClick={onAddMatch}
+        >
+          Add Match
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <DataCard
-      title="Recent Matches"
-      description="Latest match results and performance"
-      icon={Calendar}
-      error={error}
-    >
-      <>
-        <div className="space-y-3">
-          {matches.map((match) => (
-            <div
-              key={match.date}
-              className="flex items-center justify-between p-3 border rounded-lg"
-            >
-              <div>
-                <h4 className="font-medium">vs {match.opponent}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {match.date} • {match.league}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={match.result === "W" ? "default" : "destructive"}
-                >
-                  {match.result}
-                </Badge>
-                <span className="font-medium">{match.score}</span>
-              </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Matches</h3>
+        <button
+          className="text-blue-600 hover:underline text-sm font-medium"
+          onClick={onViewAll}
+        >
+          View All Matches
+        </button>
+      </div>
+      <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        {recentMatches.slice(0, 5).map((match) => (
+          <li key={match.id} className="py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <span
+                className={`inline-block w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                  match.win
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                }`}
+                aria-label={match.win ? 'Win' : 'Loss'}
+              >
+                {match.win ? 'W' : 'L'}
+              </span>
+              <span className="text-gray-900 dark:text-white font-medium">{match.opponentTeamName}</span>
             </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          <Link href="/dashboard/match-history">
-            <Button variant="outline" className="w-full">
-              View Full Match History
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-        </div>
-      </>
-    </DataCard>
+            <span className="text-gray-500 dark:text-gray-400 text-sm">{new Date(match.date).toLocaleDateString()}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
-}
+}; 

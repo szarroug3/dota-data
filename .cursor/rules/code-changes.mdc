@@ -1,6 +1,5 @@
 ---
 description: This is for any making changes to any code
-globs: 
 alwaysApply: false
 ---
 - Always update documents, comments, jsdocs for any changes you make when relevant.

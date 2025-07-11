@@ -1,137 +1,265 @@
-import mitt from 'mitt';
-import { logWithTimestampToFile } from './server-logger';
+/**
+ * Main queueing service for background job processing
+ *
+ * Provides QStash-based queueing with memory fallback for background jobs.
+ * Handles job enqueueing, status tracking, and automatic retries.
+ */
 
-export interface QueuedRequest {
-  id: string;
-  service: string;
-  execute: () => Promise<unknown>;
-  resolve: (value: unknown) => void;
-  reject: (error: unknown) => void;
-  timestamp: number;
-  signature?: string;
-}
+import { QStashBackend } from '@/lib/queue-backends/qstash';
+import type {
+  QueueBackendType,
+  QueueEnqueueResult,
+  QueueError,
+  QueueErrorType,
+  QueueJob,
+  QueueJobStatus,
+  QueueService,
+  QueueServiceConfig,
+  QueueStats
+} from '@/types/queue';
 
-export const queueEventEmitter = mitt<{ queueStats: Record<string, { length: number; processing: boolean; activeSignatures: number }> }>();
+import { MemoryBackend } from './queue-backends/memory';
 
-class RequestQueue {
-  private queues: Map<string, QueuedRequest[]> = new Map();
-  private processing: Map<string, boolean> = new Map();
-  private requestIdCounter = 0;
-  private activeRequests: Set<string> = new Set();
-  private rateLimiter: { waitForRateLimit: (service: string) => Promise<void>; recordRequest: (service: string) => Promise<void> };
-  private currentlyProcessing: Map<string, string> = new Map(); // Track currently processing signature per service
+/**
+ * Main queueing service implementation
+ */
+export class RequestQueue implements QueueService {
+  private qstashBackend?: QStashBackend;
+  private memoryBackend: MemoryBackend;
+  private config: QueueServiceConfig;
+  private currentBackend: QueueBackendType = 'memory';
 
-  constructor(rateLimiter: { waitForRateLimit: (service: string) => Promise<void>; recordRequest: (service: string) => Promise<void> }) {
-    this.rateLimiter = rateLimiter;
-  }
-
-  private generateRequestId(): string {
-    return `req_${++this.requestIdCounter}_${Date.now()}`;
-  }
-
-  /**
-   * Enqueue a request. If a duplicate signature is detected, returns { status: 'already_queued', signature }.
-   * The signature (requestKey) must be provided explicitly by the route.
-   */
-  async enqueue(service: string, execute: () => Promise<unknown>, requestKey: string): Promise<unknown> {
-    logWithTimestampToFile('log', `[RequestQueue] enqueue called with requestKey=${requestKey}`);
-    if (requestKey !== undefined && typeof requestKey !== 'string') {
-      throw new Error(`[RequestQueue] requestKey must be a string, got: ${typeof requestKey} (${String(requestKey)})`);
+  constructor(config: QueueServiceConfig) {
+    this.config = config;
+    
+    // Initialize QStash backend if enabled
+    if (config.useQStash && config.qstashToken) {
+      this.qstashBackend = new QStashBackend({
+        token: config.qstashToken,
+        currentSigningKey: config.qstashCurrentSigningKey,
+        nextSigningKey: config.qstashNextSigningKey
+      });
+      this.currentBackend = 'qstash';
     }
-    
-    const requestId = this.generateRequestId();
-    // Use requestKey as the signature; must be provided by the route
-    const signature = requestKey;
-    
-    if (this.activeRequests.has(signature)) {
-      return { status: 'already_queued', signature };
-    }
-    
-    return new Promise<unknown>((resolve, reject) => {
-      const queuedRequest: QueuedRequest = {
-        id: requestId,
-        service,
-        execute,
-        resolve,
-        reject,
-        timestamp: Date.now(),
-        signature
-      };
 
-      // Initialize queue for service if it doesn't exist
-      if (!this.queues.has(service)) {
-        logWithTimestampToFile('log', `[RequestQueue] Initializing new queue for service: ${service}`);
-        this.queues.set(service, []);
-        this.processing.set(service, false);
-      }
-
-      const queue = this.queues.get(service)!;
-      queue.push(queuedRequest);
-      
-      // Mark this signature as active
-      this.activeRequests.add(signature);
-      
-      // Start processing if not already processing
-      if (!this.processing.get(service)) {
-        this.processQueue(service);
-      }
+    // Always initialize memory backend for fallback
+    this.memoryBackend = new MemoryBackend({
+      defaultTimeout: config.defaultTimeout,
+      maxRetries: config.maxRetries,
+      baseDelay: config.baseDelay
     });
   }
 
-  private async processQueue(service: string): Promise<void> {
-    logWithTimestampToFile('log', `[RequestQueue] processQueue called for ${service}`);
-    
-    if (this.processing.get(service)) {
-      logWithTimestampToFile('log', `[RequestQueue] Already processing queue for ${service}, skipping`);
-      return; // Already processing
-    }
-
-    logWithTimestampToFile('log', `[RequestQueue] Setting processing flag to true for ${service}`);
-    this.processing.set(service, true);
-    const queue = this.queues.get(service)!;
-
-    logWithTimestampToFile('log', `[RequestQueue] Starting to process queue for ${service}. Queue length: ${queue.length}`);
-
-    while (queue.length > 0) {
-      const request = queue.shift()!;
-      logWithTimestampToFile('log', `[RequestQueue] Processing next request in queue for ${service}. Remaining in queue: ${queue.length}`);
-      
-      // Mark this request as currently processing
-      if (request.signature) {
-        this.currentlyProcessing.set(service, request.signature);
-        logWithTimestampToFile('log', `[RequestQueue] Marked ${request.signature} as currently processing for ${service}`);
-      }
-      
-      try {
-        // Apply rate limiting delay before executing the request
-        logWithTimestampToFile('log', `[RequestQueue] Applying rate limit delay for ${service} before request ${request.id}`);
-        await this.rateLimiter.waitForRateLimit(service);
-        const result = await request.execute();
-        
-        // Record the request in the rate limiter
-        await this.rateLimiter.recordRequest(service);
-        
-        request.resolve(result);
-        logWithTimestampToFile('log', `[RequestQueue] Completed request ${request.id} for ${service}`);
-      } catch (error) {
-        logWithTimestampToFile('error', `[RequestQueue] Failed request ${request.id} for ${service}:`, error);
-        request.reject(error);
-      } finally {
-        // Remove the signature from active requests and currently processing
-        if (request.signature) {
-          this.activeRequests.delete(request.signature);
-          this.currentlyProcessing.delete(service);
+  /**
+   * Enqueue a job for processing
+   */
+  async enqueue(jobId: string, job: QueueJob): Promise<QueueEnqueueResult> {
+    try {
+      // Try QStash first if available
+      if (this.currentBackend === 'qstash' && this.qstashBackend) {
+        try {
+          return await this.qstashBackend.enqueue(jobId, job);
+        } catch (error) {
+          // If QStash fails and fallback is enabled, try memory
+          if (
+            this.config.fallbackToMemory &&
+            error instanceof Error && this.isQStashError(error)
+          ) {
+            console.warn(`QStash queueing failed, falling back to memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            const result = await this.memoryBackend.enqueue(jobId, job);
+            return { ...result, backend: 'memory' as QueueBackendType };
+          }
+          throw error;
         }
       }
+
+      // Use memory backend
+      return await this.memoryBackend.enqueue(jobId, job);
+    } catch (error) {
+      throw this.createQueueError(error instanceof Error ? error : new Error('Unknown error'), jobId);
+    }
+  }
+
+  /**
+   * Get job status
+   */
+  async getJobStatus(jobId: string): Promise<QueueJobStatus> {
+    try {
+      return await this.executeWithFallback(
+        () => this.qstashBackend?.getJobStatus(jobId),
+        () => this.memoryBackend.getJobStatus(jobId)
+      );
+    } catch (error) {
+      throw this.createQueueError(error instanceof Error ? error : new Error('Unknown error'), jobId);
+    }
+  }
+
+  /**
+   * Cancel a job
+   */
+  async cancelJob(jobId?: string): Promise<boolean> {
+    try {
+      return await this.executeWithFallback(
+        () => this.qstashBackend?.cancelJob(),
+        () => this.memoryBackend.cancelJob(jobId)
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return false;
+      }
+      throw (error instanceof Error ? error : new Error('Unknown error'));
+    }
+  }
+
+  /**
+   * Execute operation with QStash fallback to memory
+   */
+  private async executeWithFallback<T>(
+    qstashOperation: () => Promise<T> | undefined,
+    memoryOperation: () => Promise<T>
+  ): Promise<T> {
+    // Try QStash first if available
+    if (this.currentBackend === 'qstash' && this.qstashBackend) {
+      try {
+        const result = await qstashOperation();
+        if (result !== undefined) {
+          return result;
+        }
+      } catch (error) {
+        // If QStash fails and fallback is enabled, try memory
+        if (this.config.fallbackToMemory && error instanceof Error && this.isQStashError(error)) {
+          return await memoryOperation();
+        }
+        throw error;
+      }
     }
 
-    this.processing.set(service, false);
+    // Use memory backend
+    return await memoryOperation();
   }
 
-  clearQueue(service: string): void {
-    this.queues.set(service, []);
-    this.processing.set(service, false);
+  /**
+   * Get queue statistics
+   */
+  async getStats(): Promise<QueueStats> {
+    try {
+      return await this.executeWithFallback(
+        () => this.qstashBackend?.getStats(),
+        () => this.memoryBackend.getStats()
+      );
+    } catch (error) {
+      throw this.createQueueError(error instanceof Error ? error : new Error('Unknown error'));
+    }
   }
-}
 
-export default RequestQueue; 
+  /**
+   * Check if the service is healthy
+   */
+  async isHealthy(): Promise<boolean> {
+    try {
+      return await this.executeWithFallback(
+        () => this.qstashBackend?.isHealthy(),
+        () => this.memoryBackend.isHealthy()
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the current backend type
+   */
+  getBackendType(): QueueBackendType {
+    return this.currentBackend;
+  }
+
+  /**
+   * Clear all jobs (memory backend only)
+   */
+  async clear(): Promise<void> {
+    try {
+      await this.memoryBackend.clear();
+    } catch (error) {
+      throw this.createQueueError(error instanceof Error ? error : new Error('Unknown error'));
+    }
+  }
+
+  /**
+   * Check if error is a QStash-specific error
+   */
+  private isQStashError(error: Error): boolean {
+    const errorMessage = error.message.toLowerCase();
+    return (
+      errorMessage.includes('qstash') ||
+      errorMessage.includes('quota') ||
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('connection failed')
+    );
+  }
+
+  /**
+   * Create a standardized queue error
+   */
+  private createQueueError(error: Error, jobId?: string): QueueError {
+    const errorMessage = error.message;
+    
+    let type: QueueErrorType = 'service_unavailable';
+    let retryable = false;
+    let retryAfter: number | undefined;
+
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('timeout')) {
+        type = 'timeout';
+        retryable = true;
+      } else if (message.includes('connection')) {
+        type = 'connection_failed';
+        retryable = true;
+      } else if (message.includes('quota') || message.includes('rate limit')) {
+        type = 'quota_exceeded';
+        retryable = true;
+        retryAfter = 60; // 1 minute
+      } else if (message.includes('not found')) {
+        type = 'job_not_found';
+        retryable = false;
+      } else if (message.includes('already exists')) {
+        type = 'job_already_exists';
+        retryable = false;
+      } else if (message.includes('invalid')) {
+        type = 'invalid_payload';
+        retryable = false;
+      } else if (message.includes('unavailable')) {
+        type = 'service_unavailable';
+        retryable = true;
+      }
+    }
+
+    const queueError = new Error(errorMessage) as QueueError;
+    queueError.type = type;
+    queueError.jobId = jobId;
+    queueError.backend = this.currentBackend;
+    queueError.retryable = retryable;
+    queueError.retryAfter = retryAfter;
+
+    return queueError;
+  }
+
+  /**
+   * Disconnect from queue backends
+   */
+  async disconnect(): Promise<void> {
+    try {
+      // QStash backend doesn't need explicit disconnection
+      if (this.qstashBackend) {
+        console.log('[RequestQueue] QStash backend disconnected');
+      }
+      
+      // Memory backend cleanup
+      await this.memoryBackend.clear();
+      console.log('[RequestQueue] Request queue disconnected');
+    } catch (error) {
+      console.error('[RequestQueue] Error during disconnect:', error);
+    }
+  }
+} 

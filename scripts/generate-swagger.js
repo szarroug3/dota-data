@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+
 import swaggerJSDoc from 'swagger-jsdoc';
+
 import { schemas } from './swagger-schemas.js';
 
 const options = {

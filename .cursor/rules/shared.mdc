@@ -1,0 +1,6 @@
+---
+description: Shared files may not be modified without coordination
+globs: src/types/**, src/lib/shared/**
+alwaysApply: false
+---
+Shared files are used across both backend and frontend. Do not edit without explicit coordination and approval.

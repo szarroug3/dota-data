@@ -1,15 +1,7 @@
 ---
-description: 
+description: Automatically run relevant tests after code changes.
 globs: src/**/*.test.ts, src/**/*.test.tsx
 alwaysApply: false
----
----
-name: Run Relevant Tests Auto
-description: Automatically run relevant tests after code changes.
-globs:
-  - "**/*.tsx"
-  - "**/*.ts"
-  - "**/*.js"
 ---
 
 - After making changes to code, run all relevant tests for affected files.

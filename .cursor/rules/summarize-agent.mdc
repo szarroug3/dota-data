@@ -1,11 +1,6 @@
 ---
 description: When summarizing, include what was done, decisions made, what’s left, and a detailed plan/checklist.
-globs: 
 alwaysApply: false
----
----
-name: Summarize Agent
-description: A rule for summarizing the actions and decisions of an agent.
 ---
 
 - Summaries must include:

@@ -1,11 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
-name: Update Documentation Always
 description: Ensure all documentation and comments are up-to-date with the codebase.
+alwaysApply: true
 ---
 
 - Update documentation and comments for any significant code, architecture, or design changes.

@@ -1,10 +1,6 @@
 ---
-description: 
-globs: 
+description: Separation of Concerns - Always
 alwaysApply: true
----
----
-name: Separation of Concerns - Always
 ---
 
 - Backend and frontend code must be kept in separate directories and files.

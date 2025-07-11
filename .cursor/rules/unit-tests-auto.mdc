@@ -1,16 +1,7 @@
 ---
-description: 
-globs: src/**/*.ts, src/**/*.tsx
-alwaysApply: false
----
----
-name: Unit Tests Auto
 description: Automatically checks for unit tests in new or modified code files.
-globs:
-  - "**/*.ts"
-  - "**/*.js"
-  - "**/*.jsx"
-  - "**/*.tsx"
+globs: src/**/*.ts, src/**/*.tsx, src/**/*.js, src/**/*.jsx
+alwaysApply: false
 ---
 
 - For every new or modified code file that should have unit tests, ensure there are corresponding unit tests.

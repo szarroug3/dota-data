@@ -1,225 +1,210 @@
-// Centralized cache key and filename helpers for all cacheable entities
+/**
+ * Cache key generation utilities
+ *
+ * Provides consistent cache key formatting and parsing across the application.
+ * All cache keys follow the pattern: namespace:identifier:part1:part2...
+ */
 
-export function getTeamCacheKey(teamId: string) {
-  return `dotabuff-team-${teamId}-matches`;
-}
-export function getTeamCacheFilename(teamId: string, pageNum?: number) {
-  if (typeof pageNum === 'number' && pageNum > 0) {
-    return `dotabuff-team-${teamId}-matches-page-${pageNum}.html`;
+import { CacheKeyBuilder, CacheKeyConfig, CacheNamespace } from '@/types/cache';
+
+/**
+ * Default cache key configuration
+ */
+const DEFAULT_CONFIG: CacheKeyConfig = {
+  separator: ':',
+  maxLength: 250,
+  encoding: 'utf8'
+};
+
+/**
+ * Cache key builder implementation
+ */
+export class CacheKeyBuilderImpl implements CacheKeyBuilder {
+  private config: CacheKeyConfig;
+
+  constructor(config: Partial<CacheKeyConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
   }
-  return `dotabuff-team-${teamId}-matches.json`;
-}
 
-export function getDotabuffMatchesCacheKey(teamId: string) {
-  return `dotabuff-team-${teamId}-matches`;
-}
-export function getDotabuffMatchesCacheFilename(teamId: string) {
-  return `dotabuff-team-${teamId}-matches.json`;
-}
+  /**
+   * Build a cache key with namespace and identifier
+   */
+  build(namespace: CacheNamespace, identifier: string, ...parts: string[]): string {
+    const allParts = [namespace, identifier, ...parts];
+    const key = allParts
+      .filter(part => part && part.trim())
+      .map(part => this.sanitizePart(part))
+      .join(this.config.separator);
 
-export function getPlayerDraftDataCacheKey(teamId: string) {
-  return `player-draft-data-${teamId}`;
-}
-export function getPlayerDraftDataCacheFilename(teamId: string) {
-  return `player-draft-data-${teamId}.json`;
-}
+    if (key.length > this.config.maxLength) {
+      throw new Error(`Cache key too long: ${key.length} > ${this.config.maxLength}`);
+    }
 
-export function getPlayerAnalysisDataCacheKey(teamId: string) {
-  return `player-analysis-data-${teamId}`;
-}
-export function getPlayerAnalysisDataCacheFilename(teamId: string) {
-  return `player-analysis-data-${teamId}.json`;
-}
+    return key;
+  }
 
-export function getMatchCacheKey(matchId: string) {
-  return `opendota-match-${matchId}`;
-}
-export function getMatchCacheFilename(matchId: string) {
-  return `opendota-match-${matchId}.json`;
-}
+  /**
+   * Build a pattern for cache invalidation
+   */
+  buildPattern(namespace: CacheNamespace, pattern: string): string {
+    // Sanitize the pattern but preserve wildcards and colons
+    const safePattern = this.sanitizePattern(pattern);
+    const key = `${namespace}${this.config.separator}${safePattern}`;
+    if (key.length > this.config.maxLength) {
+      throw new Error(`Cache pattern too long: ${key.length} > ${this.config.maxLength}`);
+    }
+    return key;
+  }
 
-export function getLeagueCacheKey(leagueId: string) {
-  return `dotabuff-league-${leagueId}`;
-}
-export function getLeagueCacheFilename(leagueId: string) {
-  return `dotabuff-league-${leagueId}.json`;
-}
+  /**
+   * Parse a cache key into its components
+   */
+  parse(key: string): {
+    namespace: CacheNamespace;
+    identifier: string;
+    parts: string[];
+  } | null {
+    if (!key || !key.includes(this.config.separator)) {
+      return null;
+    }
 
-export function getLeagueHtmlFilename(leagueId: string) {
-  return `dotabuff-league-${leagueId}.html`;
-}
+    const parts = key.split(this.config.separator);
+    if (parts.length < 2) {
+      return null;
+    }
 
-// Standardized API cache keys for new endpoints
-export function getHeroesCacheKey() {
-  return 'opendota-heroes';
-}
-export function getHeroesCacheFilename() {
-  return 'opendota-heroes.json';
-}
+    const namespace = parts[0] as CacheNamespace;
+    const identifier = parts[1];
+    const remainingParts = parts.slice(2);
 
-// Items endpoints cache keys
-export function getOpendotaItemsCacheKey() {
-  return 'opendota-items';
-}
-export function getOpendotaItemsCacheFilename() {
-  return 'opendota-items.json';
-}
+    return {
+      namespace,
+      identifier,
+      parts: remainingParts
+    };
+  }
 
-// Player endpoints cache keys
-export function getPlayerCacheKey(accountId: string) {
-  return `opendota-player-${accountId}`;
-}
-export function getPlayerCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}.json`;
-}
+  /**
+   * Sanitize a cache key part
+   */
+  private sanitizePart(part: string): string {
+    return part
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, '_') // replace all non-alphanumeric with _
+      .replace(/_+/g, '_')           // collapse multiple underscores
+      .toLowerCase();
+  }
 
-export function getPlayerMatchesCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-matches`;
-}
-export function getPlayerMatchesCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-matches.json`;
-}
-
-export function getPlayerRecentMatchesCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-recent-matches`;
-}
-export function getPlayerRecentMatchesCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-recent-matches.json`;
-}
-
-export function getPlayerRankingsCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-rankings`;
-}
-export function getPlayerRankingsCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-rankings.json`;
-}
-
-export function getPlayerRatingsCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-ratings`;
-}
-export function getPlayerRatingsCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-ratings.json`;
-}
-
-export function getPlayerWLCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-wl`;
-}
-export function getPlayerWLCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-wl.json`;
-}
-
-export function getPlayerTotalsCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-totals`;
-}
-export function getPlayerTotalsCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-totals.json`;
-}
-
-export function getPlayerCountsCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-counts`;
-}
-export function getPlayerCountsCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-counts.json`;
-}
-
-export function getPlayerHeroesCacheKey(accountId: string) {
-  return `opendota-player-${accountId}-heroes`;
-}
-export function getPlayerHeroesCacheFilename(accountId: string) {
-  return `opendota-player-${accountId}-heroes.json`;
-}
-
-// Team endpoints cache keys
-export function getTeamDataCacheKey(teamId: string) {
-  return `dotabuff-team-${teamId}`;
-}
-export function getTeamDataCacheFilename(teamId: string) {
-  return `dotabuff-team-${teamId}.json`;
-}
-
-// Legacy cache keys for backward compatibility
-export function getOpendotaMatchCacheKey(matchId: string) {
-  return `opendota-match-${matchId}`;
-}
-export function getOpendotaPublicMatchesCacheKey(limit: string) {
-  return `opendota-public-matches-${limit}`;
-}
-export function getOpendotaPlayerCacheKey(accountId: string) {
-  return `opendota-player-${accountId}`;
-}
-export function getOpendotaPlayerWlCacheKey(accountId: string) {
-  return `opendota-player-wl-${accountId}`;
-}
-export function getOpendotaPlayerTotalsCacheKey(accountId: string) {
-  return `opendota-player-totals-${accountId}`;
-}
-export function getOpendotaPlayerCountsCacheKey(accountId: string) {
-  return `opendota-player-counts-${accountId}`;
-}
-export function getOpendotaPlayerHeroesCacheKey(accountId: string) {
-  return `opendota-player-heroes-${accountId}`;
-}
-export function getOpendotaPlayerRecentMatchesCacheKey(accountId: string) {
-  return `opendota-player-recent-matches-${accountId}`;
-}
-export function getOpendotaPlayerMatchesCacheKey(accountId: string) {
-  return `opendota-player-matches-${accountId}`;
-}
-export function getOpendotaPlayerStatsCacheKey(accountId: string) {
-  return `opendota-player-stats-${accountId}`;
-}
-
-// Dashboard config cache keys
-export function getDashboardConfigCacheKey(id: string) {
-  return `dashboard-config-${id}`;
-}
-
-export function getDashboardConfigCacheFilename(id: string) {
-  return `dashboard-config-${id}.json`;
-}
-
-export function getCacheKeyAndFilename(type: string, id: string) {
-  switch (type) {
-    case 'player':
-      return {
-        key: `opendota-player-${id}`,
-        filename: `opendota-player-${id}.json`
-      };
-    case 'team':
-      return {
-        key: `dotabuff-team-${id}`,
-        filename: `dotabuff-team-${id}.json`
-      };
-    case 'match':
-      return {
-        key: `opendota-match-${id}`,
-        filename: `opendota-match-${id}.json`
-      };
-    case 'league':
-      return {
-        key: `dotabuff-league-${id}`,
-        filename: `dotabuff-league-${id}.json`
-      };
-    case 'heroes':
-      return {
-        key: 'opendota-heroes',
-        filename: 'opendota-heroes.json'
-      };
-    default:
-      throw new Error(`Unknown cache type: ${type}`);
+  /**
+   * Sanitize a pattern while preserving wildcards and colons
+   */
+  private sanitizePattern(pattern: string): string {
+    return pattern
+      .trim()
+      .replace(/[^a-zA-Z0-9*:]/g, '_') // replace non-alphanumeric (except * and :) with _
+      .replace(/_+/g, '_')             // collapse multiple underscores
+      .replace(/^_+|_+$/g, '')         // remove leading/trailing underscores
+      .toLowerCase();
   }
 }
 
-export function getHeroesCacheKeyAndFilename() {
-  return {
-    key: 'opendota-heroes',
-    filename: 'opendota-heroes.json'
-  };
+/**
+ * Global cache key builder instance
+ */
+export const cacheKeyBuilder = new CacheKeyBuilderImpl();
+
+/**
+ * Convenience functions for common cache key patterns
+ */
+
+/**
+ * Build an API cache key
+ */
+export function buildApiKey(endpoint: string, params: Record<string, string | number> = {}): string {
+  const paramString = Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  
+  // Don't sanitize endpoint and params for API keys
+  const key = ['api', endpoint, paramString]
+    .filter(part => part && part.trim())
+    .join(':');
+  
+  if (key.length > 250) {
+    throw new Error(`Cache key too long: ${key.length} > 250`);
+  }
+  
+  return key;
 }
 
-export function getPlayerStatsCacheKeyAndFilename(playerId: string) {
-  return {
-    key: `opendota-player-stats-${playerId}`,
-    filename: `opendota-player-stats-${playerId}.json`
-  };
+/**
+ * Build a hero cache key
+ */
+export function buildHeroKey(heroId: string): string {
+  return cacheKeyBuilder.build('hero', heroId);
+}
+
+/**
+ * Build a player cache key
+ */
+export function buildPlayerKey(playerId: string, dataType?: string): string {
+  return cacheKeyBuilder.build('player', playerId, dataType || 'profile');
+}
+
+/**
+ * Build a team cache key
+ */
+export function buildTeamKey(teamId: string): string {
+  return cacheKeyBuilder.build('team', teamId);
+}
+
+/**
+ * Build a match cache key
+ */
+export function buildMatchKey(matchId: string): string {
+  return cacheKeyBuilder.build('match', matchId);
+}
+
+/**
+ * Build a league cache key
+ */
+export function buildLeagueKey(leagueId: string): string {
+  return cacheKeyBuilder.build('league', leagueId);
+}
+
+/**
+ * Build a rate limit cache key
+ */
+export function buildRateLimitKey(service: string, identifier: string): string {
+  return cacheKeyBuilder.build('rate-limit', service, identifier);
+}
+
+/**
+ * Build a job cache key
+ */
+export function buildJobKey(jobId: string, status?: string): string {
+  return cacheKeyBuilder.build('job', jobId, status || 'status');
+}
+
+/**
+ * Build a config cache key
+ */
+export function buildConfigKey(configId: string): string {
+  return cacheKeyBuilder.build('config', configId);
+}
+
+/**
+ * Build a pattern for invalidating all keys in a namespace
+ */
+export function buildNamespacePattern(namespace: CacheNamespace): string {
+  return cacheKeyBuilder.buildPattern(namespace, '*');
+}
+
+/**
+ * Build a pattern for invalidating all keys with a specific identifier
+ */
+export function buildIdentifierPattern(namespace: CacheNamespace, identifier: string): string {
+  // Do not sanitize the colon between identifier and wildcard
+  return cacheKeyBuilder.buildPattern(namespace, `${identifier}:*`);
 } 

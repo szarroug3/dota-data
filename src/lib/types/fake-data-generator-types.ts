@@ -1,1 +1,0 @@
-// All OpenDota types are now defined in src/types/opendota.ts with OpenDota[Type] naming. This file is now empty. 

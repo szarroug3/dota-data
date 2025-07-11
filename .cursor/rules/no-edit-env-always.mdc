@@ -1,10 +1,6 @@
 ---
-description: 
-globs: 
+description: No Edit Env Always
 alwaysApply: true
----
----
-name: No Edit Env Always
 ---
 
 - Do not make changes to .env files.

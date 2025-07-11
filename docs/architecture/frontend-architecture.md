@@ -30,6 +30,7 @@ This document outlines the complete frontend architecture, including component s
   - [HeroDataManagementContext](#4-herodatamanagementcontext)
 
 ### [Pages](#pages)
+- [Next.js App Router Structure](#nextjs-app-router-structure)
 - [Dashboard Page](#dashboard-page)
 - [Team Management Page](#team-management-page)
 - [Match History Page](#match-history-page)
@@ -98,6 +99,7 @@ This document outlines the complete frontend architecture, including component s
   - Teams list is loaded immediately upon application start
   - Active team data begins fetching automatically if a team is selected
   - User preferences (theme, sidebar state, preferred site) are restored from localStorage
+  - Team data (active team ID, team list, team preferences) are restored from localStorage
   - Navigation state is initialized based on current route
 
 - **Active Team Data Preloading:**
@@ -135,6 +137,44 @@ This document outlines the complete frontend architecture, including component s
   - **Data Display Options** - Toggle visibility of specific data fields
   - **Filter Presets** - Save and restore common filter combinations
   - **UI Preferences** - Theme, layout density, animation preferences
+
+### localStorage Data Persistence
+The application persists critical user data in localStorage to maintain state across browser sessions and page refreshes.
+
+#### User Preferences (UI Settings)
+- **Theme Preference**
+  - Key: `'theme'`
+  - Values: `'light' | 'dark'`
+  - Purpose: Light/dark mode persistence
+- **Sidebar Collapsed State**
+  - Key: `'sidebarCollapsed'`
+  - Values: `boolean` (JSON stringified)
+  - Purpose: Remember if sidebar is collapsed/expanded
+- **Preferred External Site**
+  - Key: `'preferredSite'`
+  - Values: `'dotabuff' | 'opendota'`
+  - Purpose: User's preferred external site for match/player links
+
+#### Team Data Persistence
+- **Active Team ID**
+  - Key: `'activeTeamId'`
+  - Values: `string | null`
+  - Purpose: Remember which team is currently selected across sessions
+- **Team List**
+  - Key: `'teams'`
+  - Values: `Team[]` (JSON stringified)
+  - Purpose: Remember user's added teams and their metadata
+- **Team Preferences**
+  - Key: `'teamPreferences'`
+  - Values: `TeamPreferences` (JSON stringified)
+  - Purpose: Remember user's team-specific settings and preferences
+
+#### Persistence Strategy
+- **Load on App Start**: All localStorage data is loaded during application initialization
+- **Save on State Changes**: Data is automatically saved when relevant state changes
+- **Error Handling**: Graceful fallback if localStorage is unavailable (private browsing, quota exceeded)
+- **Data Validation**: Stored data is validated before use to handle corrupted localStorage
+- **Migration Support**: Version-aware data migration for localStorage schema changes
 
 ### Sidebar Navigation
 - **Persistent Sidebar** - Always visible navigation component
@@ -290,6 +330,99 @@ These contexts manage application state, filtering, and derived data. They use d
   - `filteredHeroes: Hero[]`
   - `setHeroFilters: (filters: HeroFilters) => void`
 - **Used by:** [Draft Suggestions Page](./frontend-architecture.md#draft-suggestions-page), [Player Stats Page](./frontend-architecture.md#player-stats-page), [Team Analysis Page](./frontend-architecture.md#team-analysis-page)
+
+---
+
+## Next.js App Router Structure
+
+### Overview
+The application uses Next.js 15 with the App Router for optimal performance and modern React features. The routing structure follows a clean, hierarchical organization that supports all major pages and features.
+
+### File Structure
+```
+src/app/
+├── layout.tsx                    # Root layout with providers and sidebar
+├── page.tsx                     # Main dashboard page (default route)
+├── team-management/
+│   └── page.tsx                # Team management page
+├── match-history/
+│   └── page.tsx                # Match history page
+├── player-stats/
+│   └── page.tsx                # Player stats page
+├── draft-suggestions/
+│   └── page.tsx                # Draft suggestions page
+├── team-analysis/
+│   └── page.tsx                # Team analysis page
+└── api/                        # API routes (existing)
+    ├── heroes/
+    │   └── route.ts
+    ├── teams/
+    │   └── [id]/
+    │       └── route.ts
+    ├── players/
+    │   └── [id]/
+    │       └── route.ts
+    ├── matches/
+    │   └── [id]/
+    │       ├── route.ts
+    │       └── parse/
+    │           └── route.ts
+    ├── leagues/
+    │   └── [id]/
+    │       └── route.ts
+    └── cache/
+        └── invalidate/
+            └── route.ts
+```
+
+### URL Structure
+- **Main Dashboard**: `http://localhost:3000/` (default route)
+- **Team Management**: `http://localhost:3000/team-management`
+- **Match History**: `http://localhost:3000/match-history`
+- **Player Stats**: `http://localhost:3000/player-stats`
+- **Draft Suggestions**: `http://localhost:3000/draft-suggestions`
+- **Team Analysis**: `http://localhost:3000/team-analysis`
+
+### Root Layout (`src/app/layout.tsx`)
+- **Purpose**: Root layout that wraps all pages with providers and sidebar
+- **Features**:
+  - Theme provider (light/dark mode)
+  - Context providers (team, match, player, hero contexts)
+  - Sidebar navigation (always visible)
+  - Error boundary wrapper
+  - Global styles and fonts
+  - Meta tags and SEO optimization
+
+### Page Components
+Each page component follows the same pattern:
+- **Location**: `src/app/[page-name]/page.tsx`
+- **Purpose**: Server component that renders the corresponding page component
+- **Structure**: Minimal wrapper that renders the page component with proper providers
+- **Loading**: Uses React Suspense for loading states
+- **Error Handling**: Uses error boundaries for graceful error handling
+
+### Implementation Pattern
+```tsx
+// Example: src/app/team-management/page.tsx
+import { TeamManagementPage } from '@/components/team-management/TeamManagementPage'
+
+export default function TeamManagementPageRoute() {
+  return <TeamManagementPage />
+}
+```
+
+### Navigation
+- **Client-side navigation** using Next.js Link components
+- **Active state management** in sidebar navigation
+- **Breadcrumb navigation** for deep pages
+- **Back button support** for mobile devices
+
+### Performance Optimizations
+- **Static generation** for pages that don't require dynamic data
+- **Incremental Static Regeneration** for pages with semi-dynamic content
+- **Lazy loading** for heavy components
+- **Code splitting** by route for optimal bundle sizes
+- **Image optimization** using Next.js Image component
 
 ---
 
@@ -611,9 +744,11 @@ The Sidebar provides persistent navigation, quick access to external resources, 
 - Theme preference saved to localStorage
 - Preferred site setting saved to localStorage
 - Sidebar collapsed state saved to localStorage
+- Active team ID saved to localStorage
+- Team list saved to localStorage
+- Team preferences saved to localStorage
 - Navigation state managed by routing context
-- Team list and active team from existing contexts
-- All settings persist across sessions
+- All settings and team data persist across sessions
 
 ---
 
@@ -624,7 +759,8 @@ The Sidebar provides persistent navigation, quick access to external resources, 
 4. Sidebar collapse/expand updates with smooth animations
 5. Preferred site changes update external link behavior
 6. Team list updates when teams are added/removed
-7. All settings persist to localStorage automatically
+7. Active team changes are persisted to localStorage
+8. All settings and team data persist to localStorage automatically
 
 ---
 
@@ -660,6 +796,9 @@ The Sidebar provides persistent navigation, quick access to external resources, 
     preferredSite: 'dotabuff' | 'opendota';
     sidebarCollapsed: boolean;
     sidebarWidth: number;
+    activeTeamId: string | null;
+    teams: Team[];
+    teamPreferences: TeamPreferences;
   }
   ```
 

@@ -8,8 +8,6 @@ The backend data flow is controlled by environment variables that determine mock
 
 ## Data Fetching Modes
 
-All API data fetches go through these layers in sequence: cache check → queue → rate limit → fetch/store.
-
 There are three main modes/behaviors:
 
 - **Mock mode:** If enabled, the service attempts to load a mock data file. If found, it is processed, cached, and returned. If not, an error is returned.
@@ -28,11 +26,11 @@ The backend uses three tightly integrated layers to manage data fetching, perfor
 - **[Rate Limiting Layer](./rate-limiting-layer.md):** Prevents exceeding external API rate limits and simulates rate limits in mock mode. Supports per-service limits, delays, backoff, and logging.
 - **[Queueing Layer](./queueing-layer.md):** Ensures requests are processed in order, deduplicates in-progress requests, and supports background processing with QStash and memory fallback.
 
-All API data fetches go through these layers in sequence: cache check → queue → rate limit → fetch/store.
-
 ---
 
 ## General Synchronous Data Loading Flow
+
+All API data fetches go through these layers in sequence: cache check → queue → rate limit → fetch/store.
 
 This diagram shows the unified backend flow for all standard API endpoints, now explicitly including queueing and rate limiting for both mock and real modes:
 
@@ -65,8 +63,6 @@ flowchart TD
 
 **Summary:** On a cache miss, the request is queued, rate-limited, and then either loads mock data or fetches from the external API, processes and caches the result, and returns it to the client.
 
-- See [Data Fetching Modes](#data-fetching-modes) for details on real mode, mock mode, and write real to mock behavior.
-
 ---
 
 ## Error Handling
@@ -94,7 +90,7 @@ The `/matches/{id}/parse` endpoint enqueues a parse request, then:
 - In **real mode**, fetches from the external API and polls for completion, then calls the internal `/matches/{id}` endpoint to return processed match data.
 - In **mock mode**, directly calls the internal `/matches/{id}` endpoint with the parsed flag to return processed mock data.
 
-See [Data Fetching Modes](#data-fetching-modes) for details on real/mock mode behavior.
+
 
 ```mermaid
 flowchart TD
@@ -129,7 +125,7 @@ The following table summarizes the logic used by the Matches Endpoint (`/matches
 - **Real mode:** Fetches from external API, processes, caches, and returns (mock/parsed file logic does not apply).
 - **Write Real to Mock:** Controlled by the `WRITE_REAL_DATA_TO_MOCK` flag - only data-fetching endpoints support this.
 
-- See [Data Fetching Modes](#data-fetching-modes) for details on real mode, mock mode, and write real to mock behavior.
+
 
 ---
 

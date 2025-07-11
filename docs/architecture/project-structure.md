@@ -8,14 +8,19 @@ This document describes the recommended folder structure for the Dota Data codeb
 src/
 ├── app/                           # Next.js app router
 │   ├── api/                       # API route handlers (thin handlers)
-│   ├── dashboard/                 # Dashboard page
-│   ├── team-management/           # Team management page
-│   ├── match-history/             # Match history page
-│   ├── player-stats/              # Player stats page
-│   ├── draft-suggestions/         # Draft suggestions page
-│   ├── team-analysis/             # Team analysis page
-│   ├── layout.tsx                 # Root layout with providers
-│   └── page.tsx                   # Home page (redirects to dashboard)
+│   │   ├── heroes/                # Heroes endpoint
+│   │   ├── teams/                 # Teams endpoint
+│   │   ├── players/               # Players endpoint
+│   │   ├── matches/               # Matches endpoint
+│   │   ├── leagues/               # Leagues endpoint
+│   │   └── cache/                 # Cache management endpoint
+│   ├── layout.tsx                 # Root layout with providers (TODO: Phase 4.5)
+│   └── page.tsx                   # Home page (TODO: Phase 4.5)
+├── team-management/               # Team management page (TODO: Phase 4.5)
+├── match-history/                 # Match history page (TODO: Phase 4.5)
+├── player-stats/                  # Player stats page (TODO: Phase 4.5)
+├── draft-suggestions/             # Draft suggestions page (TODO: Phase 4.5)
+└── team-analysis/                 # Team analysis page (TODO: Phase 4.5)
 ├── components/                    # React UI components
 │   ├── layout/                    # Layout components (sidebar, header, etc.)
 │   ├── dashboard/                 # Dashboard-specific components
@@ -82,14 +87,15 @@ src/
 
 | Folder / Path                | Purpose | Key Contents |
 |------------------------------|---------|--------------|
-| **src/app/**                 | Next.js app router | Pages, layouts, API route handlers |
+| **src/app/**                 | Next.js app router | API route handlers, layouts, pages |
 | ├── api/                     | API route handlers | Thin handlers, import from `lib/api/` |
-| ├── dashboard/               | Dashboard page | [Dashboard components](./frontend-architecture.md#dashboard-page) |
-| ├── team-management/         | Team management page | [Team management components](./frontend-architecture.md#team-management-page) |
-| ├── match-history/           | Match history page | [Match history components](./frontend-architecture.md#match-history-page) |
-| ├── player-stats/            | Player stats page | [Player stats components](./frontend-architecture.md#player-stats-page) |
-| ├── draft-suggestions/       | Draft suggestions page | [Draft suggestions components](./frontend-architecture.md#draft-suggestions-page) |
-| ├── team-analysis/           | Team analysis page | [Team analysis components](./frontend-architecture.md#team-analysis-page) |
+| ├── layout.tsx               | Root layout | Providers, sidebar, global styles (TODO: Phase 4.5) |
+| └── page.tsx                 | Home page | Main dashboard page (TODO: Phase 4.5) |
+| **src/app/team-management/** | Team management page | [Team management components](./frontend-architecture.md#team-management-page) (TODO: Phase 4.5) |
+| **src/app/match-history/**   | Match history page | [Match history components](./frontend-architecture.md#match-history-page) (TODO: Phase 4.5) |
+| **src/app/player-stats/**    | Player stats page | [Player stats components](./frontend-architecture.md#player-stats-page) (TODO: Phase 4.5) |
+| **src/app/draft-suggestions/** | Draft suggestions page | [Draft suggestions components](./frontend-architecture.md#draft-suggestions-page) (TODO: Phase 4.5) |
+| **src/app/team-analysis/**   | Team analysis page | [Team analysis components](./frontend-architecture.md#team-analysis-page) (TODO: Phase 4.5) |
 | **src/components/**          | React UI components | All UI components organized by feature |
 | ├── layout/                  | Layout components | [Sidebar, header, etc.](./frontend-architecture.md#layout-components) |
 | ├── dashboard/               | Dashboard components | [Dashboard page components](./frontend-architecture.md#dashboard-page) |

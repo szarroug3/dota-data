@@ -1,10 +1,6 @@
 ---
-description: 
-globs: 
+description: Read Docs Before Changes Always
 alwaysApply: true
----
----
-name: Read Docs Before Changes Always
 ---
 
 - Before making any file changes, review all relevant documentation, including architecture, design, and implementation docs.

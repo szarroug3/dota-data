@@ -1,10 +1,6 @@
 ---
-description: 
-globs: 
+description: Follow All Rules Always
 alwaysApply: true
----
----
-name: Follow All Rules Always
 ---
 
 - Review and follow all rules in .cursor/rules for every task.

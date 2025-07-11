@@ -1,25 +1,60 @@
 import js from "@eslint/js";
 import prettier from 'eslint-config-prettier';
+import pluginImport from 'eslint-plugin-import';
+import jest from 'eslint-plugin-jest';
+import jestDom from 'eslint-plugin-jest-dom';
 import pluginReact from "eslint-plugin-react";
 import reactHooks from 'eslint-plugin-react-hooks';
+import testingLibrary from 'eslint-plugin-testing-library';
 import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
+  { ignores: [".next/**", ".backup/**", "coverage/**"] },
+  // Only lint source files, never .next or build output
+  {
+    files: ["src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    settings: {
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+        },
+      },
+    },
+  },
+  {
+    files: ["src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**"],
+    languageOptions: { globals: {...globals.browser, ...globals.node} }
+  },
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
-    plugins: { 'react-hooks': reactHooks },
+    plugins: { 
+      'react-hooks': reactHooks,
+      'import': pluginImport
+    },
     rules: {
       // TypeScript rules
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^$', varsIgnorePattern: '^$' }],
       '@typescript-eslint/no-empty-object-type': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
+      '@typescript-eslint/no-restricted-types': [
+        'error',
+        {
+          types: {
+            unknown: {
+              message: "Do not use 'unknown', use a more specific type."
+            }
+          }
+        }
+      ],
       
       // React rules - disable the problematic ones for Next.js 13+
       'react/react-in-jsx-scope': 'off',
@@ -31,6 +66,28 @@ export default defineConfig([
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      
+      // Import rules
+      'import/order': [
+        'error',
+        {
+          'groups': [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index'
+          ],
+          'newlines-between': 'always',
+          'alphabetize': {
+            'order': 'asc',
+            'caseInsensitive': true
+          }
+        }
+      ],
+      'import/no-unresolved': 'error',
+      'import/no-duplicates': 'error',
       
       // General rules
       'prefer-const': 'warn',
@@ -56,51 +113,54 @@ export default defineConfig([
       ],
     },
   },
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    ignores: [
-      'node_modules/**', 
-      '.next/**', 
-      '.next/types/**',
-      '.next/types/**/*.ts',
-      '.next/static/**',
-      '.next/server/**',
-      'out/**', 
-      'dist/**', 
-      'build/**'
-    ],
-    settings: {
-      next: {
-        rootDir: '.',
-        appDir: ['src/app'],
-        pagesDir: ['src/pages'],
-      },
-    },
-  },
-  // Separate configuration for .next files to disable all rules
-  {
-    files: ['.next/**/*'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-wrapper-object-types': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/no-this-alias': 'off',
-      'no-undef': 'off',
-      'no-redeclare': 'off',
-      'no-cond-assign': 'off',
-      'no-empty': 'off',
-      'no-control-regex': 'off',
-      'no-prototype-builtins': 'off',
-      'no-fallthrough': 'off',
-      'max-lines': 'off',
-      'max-lines-per-function': 'off',
-      'complexity': 'off',
-      'max-depth': 'off',
-      'no-restricted-syntax': 'off',
-    },
-  },
   prettier,
+  // TEST FILE OVERRIDES (flat config style)
+  {
+    files: [
+      'src/**/*.test.{ts,tsx,js,jsx}',
+      'src/**/*.spec.{ts,tsx,js,jsx}',
+      'src/tests/**/*.{ts,tsx,js,jsx}',
+    ],
+    ignores: ["coverage/**"],
+    plugins: {
+      jest,
+      'testing-library': testingLibrary,
+      'jest-dom': jestDom,
+    },
+    rules: {
+      // Jest and Testing Library recommended rules (manually enabled)
+      'jest/expect-expect': 'warn',
+      'jest/no-disabled-tests': 'warn',
+      'jest/no-focused-tests': 'error',
+      'jest/no-identical-title': 'error',
+      'jest/prefer-to-have-length': 'warn',
+      'jest/valid-expect': 'error',
+      'jest-dom/prefer-checked': 'warn',
+      'jest-dom/prefer-enabled-disabled': 'warn',
+      'jest-dom/prefer-required': 'warn',
+      // Relaxed rules for tests
+      'max-lines-per-function': 'off',
+      'max-lines': 'off',
+      'max-nested-callbacks': 'off',
+      'no-magic-numbers': 'off',
+      'no-unused-expressions': 'off',
+      'no-console': 'off',
+      'no-empty-function': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'import/no-extraneous-dependencies': [
+        'error',
+        { devDependencies: true },
+      ],
+      // Allow require() calls in test files for mocking
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression',
+          message: 'Dynamic import() is not allowed except for code-splitting. All imports should be at the top.'
+        }
+      ],
+    },
+  },
 ]);

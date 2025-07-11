@@ -6,10 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "DIR=${DIR:-src} eslint $DIR",
-    "lint:fix": "DIR=${DIR:-src} eslint --fix $DIR",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "lint:all": "eslint src",
+    "lint:fix:all": "eslint --fix src",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
     "generate:openapi": "node scripts/generate-swagger.js",
-    "test": "jest"
+    "test": "NODE_ENV=test jest",
+    "test:watch": "NODE_ENV=test jest --watch",
+    "test:coverage": "NODE_ENV=test jest --coverage"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
@@ -37,21 +43,30 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@eslint/js": "^9.30.0",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/domhandler": "^3.1.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.3",
+    "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jest": "^29.0.1",
+    "eslint-plugin-jest-dom": "^5.5.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-testing-library": "^7.5.4",
     "globals": "^16.2.0",
     "jest": "^29.0.0",
+    "jest-environment-jsdom": "^30.0.4",
     "openapi-comment-parser": "^1.0.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
@@ -65,9 +80,95 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testEnvironment": "node",
+    "testEnvironment": "jsdom",
+    "setupFiles": [
+      "<rootDir>/jest.upstash-mock.js",
+      "<rootDir>/jest.setup.js"
+    ],
     "testMatch": [
-      "**/tests/**/*.test.ts"
+      "**/tests/**/*.test.ts",
+      "**/tests/**/*.test.tsx"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "jsx": "react-jsx"
+          }
+        }
+      ]
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@upstash/redis|uncrypto)/)"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "projects": [
+      {
+        "displayName": "backend",
+        "testMatch": [
+          "<rootDir>/src/tests/lib/**/*.test.ts",
+          "<rootDir>/src/tests/app/api/**/*.test.ts"
+        ],
+        "testEnvironment": "node",
+        "moduleNameMapper": {
+          "^@/(.*)$": "<rootDir>/src/$1"
+        },
+        "transform": {
+          "^.+\\.(ts|tsx)$": [
+            "ts-jest",
+            {
+              "useESM": true,
+              "tsconfig": {
+                "jsx": "react-jsx"
+              }
+            }
+          ]
+        },
+        "transformIgnorePatterns": [
+          "node_modules/(?!(@upstash/redis|uncrypto)/)"
+        ],
+        "extensionsToTreatAsEsm": [
+          ".ts",
+          ".tsx"
+        ]
+      },
+      {
+        "displayName": "frontend",
+        "testMatch": [
+          "<rootDir>/src/tests/contexts/**/*.test.ts",
+          "<rootDir>/src/tests/contexts/**/*.test.tsx",
+          "<rootDir>/src/tests/components/**/*.test.ts",
+          "<rootDir>/src/tests/components/**/*.test.tsx",
+          "<rootDir>/src/tests/hooks/**/*.test.ts",
+          "<rootDir>/src/tests/hooks/**/*.test.tsx"
+        ],
+        "testEnvironment": "jsdom",
+        "moduleNameMapper": {
+          "^@/(.*)$": "<rootDir>/src/$1"
+        },
+        "transform": {
+          "^.+\\.(ts|tsx)$": [
+            "ts-jest",
+            {
+              "tsconfig": {
+                "jsx": "react-jsx"
+              }
+            }
+          ]
+        },
+        "transformIgnorePatterns": [
+          "node_modules/(?!(@upstash/redis|uncrypto|cheerio|domhandler)/)"
+        ],
+        "setupFilesAfterEnv": [
+          "<rootDir>/jest.setup.js"
+        ]
+      }
     ]
   }
 }

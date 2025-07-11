@@ -1,3 +1,5 @@
+import path from "path";
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -18,6 +20,11 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack: (config, { dev }) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': path.resolve(__dirname, 'src'),
+    };
     if (dev) {
       config.watchOptions = {
         ...(config.watchOptions || {}),

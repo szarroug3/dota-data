@@ -1,68 +1,112 @@
-import { Target, BarChart3, Users, Shield, Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import React from 'react';
 
-const quickActions = [
-  {
-    title: "Draft Suggestions",
-    description: "AI-powered hero recommendations",
-    icon: Target,
-    href: "/dashboard/draft-suggestions",
-    color: "text-blue-600",
-  },
-  {
-    title: "Meta Insights",
-    description: "Current meta trends and analysis",
-    icon: BarChart3,
-    href: "/dashboard/meta-insights",
-    color: "text-green-600",
-  },
-  {
-    title: "Player Stats",
-    description: "Individual player performance",
-    icon: Users,
-    href: "/dashboard/player-stats",
-    color: "text-purple-600",
-  },
-  {
-    title: "Team Analysis",
-    description: "Detailed team performance analysis",
-    icon: Shield,
-    href: "/dashboard/team-analysis",
-    color: "text-orange-600",
-  },
-  {
-    title: "Match History",
-    description: "Complete match history and statistics",
-    icon: Activity,
-    href: "/dashboard/match-history",
-    color: "text-red-600",
-  },
-];
+export const QuickActions: React.FC = () => {
+  const handleAddMatch = () => {
+    console.log('Add match action');
+  };
 
-export default function QuickActions() {
+  const handleViewAnalysis = () => {
+    console.log('View team analysis');
+  };
+
+  const handleViewDraftSuggestions = () => {
+    console.log('View draft suggestions');
+  };
+
+  const handleViewPlayerStats = () => {
+    console.log('View player stats');
+  };
+
+  const handleViewMatchHistory = () => {
+    console.log('View match history');
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {quickActions.map((action) => {
-        const Icon = action.icon;
-        return (
-          <Link key={action.title} href={action.href}>
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon className={`w-5 h-5 ${action.color}`} />
-                  {action.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {action.description}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        );
-      })}
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Quick Actions
+      </h3>
+      
+      <div className="space-y-3">
+        <ActionButton
+          title="Add Match"
+          description="Add a new match to track"
+          icon="➕"
+          onClick={handleAddMatch}
+          primary
+        />
+        
+        <ActionButton
+          title="Team Analysis"
+          description="View detailed team performance"
+          icon="📊"
+          onClick={handleViewAnalysis}
+        />
+        
+        <ActionButton
+          title="Draft Suggestions"
+          description="Get meta insights and recommendations"
+          icon="🎯"
+          onClick={handleViewDraftSuggestions}
+        />
+        
+        <ActionButton
+          title="Player Stats"
+          description="View individual player performance"
+          icon="👤"
+          onClick={handleViewPlayerStats}
+        />
+        
+        <ActionButton
+          title="Match History"
+          description="Browse all team matches"
+          icon="📜"
+          onClick={handleViewMatchHistory}
+        />
+      </div>
     </div>
   );
+};
+
+interface ActionButtonProps {
+  title: string;
+  description: string;
+  icon: string;
+  onClick: () => void;
+  primary?: boolean;
 }
+
+const ActionButton: React.FC<ActionButtonProps> = ({ 
+  title, 
+  description, 
+  icon, 
+  onClick, 
+  primary = false 
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full p-4 rounded-lg border transition-colors ${
+        primary
+          ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
+          : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600'
+      }`}
+    >
+      <div className="flex items-center space-x-3">
+        <div className="text-2xl">{icon}</div>
+        <div className="text-left">
+          <p className={`font-medium ${
+            primary ? 'text-white' : 'text-gray-900 dark:text-white'
+          }`}>
+            {title}
+          </p>
+          <p className={`text-sm ${
+            primary ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+          }`}>
+            {description}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}; 

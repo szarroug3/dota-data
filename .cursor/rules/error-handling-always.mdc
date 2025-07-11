@@ -1,6 +1,5 @@
 ---
 description: 
-globs: 
 alwaysApply: true
 ---
 - Handle errors gracefully in all code.

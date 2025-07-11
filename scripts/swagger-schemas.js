@@ -1,4 +1,4 @@
-export const schemas = {
+const schemas = {
   OpenDotaHero: {
     type: 'object',
     properties: {
@@ -440,4 +440,6 @@ export const schemas = {
       },
     },
   },
-}; 
+};
+
+export { schemas };

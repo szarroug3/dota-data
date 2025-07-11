@@ -1,82 +1,104 @@
-import { shouldMockService, tryMock } from '@/lib/api';
-import { fetchAPI } from '@/lib/api/shared';
-import { cacheService } from '@/lib/cache-service';
-import { generateFakeHeroes } from '@/lib/fake-data-generators/hero-generator';
-import type { OpenDotaHero } from '@/types/opendota';
+import fs from 'fs/promises';
+import path from 'path';
+
+import { CacheService } from '@/lib/cache-service';
+import { RateLimiter } from '@/lib/rate-limiter';
+import { CacheValue } from '@/types/cache';
+import { OpenDotaHero } from '@/types/external-apis';
 
 /**
- * Get heroes data from OpenDota API
- * @param forceRefresh - Force refresh from API
- * @returns Promise<OpenDotaHero[]> - Heroes data
+ * Fetches the list of Dota 2 heroes from OpenDota API, with cache, rate limiting, and mock mode support.
+ * OpenDota API docs: https://docs.opendota.com/#tag/heroes/operation/get_heroes
+ *
+ * @param force If true, bypasses cache and fetches fresh data
+ * @returns Array of OpenDotaHero objects
+ * @throws Error if data cannot be loaded from any source
  */
-export async function getHeroes(forceRefresh = false): Promise<OpenDotaHero[]> {
-  const cacheKey = 'opendota-heroes';
-  const filename = `${cacheKey}.json`;
-  const HEROES_TTL = 60 * 60 * 24 * 90; // 90 days in seconds
+export async function fetchOpenDotaHeroes(force = false): Promise<OpenDotaHero[]> {
+  const cacheKey = 'opendota:heroes';
+  const cacheTTL = 60 * 60 * 24 * 7; // 7 days
+  const cache = new CacheService({
+    useRedis: process.env.USE_REDIS === 'true',
+    redisUrl: process.env.REDIS_URL,
+    fallbackToMemory: true,
+  });
+  const rateLimiter = new RateLimiter({
+    useRedis: process.env.USE_REDIS === 'true',
+    redisUrl: process.env.REDIS_URL,
+    fallbackToMemory: true,
+  });
 
-  // 1. Check cache for data (unless force refresh)
-  if (!forceRefresh) {
-    const cached = await cacheService.get<OpenDotaHero[]>(cacheKey, filename, HEROES_TTL);
-    if (cached) return cached;
+  // 1. Mock mode
+  if (process.env.USE_MOCK_API === 'true') {
+    return loadMockHeroes();
   }
 
-  // 2. Try mock data if available
-  const mockRes = await tryMock('opendota', filename);
-  if (mockRes) {
-    const data = await mockRes.json();
-    await cacheService.set('opendota', cacheKey, data, HEROES_TTL, filename);
-    return data;
+  // 2. Cache check
+  if (!force) {
+    const cached = await cache.get(cacheKey);
+    const parsed = parseCachedHeroes(cached);
+    if (parsed) return parsed;
   }
-  
-  // 3. Check if we should use mock service
-  if (shouldMockService('opendota')) {
-    const fakeData = generateFakeHeroes(124, filename);
-    await cacheService.set('opendota', cacheKey, fakeData, HEROES_TTL, filename);
-    return fakeData;
-  }
-  
-  // 4. Fetch real data
-  const data = await fetchAPI<OpenDotaHero[]>("opendota", "/heroes", cacheKey);
-  
-  // 5. Write processed data to cache
-  await cacheService.set('opendota', cacheKey, data, HEROES_TTL, filename);
-  
-  // 6. Return processed data
-  return data;
+
+  // 3. Rate limit
+  await ensureNotRateLimited(rateLimiter);
+
+  // 4. Fetch from OpenDota
+  const heroes = await fetchHeroesFromApi();
+  await cache.set(cacheKey, JSON.stringify(heroes), cacheTTL);
+  return heroes;
 }
 
-export async function getHeroStats(forceRefresh = false): Promise<OpenDotaHero[]> {
-  const cacheKey = "opendota-hero-stats";
-  const filename = `${cacheKey}.json`;
-  const HEROES_TTL = 60 * 60 * 24 * 90; // 90 days in seconds
+async function loadMockHeroes(): Promise<OpenDotaHero[]> {
+  const mockPath = path.join(process.cwd(), 'mock-data', 'heroes.json');
+  try {
+    const data = await fs.readFile(mockPath, 'utf-8');
+    return JSON.parse(data) as OpenDotaHero[];
+  } catch (err) {
+    throw new Error(`Failed to load OpenDota heroes from mock data: ${err}`);
+  }
+}
 
-  // 1. Check cache for data (unless force refresh)
-  if (!forceRefresh) {
-    const cached = await cacheService.get<OpenDotaHero[]>(cacheKey, filename, HEROES_TTL);
-    if (cached) return cached;
+function parseCachedHeroes(cached: CacheValue): OpenDotaHero[] | null {
+  if (typeof cached === 'string') {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) {
+        return parsed as OpenDotaHero[];
+      }
+    } catch {
+      // ignore parse error
+    }
   }
+  return null;
+}
 
-  // 2. Try mock data if available
-  const mockRes = await tryMock('opendota', filename);
-  if (mockRes) {
-    const data = await mockRes.json();
-    await cacheService.set('opendota', cacheKey, data, HEROES_TTL, filename);
-    return data;
+async function ensureNotRateLimited(rateLimiter: RateLimiter): Promise<void> {
+  const rateResult = await rateLimiter.checkServiceLimit('opendota', 'heroes');
+  if (!rateResult.allowed) {
+    throw new Error('Rate limited by OpenDota API');
   }
-  
-  // 3. Check if we should use mock service
-  if (shouldMockService('opendota')) {
-    const fakeData = generateFakeHeroes(124, filename);
-    await cacheService.set('opendota', cacheKey, fakeData, HEROES_TTL, filename);
-    return fakeData;
+}
+
+async function fetchHeroesFromApi(): Promise<OpenDotaHero[]> {
+  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/heroes`;
+  const timeout = Number(process.env.OPENDOTA_API_TIMEOUT) || 10000;
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  let response: Response;
+  try {
+    response = await fetch(url, { signal: controller.signal });
+  } catch (err) {
+    clearTimeout(id);
+    throw new Error(`Failed to fetch OpenDota heroes: ${err}`);
   }
-  
-  // 4. Fetch real data
-  const data = await fetchAPI<OpenDotaHero[]>("opendota", "/heroes/stats", cacheKey);
-  
-  // 5. Write processed data to cache
-  await cacheService.set('opendota', cacheKey, data, HEROES_TTL, filename);
-  
-  // 6. Return processed data
-  return data;
+  clearTimeout(id);
+  if (!response.ok) {
+    throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
+  }
+  try {
+    return await response.json();
+  } catch (err) {
+    throw new Error(`Failed to parse OpenDota heroes response: ${err}`);
+  }
 } 

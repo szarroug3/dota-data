@@ -1,6 +1,5 @@
 ---
-description: 
-globs: 
+description: Read code before editing
 alwaysApply: true
 ---
 - Before making any code changes or decisions, review the relevant code to understand its context and dependencies.

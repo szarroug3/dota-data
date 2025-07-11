@@ -1,90 +1,122 @@
-import { tryMock } from '@/lib/api';
-import { fetchPage, isAlreadyQueuedResult } from '@/lib/api/shared';
-import { cacheService } from '@/lib/cache-service';
-import { logWithTimestampToFile } from '@/lib/server-logger';
-import { getLeagueCacheFilename, getLeagueCacheKey, getLeagueHtmlFilename } from '@/lib/utils/cache-keys';
-import * as cheerio from 'cheerio';
+import fs from 'fs/promises';
+import path from 'path';
 
-export async function getLeagueName(leagueId: string, forceRefresh = false): Promise<{ leagueName: string } | { status: string; signature: string }> {
-  const endpoint = `/esports/leagues/${leagueId}`;
-  const cacheKey = getLeagueCacheKey(leagueId);
-  const htmlFilename = getLeagueHtmlFilename(leagueId);
-  const filename = getLeagueCacheFilename(leagueId);
-  const LEAGUE_TTL = 60 * 60 * 24 * 90; // 90 days in seconds
+import { CacheService } from '@/lib/cache-service';
+import { RateLimiter } from '@/lib/rate-limiter';
+import { CacheValue } from '@/types/cache';
+import { DotabuffLeague } from '@/types/external-apis';
 
-  logWithTimestampToFile('log', `[getLeagueName] Called for leagueId=${leagueId}, forceRefresh=${forceRefresh}`);
+/**
+ * Fetches a Dota 2 league profile from Dotabuff, with cache, rate limiting, and mock mode support.
+ * Dotabuff endpoint: https://www.dotabuff.com/esports/leagues/{leagueId}
+ *
+ * @param leagueId The league ID to fetch
+ * @param force If true, bypasses cache and fetches fresh data
+ * @returns DotabuffLeague object
+ * @throws Error if data cannot be loaded from any source
+ */
+export async function fetchDotabuffLeague(leagueId: string, force = false): Promise<DotabuffLeague> {
+  const cacheKey = `dotabuff:league:${leagueId}`;
+  const cacheTTL = 60 * 60 * 24 * 7; // 7 days
+  const cache = new CacheService();
+  const limiter = new RateLimiter({
+    useRedis: process.env.USE_REDIS === 'true',
+    redisUrl: process.env.REDIS_URL,
+    fallbackToMemory: true,
+  });
 
-  // 1. Check cache for processed JSON
-  if (!forceRefresh) {
-    let cached = await cacheService.get<string>(cacheKey, filename, LEAGUE_TTL);
-    if (typeof cached === 'string') {
-      try { 
-        cached = JSON.parse(cached); 
-      } catch {
-        // Ignore parsing errors
-      }
-    }
-    if (cached && typeof cached === 'object' && 'leagueName' in cached) {
-      logWithTimestampToFile('log', `[getLeagueName] Cache hit for key: ${cacheKey}`);
-      return cached as { leagueName: string };
-    }
-    logWithTimestampToFile('log', `[getLeagueName] Cache miss for key: ${cacheKey}`);
+  if (!force) {
+    const cached = await cache.get(cacheKey);
+    const parsed = parseCachedLeague(cached);
+    if (parsed) return parsed;
   }
 
-  // 2. Queue the fetch for the league page
-  logWithTimestampToFile('log', `[getLeagueName] Queueing request for key: ${cacheKey}`);
-  const queueResult: { leagueName: string } | { status: string; signature: string } = await cacheService.queueRequest(
-    'dotabuff',
-    cacheKey,
-    async () => {
-      logWithTimestampToFile('log', `[getLeagueName] Processing job for key: ${cacheKey}`);
-      // 1. Try mock data if available
-      const mockRes = await tryMock('dotabuff', htmlFilename);
-      if (mockRes) {
-        const html = await mockRes.text();
-        const parsed = parseLeagueNameHtml(html, leagueId);
-        console.log('[LEAGUE CACHE WRITE] (mock)', cacheKey, typeof parsed, JSON.stringify(parsed).slice(0, 200));
-        await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), LEAGUE_TTL, filename);
-        logWithTimestampToFile('log', `[getLeagueName] Mock data processed and cached for key: ${cacheKey}`);
-        return parsed;
-      }
-      // 2. Fetch real data
-      const html = await fetchPage('dotabuff', cacheKey, endpoint, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        },
-      });
-      const parsed = parseLeagueNameHtml(html, leagueId);
-      console.log('[LEAGUE CACHE WRITE] (real)', cacheKey, typeof parsed, JSON.stringify(parsed).slice(0, 200));
-      await cacheService.set('dotabuff', cacheKey, JSON.stringify(parsed), LEAGUE_TTL, filename);
-      logWithTimestampToFile('log', `[getLeagueName] Real data fetched and cached for key: ${cacheKey}`);
-      return parsed;
-    },
-    LEAGUE_TTL,
-    filename,
-    true
-  );
-
-  logWithTimestampToFile('log', `[getLeagueName] queueResult for key: ${cacheKey}:`, queueResult);
-  if (isAlreadyQueuedResult(queueResult)) {
-    logWithTimestampToFile('log', `[getLeagueName] Already queued for key: ${cacheKey}`);
-    return { status: 'queued', signature: queueResult.signature };
-  }
-
-  logWithTimestampToFile('log', `[getLeagueName] Returning result for key: ${cacheKey}`);
-  return queueResult;
+  return fetchDotabuffLeagueUncached(leagueId, cache, cacheKey, cacheTTL, limiter);
 }
 
-function parseLeagueNameHtml(html: string, leagueId: string) {
-  const $ = cheerio.load(html);
-  const img = $('img.img-league.img-avatar').first();
-  let leagueName = '';
-  if (img.length) {
-    leagueName = img.attr('alt') || '';
+async function fetchDotabuffLeagueUncached(
+  leagueId: string,
+  cache: CacheService,
+  cacheKey: string,
+  cacheTTL: number,
+  limiter: RateLimiter
+): Promise<DotabuffLeague> {
+  const useMock = process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DOTABUFF === 'true';
+  const mockFile = path.join(process.cwd(), 'mock-data', `league-${leagueId}.html`);
+  if (useMock) {
+    return fetchDotabuffLeagueFromMock(mockFile, leagueId, cache, cacheKey, cacheTTL);
   }
-  if (!leagueName) {
-    leagueName = leagueId;
+  return fetchDotabuffLeagueFromApi(leagueId, mockFile, cache, cacheKey, cacheTTL, limiter);
+}
+
+async function fetchDotabuffLeagueFromMock(
+  mockFile: string,
+  leagueId: string,
+  cache: CacheService,
+  cacheKey: string,
+  cacheTTL: number
+): Promise<DotabuffLeague> {
+  try {
+    const file = await fs.readFile(mockFile, 'utf-8');
+    const league = parseDotabuffLeagueHtml(file, leagueId);
+    await cache.set(cacheKey, JSON.stringify(league), cacheTTL);
+    return league;
+  } catch {
+    throw new Error(`Mock data file not found for league ${leagueId}`);
   }
-  return { leagueName };
+}
+
+async function fetchDotabuffLeagueFromApi(
+  leagueId: string,
+  mockFile: string,
+  cache: CacheService,
+  cacheKey: string,
+  cacheTTL: number,
+  limiter: RateLimiter
+): Promise<DotabuffLeague> {
+  await limiter.checkLimit('dotabuff:league', {
+    window: 60,
+    max: 60,
+    service: 'dotabuff',
+    identifier: `league:${leagueId}`,
+  });
+  try {
+    const res = await fetch(`https://www.dotabuff.com/esports/leagues/${leagueId}`);
+    if (!res.ok) throw new Error(`Dotabuff API error: ${res.status}`);
+    const html = await res.text();
+    const league = parseDotabuffLeagueHtml(html, leagueId);
+    if (process.env.WRITE_REAL_DATA_TO_MOCK === 'true') {
+      await fs.writeFile(mockFile, html, 'utf-8');
+    }
+    await cache.set(cacheKey, JSON.stringify(league), cacheTTL);
+    return league;
+  } catch (error) {
+    throw new Error(`Failed to fetch Dotabuff league: ${error}`);
+  }
+}
+
+function parseCachedLeague(cached: CacheValue): DotabuffLeague | null {
+  if (typeof cached === 'string') {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === 'object') {
+        return parsed as DotabuffLeague;
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+  return null;
+}
+
+// TODO: Implement a robust HTML parser for Dotabuff league pages
+function parseDotabuffLeagueHtml(html: string, leagueId: string): DotabuffLeague {
+  // Placeholder: return minimal object for now
+  return {
+    league_id: Number(leagueId),
+    name: `League ${leagueId}`,
+    description: '',
+    tournament_url: '',
+    matches: [],
+  };
 } 

@@ -9,6 +9,8 @@ export const DotabuffIcon: React.FC<{ className?: string }> = ({ className = "w-
     strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
+    role="img"
+    aria-label="Dotabuff icon"
   >
     <rect x="2" y="2" width="20" height="20" rx="5" stroke="#ef4444" fill="none" strokeWidth={2.5} />
     <text
@@ -34,6 +36,8 @@ export const OpenDotaIcon: React.FC<{ className?: string }> = ({ className = "w-
     strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
+    role="img"
+    aria-label="OpenDota icon"
   >
     <circle cx="9" cy="10" r="7" stroke="#000" className="dark:stroke-white" fill="none" strokeWidth={1.5} />
     <line x1="9" y1="1" x2="9" y2="19" stroke="#22c55e" strokeWidth={1.5} />
@@ -42,7 +46,7 @@ export const OpenDotaIcon: React.FC<{ className?: string }> = ({ className = "w-
 );
 
 export const StratzIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className={className} viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stratz icon">
     <circle cx="30" cy="30" r="27" fill="none" stroke="url(#circleOutline)" strokeWidth="6" />
     <path fillRule="evenodd" d="M56.72 30C56.72 15.253 44.747 3.28 30 3.28S3.279 15.253 3.279 30 15.252 56.721 30 56.721 56.72 44.748 56.72 30z" fill="none"></path>
     <path d="M39.071 36.287a.72.72 0 01.53.22c.146.147.22.324.22.532a.72.72 0 01-.22.531c-.147.146-.323.219-.53.219s-.385-.073-.532-.219a.72.72 0 01-.22-.531c0-.208.073-.385.22-.532s.324-.22.532-.22zm.001.118a.61.61 0 00-.635.634c0 .175.062.324.186.447a.61.61 0 00.449.185.609.609 0 00.446-.185.61.61 0 00.185-.447.61.61 0 00-.185-.448.609.609 0 00-.446-.185zm-.026.148c.111 0 .197.023.257.07s.091.11.091.19c0 .065-.021.121-.064.167s-.102.077-.178.093v.004c.053.012.105.071.158.177l.125.254h-.173l-.104-.229c-.053-.115-.109-.173-.17-.173h-.065v.402h-.146v-.955h.269zm-.029.124h-.094v.307h.118c.132 0 .198-.051.198-.154 0-.059-.018-.099-.053-.121s-.092-.032-.168-.032z" fill="url(#circledR)"/>
@@ -70,7 +74,7 @@ export const StratzIcon: React.FC<{ className?: string }> = ({ className = "w-5 
 );
 
 export const Dota2ProTrackerIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} role="img" aria-label="Dota2ProTracker icon">
     <defs>
       <mask id="aegis-cutout-mask">
         <rect width="32" height="32" fill="black"/>

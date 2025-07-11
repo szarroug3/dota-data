@@ -1,0 +1,8 @@
+---
+description: Enforce todo_tool before implementation
+alwaysApply: true
+---
+
+- Use the built-in `todo_tool` before beginning any implementation.
+- Do **not** create TODOs using Markdown files or in plain text.
+- Do **not** proceed with coding until the TODO list is created in Cursor’s interface.

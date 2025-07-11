@@ -1,6 +1,5 @@
 ---
 description: 
-globs: 
 alwaysApply: true
 ---
 - Ensure all user-facing components meet accessibility standards (e.g., WCAG 2.1).

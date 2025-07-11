@@ -952,13 +952,13 @@
     }
   },
   "paths": {
-    "/cache/invalidate": {
+    "/api/cache/invalidate": {
       "post": {
+        "summary": "Invalidate cache entries by pattern or key",
+        "description": "Invalidates cache entries either by pattern matching or by specific key. Supports both Redis and memory cache backends with automatic fallback.",
         "tags": [
           "Cache"
         ],
-        "summary": "Invalidate cache keys/files",
-        "description": "Invalidate one or more cache keys/files immediately (not queued).",
         "requestBody": {
           "required": true,
           "content": {
@@ -966,22 +966,30 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "description": "The cache type (e.g. 'player', 'team', 'match', 'league')"
-                        },
-                        "id": {
-                          "type": "string",
-                          "description": "The id for the entity (e.g. playerId, teamId, matchId, leagueId)"
-                        }
-                      }
-                    },
-                    "description": "List of cache items to invalidate"
+                  "pattern": {
+                    "type": "string",
+                    "description": "Pattern to match cache keys (cannot be used with key)"
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Specific cache key to invalidate (cannot be used with pattern)"
+                  }
+                },
+                "example": {
+                  "pattern": "opendota:*"
+                }
+              },
+              "examples": {
+                "pattern": {
+                  "summary": "Invalidate by pattern",
+                  "value": {
+                    "pattern": "opendota:heroes:*"
+                  }
+                },
+                "key": {
+                  "summary": "Invalidate by key",
+                  "value": {
+                    "key": "opendota:heroes"
                   }
                 }
               }
@@ -990,31 +998,83 @@
         },
         "responses": {
           "200": {
-            "description": "Cache invalidation result",
+            "description": "Cache invalidation successful",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "invalidated": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "invalidated": {
+                          "type": "integer",
+                          "description": "Number of cache entries invalidated"
+                        },
+                        "pattern": {
+                          "type": "string",
+                          "description": "Pattern used for invalidation (pattern-based only)"
+                        }
                       }
                     },
-                    "errors": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "backend": {
+                      "type": "string",
+                      "enum": [
+                        "redis",
+                        "memory"
+                      ]
+                    },
+                    "details": {
+                      "type": "object",
+                      "properties": {
+                        "pattern": {
+                          "type": "string"
+                        },
+                        "key": {
+                          "type": "string"
+                        },
+                        "invalidatedCount": {
+                          "type": "integer"
+                        },
+                        "existed": {
+                          "type": "boolean"
+                        },
+                        "invalidated": {
+                          "type": "boolean"
+                        },
+                        "operation": {
+                          "type": "string",
+                          "enum": [
+                            "pattern-invalidation",
+                            "key-invalidation"
+                          ]
+                        }
                       }
                     }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "invalidated": 15,
+                    "pattern": "opendota:heroes:*"
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "backend": "redis",
+                  "details": {
+                    "pattern": "opendota:heroes:*",
+                    "invalidatedCount": 15,
+                    "operation": "pattern-invalidation"
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1022,14 +1082,54 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "missing_criteria": {
+                    "summary": "Missing invalidation criteria",
+                    "value": {
+                      "error": "Missing invalidation criteria",
+                      "status": 400,
+                      "details": "Either pattern or key must be provided"
+                    }
+                  },
+                  "invalid_criteria": {
+                    "summary": "Invalid invalidation criteria",
+                    "value": {
+                      "error": "Invalid invalidation criteria",
+                      "status": 400,
+                      "details": "Cannot specify both pattern and key, choose one"
+                    }
+                  },
+                  "invalid_body": {
+                    "summary": "Invalid request body",
+                    "value": {
+                      "error": "Invalid request body",
+                      "status": 400,
+                      "details": "Request body must be valid JSON"
+                    }
+                  },
+                  "invalid_pattern": {
+                    "summary": "Invalid cache pattern",
+                    "value": {
+                      "error": "Invalid cache pattern",
+                      "status": 400,
+                      "details": "Cache pattern is invalid or malformed"
                     }
                   }
                 }
               }
             }
           },
-          "500": {
-            "description": "Server error",
+          "403": {
+            "description": "Permission denied",
             "content": {
               "application/json": {
                 "schema": {
@@ -1037,78 +1137,232 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Permission denied",
+                  "status": 403,
+                  "details": "Insufficient permissions to invalidate cache"
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/configs/{id}": {
-      "get": {
-        "tags": [
-          "Configs"
-        ],
-        "summary": "Get config by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Config ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Config data",
+          },
+          "500": {
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Failed to invalidate cache",
+                  "status": 500,
+                  "details": "Unknown error occurred"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cache backend unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Cache backend unavailable",
+                  "status": 503,
+                  "details": "Cache service is temporarily unavailable"
                 }
               }
             }
           }
         }
       },
-      "post": {
+      "get": {
+        "summary": "Get cache invalidation status and statistics",
+        "description": "Retrieves cache backend information, health status, statistics, and available invalidation endpoints. Useful for monitoring cache performance and understanding available operations.",
         "tags": [
-          "Configs"
+          "Cache"
         ],
-        "summary": "Update config by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Config updated",
+            "description": "Successfully retrieved cache status and statistics",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "backend": {
+                          "type": "string",
+                          "enum": [
+                            "redis",
+                            "memory"
+                          ],
+                          "description": "Current cache backend in use"
+                        },
+                        "healthy": {
+                          "type": "boolean",
+                          "description": "Cache backend health status"
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "hits": {
+                              "type": "integer",
+                              "description": "Number of cache hits"
+                            },
+                            "misses": {
+                              "type": "integer",
+                              "description": "Number of cache misses"
+                            },
+                            "keys": {
+                              "type": "integer",
+                              "description": "Total number of cached keys"
+                            },
+                            "hitRate": {
+                              "type": "number",
+                              "description": "Cache hit rate percentage"
+                            }
+                          }
+                        },
+                        "endpoints": {
+                          "type": "object",
+                          "properties": {
+                            "invalidatePattern": {
+                              "type": "object",
+                              "properties": {
+                                "method": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "example": {
+                                  "type": "object",
+                                  "properties": {
+                                    "pattern": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "invalidateKey": {
+                              "type": "object",
+                              "properties": {
+                                "method": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "example": {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "backend": "redis",
+                    "healthy": true,
+                    "statistics": {
+                      "hits": 1250,
+                      "misses": 185,
+                      "keys": 423,
+                      "hitRate": 0.871
+                    },
+                    "endpoints": {
+                      "invalidatePattern": {
+                        "method": "POST",
+                        "description": "Invalidate cache entries by pattern",
+                        "example": {
+                          "pattern": "opendota:*"
+                        }
+                      },
+                      "invalidateKey": {
+                        "method": "POST",
+                        "description": "Invalidate single cache entry by key",
+                        "example": {
+                          "key": "opendota:heroes"
+                        }
+                      }
+                    }
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Failed to get cache status",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1116,28 +1370,192 @@
         }
       }
     },
-    "/heroes": {
+    "/api/heroes": {
       "get": {
+        "summary": "Fetch and process Dota 2 heroes data",
+        "description": "Retrieves all Dota 2 heroes with optional filtering by complexity, role, primary attribute, and tier. Supports caching and rate limiting.",
         "tags": [
           "Heroes"
         ],
-        "summary": "Get all heroes",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached data"
+          },
+          {
+            "in": "query",
+            "name": "complexity",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            },
+            "description": "Filter heroes by complexity level"
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter heroes by role (partial match)"
+          },
+          {
+            "in": "query",
+            "name": "primaryAttribute",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "strength",
+                "agility",
+                "intelligence",
+                "universal"
+              ]
+            },
+            "description": "Filter heroes by primary attribute"
+          },
+          {
+            "in": "query",
+            "name": "tier",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "S",
+                "A",
+                "B",
+                "C",
+                "D"
+              ]
+            },
+            "description": "Filter heroes by tier ranking"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "List of heroes",
+            "description": "Successfully retrieved heroes data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OpenDotaHero"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "localizedName": {
+                            "type": "string"
+                          },
+                          "primaryAttribute": {
+                            "type": "string"
+                          },
+                          "attackType": {
+                            "type": "string"
+                          },
+                          "roles": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "complexity": {
+                            "type": "string"
+                          },
+                          "tier": {
+                            "type": "string"
+                          },
+                          "image": {
+                            "type": "string"
+                          },
+                          "icon": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Number of heroes in filtered results"
+                    },
+                    "totalCount": {
+                      "type": "integer",
+                      "description": "Total number of heroes available"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "properties": {
+                        "complexity": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "role": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "primaryAttribute": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "tier": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "npc_dota_hero_antimage",
+                      "localizedName": "Anti-Mage",
+                      "primaryAttribute": "agility",
+                      "attackType": "Melee",
+                      "roles": [
+                        "Carry",
+                        "Escape",
+                        "Nuker"
+                      ],
+                      "complexity": "intermediate",
+                      "tier": "A",
+                      "image": "https://cdn.dota2.com/apps/dota2/images/heroes/antimage_full.png",
+                      "icon": "https://cdn.dota2.com/apps/dota2/images/heroes/antimage_icon.png"
+                    }
+                  ],
+                  "count": 1,
+                  "totalCount": 123,
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "filters": {
+                    "complexity": null,
+                    "role": null,
+                    "primaryAttribute": null,
+                    "tier": null
                   }
                 }
               }
             }
           },
           "404": {
-            "description": "Hero data not found",
+            "description": "Heroes data not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1145,35 +1563,51 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "Heroes data could not be found or loaded."
                 }
               }
             }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Heroes"
-        ],
-        "summary": "Fetch and return all heroes (synchronous)",
-        "responses": {
-          "200": {
-            "description": "List of heroes",
+          },
+          "429": {
+            "description": "Rate limited by OpenDota API",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OpenDotaHero"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
                   }
+                },
+                "example": {
+                  "error": "Rate limited by OpenDota API",
+                  "status": 429,
+                  "details": "Too many requests to OpenDota API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -1181,8 +1615,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to process heroes",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1190,80 +1635,13 @@
         }
       }
     },
-    "/items": {
-      "post": {
-        "tags": [
-          "Items"
-        ],
-        "summary": "Get all items",
-        "description": "Returns items data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Items data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/leagues/{id}": {
-      "post": {
+    "/api/leagues/{id}": {
+      "get": {
+        "summary": "Fetch and process Dota 2 league data",
+        "description": "Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.",
         "tags": [
           "Leagues"
         ],
-        "summary": "Get league data",
-        "description": "Returns league data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1272,38 +1650,174 @@
             "schema": {
               "type": "string"
             },
-            "description": "League ID"
+            "description": "League ID (numeric string)"
+          },
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached data"
+          },
+          {
+            "in": "query",
+            "name": "includeMatches",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include matches data in the response"
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "default": "full"
+            },
+            "description": "Data view mode (full=all data, summary=basic info)"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "League data",
+            "description": "Successfully retrieved league data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "leagueId": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "tournamentUrl": {
+                          "type": "string"
+                        },
+                        "matches": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "matchId": {
+                                "type": "string"
+                              },
+                              "duration": {
+                                "type": "integer"
+                              },
+                              "radiant_win": {
+                                "type": "boolean"
+                              },
+                              "radiant_name": {
+                                "type": "string"
+                              },
+                              "dire_name": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "totalMatches": {
+                              "type": "integer"
+                            },
+                            "averageDuration": {
+                              "type": "number"
+                            },
+                            "radiantWins": {
+                              "type": "integer"
+                            },
+                            "direWins": {
+                              "type": "integer"
+                            },
+                            "uniqueTeams": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "processed": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "options": {
+                      "type": "object",
+                      "properties": {
+                        "includeMatches": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "leagueId": "16435",
+                    "name": "The International 2024",
+                    "description": "The International is the premier Dota 2 tournament",
+                    "tournamentUrl": "https://www.dota2.com/esports/ti2024",
+                    "matches": [
+                      {
+                        "matchId": "8054301932",
+                        "duration": 2150,
+                        "radiant_win": true,
+                        "radiant_name": "Team Spirit",
+                        "dire_name": "Team Secret"
+                      }
+                    ],
+                    "statistics": {
+                      "totalMatches": 156,
+                      "averageDuration": 2247,
+                      "radiantWins": 78,
+                      "direWins": 78,
+                      "uniqueTeams": 16
+                    },
+                    "processed": {
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "version": "1.0.0"
+                    }
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "view": "full",
+                  "options": {
+                    "includeMatches": true
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid league ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -1311,14 +1825,103 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Invalid league ID",
+                  "status": 400,
+                  "details": "League ID must be a valid number"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "League not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "League with ID 16435 could not be found."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid league data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid league data",
+                  "status": 422,
+                  "details": "League data is invalid or corrupted."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by Dotabuff API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by Dotabuff API",
+                  "status": 429,
+                  "details": "Too many requests to Dotabuff API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -1326,8 +1929,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to process league",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1335,13 +1949,13 @@
         }
       }
     },
-    "/matches/{id}": {
+    "/api/matches/{id}/parse": {
       "post": {
+        "summary": "Parse a Dota 2 match",
+        "description": "Initiates match parsing through a background job queue. Returns immediately with job status and polls for completion within the timeout period. Supports both QStash and in-memory queue backends.",
         "tags": [
           "Matches"
         ],
-        "summary": "Get match data from OpenDota",
-        "description": "Returns match data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1350,38 +1964,161 @@
             "schema": {
               "type": "string"
             },
-            "description": "Match ID"
+            "description": "Match ID (numeric string)"
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "low",
+                "normal",
+                "high"
+              ],
+              "default": "normal"
+            },
+            "description": "Job priority in the queue"
+          },
+          {
+            "in": "query",
+            "name": "timeout",
+            "schema": {
+              "type": "integer",
+              "default": 60000
+            },
+            "description": "Maximum time to wait for parsing completion (in milliseconds)"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Match data",
+            "description": "Match parsing completed successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OpenDotaMatch"
+                  "type": "object",
+                  "properties": {
+                    "jobId": {
+                      "type": "string",
+                      "description": "Unique job identifier"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "completed",
+                        "failed",
+                        "timeout"
+                      ],
+                      "description": "Final job status"
+                    },
+                    "matchId": {
+                      "type": "integer",
+                      "description": "Match ID that was parsed"
+                    },
+                    "parsed": {
+                      "type": "boolean",
+                      "description": "Whether the match was successfully parsed"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "Parsed match data (when status is completed)"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "processingTime": {
+                      "type": "integer",
+                      "description": "Time taken to complete parsing (in milliseconds)"
+                    },
+                    "backend": {
+                      "type": "string",
+                      "enum": [
+                        "qstash",
+                        "memory"
+                      ],
+                      "description": "Queue backend used for processing"
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (when status is failed or timeout)"
+                    },
+                    "mockMode": {
+                      "type": "boolean",
+                      "description": "Whether mock mode was used for processing"
+                    }
+                  }
+                },
+                "examples": {
+                  "completed": {
+                    "summary": "Successfully parsed match",
+                    "value": {
+                      "jobId": "match-parse-8054301932-1640995200000",
+                      "status": "completed",
+                      "matchId": 8054301932,
+                      "parsed": true,
+                      "data": {
+                        "matchId": "8054301932",
+                        "startTime": "2024-01-01T00:00:00.000Z",
+                        "duration": 2150,
+                        "radiantWin": true,
+                        "gameMode": "All Pick",
+                        "statistics": {
+                          "totalKills": 45,
+                          "radiantScore": 28,
+                          "direScore": 17
+                        }
+                      },
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "processingTime": 5000,
+                      "backend": "qstash"
+                    }
+                  },
+                  "failed": {
+                    "summary": "Failed to parse match",
+                    "value": {
+                      "jobId": "match-parse-8054301932-1640995200000",
+                      "status": "failed",
+                      "matchId": 8054301932,
+                      "error": "Match parsing failed",
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "processingTime": 15000
+                    }
+                  },
+                  "timeout": {
+                    "summary": "Parsing timed out",
+                    "value": {
+                      "jobId": "match-parse-8054301932-1640995200000",
+                      "status": "timeout",
+                      "matchId": 8054301932,
+                      "error": "Match parsing timed out",
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "processingTime": 60000
+                    }
+                  },
+                  "mock": {
+                    "summary": "Mock mode processing",
+                    "value": {
+                      "jobId": "match-parse-8054301932-1640995200000",
+                      "status": "completed",
+                      "matchId": 8054301932,
+                      "parsed": true,
+                      "mockMode": true,
+                      "data": {
+                        "matchId": "8054301932",
+                        "startTime": "2024-01-01T00:00:00.000Z",
+                        "duration": 2150
+                      },
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "processingTime": 0
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid match ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -1389,14 +2126,103 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Invalid match ID",
+                  "status": 400,
+                  "details": "Match ID must be a valid number"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Match not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "Match with ID 8054301932 could not be found for parsing."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid match data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid match data",
+                  "status": 422,
+                  "details": "Match data is invalid and cannot be parsed."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by OpenDota API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by OpenDota API",
+                  "status": 429,
+                  "details": "Too many requests to OpenDota API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -1404,8 +2230,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to parse match",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1413,26 +2250,13 @@
         }
       }
     },
-    "/openapi": {
+    "/api/matches/{id}": {
       "get": {
+        "summary": "Fetch and process Dota 2 match data",
+        "description": "Retrieves detailed match information including players, teams, statistics, and game events. Supports both parsed and unparsed match data with different view modes for optimized data delivery.",
         "tags": [
-          "OpenAPI"
+          "Matches"
         ],
-        "summary": "Get OpenAPI spec",
-        "responses": {
-          "200": {
-            "description": "OpenAPI spec"
-          }
-        }
-      }
-    },
-    "/players/{id}/counts": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player counts",
-        "description": "Returns player counts data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1441,38 +2265,265 @@
             "schema": {
               "type": "string"
             },
-            "description": "Player ID"
+            "description": "Match ID (numeric string)"
+          },
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached data"
+          },
+          {
+            "in": "query",
+            "name": "parsed",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Return parsed match data with detailed statistics"
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary",
+                "players",
+                "teams"
+              ],
+              "default": "full"
+            },
+            "description": "Data view mode (full=all data, summary=basic info, players=player focus, teams=team focus)"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Player counts data",
+            "description": "Successfully retrieved match data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "matchId": {
+                          "type": "string"
+                        },
+                        "startTime": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "duration": {
+                          "type": "integer"
+                        },
+                        "radiantWin": {
+                          "type": "boolean"
+                        },
+                        "gameMode": {
+                          "type": "string"
+                        },
+                        "lobbyType": {
+                          "type": "string"
+                        },
+                        "averageRank": {
+                          "type": "integer"
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "totalKills": {
+                              "type": "integer"
+                            },
+                            "radiantScore": {
+                              "type": "integer"
+                            },
+                            "direScore": {
+                              "type": "integer"
+                            },
+                            "firstBlood": {
+                              "type": "integer"
+                            },
+                            "avgGPM": {
+                              "type": "number"
+                            },
+                            "avgXPM": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "teams": {
+                          "type": "object",
+                          "properties": {
+                            "radiant": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "accountId": {
+                                    "type": "string"
+                                  },
+                                  "heroId": {
+                                    "type": "integer"
+                                  },
+                                  "kills": {
+                                    "type": "integer"
+                                  },
+                                  "deaths": {
+                                    "type": "integer"
+                                  },
+                                  "assists": {
+                                    "type": "integer"
+                                  },
+                                  "lastHits": {
+                                    "type": "integer"
+                                  },
+                                  "denies": {
+                                    "type": "integer"
+                                  },
+                                  "gpm": {
+                                    "type": "number"
+                                  },
+                                  "xpm": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            },
+                            "dire": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "accountId": {
+                                    "type": "string"
+                                  },
+                                  "heroId": {
+                                    "type": "integer"
+                                  },
+                                  "kills": {
+                                    "type": "integer"
+                                  },
+                                  "deaths": {
+                                    "type": "integer"
+                                  },
+                                  "assists": {
+                                    "type": "integer"
+                                  },
+                                  "lastHits": {
+                                    "type": "integer"
+                                  },
+                                  "denies": {
+                                    "type": "integer"
+                                  },
+                                  "gpm": {
+                                    "type": "number"
+                                  },
+                                  "xpm": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "processed": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": {
+                              "type": "string"
+                            },
+                            "dataQuality": {
+                              "type": "string"
+                            },
+                            "completeness": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "parsed": {
+                      "type": "boolean"
+                    },
+                    "cached": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "matchId": "8054301932",
+                    "startTime": "2024-01-01T00:00:00.000Z",
+                    "duration": 2150,
+                    "radiantWin": true,
+                    "gameMode": "All Pick",
+                    "lobbyType": "Ranked",
+                    "averageRank": 75,
+                    "statistics": {
+                      "totalKills": 45,
+                      "radiantScore": 28,
+                      "direScore": 17,
+                      "firstBlood": 120,
+                      "avgGPM": 520,
+                      "avgXPM": 580
+                    },
+                    "teams": {
+                      "radiant": [
+                        {
+                          "accountId": "123456789",
+                          "heroId": 1,
+                          "kills": 8,
+                          "deaths": 2,
+                          "assists": 12,
+                          "lastHits": 185,
+                          "denies": 15,
+                          "gpm": 650,
+                          "xpm": 720
+                        }
+                      ],
+                      "dire": [
+                        {
+                          "accountId": "987654321",
+                          "heroId": 2,
+                          "kills": 3,
+                          "deaths": 6,
+                          "assists": 8,
+                          "lastHits": 125,
+                          "denies": 8,
+                          "gpm": 420,
+                          "xpm": 480
+                        }
+                      ]
+                    },
+                    "processed": {
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "dataQuality": "high",
+                      "completeness": 0.95
+                    }
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "view": "full",
+                  "parsed": false,
+                  "cached": true
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid match ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -1480,14 +2531,103 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Invalid match ID",
+                  "status": 400,
+                  "details": "Match ID must be a valid number"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Match not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "Match with ID 8054301932 could not be found."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid match data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid match data",
+                  "status": 422,
+                  "details": "Match data is invalid or corrupted."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by OpenDota API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by OpenDota API",
+                  "status": 429,
+                  "details": "Too many requests to OpenDota API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -1495,8 +2635,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to process match",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1504,13 +2655,13 @@
         }
       }
     },
-    "/players/{id}/heroes": {
-      "post": {
+    "/api/players/{id}": {
+      "get": {
+        "summary": "Fetch and process Dota 2 player data",
+        "description": "Retrieves comprehensive player data including profile, statistics, performance metrics, and recent activity. Supports different view modes for optimized data delivery.",
         "tags": [
           "Players"
         ],
-        "summary": "Get player heroes",
-        "description": "Returns player heroes data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1519,437 +2670,238 @@
             "schema": {
               "type": "string"
             },
-            "description": "Player ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Player heroes data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OpenDotaPlayerHeroes"
-                  }
-                }
-              }
-            }
+            "description": "Player account ID (numeric string)"
           },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/players/{id}/matches": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player matches",
-        "description": "Returns player matches data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
+            "in": "query",
+            "name": "force",
             "schema": {
-              "type": "string"
+              "type": "boolean",
+              "default": false
             },
-            "description": "Player ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Player matches data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OpenDotaMatch"
-                  }
-                }
-              }
-            }
+            "description": "Force refresh of cached data"
           },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/players/{id}/recentMatches": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player recent matches",
-        "description": "Returns player recent matches data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
+            "in": "query",
+            "name": "view",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "full",
+                "profile",
+                "stats",
+                "recent"
+              ],
+              "default": "full"
             },
-            "description": "Player ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Player recent matches data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OpenDotaMatch"
-                  }
-                }
-              }
-            }
+            "description": "Data view mode (full=all data, profile=basic info, stats=statistics, recent=recent activity)"
           },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/players/{id}": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player data",
-        "description": "Returns player data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
+            "in": "query",
+            "name": "includeMatches",
             "schema": {
-              "type": "string"
+              "type": "boolean",
+              "default": false
             },
-            "description": "Player ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Player data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OpenDotaPlayer"
-                }
-              }
-            }
+            "description": "Include recent matches data"
           },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/players/{id}/totals": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player totals",
-        "description": "Returns player totals data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
+            "in": "query",
+            "name": "includeHeroes",
             "schema": {
-              "type": "string"
+              "type": "boolean",
+              "default": false
             },
-            "description": "Player ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Player totals data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": "Include hero performance data"
           },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/players/{id}/wl": {
-      "post": {
-        "tags": [
-          "Players"
-        ],
-        "summary": "Get player win/loss record",
-        "description": "Returns player win/loss data immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
-        "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
+            "in": "query",
+            "name": "includeRecent",
             "schema": {
-              "type": "string"
+              "type": "boolean",
+              "default": false
             },
-            "description": "Player ID"
+            "description": "Include recent activity data"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Player win/loss data",
+            "description": "Successfully retrieved player data",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accountId": {
+                          "type": "string"
+                        },
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "accountId": {
+                              "type": "string"
+                            },
+                            "personaName": {
+                              "type": "string"
+                            },
+                            "avatar": {
+                              "type": "string"
+                            },
+                            "rankTier": {
+                              "type": "integer"
+                            },
+                            "leaderboardRank": {
+                              "type": "integer"
+                            },
+                            "mmrEstimate": {
+                              "type": "object"
+                            },
+                            "plus": {
+                              "type": "boolean"
+                            }
+                          }
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "winRate": {
+                              "type": "number"
+                            },
+                            "totalMatches": {
+                              "type": "integer"
+                            },
+                            "totalWins": {
+                              "type": "integer"
+                            },
+                            "totalLosses": {
+                              "type": "integer"
+                            },
+                            "avgKDA": {
+                              "type": "number"
+                            },
+                            "avgLastHits": {
+                              "type": "number"
+                            },
+                            "avgDenies": {
+                              "type": "number"
+                            },
+                            "avgGPM": {
+                              "type": "number"
+                            },
+                            "avgXPM": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "performance": {
+                          "type": "object",
+                          "properties": {
+                            "recentPerformance": {
+                              "type": "string"
+                            },
+                            "skillLevel": {
+                              "type": "string"
+                            },
+                            "consistency": {
+                              "type": "string"
+                            },
+                            "impact": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "processed": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": {
+                              "type": "string"
+                            },
+                            "dataQuality": {
+                              "type": "string"
+                            },
+                            "completeness": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "options": {
+                      "type": "object",
+                      "properties": {
+                        "includeMatches": {
+                          "type": "boolean"
+                        },
+                        "includeHeroes": {
+                          "type": "boolean"
+                        },
+                        "includeRecent": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "accountId": "12345678",
+                    "profile": {
+                      "accountId": "12345678",
+                      "personaName": "Example Player",
+                      "avatar": "https://avatars.cloudflare.steamstatic.com/abc123.jpg",
+                      "rankTier": 75,
+                      "leaderboardRank": 1500,
+                      "mmrEstimate": {
+                        "estimate": 5500
+                      },
+                      "plus": true
+                    },
+                    "statistics": {
+                      "winRate": 0.62,
+                      "totalMatches": 1250,
+                      "totalWins": 775,
+                      "totalLosses": 475,
+                      "avgKDA": 2.8,
+                      "avgLastHits": 185,
+                      "avgDenies": 12,
+                      "avgGPM": 520,
+                      "avgXPM": 580
+                    },
+                    "performance": {
+                      "recentPerformance": "improving",
+                      "skillLevel": "high",
+                      "consistency": "stable",
+                      "impact": "high"
+                    },
+                    "processed": {
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "dataQuality": "high",
+                      "completeness": 0.95
+                    }
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "view": "full",
+                  "options": {
+                    "includeMatches": false,
+                    "includeHeroes": false,
+                    "includeRecent": false
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid player ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -1957,14 +2909,129 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Invalid player ID",
+                  "status": 400,
+                  "details": "Player ID must be a valid number"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Private profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Private profile",
+                  "status": 403,
+                  "details": "Player profile is private and cannot be accessed."
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Player not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "Player with ID 12345678 could not be found."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid player data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid player data",
+                  "status": 422,
+                  "details": "Player data is invalid or corrupted."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by OpenDota API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by OpenDota API",
+                  "status": 429,
+                  "details": "Too many requests to OpenDota API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -1972,8 +3039,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to process player",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }
@@ -1981,13 +3059,13 @@
         }
       }
     },
-    "/teams/{id}": {
-      "post": {
+    "/api/teams/{id}": {
+      "get": {
+        "summary": "Fetch and process Dota 2 team data",
+        "description": "Retrieves comprehensive team data including statistics, performance metrics, and roster information from Dotabuff. Supports different view modes for optimized data delivery.",
         "tags": [
           "Teams"
         ],
-        "summary": "Get team data with matches",
-        "description": "Returns team data with matches immediately if cached, or waits for fetch to complete.\nAlways returns 200 with the actual data.\n",
         "parameters": [
           {
             "in": "path",
@@ -1996,38 +3074,182 @@
             "schema": {
               "type": "string"
             },
-            "description": "Team ID"
+            "description": "Team ID (numeric string)"
+          },
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached data"
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "default": "full"
+            },
+            "description": "Data view mode (full=all data, summary=basic statistics)"
+          },
+          {
+            "in": "query",
+            "name": "includeMatches",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include recent matches data"
+          },
+          {
+            "in": "query",
+            "name": "includeRoster",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include team roster information"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "force": {
-                    "type": "boolean",
-                    "description": "Force refresh - bypass cache and fetch fresh data"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "Team data with matches",
+            "description": "Successfully retrieved team data",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DotabuffTeam"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "teamId": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "tag": {
+                          "type": "string"
+                        },
+                        "performance": {
+                          "type": "object",
+                          "properties": {
+                            "recentForm": {
+                              "type": "string"
+                            },
+                            "strength": {
+                              "type": "string"
+                            },
+                            "consistency": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "statistics": {
+                          "type": "object",
+                          "properties": {
+                            "totalMatches": {
+                              "type": "integer"
+                            },
+                            "wins": {
+                              "type": "integer"
+                            },
+                            "losses": {
+                              "type": "integer"
+                            },
+                            "winRate": {
+                              "type": "number"
+                            },
+                            "rating": {
+                              "type": "number"
+                            },
+                            "lastMatchTime": {
+                              "type": "string"
+                            },
+                            "averageMatchDuration": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "processed": {
+                          "type": "object",
+                          "properties": {
+                            "timestamp": {
+                              "type": "string"
+                            },
+                            "dataQuality": {
+                              "type": "string"
+                            },
+                            "completeness": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "view": {
+                      "type": "string"
+                    },
+                    "options": {
+                      "type": "object",
+                      "properties": {
+                        "includeMatches": {
+                          "type": "boolean"
+                        },
+                        "includeRoster": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "data": {
+                    "teamId": "9517508",
+                    "name": "Team Spirit",
+                    "tag": "TS",
+                    "performance": {
+                      "recentForm": "strong",
+                      "strength": "high",
+                      "consistency": "stable"
+                    },
+                    "statistics": {
+                      "totalMatches": 150,
+                      "wins": 95,
+                      "losses": 55,
+                      "winRate": 0.633,
+                      "rating": 1850,
+                      "lastMatchTime": "2024-01-01T00:00:00.000Z",
+                      "averageMatchDuration": 2400
+                    },
+                    "processed": {
+                      "timestamp": "2024-01-01T00:00:00.000Z",
+                      "dataQuality": "high",
+                      "completeness": 0.9
+                    }
+                  },
+                  "timestamp": "2024-01-01T00:00:00.000Z",
+                  "view": "full",
+                  "options": {
+                    "includeMatches": false,
+                    "includeRoster": false
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid input",
+            "description": "Invalid team ID",
             "content": {
               "application/json": {
                 "schema": {
@@ -2035,14 +3257,103 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Invalid team ID",
+                  "status": 400,
+                  "details": "Team ID must be a valid number"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Team not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Data Not Found",
+                  "status": 404,
+                  "details": "Team with ID 9517508 could not be found."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid team data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid team data",
+                  "status": 422,
+                  "details": "Team data is invalid or corrupted."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by Dotabuff API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by Dotabuff API",
+                  "status": 429,
+                  "details": "Too many requests to Dotabuff API. Please try again later."
                 }
               }
             }
           },
           "500": {
-            "description": "Server error",
+            "description": "Internal server error",
             "content": {
               "application/json": {
                 "schema": {
@@ -2050,8 +3361,19 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
                     }
                   }
+                },
+                "example": {
+                  "error": "Failed to process team",
+                  "status": 500,
+                  "details": "Unknown error occurred"
                 }
               }
             }

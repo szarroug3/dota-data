@@ -1,10 +1,6 @@
 ---
-description: 
-globs: 
+description: Use pnpm for all package management tasks
 alwaysApply: true
----
----
-name: pnpm-project-always
 ---
 
 - Use pnpm for all package management tasks.

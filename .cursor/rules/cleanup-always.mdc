@@ -1,6 +1,5 @@
 ---
 description: 
-globs: 
 alwaysApply: true
 ---
 - Remove any dead, commented-out, or unused code, variables, functions, or files from the codebase.

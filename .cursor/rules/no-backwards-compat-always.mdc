@@ -1,11 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
-name: No Backwards Compatibility
 description: Do not add code or logic for backwards compatibility unless the user requests it.
+alwaysApply: true
 ---
 
 - Do not add code or logic for backwards compatibility unless the user requests it.

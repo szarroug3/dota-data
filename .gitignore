@@ -43,3 +43,6 @@ next-env.d.ts
 
 # mock-data
 mock-data/
+cache-data/
+
+.backup

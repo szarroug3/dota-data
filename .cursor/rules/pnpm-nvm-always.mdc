@@ -1,11 +1,6 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
-name: pnpm-nvm-always
 description: Ensure the correct Node version is active before running any pnpm command.
+alwaysApply: true
 ---
 
 - Before running any pnpm command, execute nvm use to ensure the correct Node version is active.
