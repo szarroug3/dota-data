@@ -3,6 +3,7 @@
 import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Target, Trophy, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import React from "react";
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
 import { useConfigContext } from "@/contexts/config-context";
@@ -23,6 +24,9 @@ const Title = ({ open }: { open: boolean }) => {
       </div> :
         <div className="flex items-center justify-center transition-all duration-200"> <Toggle /> </div>
       }
+      <div className="flex justify-center">
+        <SidebarSeparator />
+      </div>
     </SidebarHeader>
   );
 }
@@ -40,27 +44,29 @@ const Navigation = () => {
     { id: 'draft-suggestions', label: 'Draft Suggestions', icon: <Target />, path: '/draft-suggestions' },
   ];
 
-
   return (
-      <SidebarGroup>
-        <div className="flex justify-center">
-          <SidebarSeparator />
-        </div>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">Navigation</SidebarGroupLabel>
-        <SidebarMenu className="overflow-hidden">
-          {navigationItems.map((item) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">Navigation</SidebarGroupLabel>
+      <SidebarMenu className="overflow-hidden">
+        {navigationItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton
                 onClick={() => router.push(item.path)}
-                className={pathname === item.path ? 'bg-primary/10' : ''}
+                className={isActive ? 'bg-accent' : ''}
               >
-                {item.icon} <span className="truncate">{item.label}</span>
+                {React.cloneElement(item.icon, {
+                  className: isActive ? 'text-primary' : ''
+                })}
+                <span className="truncate">{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
-  )
+          );
+        })}
+      </SidebarMenu>
+    </SidebarGroup>
+  );
 }
 
 /**

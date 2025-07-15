@@ -1,6 +1,11 @@
 import { X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 interface EditTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,19 +54,23 @@ const getButtonState = (
 };
 
 const ModalHeader: React.FC<{ onCancel: () => void }> = ({ onCancel }) => (
-  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-      Edit Team
-    </h2>
-    <button
+  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <div>
+      <CardTitle>Edit Team</CardTitle>
+      <CardDescription>
+        Update team and league information
+      </CardDescription>
+    </div>
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={onCancel}
-      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
       aria-label="Close modal"
-      type="button"
+      className="h-8 w-8"
     >
-      <X className="w-5 h-5" />
-    </button>
-  </div>
+      <X className="h-4 w-4" />
+    </Button>
+  </CardHeader>
 );
 
 const ModalForm: React.FC<{
@@ -71,45 +80,37 @@ const ModalForm: React.FC<{
   setNewLeagueId: (value: string) => void;
   error?: string;
 }> = ({ newTeamId, newLeagueId, setNewTeamId, setNewLeagueId, error }) => (
-  <div className="p-6 space-y-4">
+  <div className="space-y-4">
     {error && (
-      <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-        <p className="text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+        <p className="text-sm text-destructive">{error}</p>
       </div>
     )}
     
-    <div>
-      <label htmlFor="teamId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Team ID
-      </label>
-      <input
-        id="teamId"
-        type="text"
-        value={newTeamId}
-        onChange={(e) => setNewTeamId(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                   bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="Enter team ID"
-      />
-    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="teamId">Team ID *</Label>
+        <Input
+          id="teamId"
+          type="text"
+          value={newTeamId}
+          onChange={(e) => setNewTeamId(e.target.value)}
+          placeholder="Enter team ID"
+          required
+        />
+      </div>
 
-    <div>
-      <label htmlFor="leagueId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        League ID
-      </label>
-      <input
-        id="leagueId"
-        type="text"
-        value={newLeagueId}
-        onChange={(e) => setNewLeagueId(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                   bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="Enter league ID"
-      />
+      <div className="space-y-2">
+        <Label htmlFor="leagueId">League ID *</Label>
+        <Input
+          id="leagueId"
+          type="text"
+          value={newLeagueId}
+          onChange={(e) => setNewLeagueId(e.target.value)}
+          placeholder="Enter league ID"
+          required
+        />
+      </div>
     </div>
   </div>
 );
@@ -119,26 +120,21 @@ const ModalActions: React.FC<{
   onSave: () => void;
   buttonState: ButtonState;
 }> = ({ onCancel, onSave, buttonState }) => (
-  <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
-    <button
+  <div className="flex gap-3">
+    <Button
+      variant="outline"
       onClick={onCancel}
-      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 
-                 border border-gray-300 dark:border-gray-600 rounded-md
-                 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-      type="button"
+      className="flex-1"
     >
       Cancel
-    </button>
-    <button
+    </Button>
+    <Button
       onClick={onSave}
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md
-                 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       disabled={buttonState.disabled}
-      type="button"
+      className="flex-1"
     >
       {buttonState.text}
-    </button>
+    </Button>
   </div>
 );
 
@@ -188,22 +184,30 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+      onClick={handleCancel}
+    >
+      <Card 
+        className="w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <ModalHeader onCancel={handleCancel} />
-        <ModalForm
-          newTeamId={newTeamId}
-          newLeagueId={newLeagueId}
-          setNewTeamId={setNewTeamId}
-          setNewLeagueId={setNewLeagueId}
-          error={error}
-        />
-        <ModalActions
-          onCancel={handleCancel}
-          onSave={handleSave}
-          buttonState={buttonState}
-        />
-      </div>
+        <CardContent className="space-y-6">
+          <ModalForm
+            newTeamId={newTeamId}
+            newLeagueId={newLeagueId}
+            setNewTeamId={setNewTeamId}
+            setNewLeagueId={setNewLeagueId}
+            error={error}
+          />
+          <ModalActions
+            onCancel={handleCancel}
+            onSave={handleSave}
+            buttonState={buttonState}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }; 

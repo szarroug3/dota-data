@@ -1,6 +1,9 @@
-import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { Pencil, RefreshCw, Trash2, Users } from 'lucide-react';
 import React from 'react';
 
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import type { TeamData } from '@/types/contexts/team-context-value';
 
 interface TeamCardProps {
@@ -39,49 +42,48 @@ const TeamInformation: React.FC<TeamInformationProps> = ({
   const stats = getTeamStats();
 
   return (
-    <div className="flex items-center space-x-3 flex-1">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">
-            {teamName}
-          </h3>
-          {/* Active Badge */}
+    <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <h3 className="font-semibold truncate">{teamName}</h3>
           {isActive && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            <Badge variant="default" className="flex-shrink-0">
               Active
-            </span>
+            </Badge>
           )}
+          {hasError && (
+            <Badge variant="destructive" className="text-xs ml-2">
+              Error
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
           {/* Loading indicator */}
           {teamData.team.isLoading && (
-            <span 
-              className="inline-block w-4 h-4 animate-spin border-2 border-blue-500 border-t-transparent rounded-full" 
-              aria-label="Loading team data" 
-            />
-          )}
-          {/* Error indicator */}
-          {hasError && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-              Error
-            </span>
+            <Badge variant="secondary" className="text-xs">
+              Loading...
+            </Badge>
           )}
         </div>
-        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
-          <span>{leagueName}</span>
-          {hasError && (
-            <>
-              <span>•</span>
-              <span className="text-red-600 dark:text-red-400">{teamData.team.error}</span>
-            </>
-          )}
-          {!hasError && stats && (
-            <>
-              <span>•</span>
-              <span>{stats.totalMatches} matches</span>
-              <span>•</span>
-              <span>{stats.overallWinRate.toFixed(1)}% win rate</span>
-            </>
-          )}
-        </div>
+      </div>
+      
+      <div className="space-y-1">
+        <p className="text-sm text-muted-foreground truncate">
+          {leagueName}
+        </p>
+        {!hasError && stats && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{stats.totalMatches} matches</span>
+            <span>•</span>
+            <span>{stats.overallWinRate.toFixed(1)}% win rate</span>
+          </div>
+        )}
+        {hasError && (
+          <p className="text-xs text-destructive">
+            {teamData.team.error}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -118,51 +120,45 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-1">
       {/* Refresh Button */}
-      <button
-        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md 
-                   hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      <Button
+        variant="ghost"
+        size="icon"
         title="Refresh team data"
         onClick={handleRefreshTeam}
         disabled={isLoading}
         aria-label={`Refresh data for ${teamData.team.name || teamData.team.leagueName}`}
-        type="button"
+        className="h-8 w-8"
       >
-        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-      </button>
+        <RefreshCw className="h-4 w-4" />
+      </Button>
 
       {/* Edit Button */}
-      <button
-        className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md 
-                   hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      <Button
+        variant="ghost"
+        size="icon"
         title="Edit team"
         onClick={handleEditTeam}
         disabled={isLoading}
         aria-label="Edit team"
-        type="button"
+        className="h-8 w-8"
       >
-        <Pencil className="w-4 h-4" aria-hidden="true" />
-      </button>
+        <Pencil className="h-4 w-4" />
+      </Button>
 
       {/* Delete Button */}
-      <button
-        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-md 
-                   hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+      <Button
+        variant="ghost"
+        size="icon"
         title="Delete team"
         onClick={handleRemoveTeam}
         disabled={isLoading}
         aria-label={`Delete team ${teamData.team.name || teamData.team.leagueName}`}
-        type="button"
+        className="h-8 w-8 text-destructive hover:text-destructive"
       >
-        <Trash2 className="w-4 h-4" aria-hidden="true" />
-      </button>
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
@@ -184,20 +180,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   const leagueName = teamData.team.leagueName || `Loading ${teamData.team.leagueId}...`;
   const hasError = Boolean(teamData.team.error);
 
-  const getCardClassName = () => {
-    const baseClasses = 'bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-all duration-200';
-    
-    if (isActive) {
-      return `${baseClasses} ring-2 ring-blue-500 ring-opacity-50 shadow-md`;
-    }
-    
-    if (hasError) {
-      return `${baseClasses} cursor-not-allowed opacity-75 border-red-200 dark:border-red-700`;
-    }
-    
-    return `${baseClasses} hover:shadow-md cursor-pointer hover:border-gray-300 dark:hover:border-gray-600`;
-  };
-
   const getAriaLabel = () => {
     if (hasError) {
       return `Team ${teamName} has an error and cannot be selected. Click edit to fix the issue.`;
@@ -210,36 +192,48 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   };
 
   return (
-    <div 
-      className={getCardClassName()}
-      onClick={hasError ? undefined : handleSelectTeam}
-      role={hasError ? undefined : 'button'}
-      tabIndex={hasError ? -1 : 0}
-      onKeyDown={hasError ? undefined : (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleSelectTeam();
-        }
-      }}
-      aria-label={getAriaLabel()}
-      title={getTitle()}
-    >
-      <div className="flex items-center justify-between">
-        <TeamInformation
-          teamData={teamData}
-          isActive={isActive}
-          teamName={teamName}
-          leagueName={leagueName}
-          hasError={hasError}
-        />
-        <TeamCardActions
-          teamData={teamData}
-          onRefreshTeam={onRefreshTeam}
-          onEditTeam={onEditTeam}
-          onRemoveTeam={onRemoveTeam}
-          isLoading={isLoading}
-        />
-      </div>
+    <div className="p-1">
+      <Card 
+        className={`transition-all duration-200 ${
+          isActive 
+            ? 'ring-2 ring-primary bg-primary/5' 
+            : 'hover:bg-accent/50'
+        } ${
+          hasError 
+            ? 'opacity-75 cursor-not-allowed' 
+            : 'cursor-pointer hover:shadow-md'
+        }`}
+        onClick={hasError ? undefined : handleSelectTeam}
+        role={hasError ? undefined : 'button'}
+        tabIndex={hasError ? -1 : 0}
+        onKeyDown={hasError ? undefined : (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelectTeam();
+          }
+        }}
+        aria-label={getAriaLabel()}
+        title={getTitle()}
+      >
+        <CardContent className="px-4">
+          <div className="flex items-start justify-between">
+            <TeamInformation
+              teamData={teamData}
+              isActive={isActive}
+              teamName={teamName}
+              leagueName={leagueName}
+              hasError={hasError}
+            />
+            <TeamCardActions
+              teamData={teamData}
+              onRefreshTeam={onRefreshTeam}
+              onEditTeam={onEditTeam}
+              onRemoveTeam={onRemoveTeam}
+              isLoading={isLoading}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }; 

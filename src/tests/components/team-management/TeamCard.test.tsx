@@ -151,8 +151,8 @@ describe('TeamCard', () => {
       />
     );
     
-    const card = screen.getByText('Team Liquid').closest('div');
-    fireEvent.click(card!);
+    const card = screen.getByRole('button', { name: 'Select team Team Liquid' });
+    fireEvent.click(card);
     
     expect(mockOnSetActiveTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
   });
@@ -308,7 +308,7 @@ describe('TeamCard', () => {
       />
     );
     
-    expect(screen.getByLabelText('Loading team data')).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('should handle team with missing name', () => {
@@ -394,5 +394,77 @@ describe('TeamCard', () => {
     expect(refreshButton).toHaveAttribute('aria-label', 'Refresh data for Team Liquid');
     expect(editButton).toHaveAttribute('aria-label', 'Edit team');
     expect(deleteButton).toHaveAttribute('aria-label', 'Delete team Team Liquid');
+  });
+
+  it('should display team stats when available', () => {
+    render(
+      <TeamCard 
+        teamData={mockTeamData} 
+        isActive={false}
+        onRemoveTeam={mockOnRemoveTeam}
+        onRefreshTeam={mockOnRefreshTeam}
+        onSetActiveTeam={mockOnSetActiveTeam}
+        onEditTeam={mockOnEditTeam}
+      />
+    );
+    
+    expect(screen.getByText('5 matches')).toBeInTheDocument();
+    expect(screen.getByText('60.0% win rate')).toBeInTheDocument();
+  });
+
+  it('should not display team stats when team has error', () => {
+    const teamWithError = {
+      ...mockTeamData,
+      team: {
+        ...mockTeamData.team,
+        error: 'Failed to load team data'
+      }
+    };
+
+    render(
+      <TeamCard 
+        teamData={teamWithError} 
+        isActive={false}
+        onRemoveTeam={mockOnRemoveTeam}
+        onRefreshTeam={mockOnRefreshTeam}
+        onSetActiveTeam={mockOnSetActiveTeam}
+        onEditTeam={mockOnEditTeam}
+      />
+    );
+    
+    expect(screen.queryByText('5 matches')).not.toBeInTheDocument();
+    expect(screen.queryByText('60.0% win rate')).not.toBeInTheDocument();
+  });
+
+  it('should have proper card styling for active team', () => {
+    render(
+      <TeamCard 
+        teamData={mockTeamData} 
+        isActive={true}
+        onRemoveTeam={mockOnRemoveTeam}
+        onRefreshTeam={mockOnRefreshTeam}
+        onSetActiveTeam={mockOnSetActiveTeam}
+        onEditTeam={mockOnEditTeam}
+      />
+    );
+    
+    const card = screen.getByRole('button', { name: 'Select team Team Liquid' });
+    expect(card).toHaveClass('ring-2', 'ring-primary', 'bg-primary/5');
+  });
+
+  it('should have proper card styling for inactive team', () => {
+    render(
+      <TeamCard 
+        teamData={mockTeamData} 
+        isActive={false}
+        onRemoveTeam={mockOnRemoveTeam}
+        onRefreshTeam={mockOnRefreshTeam}
+        onSetActiveTeam={mockOnSetActiveTeam}
+        onEditTeam={mockOnEditTeam}
+      />
+    );
+    
+    const card = screen.getByRole('button', { name: 'Select team Team Liquid' });
+    expect(card).toHaveClass('hover:bg-accent/50');
   });
 }); 

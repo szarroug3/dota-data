@@ -117,6 +117,22 @@ describe('AddTeamForm', () => {
     expect(leagueIdInput).toHaveAttribute('placeholder', 'e.g., 16435');
   });
 
+  it('should render help text for form fields', () => {
+    render(
+      <AddTeamForm 
+        teamId=""
+        leagueId=""
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />
+    );
+    
+    expect(screen.getByText('Find this in Dotabuff team URLs')).toBeInTheDocument();
+    expect(screen.getByText('Find this in Dotabuff league URLs')).toBeInTheDocument();
+  });
+
   it('should render submit button with proper attributes', () => {
     render(
       <AddTeamForm 
@@ -131,10 +147,9 @@ describe('AddTeamForm', () => {
     
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
     expect(submitButton).toHaveAttribute('type', 'submit');
-    expect(submitButton).toHaveClass('bg-blue-600', 'hover:bg-blue-700');
   });
 
-  it('should have proper form structure', () => {
+  it('should have proper form structure with Form components', () => {
     render(
       <AddTeamForm 
         teamId=""
@@ -148,10 +163,9 @@ describe('AddTeamForm', () => {
     
     const form = screen.getByRole('button', { name: 'Add Team' }).closest('form');
     expect(form).toBeInTheDocument();
-    expect(form).toHaveClass('space-y-4');
   });
 
-  it('should have proper grid layout for form fields', () => {
+  it('should have proper card structure', () => {
     render(
       <AddTeamForm 
         teamId=""
@@ -163,75 +177,8 @@ describe('AddTeamForm', () => {
       />
     );
     
-    const gridContainer = screen.getByLabelText('Team ID *').closest('.grid');
-    expect(gridContainer).toHaveClass('grid-cols-1', 'md:grid-cols-2');
-  });
-
-  it('should have proper styling for form container', () => {
-    render(
-      <AddTeamForm 
-        teamId=""
-        leagueId=""
-        onTeamIdChange={mockOnTeamIdChange}
-        onLeagueIdChange={mockOnLeagueIdChange}
-        onAddTeam={mockOnAddTeam}
-        teamExists={mockTeamExists}
-      />
-    );
-    
-    const container = screen.getByText('Add New Team').closest('div');
-    expect(container).toHaveClass('bg-white', 'dark:bg-gray-800', 'rounded-lg', 'shadow-sm');
-  });
-
-  it('should have proper accessibility attributes', () => {
-    render(
-      <AddTeamForm 
-        teamId=""
-        leagueId=""
-        onTeamIdChange={mockOnTeamIdChange}
-        onLeagueIdChange={mockOnLeagueIdChange}
-        onAddTeam={mockOnAddTeam}
-        teamExists={mockTeamExists}
-      />
-    );
-    
-    const teamIdInput = screen.getByLabelText('Team ID *');
-    const leagueIdInput = screen.getByLabelText('League ID *');
-    
-    expect(teamIdInput).toHaveAttribute('id', 'team-id');
-    expect(leagueIdInput).toHaveAttribute('id', 'league-id');
-  });
-
-  it('should have proper focus states', () => {
-    render(
-      <AddTeamForm 
-        teamId=""
-        leagueId=""
-        onTeamIdChange={mockOnTeamIdChange}
-        onLeagueIdChange={mockOnLeagueIdChange}
-        onAddTeam={mockOnAddTeam}
-        teamExists={mockTeamExists}
-      />
-    );
-    
-    const teamIdInput = screen.getByLabelText('Team ID *');
-    expect(teamIdInput).toHaveClass('focus:ring-2', 'focus:ring-blue-500');
-  });
-
-  it('should have proper dark mode support', () => {
-    render(
-      <AddTeamForm 
-        teamId=""
-        leagueId=""
-        onTeamIdChange={mockOnTeamIdChange}
-        onLeagueIdChange={mockOnLeagueIdChange}
-        onAddTeam={mockOnAddTeam}
-        teamExists={mockTeamExists}
-      />
-    );
-    
-    const container = screen.getByText('Add New Team').closest('div');
-    expect(container).toHaveClass('dark:bg-gray-800');
+    const card = screen.getByText('Add New Team').closest('[data-slot="card"]');
+    expect(card).toBeInTheDocument();
   });
 
   it('should call onTeamIdChange when team ID input changes', async () => {
@@ -250,9 +197,7 @@ describe('AddTeamForm', () => {
     const teamIdInput = screen.getByLabelText('Team ID *');
     await user.type(teamIdInput, 'test-team');
     
-    // Check that the mock was called for each character
-    expect(mockOnTeamIdChange).toHaveBeenCalledTimes(9); // 'test-team' has 9 characters
-    // Check that the last call was with the last character
+    expect(mockOnTeamIdChange).toHaveBeenCalledTimes(9);
     expect(mockOnTeamIdChange).toHaveBeenLastCalledWith('m');
   });
 
@@ -272,13 +217,11 @@ describe('AddTeamForm', () => {
     const leagueIdInput = screen.getByLabelText('League ID *');
     await user.type(leagueIdInput, 'test-league');
     
-    // Check that the mock was called for each character
-    expect(mockOnLeagueIdChange).toHaveBeenCalledTimes(11); // 'test-league' has 11 characters
-    // Check that the last call was with the last character
+    expect(mockOnLeagueIdChange).toHaveBeenCalledTimes(11);
     expect(mockOnLeagueIdChange).toHaveBeenLastCalledWith('e');
   });
 
-  it('should call onAddTeam when form is submitted with valid data', async () => {
+  it('should call onAddTeam and clear fields when form is submitted with valid data', async () => {
     const user = userEvent.setup();
     render(
       <AddTeamForm 
@@ -295,6 +238,8 @@ describe('AddTeamForm', () => {
     await user.click(submitButton);
     
     expect(mockOnAddTeam).toHaveBeenCalledWith('test-team', 'test-league');
+    expect(mockOnTeamIdChange).toHaveBeenCalledWith('');
+    expect(mockOnLeagueIdChange).toHaveBeenCalledWith('');
   });
 
   it('should not call onAddTeam when form is submitted with empty data', async () => {
@@ -336,7 +281,7 @@ describe('AddTeamForm', () => {
     expect(mockOnAddTeam).not.toHaveBeenCalled();
   });
 
-  it('should show loading state when submitting', () => {
+  it('should disable button when submitting', () => {
     render(
       <AddTeamForm 
         teamId="test-team"
@@ -349,8 +294,8 @@ describe('AddTeamForm', () => {
       />
     );
     
-    expect(screen.getByRole('button', { name: 'Adding Team...' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Adding Team...' })).toBeDisabled();
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    expect(submitButton).toBeDisabled();
   });
 
   it('should call onReset when reset button is clicked', async () => {
@@ -386,7 +331,6 @@ describe('AddTeamForm', () => {
       />
     );
     
-    // The reset button should not be present when onReset is not provided
     expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument();
   });
 
@@ -423,5 +367,21 @@ describe('AddTeamForm', () => {
     );
     
     expect(mockTeamExists).toHaveBeenCalledWith('test-team', 'test-league');
+  });
+
+  it('should align buttons to the right', () => {
+    render(
+      <AddTeamForm 
+        teamId="test-team"
+        leagueId="test-league"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />
+    );
+    
+    const actionsContainer = screen.getByRole('button', { name: 'Add Team' }).closest('.flex');
+    expect(actionsContainer).toHaveClass('justify-end');
   });
 }); 

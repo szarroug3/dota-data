@@ -131,50 +131,27 @@ export const TeamManagementPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Team Management
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage your tracked teams and add new ones
-        </p>
-      </div>
+    <>
+      <AddTeamForm
+        teamId={form.teamId}
+        leagueId={form.leagueId}
+        onTeamIdChange={form.setTeamId}
+        onLeagueIdChange={form.setLeagueId}
+        onAddTeam={handlers.handleAddTeam}
+        teamExists={handlers.checkTeamExists}
+        isSubmitting={form.isSubmitting}
+        onReset={form.reset}
+      />
 
-      {/* Add Team Form Section */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Add New Team
-        </h2>
-        <AddTeamForm
-          teamId={form.teamId}
-          leagueId={form.leagueId}
-          onTeamIdChange={form.setTeamId}
-          onLeagueIdChange={form.setLeagueId}
-          onAddTeam={handlers.handleAddTeam}
-          teamExists={handlers.checkTeamExists}
-          isSubmitting={form.isSubmitting}
-          onReset={form.reset}
-        />
-      </div>
+      <TeamList
+        teamDataList={context.teamDataList}
+        activeTeam={context.activeTeam}
+        onRefreshTeam={context.refreshTeam}
+        onRemoveTeam={context.removeTeam}
+        onSetActiveTeam={context.setActiveTeam}
+        onEditTeam={handlers.handleEditTeam}
+      />
 
-      {/* Team List Section */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Team List
-        </h2>
-        <TeamList
-          teamDataList={context.teamDataList}
-          activeTeam={context.activeTeam}
-          onRefreshTeam={context.refreshTeam}
-          onRemoveTeam={context.removeTeam}
-          onSetActiveTeam={context.setActiveTeam}
-          onEditTeam={handlers.handleEditTeam}
-        />
-      </div>
-
-      {/* Edit Team Modal */}
       <EditTeamModal
         isOpen={modal.isEditModalOpen}
         onClose={modal.close}
@@ -183,6 +160,6 @@ export const TeamManagementPage: React.FC = () => {
         onSave={handlers.handleSaveTeamChanges}
         teamExists={context.teamExists}
       />
-    </div>
+    </>
   );
 }; 

@@ -1,5 +1,11 @@
 import React from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormField, FormRow } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 interface AddTeamFormProps {
   teamId: string;
   leagueId: string;
@@ -11,7 +17,7 @@ interface AddTeamFormProps {
   onReset?: () => void;
 }
 
-interface FormFieldProps {
+interface FormFieldInputProps {
   id: string;
   label: string;
   placeholder: string;
@@ -21,7 +27,7 @@ interface FormFieldProps {
   helpText: string;
 }
 
-const FormField: React.FC<FormFieldProps> = ({
+const FormFieldInput: React.FC<FormFieldInputProps> = ({
   id,
   label,
   placeholder,
@@ -30,32 +36,25 @@ const FormField: React.FC<FormFieldProps> = ({
   disabled,
   helpText
 }) => (
-  <div>
-    <label 
-      htmlFor={id} 
-      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-    >
+  <FormField>
+    <Label htmlFor={id} className="text-sm font-medium">
       {label} *
-    </label>
-    <input
+    </Label>
+    <Input
       type="text"
       id={id}
       name={id}
       placeholder={placeholder}
       required
       disabled={disabled}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
-                 bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                 placeholder-gray-500 dark:placeholder-gray-400
-                 disabled:opacity-50 disabled:cursor-not-allowed"
       value={value}
       onChange={e => onChange(e.target.value)}
+      className="w-full"
     />
-    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+    <p className="text-xs text-muted-foreground">
       {helpText}
     </p>
-  </div>
+  </FormField>
 );
 
 interface FormActionsProps {
@@ -71,29 +70,23 @@ const FormActions: React.FC<FormActionsProps> = ({
   onReset,
   getButtonText
 }) => (
-  <div className="flex justify-end space-x-3">
+  <div className="flex gap-4 justify-end">
     {onReset && (
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={onReset}
         disabled={isSubmitting}
-        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 
-                   text-gray-700 dark:text-gray-300 font-medium rounded-md 
-                   transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
-                   disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Reset
-      </button>
+      </Button>
     )}
-    <button
+    <Button
       type="submit"
       disabled={isDisabled}
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md 
-                 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {getButtonText()}
-    </button>
+    </Button>
   </div>
 );
 
@@ -112,49 +105,58 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isDisabled) {
-      await onAddTeam(teamId, leagueId);
+      const currentTeamId = teamId;
+      const currentLeagueId = leagueId;
+      // Clear fields immediately
+      onTeamIdChange('');
+      onLeagueIdChange('');
+      await onAddTeam(currentTeamId, currentLeagueId);
     }
   };
 
   const getButtonText = () => {
-    if (isSubmitting) return 'Adding Team...';
     if (teamExists(teamId, leagueId)) return 'Team Already Imported';
     return 'Add Team';
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Add New Team
-      </h2>
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            id="team-id"
-            label="Team ID"
-            placeholder="e.g., 9517508"
-            value={teamId}
-            onChange={onTeamIdChange}
-            disabled={isSubmitting}
-            helpText="Find this in Dotabuff team URLs: https://www.dotabuff.com/esports/teams/9517508"
+    <Card>
+      <CardHeader>
+        <CardTitle>Add New Team</CardTitle>
+        <CardDescription>
+          Add a team to track their performance and statistics
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form onSubmit={handleSubmit}>
+          <FormRow>
+            <FormFieldInput
+              id="team-id"
+              label="Team ID"
+              placeholder="e.g., 9517508"
+              value={teamId}
+              onChange={onTeamIdChange}
+              disabled={isSubmitting}
+              helpText="Find this in Dotabuff team URLs"
+            />
+            <FormFieldInput
+              id="league-id"
+              label="League ID"
+              placeholder="e.g., 16435"
+              value={leagueId}
+              onChange={onLeagueIdChange}
+              disabled={isSubmitting}
+              helpText="Find this in Dotabuff league URLs"
+            />
+          </FormRow>
+          <FormActions
+            isDisabled={isDisabled}
+            isSubmitting={isSubmitting}
+            onReset={onReset}
+            getButtonText={getButtonText}
           />
-          <FormField
-            id="league-id"
-            label="League ID"
-            placeholder="e.g., 16435"
-            value={leagueId}
-            onChange={onLeagueIdChange}
-            disabled={isSubmitting}
-            helpText="Find this in Dotabuff league URLs: https://www.dotabuff.com/esports/leagues/16435"
-          />
-        </div>
-        <FormActions
-          isDisabled={isDisabled}
-          isSubmitting={isSubmitting}
-          onReset={onReset}
-          getButtonText={getButtonText}
-        />
-      </form>
-    </div>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }; 

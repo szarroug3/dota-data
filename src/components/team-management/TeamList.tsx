@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TeamData } from '@/types/contexts/team-context-value';
 
 import { TeamCard } from './TeamCard';
@@ -23,35 +24,48 @@ export const TeamList: React.FC<TeamListProps> = ({
 }) => {
   if (teamDataList.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-          No Teams Added
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          Add your first team using the form above to get started.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Teams</CardTitle>
+          <CardDescription>
+            Manage your tracked teams and view their performance
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="min-h-[139px] flex items-center justify-center">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Teams Added</h3>
+            <p className="text-sm text-muted-foreground">
+              Add your first team using the add team form to get started.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Your Teams ({teamDataList.length})
-      </h2>
-      <div className="space-y-3">
-        {teamDataList.map((teamData) => (
-          <TeamCard
-            key={`${teamData.team.id}-${teamData.team.leagueId}`}
-            teamData={teamData}
-            isActive={activeTeam?.teamId === teamData.team.id && activeTeam?.leagueId === teamData.team.leagueId}
-            onRemoveTeam={onRemoveTeam}
-            onRefreshTeam={onRefreshTeam}
-            onSetActiveTeam={onSetActiveTeam}
-            onEditTeam={onEditTeam}
-          />
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Your Teams</CardTitle>
+        <CardDescription>
+          Manage your tracked teams and view their performance
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="max-h-[calc(100vh-18rem)] min-h-[139px] overflow-y-auto px-4">
+        <div>
+          {teamDataList.map((teamData) => (
+            <TeamCard
+              key={`${teamData.team.id}-${teamData.team.leagueId}`}
+              teamData={teamData}
+              isActive={activeTeam?.teamId === teamData.team.id && activeTeam?.leagueId === teamData.team.leagueId}
+              onRemoveTeam={onRemoveTeam}
+              onRefreshTeam={onRefreshTeam}
+              onSetActiveTeam={onSetActiveTeam}
+              onEditTeam={onEditTeam}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }; 

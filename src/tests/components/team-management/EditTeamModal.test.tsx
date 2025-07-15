@@ -26,8 +26,8 @@ describe('EditTeamModal', () => {
     render(<EditTeamModal {...defaultProps} />);
     
     expect(screen.getByText('Edit Team')).toBeInTheDocument();
-    expect(screen.getByLabelText('Team ID')).toBeInTheDocument();
-    expect(screen.getByLabelText('League ID')).toBeInTheDocument();
+    expect(screen.getByLabelText('Team ID *')).toBeInTheDocument();
+    expect(screen.getByLabelText('League ID *')).toBeInTheDocument();
     expect(screen.getByText('Save Changes')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
@@ -41,8 +41,8 @@ describe('EditTeamModal', () => {
   it('should populate form with current team and league IDs', () => {
     render(<EditTeamModal {...defaultProps} />);
     
-    const teamIdInput = screen.getByLabelText('Team ID') as HTMLInputElement;
-    const leagueIdInput = screen.getByLabelText('League ID') as HTMLInputElement;
+    const teamIdInput = screen.getByLabelText('Team ID *') as HTMLInputElement;
+    const leagueIdInput = screen.getByLabelText('League ID *') as HTMLInputElement;
     
     expect(teamIdInput.value).toBe('team1');
     expect(leagueIdInput.value).toBe('league1');
@@ -72,7 +72,7 @@ describe('EditTeamModal', () => {
     const user = userEvent.setup();
     render(<EditTeamModal {...defaultProps} />);
     
-    const teamIdInput = screen.getByLabelText('Team ID');
+    const teamIdInput = screen.getByLabelText('Team ID *');
     const saveButton = screen.getByText('Save Changes');
     
     // Clear the team ID input
@@ -85,7 +85,7 @@ describe('EditTeamModal', () => {
     const user = userEvent.setup();
     render(<EditTeamModal {...defaultProps} />);
     
-    const leagueIdInput = screen.getByLabelText('League ID');
+    const leagueIdInput = screen.getByLabelText('League ID *');
     const saveButton = screen.getByText('Save Changes');
     
     // Clear the league ID input
@@ -99,8 +99,8 @@ describe('EditTeamModal', () => {
     mockTeamExists.mockReturnValue(true);
     render(<EditTeamModal {...defaultProps} />);
     
-    const teamIdInput = screen.getByLabelText('Team ID');
-    const leagueIdInput = screen.getByLabelText('League ID');
+    const teamIdInput = screen.getByLabelText('Team ID *');
+    const leagueIdInput = screen.getByLabelText('League ID *');
     
     // Change to a different team
     await user.clear(teamIdInput);

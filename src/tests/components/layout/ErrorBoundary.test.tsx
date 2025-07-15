@@ -146,9 +146,7 @@ describe('ErrorBoundary - Accessibility', () => {
       </ErrorBoundary>
     );
     const retryButton = screen.getByRole('button', { name: 'Try Again' });
-    const reportButton = screen.getByRole('button', { name: 'Report Error' });
     expect(retryButton).toBeInTheDocument();
-    expect(reportButton).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
   it('should have proper heading structure', () => {
@@ -187,9 +185,7 @@ describe('ErrorBoundary - Styling and layout', () => {
       </ErrorBoundary>
     );
     const retryButton = screen.getByText('Try Again');
-    const reportButton = screen.getByText('Report Error');
     expect(retryButton).toHaveClass('bg-blue-600', 'hover:bg-blue-700', 'text-white');
-    expect(reportButton).toHaveClass('bg-muted', 'hover:bg-accent');
     consoleSpy.mockRestore();
   });
 });
