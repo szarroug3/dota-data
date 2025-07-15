@@ -1,153 +1,253 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Target, Trophy, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
-import { useConfigContext } from '@/contexts/config-context';
-import { useThemeContext } from '@/contexts/theme-context';
-import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
+import { useConfigContext } from "@/contexts/config-context";
+import { useTeamContext } from "@/contexts/team-context";
 
-import { ExternalResources } from '../sidebar/ExternalResources';
-import { MobileSidebarToggle } from '../sidebar/MobileSidebarToggle';
-import { QuickLinks } from '../sidebar/QuickLinks';
-import { SidebarHeader } from '../sidebar/SidebarHeader';
-import { SidebarNavigation } from '../sidebar/SidebarNavigation';
-import { SidebarSettings } from '../sidebar/SidebarSettings';
+import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from "../icons/ExternalSiteIcons";
+import { Switch } from "../ui/switch";
+/**
+ * Sidebar title component that shows the app name when expanded
+ * and only the toggle button when collapsed
+ */
+const Title = ({ open }: { open: boolean }) => {
+  return (
+    <SidebarHeader>
+      {open ? <div className="flex items-center justify-between gap-3 overflow-hidden transition-all duration-200">
+        <h1 className="transition-opacity duration-200 truncate">Dota Scouting Assistant</h1>
+        <Toggle />
+      </div> :
+        <div className="flex items-center justify-center transition-all duration-200"> <Toggle /> </div>
+      }
+    </SidebarHeader>
+  );
+}
 
-// Helper function to map pathname to current page
-const getCurrentPage = (pathname: string): string => {
-  if (pathname === '/') return 'team-management';
-  if (pathname.startsWith('/team-management')) return 'team-management';
-  if (pathname.startsWith('/match-history')) return 'match-history';
-  if (pathname.startsWith('/player-stats')) return 'player-stats';
-  if (pathname.startsWith('/draft-suggestions')) return 'draft-suggestions';
-  return 'team-management';
-};
-
-// Helper function to get navigation route
-const getNavigationRoute = (page: string): string => {
-  const routes: Record<string, string> = {
-    'team-management': '/team-management',
-    'match-history': '/match-history',
-    'player-stats': '/player-stats',
-    'draft-suggestions': '/draft-suggestions',
-  };
-  return routes[page] || '/team-management';
-};
-
-export const Sidebar: React.FC = () => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+/**
+ * Navigation section with main app navigation items
+ */
+const Navigation = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { config, updateConfig } = useConfigContext();
-  const { theme, setTheme } = useThemeContext();
+  const navigationItems = [
+    { id: 'team-management', label: 'Team Management', icon: <Building />, path: '/team-management' },
+    { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
+    { id: 'player-stats', label: 'Player Stats', icon: <BarChart />, path: '/player-stats' },
+    { id: 'draft-suggestions', label: 'Draft Suggestions', icon: <Target />, path: '/draft-suggestions' },
+  ];
 
-  // Extract values from config
-  const isCollapsed = config.sidebarCollapsed;
-  const preferredSite = (config.preferredExternalSite === 'dotabuff' || config.preferredExternalSite === 'opendota') 
-    ? config.preferredExternalSite 
-    : 'dotabuff';
-
-  // Convert theme to only 'light' or 'dark' for SidebarSettings
-  const sidebarTheme = theme === 'system' ? 'light' : theme;
-  const currentPage = getCurrentPage(pathname);
-
-  const handleNavigate = (page: string) => {
-    // Close mobile sidebar when navigating
-    if (isMobileOpen) {
-      setIsMobileOpen(false);
-    }
-
-    // Navigate to the appropriate route
-    const route = getNavigationRoute(page);
-    router.push(route);
-  };
-
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
-  };
-
-  const handlePreferredSiteChange = (site: string) => {
-    updateConfig({ preferredExternalSite: site as PreferredExternalSite });
-  };
-
-  const handleToggle = () => {
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] handleToggle for sidebar state`, isCollapsed);
-    updateConfig({ sidebarCollapsed: !isCollapsed });
-  };
-
-  const handleMobileToggle = () => {
-    setIsMobileOpen(!isMobileOpen);
-  };
-
-  const renderSidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <SidebarHeader
-        isCollapsed={isCollapsed}
-        onToggleCollapse={handleToggle}
-      />
-
-      {/* Navigation */}
-      <SidebarNavigation
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        isCollapsed={isCollapsed}
-      />
-
-      {/* Quick Links */}
-      <QuickLinks
-        isCollapsed={isCollapsed}
-        activeTeam={{
-          id: 'team-liquid',
-          name: 'Team Liquid',
-          league: 'ESL Pro League'
-        }}
-      />
-
-      {/* External Resources */}
-      <ExternalResources
-        isCollapsed={isCollapsed}
-      />
-
-      {/* Settings */}
-      <SidebarSettings
-        theme={sidebarTheme}
-        preferredSite={preferredSite}
-        onThemeChange={handleThemeChange}
-        onPreferredSiteChange={handlePreferredSiteChange}
-        isCollapsed={isCollapsed}
-      />
-    </div>
-  );
 
   return (
-    <>
-      {/* Mobile toggle button */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <MobileSidebarToggle isOpen={isMobileOpen} onToggle={handleMobileToggle} />
-      </div>
+      <SidebarGroup>
+        <div className="flex justify-center">
+          <SidebarSeparator />
+        </div>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">Navigation</SidebarGroupLabel>
+        <SidebarMenu className="overflow-hidden">
+          {navigationItems.map((item) => (
+            <SidebarMenuItem key={item.id}>
+              <SidebarMenuButton
+                onClick={() => router.push(item.path)}
+                className={pathname === item.path ? 'bg-primary/10' : ''}
+              >
+                {item.icon} <span className="truncate">{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+  )
+}
 
-      {/* Sidebar */}
-      <div
-        className={`
-          fixed left-0 top-0 h-full bg-background text-foreground border-r border-border
-          transition-all duration-300 ease-in-out z-40
-          ${isCollapsed ? 'w-16' : 'w-64'}
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-          md:relative md:translate-x-0
-        `}
-      >
-        {renderSidebarContent()}
-      </div>
+/**
+ * External sites section for Dota 2 resources
+ */
+const ExternalSites = () => {
+  const externalSites = [
+    { id: 'dotabuff', label: 'Dotabuff', icon: <DotabuffIcon />, url: 'https://dotabuff.com' },
+    { id: 'opendota', label: 'OpenDota', icon: <OpenDotaIcon />, url: 'https://opendota.com' },
+    { id: 'dota2protracker', label: 'Dota2ProTracker', icon: <Dota2ProTrackerIcon />, url: 'https://dota2protracker.com' },
+  ];
 
-      {/* Mobile overlay */}
-      {isMobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={handleMobileToggle}
-        />
+  return (
+      <SidebarGroup>
+        <div className="flex justify-center">
+          <SidebarSeparator />
+        </div>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">External Sites</SidebarGroupLabel>
+        <SidebarMenu className="overflow-hidden">
+          {externalSites.map((site) => (
+            <SidebarMenuItem key={site.id}>
+              <SidebarMenuButton
+                onClick={() => window.open(site.url, '_blank')}
+              >
+                {site.icon} <span className="truncate">{site.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+  )
+}
+
+/**
+ * Quick links section for external team and league pages
+ */
+const QuickLinks = () => {
+  const { activeTeam } = useTeamContext();
+
+  if (!activeTeam) return null;
+
+  const quickLinks = [
+    {
+      id: 'team-page',
+      label: 'Team Page',
+      icon: <Users />, 
+      url: `https://dotabuff.com/teams/${activeTeam.teamId}`
+    },
+    {
+      id: 'league-page',
+      label: 'League Page',
+      icon: <Trophy />, 
+      url: `https://dotabuff.com/leagues/${activeTeam.leagueId}`
+    },
+  ];
+
+  return (
+      <SidebarGroup>
+        <div className="flex justify-center">
+          <SidebarSeparator />
+        </div>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">Quick Links</SidebarGroupLabel>
+        <SidebarMenu className="overflow-hidden">
+          {quickLinks.map((link) => (
+            <SidebarMenuItem key={link.id}>
+              <SidebarMenuButton
+                onClick={() => window.open(link.url, '_blank')}
+              >
+                {link.icon} <span className="truncate">{link.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+  )
+}
+
+
+/**
+ * Theme toggle switch component
+ */
+const ThemeSwitch = ({ open } : { open: boolean }) => {
+  const { setTheme, theme } = useTheme();
+
+  const handleThemeChange = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  }
+
+  return (
+    <SidebarMenuItem>
+      { open ? (
+        <div className="flex items-center space-x-2 transition-all duration-200">
+          <Sun className="w-5 h-5" />
+          <Switch id="theme" checked={theme === "dark"} onCheckedChange={handleThemeChange} />
+          <Moon className="w-5 h-5" />
+        </div>
+      ) : (
+        <SidebarMenuButton 
+          onClick={handleThemeChange}
+          tooltip="Toggle theme"
+        >
+          { theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" /> }
+        </SidebarMenuButton>
       )}
-    </>
-  );
-}; 
+    </SidebarMenuItem>
+  )
+}
+
+/**
+ * Preferred external site toggle switch component
+ */
+const PreferredSiteSwitch = ({ open } : { open: boolean }) => {
+  const { config, updateConfig } = useConfigContext();
+  const preferredSite = config.preferredExternalSite;
+
+  const handlePreferredSiteChange = () => {
+    const newSite = preferredSite === "dotabuff" ? "opendota" : "dotabuff";
+    updateConfig({ preferredExternalSite: newSite as "opendota" | "dotabuff" });
+  }
+
+  return (
+    <SidebarMenuItem>
+      {open ? (
+        <div className="flex items-center space-x-2 transition-all duration-200">
+          <DotabuffIcon className="w-5 h-5" />
+            <Switch id="preferred-site" checked={preferredSite === "opendota"} onCheckedChange={handlePreferredSiteChange} />
+          <OpenDotaIcon className="w-5 h-5" />
+        </div>
+      ) : (
+        <SidebarMenuButton 
+          onClick={handlePreferredSiteChange}
+          tooltip="Toggle preferred site"
+        >
+          { preferredSite === "dotabuff" ? <DotabuffIcon className="w-5 h-5" /> : <OpenDotaIcon className="w-5 h-5" /> }
+        </SidebarMenuButton>
+      )}
+    </SidebarMenuItem>
+  )
+}
+
+/**
+ * Settings section containing theme and site preferences
+ */
+const Settings = ({ open }: { open: boolean }) => {
+  return (
+    <SidebarGroup>
+      <div className="flex justify-center">
+        <SidebarSeparator />
+      </div>
+      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">Settings</SidebarGroupLabel>
+      <SidebarMenu className="flex flex-col items-center gap-2 overflow-hidden">
+        <ThemeSwitch open={open} />
+        <PreferredSiteSwitch open={open} />
+      </SidebarMenu>
+    </SidebarGroup>
+  )
+}
+
+/**
+ * Sidebar toggle button component
+ */
+function Toggle() {
+  const { toggleSidebar, open } = useSidebar()
+ 
+  return <button onClick={toggleSidebar}>{open ? <ChevronLeft /> : <ChevronRight />}</button>
+}
+
+/**
+ * Main sidebar component with navigation, quick links, external sites, and settings
+ */
+export function AppSidebar() {
+  const {
+    open,
+  } = useSidebar();
+
+  return (
+    <Sidebar collapsible="icon" className="overflow-hidden">
+      <Title open={open} />
+      <SidebarContent className="overflow-hidden">
+        <Navigation />
+        <ExternalSites />
+        <QuickLinks />
+      </SidebarContent>
+      <SidebarFooter className="overflow-hidden">
+        <Settings open={open} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  )
+}

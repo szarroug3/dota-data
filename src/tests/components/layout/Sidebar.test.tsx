@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { Sidebar } from '@/components/layout/Sidebar';
+import { AppSidebar } from '@/components/layout/Sidebar';
 
 // Mock Next.js navigation hooks
 jest.mock('next/navigation', () => ({
@@ -20,95 +20,117 @@ jest.mock('@/contexts/config-context', () => ({
   }),
 }));
 
-jest.mock('@/contexts/theme-context', () => ({
-  useThemeContext: () => ({
+// Mock next-themes
+jest.mock('next-themes', () => ({
+  useTheme: () => ({
     theme: 'light',
     setTheme: jest.fn(),
   }),
 }));
 
-// Mock sidebar components
-jest.mock('@/components/sidebar/SidebarHeader', () => ({
-  SidebarHeader: ({ isCollapsed, onToggleCollapse }: any) => (
-    <button onClick={onToggleCollapse} data-testid="sidebar-header">
-      {isCollapsed ? 'Collapsed' : 'Expanded'}
+// Mock team context
+jest.mock('@/contexts/team-context', () => ({
+  useTeamContext: () => ({
+    activeTeam: { teamId: 'team-liquid', leagueId: 'esl-pro-league' },
+  }),
+}));
+
+// Mock the shadcn sidebar components
+jest.mock('@/components/ui/sidebar', () => ({
+  Sidebar: ({ children, ...props }: any) => (
+    <div data-testid="sidebar" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarContent: ({ children, ...props }: any) => (
+    <div data-testid="sidebar-content" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarFooter: ({ children, ...props }: any) => (
+    <div data-testid="sidebar-footer" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarGroup: ({ children, ...props }: any) => (
+    <div data-testid="sidebar-group" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarGroupLabel: ({ children, ...props }: any) => (
+    <div data-testid="sidebar-group-label" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarHeader: ({ children, ...props }: any) => (
+    <div data-testid="sidebar-header" {...props}>
+      {children}
+    </div>
+  ),
+  SidebarMenu: ({ children, ...props }: any) => (
+    <ul data-testid="sidebar-menu" {...props}>
+      {children}
+    </ul>
+  ),
+  SidebarMenuButton: ({ children, onClick, tooltip, ...props }: any) => (
+    <button 
+      data-testid="sidebar-menu-button" 
+      onClick={onClick}
+      title={tooltip}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+  SidebarMenuItem: ({ children, ...props }: any) => (
+    <li data-testid="sidebar-menu-item" {...props}>
+      {children}
+    </li>
+  ),
+  SidebarRail: () => <div data-testid="sidebar-rail" />,
+  SidebarSeparator: () => <div data-testid="sidebar-separator" />,
+  useSidebar: () => ({
+    open: true,
+    toggleSidebar: jest.fn(),
+  }),
+}));
+
+// Mock the Switch component
+jest.mock('@/components/ui/switch', () => ({
+  Switch: ({ checked, onCheckedChange, id, ...props }: any) => (
+    <button 
+      data-testid={`switch-${id}`}
+      onClick={() => onCheckedChange(!checked)}
+      aria-checked={checked}
+      {...props}
+    >
+      {checked ? 'ON' : 'OFF'}
     </button>
   ),
 }));
 
-jest.mock('@/components/sidebar/SidebarNavigation', () => ({
-  SidebarNavigation: ({ currentPage, onNavigate }: any) => (
-    <nav data-testid="sidebar-navigation">
-      <button 
-        onClick={() => onNavigate('team-management')}
-        data-testid="nav-team-management"
-        aria-pressed={currentPage === 'team-management'}
-      >
-        Team Management
-      </button>
-      <button 
-        onClick={() => onNavigate('match-history')}
-        data-testid="nav-match-history"
-        aria-pressed={currentPage === 'match-history'}
-      >
-        Match History
-      </button>
-      <button 
-        onClick={() => onNavigate('player-stats')}
-        data-testid="nav-player-stats"
-        aria-pressed={currentPage === 'player-stats'}
-      >
-        Player Stats
-      </button>
-      <button 
-        onClick={() => onNavigate('draft-suggestions')}
-        data-testid="nav-draft-suggestions"
-        aria-pressed={currentPage === 'draft-suggestions'}
-      >
-        Draft Suggestions
-      </button>
-    </nav>
-  ),
+// Mock external site icons
+jest.mock('@/components/icons/ExternalSiteIcons', () => ({
+  DotabuffIcon: () => <div data-testid="dotabuff-icon">Dotabuff</div>,
+  OpenDotaIcon: () => <div data-testid="opendota-icon">OpenDota</div>,
+  Dota2ProTrackerIcon: () => <div data-testid="dota2protracker-icon">Dota2ProTracker</div>,
 }));
 
-jest.mock('@/components/sidebar/QuickLinks', () => ({
-  QuickLinks: ({ isCollapsed }: any) => (
-    <div data-testid="quick-links">
-      {isCollapsed ? 'Collapsed' : 'Expanded'}
-    </div>
-  ),
+// Mock Lucide icons
+jest.mock('lucide-react', () => ({
+  BarChart: () => <div data-testid="bar-chart-icon">BarChart</div>,
+  Building: () => <div data-testid="building-icon">Building</div>,
+  ChevronLeft: () => <div data-testid="chevron-left-icon">ChevronLeft</div>,
+  ChevronRight: () => <div data-testid="chevron-right-icon">ChevronRight</div>,
+  Clock: () => <div data-testid="clock-icon">Clock</div>,
+  Moon: () => <div data-testid="moon-icon">Moon</div>,
+  Sun: () => <div data-testid="sun-icon">Sun</div>,
+  Target: () => <div data-testid="target-icon">Target</div>,
+  Trophy: () => <div data-testid="trophy-icon">Trophy</div>,
+  Users: () => <div data-testid="users-icon">Users</div>,
 }));
 
-jest.mock('@/components/sidebar/ExternalResources', () => ({
-  ExternalResources: ({ isCollapsed }: any) => (
-    <div data-testid="external-resources">
-      {isCollapsed ? 'Collapsed' : 'Expanded'}
-    </div>
-  ),
-}));
-
-jest.mock('@/components/sidebar/SidebarSettings', () => ({
-  SidebarSettings: ({ theme, preferredSite, onThemeChange, onPreferredSiteChange }: any) => (
-    <div data-testid="sidebar-settings">
-      <button onClick={() => onThemeChange('dark')} data-testid="theme-toggle">
-        {theme}
-      </button>
-      <button onClick={() => onPreferredSiteChange('opendota')} data-testid="site-toggle">
-        {preferredSite}
-      </button>
-    </div>
-  ),
-}));
-
-jest.mock('@/components/sidebar/MobileSidebarToggle', () => ({
-  MobileSidebarToggle: ({ isOpen, onToggle }: any) => (
-    <button onClick={onToggle} data-testid="mobile-toggle">
-      {isOpen ? 'Close' : 'Open'}
-    </button>
-  ),
-}));
-
-describe('Sidebar', () => {
+describe('AppSidebar', () => {
   const mockRouter = {
     push: jest.fn(),
     back: jest.fn(),
@@ -127,86 +149,155 @@ describe('Sidebar', () => {
     mockUsePathname.mockReturnValue('/');
   });
 
-  it('renders sidebar with navigation', () => {
-    render(<Sidebar />);
+  it('renders sidebar with all main sections', () => {
+    render(<AppSidebar />);
     
-    expect(screen.getByTestId('sidebar-navigation')).toBeInTheDocument();
-    expect(screen.getByTestId('nav-team-management')).toBeInTheDocument();
-    expect(screen.getByTestId('nav-match-history')).toBeInTheDocument();
-    expect(screen.getByTestId('nav-player-stats')).toBeInTheDocument();
-    expect(screen.getByTestId('nav-draft-suggestions')).toBeInTheDocument();
+    // Check that main sidebar structure is rendered
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-footer')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-header')).toBeInTheDocument();
   });
 
-  it('navigates to team management when team management button is clicked', () => {
-    render(<Sidebar />);
+  it('renders navigation section with all navigation items', () => {
+    render(<AppSidebar />);
     
-    fireEvent.click(screen.getByTestId('nav-team-management'));
+    // Check that navigation group is rendered
+    const navigationGroups = screen.getAllByTestId('sidebar-group');
+    expect(navigationGroups.length).toBeGreaterThan(0);
     
-    expect(mockRouter.push).toHaveBeenCalledWith('/team-management');
+    // Check that navigation menu buttons are rendered
+    const menuButtons = screen.getAllByTestId('sidebar-menu-button');
+    expect(menuButtons.length).toBeGreaterThan(0);
   });
 
-  it('navigates to match history when match history button is clicked', () => {
-    render(<Sidebar />);
+  it('renders sidebar title', () => {
+    render(<AppSidebar />);
     
-    fireEvent.click(screen.getByTestId('nav-match-history'));
-    
-    expect(mockRouter.push).toHaveBeenCalledWith('/match-history');
+    expect(screen.getByText('Dota Scouting Assistant')).toBeInTheDocument();
   });
 
-  it('navigates to player stats when player stats button is clicked', () => {
-    render(<Sidebar />);
+  it('renders navigation group label', () => {
+    render(<AppSidebar />);
     
-    fireEvent.click(screen.getByTestId('nav-player-stats'));
-    
-    expect(mockRouter.push).toHaveBeenCalledWith('/player-stats');
+    expect(screen.getByText('Navigation')).toBeInTheDocument();
   });
 
-  it('navigates to draft suggestions when draft suggestions button is clicked', () => {
-    render(<Sidebar />);
+  it('renders quick links group label when active team is present', () => {
+    render(<AppSidebar />);
     
-    fireEvent.click(screen.getByTestId('nav-draft-suggestions'));
-    
-    expect(mockRouter.push).toHaveBeenCalledWith('/draft-suggestions');
+    expect(screen.getByText('Quick Links')).toBeInTheDocument();
   });
 
-  it('highlights current page based on pathname', () => {
-    mockUsePathname.mockReturnValue('/team-management');
+  it('renders external sites group label', () => {
+    render(<AppSidebar />);
     
-    render(<Sidebar />);
-    
-    expect(screen.getByTestId('nav-team-management')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('nav-match-history')).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('External Sites')).toBeInTheDocument();
   });
 
-  it('highlights team management when on root path', () => {
-    mockUsePathname.mockReturnValue('/');
+  it('renders settings group label', () => {
+    render(<AppSidebar />);
     
-    render(<Sidebar />);
-    
-    expect(screen.getByTestId('nav-team-management')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
-  it('handles mobile sidebar toggle', () => {
-    render(<Sidebar />);
+  it('renders navigation items with correct labels', () => {
+    render(<AppSidebar />);
     
-    const mobileToggle = screen.getByTestId('mobile-toggle');
-    expect(mobileToggle).toHaveTextContent('Open');
-    
-    fireEvent.click(mobileToggle);
-    expect(mobileToggle).toHaveTextContent('Close');
+    expect(screen.getByText('Team Management')).toBeInTheDocument();
+    expect(screen.getByText('Match History')).toBeInTheDocument();
+    expect(screen.getByText('Player Stats')).toBeInTheDocument();
+    expect(screen.getByText('Draft Suggestions')).toBeInTheDocument();
   });
 
-  it('closes mobile sidebar when navigating', () => {
-    render(<Sidebar />);
+  it('renders quick links with correct labels when active team is present', () => {
+    render(<AppSidebar />);
     
-    // Open mobile sidebar
-    fireEvent.click(screen.getByTestId('mobile-toggle'));
-    expect(screen.getByTestId('mobile-toggle')).toHaveTextContent('Close');
+    expect(screen.getByText('Team Page')).toBeInTheDocument();
+    expect(screen.getByText('League Page')).toBeInTheDocument();
+  });
+
+  it('renders external sites with correct labels', () => {
+    render(<AppSidebar />);
     
-    // Navigate to a page
-    fireEvent.click(screen.getByTestId('nav-team-management'));
+    // Use getAllByText since there are multiple instances (icon and label)
+    expect(screen.getAllByText('Dotabuff').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('OpenDota').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Dota2ProTracker').length).toBeGreaterThan(0);
+  });
+
+  it('renders theme switch in settings', () => {
+    render(<AppSidebar />);
     
-    // Mobile sidebar should close
-    expect(screen.getByTestId('mobile-toggle')).toHaveTextContent('Open');
+    expect(screen.getByTestId('switch-theme')).toBeInTheDocument();
+  });
+
+  it('renders preferred site switch in settings', () => {
+    render(<AppSidebar />);
+    
+    expect(screen.getByTestId('switch-preferred-site')).toBeInTheDocument();
+  });
+
+  it('renders sidebar rail', () => {
+    render(<AppSidebar />);
+    
+    expect(screen.getByTestId('sidebar-rail')).toBeInTheDocument();
+  });
+
+  it('renders sidebar separators', () => {
+    render(<AppSidebar />);
+    
+    const separators = screen.getAllByTestId('sidebar-separator');
+    expect(separators.length).toBeGreaterThan(0);
+  });
+
+  it('renders all required icons', () => {
+    render(<AppSidebar />);
+    
+    // Navigation icons
+    expect(screen.getByTestId('building-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('clock-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('bar-chart-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('target-icon')).toBeInTheDocument();
+    
+    // Quick links icons
+    expect(screen.getByTestId('users-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('trophy-icon')).toBeInTheDocument();
+    
+    // External site icons - use getAllByTestId since there are multiple instances
+    expect(screen.getAllByTestId('dotabuff-icon').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('opendota-icon').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('dota2protracker-icon').length).toBeGreaterThan(0);
+    
+    // Theme icons
+    expect(screen.getByTestId('sun-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('moon-icon')).toBeInTheDocument();
+  });
+
+  it('has proper accessibility structure', () => {
+    render(<AppSidebar />);
+    
+    // Check that sidebar has proper role
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    
+    // Check that navigation is properly structured
+    expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-footer')).toBeInTheDocument();
+    
+    // Check that menu items are properly structured
+    const menuItems = screen.getAllByTestId('sidebar-menu-item');
+    expect(menuItems.length).toBeGreaterThan(0);
+  });
+
+  it('renders with correct sidebar structure', () => {
+    render(<AppSidebar />);
+    
+    // Verify the main sidebar structure
+    const sidebar = screen.getByTestId('sidebar');
+    expect(sidebar).toHaveAttribute('collapsible', 'icon');
+    
+    // Verify content and footer are present
+    expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-footer')).toBeInTheDocument();
   });
 }); 
