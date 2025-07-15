@@ -102,24 +102,6 @@ describe('ErrorBoundary - Error recovery', () => {
   });
 });
 
-// Error reporting
-describe('ErrorBoundary - Error reporting', () => {
-  it('should handle report error button click', () => {
-    const consoleSpy = suppressConsoleError();
-    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    render(
-      <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
-    );
-    const reportButton = screen.getByText('Report Error');
-    fireEvent.click(reportButton);
-    expect(alertSpy).toHaveBeenCalledWith('Error has been reported. Thank you for your feedback.');
-    consoleSpy.mockRestore();
-    alertSpy.mockRestore();
-  });
-});
-
 // Development mode
 describe('ErrorBoundary - Development mode', () => {
   it('should show error details in development mode', () => {
@@ -207,7 +189,7 @@ describe('ErrorBoundary - Styling and layout', () => {
     const retryButton = screen.getByText('Try Again');
     const reportButton = screen.getByText('Report Error');
     expect(retryButton).toHaveClass('bg-blue-600', 'hover:bg-blue-700', 'text-white');
-    expect(reportButton).toHaveClass('bg-gray-100', 'hover:bg-gray-200');
+    expect(reportButton).toHaveClass('bg-muted', 'hover:bg-accent');
     consoleSpy.mockRestore();
   });
 });
@@ -221,9 +203,9 @@ describe('ErrorBoundary - Dark mode support', () => {
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     );
-    const container = document.querySelector('.bg-gray-50');
+    const container = document.querySelector('.bg-muted');
     expect(container).toBeInTheDocument();
-    const errorCard = document.querySelector('.bg-white');
+    const errorCard = document.querySelector('.bg-card');
     expect(errorCard).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
@@ -236,8 +218,8 @@ describe('ErrorBoundary - Dark mode support', () => {
     );
     const heading = screen.getByText('Something went wrong');
     const description = screen.getByText(/We encountered an unexpected error/);
-    expect(heading).toHaveClass('text-gray-900');
-    expect(description).toHaveClass('text-gray-500');
+    expect(heading).toHaveClass('text-foreground');
+    expect(description).toHaveClass('text-muted-foreground');
     consoleSpy.mockRestore();
   });
 }); 

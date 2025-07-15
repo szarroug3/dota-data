@@ -151,7 +151,7 @@ export class RequestTracer {
       maxSpansPerRequest: 50,
       maxLogsPerSpan: 100,
       enableDistributedTracing: false,
-      serviceName: 'dota-data-api',
+      serviceName: 'dota-scout-assistant-api',
       serviceVersion: '1.0.0',
       ...config
     };
@@ -424,7 +424,7 @@ export class RequestTracer {
         }
       })),
       process: {
-        serviceName: this.config.serviceName || 'dota-data-api',
+        serviceName: this.config.serviceName || 'dota-scout-assistant-api',
         tags: {
           version: this.config.serviceVersion || '1.0.0',
           node_env: process.env.NODE_ENV

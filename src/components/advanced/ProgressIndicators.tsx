@@ -71,15 +71,15 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     <div className={`w-full ${className}`}>
       {showLabel && (
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
             {label || 'Progress'}
           </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground dark:text-muted-foreground">
             {Math.round(clampedProgress)}%
           </span>
         </div>
       )}
-      <div className={`w-full bg-gray-200 dark:bg-gray-700 rounded-full ${getSizeClasses()}`}>
+      <div className={`w-full bg-muted dark:bg-muted rounded-full ${getSizeClasses()}`}>
         <div
           className={`${getVariantClasses()} rounded-full transition-all duration-300 ease-out`}
           style={{ width: `${clampedProgress}%` }}
@@ -116,16 +116,16 @@ export const Spinner: React.FC<SpinnerProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
-        return 'text-blue-600';
+        return 'text-primary';
       case 'success':
-        return 'text-green-600';
+        return 'text-success';
       case 'warning':
         return 'text-yellow-600';
       case 'error':
-        return 'text-red-600';
+        return 'text-destructive';
       case 'default':
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-muted-foreground dark:text-muted-foreground';
     }
   };
 
@@ -172,7 +172,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
             {Array.from({ length: lines }).map((_, index) => (
               <div
                 key={index}
-                className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                className="h-4 bg-muted dark:bg-muted rounded animate-pulse"
                 style={{
                   width: `${Math.random() * 40 + 60}%`
                 }}
@@ -183,27 +183,27 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       case 'avatar':
         return (
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+            <div className="w-10 h-10 bg-muted dark:bg-muted rounded-full animate-pulse" />
             <div className="space-y-2">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '60%' }} />
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '40%' }} />
+              <div className="h-4 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '60%' }} />
+              <div className="h-3 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '40%' }} />
             </div>
           </div>
         );
       case 'button':
         return (
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '120px' }} />
+          <div className="h-10 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '120px' }} />
         );
       case 'card':
         return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-card dark:bg-card rounded-lg shadow p-6">
             <div className="space-y-4">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '70%' }} />
+              <div className="h-6 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '70%' }} />
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                    className="h-4 bg-muted dark:bg-muted rounded animate-pulse"
                     style={{
                       width: `${Math.random() * 30 + 70}%`
                     }}
@@ -211,8 +211,8 @@ export const Skeleton: React.FC<SkeletonProps> = ({
                 ))}
               </div>
               <div className="flex space-x-2 pt-4">
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '80px' }} />
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" style={{ width: '60px' }} />
+                <div className="h-8 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '80px' }} />
+                <div className="h-8 bg-muted dark:bg-muted rounded animate-pulse" style={{ width: '60px' }} />
               </div>
             </div>
           </div>

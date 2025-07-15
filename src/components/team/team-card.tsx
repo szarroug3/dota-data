@@ -162,14 +162,14 @@ const formatDate = (dateString: string): string => {
 };
 
 const getWinRateColor = (winRate: number): string => {
-  if (winRate >= 70) return 'text-green-600';
-  if (winRate >= 60) return 'text-blue-600';
+  if (winRate >= 70) return 'text-success';
+  if (winRate >= 60) return 'text-primary';
   if (winRate >= 50) return 'text-yellow-600';
-  return 'text-red-600';
+  return 'text-destructive';
 };
 
 const getStreakColor = (type: 'win' | 'loss'): string => {
-  return type === 'win' ? 'text-green-600' : 'text-red-600';
+  return type === 'win' ? 'text-success' : 'text-destructive';
 };
 
 const getStreakIcon = (type: 'win' | 'loss'): string => {
@@ -178,17 +178,17 @@ const getStreakIcon = (type: 'win' | 'loss'): string => {
 
 const getRankingColor = (position: number): string => {
   if (position <= 3) return 'text-yellow-600';
-  if (position <= 8) return 'text-blue-600';
-  if (position <= 16) return 'text-green-600';
-  return 'text-gray-600';
+  if (position <= 8) return 'text-primary';
+  if (position <= 16) return 'text-success';
+  return 'text-muted-foreground';
 };
 
 const getImportanceColor = (importance: 'high' | 'medium' | 'low'): string => {
   switch (importance) {
-    case 'high': return 'bg-red-100 text-red-800 border-red-200';
+    case 'high': return 'bg-destructive/10 text-destructive border-destructive/20';
     case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'low': return 'bg-green-100 text-green-800 border-green-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'low': return 'bg-success/10 text-success border-success/20';
+    default: return 'bg-muted text-foreground border-gray-200';
   }
 };
 
@@ -203,8 +203,8 @@ const TeamLogo: React.FC<{
   };
 
   return (
-    <div className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center`}>
-      <span className="text-gray-500 dark:text-gray-400 font-bold text-sm">
+    <div className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-muted dark:bg-muted flex items-center justify-center`}>
+      <span className="text-muted-foreground dark:text-muted-foreground font-bold text-sm">
         {team.name.substring(0, 2).toUpperCase()}
       </span>
     </div>
@@ -236,7 +236,7 @@ const RecentFormIndicator: React.FC<{
   form: TeamStats['recentForm'] 
 }> = ({ form }) => (
   <div className="flex items-center space-x-1">
-    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">Form:</span>
+    <span className="text-xs font-medium text-muted-foreground dark:text-muted-foreground mr-1">Form:</span>
     {form.map((match, index) => (
       <div
         key={index}
@@ -257,7 +257,7 @@ const PlayerAvatar: React.FC<{
   };
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center`}>
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted dark:bg-muted flex items-center justify-center`}>
       {player.avatar ? (
         <img 
           src={player.avatar} 
@@ -265,7 +265,7 @@ const PlayerAvatar: React.FC<{
           className="w-full h-full object-cover"
         />
       ) : (
-        <span className="text-gray-500 dark:text-gray-400 font-medium text-xs">
+        <span className="text-muted-foreground dark:text-muted-foreground font-medium text-xs">
           {player.name.charAt(0).toUpperCase()}
         </span>
       )}
@@ -309,9 +309,10 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 cursor-pointer
+      data-testid="team-card"
+      className={`bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-3 cursor-pointer
         hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200
-        ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : ''}
+        ${isSelected ? 'ring-2 ring-primary border-primary' : ''}
         ${className}`}
       onClick={handleSelect}
     >
@@ -320,9 +321,9 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           <TeamLogo team={team} size="small" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <h3 className="font-medium text-gray-900 dark:text-white truncate">
+              <h3 className="font-medium text-foreground dark:text-foreground truncate">
                 {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-gray-500 dark:text-gray-400">{team.name}</span>
+                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
               </h3>
               <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
             </div>
@@ -332,7 +333,7 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
                   <PlayerAvatar key={player.id} player={player} size="small" />
                 ))}
                 {roster.players.length > 3 && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-muted-foreground dark:text-muted-foreground">
                     +{roster.players.length - 3}
                   </span>
                 )}
@@ -347,7 +348,7 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
               <div className={`text-sm font-medium ${getWinRateColor(stats.winRate)}`}>
                 {stats.winRate.toFixed(1)}%
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-muted-foreground dark:text-muted-foreground">
                 WR
               </div>
             </div>
@@ -357,7 +358,7 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
             {onViewDetails && (
               <button
                 onClick={handleViewDetails}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
                 aria-label="View team details"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,7 +370,7 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
             {onActivate && (
               <button
                 onClick={handleActivate}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
                 aria-label="Activate team"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,7 +381,7 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
             {onHide && (
               <button
                 onClick={handleHide}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
                 aria-label="Hide team"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -433,9 +434,10 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-pointer
+      data-testid="team-card"
+      className={`bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-4 cursor-pointer
         hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200
-        ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : ''}
+        ${isSelected ? 'ring-2 ring-primary border-primary' : ''}
         ${isActive ? 'ring-2 ring-green-500 border-green-500' : ''}
         ${className}`}
       onClick={handleSelect}
@@ -445,13 +447,13 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           <TeamLogo team={team} size="medium" />
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-gray-900 dark:text-white">
+              <h3 className="font-semibold text-foreground dark:text-foreground">
                 {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-gray-500 dark:text-gray-400">{team.name}</span>
+                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
               </h3>
               <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               {team.leagueName}
             </p>
           </div>
@@ -461,7 +463,7 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           {onActivate && !isActive && (
             <button
               onClick={handleActivate}
-              className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-success dark:hover:text-green-400 hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="Activate team"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,7 +474,7 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           {onViewDetails && (
             <button
               onClick={handleViewDetails}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="View team details"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -484,7 +486,7 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           {onHide && (
             <button
               onClick={handleHide}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="Hide team"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,35 +503,35 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
             <div className={`text-lg font-semibold ${getWinRateColor(stats.winRate)}`}>
               {stats.winRate.toFixed(1)}%
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Win Rate</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Win Rate</div>
           </div>
           
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="text-lg font-semibold text-foreground dark:text-foreground">
               {stats.wins}-{stats.losses}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">W-L</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">W-L</div>
           </div>
           
           <div className="text-center">
             <div className={`text-lg font-semibold ${getRankingColor(stats.ranking.position)}`}>
               #{stats.ranking.position}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Rank</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Rank</div>
           </div>
         </div>
       )}
 
       {showRoster && (
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Roster</h4>
+          <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">Roster</h4>
           <div className="flex items-center space-x-2">
             {roster.players.map((player) => (
               <div key={player.id} className="flex items-center space-x-1">
                 <PlayerAvatar player={player} size="medium" />
                 <div className="text-xs">
-                  <div className="font-medium text-gray-900 dark:text-white">{player.name}</div>
-                  <div className="text-gray-500 dark:text-gray-400">{player.role}</div>
+                  <div className="font-medium text-foreground dark:text-foreground">{player.name}</div>
+                  <div className="text-muted-foreground dark:text-muted-foreground">{player.role}</div>
                 </div>
               </div>
             ))}
@@ -538,12 +540,12 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
       )}
 
       {showSchedule && schedule.nextMatch && (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+        <div className="border-t border-border dark:border-border pt-3">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Next: <span className="font-medium text-gray-900 dark:text-white">vs {schedule.nextMatch.opponent}</span>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+              Next: <span className="font-medium text-foreground dark:text-foreground">vs {schedule.nextMatch.opponent}</span>
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
               {schedule.nextMatch.timeUntil}
             </div>
           </div>
@@ -595,9 +597,10 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 cursor-pointer
+      data-testid="team-card"
+      className={`bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-6 cursor-pointer
         hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200
-        ${isSelected ? 'ring-2 ring-blue-500 border-blue-500' : ''}
+        ${isSelected ? 'ring-2 ring-primary border-primary' : ''}
         ${isActive ? 'ring-2 ring-green-500 border-green-500' : ''}
         ${className}`}
       onClick={handleSelect}
@@ -607,17 +610,17 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
           <TeamLogo team={team} size="large" />
           <div>
             <div className="flex items-center space-x-2 mb-1">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-bold text-foreground dark:text-foreground">
                 {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-gray-500 dark:text-gray-400">{team.name}</span>
+                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
               </h3>
               <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               {team.leagueName}
             </p>
             <div className="flex items-center space-x-2 mt-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-muted-foreground dark:text-muted-foreground">
                 Current streak: 
               </span>
               <div className="flex items-center space-x-1">
@@ -634,7 +637,7 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
           {onActivate && !isActive && (
             <button
               onClick={handleActivate}
-              className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-success dark:hover:text-green-400 hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="Activate team"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,7 +648,7 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
           {onViewDetails && (
             <button
               onClick={handleViewDetails}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="View team details"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -657,7 +660,7 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
           {onHide && (
             <button
               onClick={handleHide}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
               aria-label="Hide team"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -670,45 +673,45 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
 
       {showStats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
             <div className={`text-2xl font-bold ${getWinRateColor(stats.winRate)}`}>
               {stats.winRate.toFixed(1)}%
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Win Rate</div>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Win Rate</div>
           </div>
           
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+            <div className="text-2xl font-bold text-foreground dark:text-foreground">
               {stats.wins}-{stats.losses}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">W-L Record</div>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">W-L Record</div>
           </div>
           
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
             <div className={`text-2xl font-bold ${getRankingColor(stats.ranking.position)}`}>
               #{stats.ranking.position}
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Ranking</div>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Ranking</div>
           </div>
           
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+            <div className="text-2xl font-bold text-foreground dark:text-foreground">
               <span data-testid="team-points">{stats.ranking.points}</span>
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Points</div>
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Points</div>
           </div>
         </div>
       )}
 
       {showRoster && (
         <div className="mb-6">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Roster</h4>
+          <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Roster</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {roster.players.map((player) => (
-              <div key={player.id} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div key={player.id} className="flex items-center space-x-3 p-2 bg-muted dark:bg-muted rounded-lg">
                 <PlayerAvatar player={player} size="medium" />
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">
+                  <div className="font-medium text-foreground dark:text-foreground">
                     {player.name}
                     {roster.captain?.id === player.id && (
                       <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
@@ -716,23 +719,23 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{player.role}</div>
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">{player.role}</div>
                 </div>
               </div>
             ))}
           </div>
           
           {roster.coach && (
-            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="mt-3 p-2 bg-accent dark:bg-accent rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center">
-                  <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">C</span>
+                  <span className="text-primary dark:text-blue-400 font-medium text-sm">C</span>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">
+                  <div className="font-medium text-foreground dark:text-foreground">
                     {roster.coach.name}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Coach</div>
+                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">Coach</div>
                 </div>
               </div>
             </div>
@@ -741,20 +744,20 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
       )}
 
       {showSchedule && (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Upcoming Matches</h4>
+        <div className="border-t border-border dark:border-border pt-4">
+          <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Upcoming Matches</h4>
           <div className="space-y-2">
             {schedule.upcomingMatches.slice(0, 3).map((match) => (
-              <div key={match.matchId} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+              <div key={match.matchId} className="flex items-center justify-between p-2 bg-muted dark:bg-muted rounded">
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 text-xs rounded-full ${getImportanceColor(match.importance)}`}>
                     {match.importance}
                   </span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-foreground dark:text-foreground">
                     vs {match.opponent}
                   </span>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
                   {formatDate(match.date)}
                 </div>
               </div>
@@ -763,7 +766,7 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
         </div>
       )}
 
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-4 pt-4 border-t border-border dark:border-border">
         <RecentFormIndicator form={stats.recentForm} />
       </div>
     </div>
@@ -832,20 +835,20 @@ export const TeamCardSkeleton: React.FC<{
   layout?: 'compact' | 'default' | 'detailed';
   className?: string;
 }> = ({ layout = 'default', className = '' }) => {
-  const baseClasses = `bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 animate-pulse ${className}`;
+  const baseClasses = `bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border animate-pulse ${className}`;
 
   if (layout === 'compact') {
     return (
       <div className={`${baseClasses} p-3`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div className="w-8 h-8 bg-muted dark:bg-muted rounded-lg"></div>
             <div className="space-y-1">
-              <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="w-24 h-4 bg-muted dark:bg-muted rounded"></div>
+              <div className="w-16 h-3 bg-muted dark:bg-muted rounded"></div>
             </div>
           </div>
-          <div className="w-12 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-12 h-4 bg-muted dark:bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -856,26 +859,26 @@ export const TeamCardSkeleton: React.FC<{
       <div className={`${baseClasses} p-6`}>
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            <div className="w-16 h-16 bg-muted dark:bg-muted rounded-lg"></div>
             <div className="space-y-2">
-              <div className="w-32 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="w-28 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="w-32 h-6 bg-muted dark:bg-muted rounded"></div>
+              <div className="w-24 h-4 bg-muted dark:bg-muted rounded"></div>
+              <div className="w-28 h-4 bg-muted dark:bg-muted rounded"></div>
             </div>
           </div>
-          <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-6 h-6 bg-muted dark:bg-muted rounded"></div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="w-12 h-6 bg-gray-200 dark:bg-gray-600 rounded mx-auto mb-2"></div>
-              <div className="w-16 h-4 bg-gray-200 dark:bg-gray-600 rounded mx-auto"></div>
+            <div key={i} className="p-3 bg-muted dark:bg-muted rounded-lg">
+              <div className="w-12 h-6 bg-muted dark:bg-muted rounded mx-auto mb-2"></div>
+              <div className="w-16 h-4 bg-muted dark:bg-muted rounded mx-auto"></div>
             </div>
           ))}
         </div>
         <div className="space-y-3">
-          <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="w-full h-4 bg-muted dark:bg-muted rounded"></div>
+          <div className="w-3/4 h-4 bg-muted dark:bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -885,25 +888,25 @@ export const TeamCardSkeleton: React.FC<{
     <div className={`${baseClasses} p-4`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          <div className="w-12 h-12 bg-muted dark:bg-muted rounded-lg"></div>
           <div className="space-y-2">
-            <div className="w-28 h-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="w-28 h-5 bg-muted dark:bg-muted rounded"></div>
+            <div className="w-20 h-4 bg-muted dark:bg-muted rounded"></div>
           </div>
         </div>
-        <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="w-6 h-6 bg-muted dark:bg-muted rounded"></div>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="text-center space-y-1">
-            <div className="w-12 h-5 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
-            <div className="w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div>
+            <div className="w-12 h-5 bg-muted dark:bg-muted rounded mx-auto"></div>
+            <div className="w-16 h-3 bg-muted dark:bg-muted rounded mx-auto"></div>
           </div>
         ))}
       </div>
       <div className="space-y-2">
-        <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        <div className="w-2/3 h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="w-full h-3 bg-muted dark:bg-muted rounded"></div>
+        <div className="w-2/3 h-3 bg-muted dark:bg-muted rounded"></div>
       </div>
     </div>
   );
@@ -945,7 +948,7 @@ export const TeamCardList: React.FC<{
 }) => {
   if (!teams || teams.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-muted-foreground dark:text-muted-foreground">
         No teams found
       </div>
     );

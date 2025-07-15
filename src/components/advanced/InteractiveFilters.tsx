@@ -34,7 +34,7 @@ const TextFilter: React.FC<{
   onChange: (value: string) => void;
 }> = ({ config, value, onChange }) => (
   <div className="space-y-2">
-    <label htmlFor={config.key} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label htmlFor={config.key} className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
       {config.label}
     </label>
     <input
@@ -43,7 +43,7 @@ const TextFilter: React.FC<{
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={config.placeholder}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+      className="w-full px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
     />
   </div>
 );
@@ -55,14 +55,14 @@ const SelectFilter: React.FC<{
   onChange: (value: string) => void;
 }> = ({ config, value, onChange }) => (
   <div className="space-y-2">
-    <label htmlFor={config.key} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label htmlFor={config.key} className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
       {config.label}
     </label>
     <select
       id={config.key}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+      className="w-full px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
     >
       <option value="">All {config.label}</option>
       {config.options?.map((option) => (
@@ -93,7 +93,7 @@ const MultiSelectFilter: React.FC<{
   return (
     <div className="space-y-2">
       <fieldset aria-labelledby={legendId} className="border-0 p-0 m-0">
-        <legend id={legendId} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <legend id={legendId} className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
           {config.label}
         </legend>
         <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -106,9 +106,9 @@ const MultiSelectFilter: React.FC<{
                   type="checkbox"
                   checked={value.includes(option.value)}
                   onChange={() => handleToggle(option.value)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                  className="rounded border-border text-primary focus:ring-primary dark:border-border dark:bg-card"
                 />
-                <label htmlFor={checkboxId} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor={checkboxId} className="ml-2 text-sm text-muted-foreground dark:text-muted-foreground">
                   {option.label} {option.count && `(${option.count})`}
                 </label>
               </div>
@@ -127,7 +127,7 @@ const DateRangeFilter: React.FC<{
   onChange: (value: { start: string; end: string }) => void;
 }> = ({ config, value, onChange }) => (
   <div className="space-y-2">
-    <label htmlFor={`${config.key}-start`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label htmlFor={`${config.key}-start`} className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
       {config.label}
     </label>
     <div className="grid grid-cols-2 gap-2">
@@ -136,14 +136,14 @@ const DateRangeFilter: React.FC<{
         type="date"
         value={value.start}
         onChange={(e) => onChange({ ...value, start: e.target.value })}
-        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        className="px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
       />
       <input
         id={`${config.key}-end`}
         type="date"
         value={value.end}
         onChange={(e) => onChange({ ...value, end: e.target.value })}
-        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        className="px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
       />
     </div>
   </div>
@@ -156,7 +156,7 @@ const NumberRangeFilter: React.FC<{
   onChange: (value: { min: number; max: number }) => void;
 }> = ({ config, value, onChange }) => (
   <div className="space-y-2">
-    <label htmlFor={`${config.key}-min`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label htmlFor={`${config.key}-min`} className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
       {config.label}
     </label>
     <div className="grid grid-cols-2 gap-2">
@@ -168,7 +168,7 @@ const NumberRangeFilter: React.FC<{
         onChange={(e) => onChange({ ...value, min: e.target.value ? Number(e.target.value) : 0 })}
         min={config.min}
         max={config.max}
-        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        className="px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
       />
       <input
         id={`${config.key}-max`}
@@ -178,7 +178,7 @@ const NumberRangeFilter: React.FC<{
         onChange={(e) => onChange({ ...value, max: e.target.value ? Number(e.target.value) : 0 })}
         min={config.min}
         max={config.max}
-        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        className="px-3 py-2 border border-border dark:border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-blue-500 dark:bg-card dark:text-foreground"
       />
     </div>
   </div>
@@ -320,13 +320,13 @@ export const InteractiveFilters: React.FC<InteractiveFiltersProps> = ({
   const hasActiveFilters = Object.keys(filterValues).length > 0;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+    <div className="bg-card dark:bg-card rounded-lg shadow-md p-4">
       <div className={`flex items-center justify-between mb-4 ${className}`}>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Filters</h3>
+        <h3 className="text-lg font-medium text-foreground dark:text-foreground">Filters</h3>
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-sm text-primary hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Clear All
           </button>

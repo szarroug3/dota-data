@@ -180,7 +180,7 @@ const expectInitialConfigState = () => {
   expect(screen.getByTestId('ui-density')).toHaveTextContent('comfortable');
   expect(screen.getByTestId('preferred-site')).toHaveTextContent('opendota');
   expect(screen.getByTestId('auto-refresh')).toHaveTextContent('true');
-  expect(screen.getByTestId('sidebar-collapsed')).toHaveTextContent('false');
+  expect(screen.getByTestId('sidebar-collapsed')).toHaveTextContent('true');
   expect(screen.getByTestId('debug-mode')).toHaveTextContent('false');
 };
 
@@ -264,7 +264,7 @@ describe('ConfigProvider', () => {
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'dota-data-config') {
+        if (key === 'dota-scout-assistant-config') {
           return JSON.stringify(storedConfig);
         }
         return null;
@@ -427,7 +427,7 @@ describe('ConfigProvider', () => {
       
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-          'dota-data-config',
+          'dota-scout-assistant-config',
           expect.stringContaining('"theme":"dark"')
         );
       });
@@ -441,7 +441,7 @@ describe('ConfigProvider', () => {
       
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-          'dota-data-preferences',
+          'dota-scout-assistant-preferences',
           expect.stringContaining('"defaultView":"recent"')
         );
       });

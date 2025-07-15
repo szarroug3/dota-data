@@ -363,36 +363,29 @@ export interface DotabuffConfig {
  * Dotabuff Team response
  */
 export interface DotabuffTeam {
-  teamName: string;
-  matches: {
-    [leagueId: string]: DotabuffMatchSummary;
-  };
+  name: string;
+  id: string;
+  matches: DotabuffMatchSummary[];
 }
 
 /**
  * Dotabuff Match Summary
  */
 export interface DotabuffMatchSummary {
-  match_id: number;
-  start_time: number;
+  matchId: string;
+  result: 'won' | 'lost';
   duration: number;
-  radiant_name: string;
-  dire_name: string;
-  radiant_win: boolean;
-  radiant_score: number;
-  dire_score: number;
-  leagueid: number;
+  opponentName: string;
+  leagueId: string;
+  startTime: number;
 }
 
 /**
  * Dotabuff League response
  */
 export interface DotabuffLeague {
-  league_id: number;
+  id: string;
   name: string;
-  description?: string;
-  tournament_url?: string;
-  matches?: DotabuffMatchSummary[];
 }
 
 /**

@@ -9,10 +9,18 @@ export const SidebarToggle: React.FC<SidebarToggleProps> = ({
   isCollapsed,
   onToggle,
 }) => {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onToggle();
+    }
+  };
+
   return (
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-center p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+      onKeyDown={handleKeyDown}
+      className="w-full flex items-center justify-center p-2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring rounded-lg"
       title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >

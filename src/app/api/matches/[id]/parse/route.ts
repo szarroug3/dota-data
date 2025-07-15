@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { RequestQueue } from '@/lib/request-queue';
 import { ApiErrorResponse } from '@/types/api';
+
+import { RequestQueue } from '@/lib/request-queue';
 import { QueueEnqueueResult, QueueJob } from '@/types/queue';
 
 /**

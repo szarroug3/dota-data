@@ -57,7 +57,7 @@ export default defineConfig([
     rules: {
       // TypeScript rules
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^$', varsIgnorePattern: '^$' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-empty-object-type': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
       '@typescript-eslint/no-restricted-types': [

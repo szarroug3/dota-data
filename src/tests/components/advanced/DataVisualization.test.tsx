@@ -24,8 +24,8 @@ const mockBarData: BarChartData = {
 const mockPieData: PieChartData = {
   title: 'Win Rate Distribution',
   data: [
-    { label: 'Wins', value: 60, color: '#10B981' },
-    { label: 'Losses', value: 40, color: '#EF4444' }
+    { label: 'Wins', value: 60, color: 'hsl(var(--chart-1))' },
+    { label: 'Losses', value: 40, color: 'hsl(var(--destructive))' }
   ]
 };
 
@@ -242,7 +242,8 @@ describe('DataVisualization', () => {
       );
 
       const container = screen.getByRole('img');
-      expect(container).toHaveClass('dark:bg-gray-800');
+      expect(container).toHaveClass('bg-card');
+      expect(container).toHaveClass('text-card-foreground');
     });
   });
 }); 

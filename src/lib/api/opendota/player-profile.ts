@@ -2,9 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { CacheService } from '@/lib/cache-service';
-import { RateLimiter } from '@/lib/rate-limiter';
 import { CacheValue } from '@/types/cache';
 import { OpenDotaPlayer } from '@/types/external-apis';
+
+import { RateLimiter } from '@/lib/rate-limiter';
 
 /**
  * Fetches a Dota 2 player profile from OpenDota API, with cache, rate limiting, and mock mode support.

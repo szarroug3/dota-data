@@ -16,13 +16,6 @@
  * - Arrays of primitive types
  * - Objects with string keys and primitive values
  */
-export type CacheValue = 
-  | string
-  | number
-  | boolean
-  | null
-  | Array<string | number | boolean | null>
-  | Record<string, string | number | boolean | null | Array<string | number | boolean | null>>;
 
 // ============================================================================
 // CACHE BACKEND TYPES
@@ -86,11 +79,6 @@ export interface CacheBackend {
    * Clear all cache data
    */
   clear(): Promise<void>;
-
-  /**
-   * Check if the backend is healthy
-   */
-  isHealthy(): Promise<boolean>;
 }
 
 /**

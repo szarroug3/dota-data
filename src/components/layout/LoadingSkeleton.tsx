@@ -15,11 +15,11 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
     switch (type) {
       case 'card':
         return (
-          <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`} data-testid="loading-skeleton">
+          <div className={`bg-card dark:bg-card rounded-lg border border-border dark:border-border p-4 ${className}`} data-testid="loading-skeleton">
             <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              <div className="h-4 bg-muted dark:bg-muted rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-muted dark:bg-muted rounded w-1/2 mb-2"></div>
+              <div className="h-3 bg-muted dark:bg-muted rounded w-2/3"></div>
             </div>
           </div>
         );
@@ -29,7 +29,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
           <div className={`space-y-3 ${className}`} data-testid="loading-skeleton">
             {Array.from({ length: lines }).map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-muted dark:bg-muted rounded w-full"></div>
               </div>
             ))}
           </div>
@@ -40,10 +40,10 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
           <div className={`space-y-2 ${className}`} data-testid="loading-skeleton">
             {Array.from({ length: lines }).map((_, index) => (
               <div key={index} className="animate-pulse flex space-x-4">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+                <div className="h-4 bg-muted dark:bg-muted rounded w-1/4"></div>
+                <div className="h-4 bg-muted dark:bg-muted rounded w-1/3"></div>
+                <div className="h-4 bg-muted dark:bg-muted rounded w-1/4"></div>
+                <div className="h-4 bg-muted dark:bg-muted rounded w-1/6"></div>
               </div>
             ))}
           </div>
@@ -52,7 +52,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
       case 'avatar':
         return (
           <div className={`animate-pulse ${className}`} data-testid="loading-skeleton">
-            <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className="h-10 w-10 bg-muted dark:bg-muted rounded-full"></div>
           </div>
         );
 
@@ -62,7 +62,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
           <div className={`space-y-2 ${className}`} data-testid="loading-skeleton">
             {Array.from({ length: lines }).map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className={`h-4 bg-gray-200 dark:bg-gray-700 rounded ${
+                <div className={`h-4 bg-muted dark:bg-muted rounded ${
                   index === lines - 1 ? 'w-3/4' : 'w-full'
                 }`}></div>
               </div>

@@ -1,0 +1,60 @@
+# Page snapshot
+
+```yaml
+- button "Open menu"
+- navigation:
+  - button "📊 Dashboard"
+  - button "👥 Team Management"
+  - button "⚔️ Match History"
+  - button "👤 Player Stats"
+  - button "📈 Team Analysis"
+  - button "🎯 Draft Suggestions"
+- button "👥 Teams ▼"
+- button "Team Alpha"
+- button "Team Beta"
+- button "🏆 Leagues ▼"
+- text: Division 1 Division 2
+- heading "External Resources" [level=3]
+- button "🔴 Dotabuff"
+- button "✓"
+- paragraph: Dota 2 statistics and analysis
+- button "🟢 OpenDota"
+- button "Set"
+- paragraph: Open source Dota 2 statistics
+- button "🛡️ Dota2ProTracker"
+- paragraph: Professional player statistics
+- button "🏰 Stratz"
+- paragraph: Advanced Dota 2 analytics
+- heading "Settings" [level=3]
+- text: Theme
+- button "☀️ Light Mode Switch to Dark"
+- text: Preferred Site
+- button "🔴 Dotabuff \\u2713"
+- button "🟢 OpenDota"
+- banner:
+  - heading "Dashboard" [level=1]
+  - paragraph: Team performance overview and quick actions
+- main:
+  - heading "Select a Team" [level=1]
+  - paragraph: Choose a team from the sidebar to view their dashboard and performance data.
+  - heading "Welcome to Dota Scout Assistant Analysis" [level=1]
+  - paragraph: Track your team's performance, analyze matches, and get draft suggestions
+  - heading "Get Started" [level=2]
+  - paragraph: Add your first team to start analyzing performance, tracking matches, and getting draft suggestions.
+  - button "Add Your First Team"
+  - text: 📊
+  - heading "Match History" [level=3]
+  - paragraph: Analyze your team's match performance with detailed statistics and insights.
+  - text: 👤
+  - heading "Player Performance" [level=3]
+  - paragraph: Track individual player statistics and hero performance across matches.
+  - text: 🎯
+  - heading "Draft Suggestions" [level=3]
+  - paragraph: Get meta insights and draft recommendations based on current trends.
+  - text: 📈
+  - heading "Team Analytics" [level=3]
+  - paragraph: Comprehensive team performance analytics and trend analysis.
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+```

@@ -6,9 +6,9 @@ interface DetailLevelControlsProps {
 }
 
 export const DetailLevelControls: React.FC<DetailLevelControlsProps> = ({ currentLevel, onLevelChange }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+  <div className="bg-card dark:bg-card rounded-lg shadow-sm border border-border dark:border-border p-4">
     <div className="flex items-center justify-between">
-      <h3 className="font-medium text-gray-900 dark:text-white">Detail Level</h3>
+      <h3 className="font-medium text-foreground dark:text-foreground">Detail Level</h3>
       <div className="flex items-center space-x-2">
         {(['basic', 'advanced', 'expert'] as const).map((levelOption) => (
           <button
@@ -17,7 +17,7 @@ export const DetailLevelControls: React.FC<DetailLevelControlsProps> = ({ curren
             className={`px-3 py-1 text-sm rounded-full transition-colors ${
               currentLevel === levelOption
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'bg-muted dark:bg-muted text-muted-foreground dark:text-muted-foreground hover:bg-accent dark:hover:bg-accent'
             }`}
           >
             {levelOption.charAt(0).toUpperCase() + levelOption.slice(1)}

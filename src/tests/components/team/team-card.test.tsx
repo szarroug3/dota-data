@@ -170,7 +170,7 @@ describe('TeamCard', () => {
         />
       );
 
-      const cardElement = screen.getAllByText('Team Alpha')[0].closest('.bg-white');
+      const cardElement = screen.getAllByText('Team Alpha')[0].closest('[data-testid="team-card"]');
       expect(cardElement).toHaveClass('custom-team-card');
     });
 

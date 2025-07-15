@@ -9,9 +9,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Dota Data API',
+      title: 'Dota Scout Assistant API',
       version: '1.0.0',
-      description: 'API documentation for Dota Data service routes.',
+      description: 'API documentation for Dota Scout Assistant service routes.',
     },
     servers: [{ url: '/api' }],
     components: {

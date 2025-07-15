@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 
 import { PlayerStatsPage } from '@/components/player-stats/player-stats-page';
 import { usePlayerStats } from '@/components/player-stats/player-stats-page/usePlayerStats';
+import { renderWithProviders } from '@/tests/utils/test-utils';
 
 jest.mock('@/components/player-stats/player-stats-page/usePlayerStats');
 const mockUsePlayerStats = jest.mocked(usePlayerStats);
@@ -71,7 +72,7 @@ describe('PlayerStatsPage', () => {
   });
 
   it('should render player stats page', () => {
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(screen.getByText('Player Statistics for Team Alpha')).toBeInTheDocument();
   });
 
@@ -79,7 +80,7 @@ describe('PlayerStatsPage', () => {
     mockUsePlayerStats.mockReturnValue(createMockUsePlayerStatsReturn({
       isLoadingPlayers: true
     }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
@@ -87,7 +88,7 @@ describe('PlayerStatsPage', () => {
     mockUsePlayerStats.mockReturnValue(createMockUsePlayerStatsReturn({
       playersError: 'Failed to load players'
     }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(screen.getByText('Failed to load players')).toBeInTheDocument();
   });
 
@@ -95,7 +96,7 @@ describe('PlayerStatsPage', () => {
     mockUsePlayerStats.mockReturnValue(createMockUsePlayerStatsReturn({
       teams: []
     }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(screen.getByText('No Teams Added')).toBeInTheDocument();
   });
 
@@ -104,12 +105,12 @@ describe('PlayerStatsPage', () => {
       activeTeamId: null,
       activeTeam: null
     }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(screen.getByText('Select a Team')).toBeInTheDocument();
   });
 
   it('should render player stats with controls', () => {
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     expect(screen.getByText('Player Statistics for Team Alpha')).toBeInTheDocument();
     expect(screen.getByLabelText('View:')).toBeInTheDocument();
     expect(screen.getByLabelText('Sort by:')).toBeInTheDocument();
@@ -118,7 +119,7 @@ describe('PlayerStatsPage', () => {
   it('should handle view type changes', () => {
     const setViewType = jest.fn();
     mockUsePlayerStats.mockReturnValue(createMockUsePlayerStatsReturn({ setViewType }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     const viewSelect = screen.getByLabelText('View:');
     expect(viewSelect).toHaveValue('overview');
     fireEvent.change(viewSelect, { target: { value: 'detailed' } });
@@ -128,7 +129,7 @@ describe('PlayerStatsPage', () => {
   it('should handle sort changes', () => {
     const handleSortChange = jest.fn();
     mockUsePlayerStats.mockReturnValue(createMockUsePlayerStatsReturn({ handleSortChange }));
-    render(<PlayerStatsPage />);
+    renderWithProviders(<PlayerStatsPage />);
     const sortSelect = screen.getByLabelText('Sort by:');
     expect(sortSelect).toHaveValue('winRate');
     fireEvent.change(sortSelect, { target: { value: 'kda' } });

@@ -54,12 +54,12 @@ export const MatchDetails: React.FC<MatchDetailsProps> = ({
     return (
       <div className={`bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg p-6 ${className}`}>
         <div className="flex items-center space-x-2">
-          <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-destructive dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span className="text-red-800 dark:text-red-200 font-medium">Error loading match details</span>
+          <span className="text-destructive dark:text-destructive font-medium">Error loading match details</span>
         </div>
-        <p className="text-red-700 dark:text-red-300 mt-2">{error}</p>
+        <p className="text-destructive dark:text-destructive mt-2">{error}</p>
       </div>
     );
   }

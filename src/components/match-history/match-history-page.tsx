@@ -5,7 +5,6 @@ import React, { Suspense, useCallback, useMemo, useState } from 'react';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { Header } from '@/components/layout/Header';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { useMatchData } from '@/hooks/use-match-data';
 import { useTeamData } from '@/hooks/use-team-data';
 import { Match } from '@/types/contexts/team-context-value';
@@ -97,10 +96,10 @@ const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ ty
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
       <div className="text-center">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-xl font-semibold text-foreground dark:text-foreground mb-4">
           {title}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted-foreground dark:text-muted-foreground mb-6">
           {description}
         </p>
         {action && (
@@ -116,10 +115,10 @@ const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ ty
 const ErrorContent: React.FC<{ error: string }> = ({ error }) => (
   <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
     <div className="text-center">
-      <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">
+      <h3 className="text-xl font-semibold text-destructive dark:text-red-400 mb-4">
         Error Loading Match History
       </h3>
-      <p className="text-gray-600 dark:text-gray-400">
+      <p className="text-muted-foreground dark:text-muted-foreground">
         {error}
       </p>
     </div>
@@ -134,18 +133,18 @@ const FiltersSection: React.FC<{
   onSortChange: (newSortBy: 'date' | 'duration' | 'opponent') => void;
   onSortDirectionChange: () => void;
 }> = ({ filters, sortBy, sortDirection, onFilterChange, onSortChange, onSortDirectionChange }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+  <div className="bg-card dark:bg-card rounded-lg shadow-md p-6 mb-6">
     <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label htmlFor="dateRange" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="dateRange" className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
             Date Range
           </label>
           <select
             id="dateRange"
             value={filters.dateRange}
             onChange={(e) => onFilterChange({ dateRange: Number(e.target.value) })}
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full p-2 border border-border dark:border-border rounded-md bg-card dark:bg-card text-foreground dark:text-foreground"
           >
             <option value={0}>All Time</option>
             <option value={7}>Last 7 Days</option>
@@ -155,14 +154,14 @@ const FiltersSection: React.FC<{
         </div>
 
         <div>
-          <label htmlFor="resultFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="resultFilter" className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
             Result
           </label>
           <select
             id="resultFilter"
             value={filters.result}
             onChange={(e) => onFilterChange({ result: e.target.value as 'all' | 'win' | 'loss' })}
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full p-2 border border-border dark:border-border rounded-md bg-card dark:bg-card text-foreground dark:text-foreground"
           >
             <option value="all">All Results</option>
             <option value="win">Wins Only</option>
@@ -171,7 +170,7 @@ const FiltersSection: React.FC<{
         </div>
 
         <div>
-          <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="sortBy" className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">
             Sort By
           </label>
           <div className="flex gap-2">
@@ -179,7 +178,7 @@ const FiltersSection: React.FC<{
               id="sortBy"
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value as 'date' | 'duration' | 'opponent')}
-              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="flex-1 p-2 border border-border dark:border-border rounded-md bg-card dark:bg-card text-foreground dark:text-foreground"
             >
               <option value="date">Date</option>
               <option value="duration">Duration</option>
@@ -187,7 +186,7 @@ const FiltersSection: React.FC<{
             </select>
             <button
               onClick={onSortDirectionChange}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600"
+              className="px-3 py-2 border border-border dark:border-border rounded-md bg-card dark:bg-card text-foreground dark:text-foreground hover:bg-accent dark:hover:bg-accent"
             >
               {sortDirection === 'asc' ? '↑' : '↓'}
             </button>
@@ -201,24 +200,24 @@ const FiltersSection: React.FC<{
 const MatchesList: React.FC<{
   matches: Match[];
 }> = ({ matches }) => (
-  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+  <div className="bg-card dark:bg-card rounded-lg shadow-md">
+    <div className="p-6 border-b border-border dark:border-border">
+      <h3 className="text-lg font-semibold text-foreground dark:text-foreground">
         Match History
       </h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-muted-foreground dark:text-muted-foreground">
         {matches.length} matches found
       </p>
     </div>
 
     {matches.length === 0 ? (
       <div className="p-6 text-center">
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           No matches found with the current filters.
         </p>
       </div>
     ) : (
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-border dark:divide-border">
         {matches.map((match) => (
           <MatchRow key={match.id} match={match} />
         ))}
@@ -328,21 +327,18 @@ export const MatchHistoryPage: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header 
-            title="Match History" 
-            subtitle="View and analyze team match performance over time"
-          />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-6xl mx-auto">
-              <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>
-                {renderContent()}
-              </Suspense>
-            </div>
-          </main>
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Match History" 
+          subtitle="View and analyze team match performance over time"
+        />
+        <main className="flex-1 overflow-y-auto p-6 bg-background text-foreground transition-colors duration-300">
+          <div className="max-w-6xl mx-auto">
+            <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>
+              {renderContent()}
+            </Suspense>
+          </div>
+        </main>
       </div>
     </ErrorBoundary>
   );
@@ -354,7 +350,7 @@ interface MatchRowProps {
 
 const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
   return (
-    <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+    <div className="p-4 hover:bg-accent dark:hover:bg-accent transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div
@@ -368,10 +364,10 @@ const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white">
+            <h4 className="font-medium text-foreground dark:text-foreground">
               vs {match.opponent}
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               {new Date(match.date).toLocaleDateString()} • {Math.floor(match.duration / 60)}m {match.duration % 60}s
             </p>
           </div>
@@ -379,17 +375,17 @@ const MatchRow: React.FC<MatchRowProps> = ({ match }) => {
 
         <div className="flex items-center space-x-6 text-sm">
           <div className="text-center">
-            <div className="font-semibold text-gray-900 dark:text-white">
+            <div className="font-semibold text-foreground dark:text-foreground">
               {match.heroes.length}
             </div>
-            <div className="text-gray-600 dark:text-gray-400">Heroes</div>
+            <div className="text-muted-foreground dark:text-muted-foreground">Heroes</div>
           </div>
           
           <div className="text-center">
-            <div className="font-semibold text-gray-900 dark:text-white">
+            <div className="font-semibold text-foreground dark:text-foreground">
               {match.players.length}
             </div>
-            <div className="text-gray-600 dark:text-gray-400">Players</div>
+            <div className="text-muted-foreground dark:text-muted-foreground">Players</div>
           </div>
         </div>
       </div>

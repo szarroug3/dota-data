@@ -5,7 +5,6 @@ import React, { Suspense } from 'react';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { Header } from '@/components/layout/Header';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
-import { Sidebar } from '@/components/layout/Sidebar';
 
 import { EmptyStateContent } from './player-stats-page/EmptyStateContent';
 import { ErrorContent } from './player-stats-page/ErrorContent';
@@ -61,21 +60,18 @@ export const PlayerStatsPage: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header 
-            title="Player Statistics" 
-            subtitle="Analyze individual player performance and statistics"
-          />
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-6xl mx-auto">
-              <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>
-                {renderContent()}
-              </Suspense>
-            </div>
-          </main>
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Player Statistics" 
+          subtitle="Analyze individual player performance and statistics"
+        />
+        <main className="flex-1 overflow-y-auto p-6 bg-background text-foreground transition-colors duration-300">
+          <div className="max-w-6xl mx-auto">
+            <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>
+              {renderContent()}
+            </Suspense>
+          </div>
+        </main>
       </div>
     </ErrorBoundary>
   );

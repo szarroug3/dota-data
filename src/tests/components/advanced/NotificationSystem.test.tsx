@@ -99,7 +99,7 @@ describe('NotificationSystem', () => {
 
       expect(screen.getByText('Info')).toBeInTheDocument();
       expect(screen.getByText('Here is some information.')).toBeInTheDocument();
-      expect(screen.getByRole('alert')).toHaveClass('bg-blue-50');
+      expect(screen.getByRole('alert')).toHaveClass('bg-accent');
     });
   });
 
@@ -114,7 +114,7 @@ describe('NotificationSystem', () => {
 
       const icon = screen.getByRole('alert').querySelector('svg');
       expect(icon).toBeInTheDocument();
-      expect(icon).toHaveClass('text-green-500');
+      expect(icon).toHaveClass('text-success');
     });
 
     it('should render error icon', () => {
@@ -127,7 +127,7 @@ describe('NotificationSystem', () => {
 
       const icon = screen.getByRole('alert').querySelector('svg');
       expect(icon).toBeInTheDocument();
-      expect(icon).toHaveClass('text-red-500');
+      expect(icon).toHaveClass('text-destructive');
     });
 
     it('should render warning icon', () => {
@@ -153,7 +153,7 @@ describe('NotificationSystem', () => {
 
       const icon = screen.getByRole('alert').querySelector('svg');
       expect(icon).toBeInTheDocument();
-      expect(icon).toHaveClass('text-blue-500');
+      expect(icon).toHaveClass('text-primary');
     });
   });
 

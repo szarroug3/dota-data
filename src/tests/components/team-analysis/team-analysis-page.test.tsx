@@ -1,22 +1,23 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import { TeamAnalysisPage } from '@/components/team-analysis/team-analysis-page';
 import { useMatchData } from '@/hooks/use-match-data';
 import { usePlayerData } from '@/hooks/use-player-data';
 import { useTeamData } from '@/hooks/use-team-data';
-import { Match, Player, Team } from '@/types/contexts/team-context-value';
+import { renderWithProviders } from '@/tests/utils/test-utils';
+import { Match, Team } from '@/types/contexts/team-context-value';
 
 // Mock the hooks
 jest.mock('@/hooks/use-team-data', () => ({
   useTeamData: jest.fn()
 }));
 
-jest.mock('@/hooks/use-player-data', () => ({
-  usePlayerData: jest.fn()
-}));
-
 jest.mock('@/hooks/use-match-data', () => ({
   useMatchData: jest.fn()
+}));
+
+jest.mock('@/hooks/use-player-data', () => ({
+  usePlayerData: jest.fn()
 }));
 
 // Mock data for team analysis tests
@@ -64,7 +65,7 @@ const mockMatches: Match[] = [
   }
 ];
 
-const mockPlayers: Player[] = [
+const mockPlayers: any[] = [ // Changed to any[] as Player type is removed
   {
     id: '1',
     name: 'Player One',
@@ -106,9 +107,30 @@ describe('Team Analysis Page', () => {
       clearErrors: jest.fn()
     });
 
+    (useMatchData as jest.Mock).mockReturnValue({
+      matches: mockMatches,
+      selectedMatch: null,
+      loading: false,
+      error: null,
+      filters: {
+        dateRange: { start: null, end: null },
+        result: 'all',
+        opponent: '',
+        heroes: [],
+        players: [],
+        duration: { min: null, max: null }
+      },
+      actions: {
+        selectMatch: jest.fn(),
+        setFilters: jest.fn(),
+        refreshMatches: jest.fn(),
+        clearError: jest.fn()
+      }
+    });
+
     (usePlayerData as jest.Mock).mockReturnValue({
-      players: mockPlayers,
-      filteredPlayers: mockPlayers,
+      players: [],
+      filteredPlayers: [],
       selectedPlayerId: null,
       selectedPlayer: null,
       playerStats: null,
@@ -132,40 +154,19 @@ describe('Team Analysis Page', () => {
       refreshPlayer: jest.fn(),
       clearErrors: jest.fn()
     });
-
-    (useMatchData as jest.Mock).mockReturnValue({
-      matches: mockMatches,
-      selectedMatch: null,
-      loading: false,
-      error: null,
-      filters: {
-        dateRange: { start: null, end: null },
-        result: 'all',
-        opponent: '',
-        heroes: [],
-        players: [],
-        duration: { min: null, max: null }
-      },
-      actions: {
-        selectMatch: jest.fn(),
-        setFilters: jest.fn(),
-        refreshMatches: jest.fn(),
-        clearError: jest.fn()
-      }
-    });
   });
 
   it('should render team analysis page', () => {
-    render(<TeamAnalysisPage />);
-    // There may be multiple headings with this name (sidebar and main content)
+    renderWithProviders(<TeamAnalysisPage />);
+    // There are multiple headings with "Team Analysis" (sidebar and main content)
     expect(screen.getAllByRole('heading', { name: 'Team Analysis' }).length).toBeGreaterThan(0);
   });
 
   it('should show loading state', () => {
     (useTeamData as jest.Mock).mockReturnValue({
-      teams: [],
-      activeTeamId: null,
-      activeTeam: null,
+      teams: mockTeams,
+      activeTeamId: '1',
+      activeTeam: mockTeams[0],
       teamData: null,
       teamStats: null,
       isLoadingTeams: true,
@@ -181,26 +182,9 @@ describe('Team Analysis Page', () => {
       updateTeam: jest.fn(),
       clearErrors: jest.fn()
     });
-    (useMatchData as jest.Mock).mockReturnValue({
-      error: null,
-      loading: false,
-      matches: [],
-      selectedMatch: null,
-      filters: {},
-      actions: {}
-    });
-    (usePlayerData as jest.Mock).mockReturnValue({
-      isLoadingPlayers: false,
-      isLoadingPlayerData: false,
-      isLoadingPlayerStats: false
-    });
 
-    render(<TeamAnalysisPage />);
-    
-    // Debug: Let's see what's actually being rendered
-    console.log('Rendered HTML:', document.body.innerHTML);
-    
-    expect(screen.getByTestId('loading-skeleton')).toBeInTheDocument();
+    renderWithProviders(<TeamAnalysisPage />);
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('should show error state', () => {
@@ -225,7 +209,7 @@ describe('Team Analysis Page', () => {
       }
     });
 
-    render(<TeamAnalysisPage />);
+    renderWithProviders(<TeamAnalysisPage />);
     expect(screen.getByText('Failed to load team data')).toBeInTheDocument();
   });
 
@@ -250,7 +234,7 @@ describe('Team Analysis Page', () => {
       clearErrors: jest.fn()
     });
 
-    render(<TeamAnalysisPage />);
+    renderWithProviders(<TeamAnalysisPage />);
     expect(screen.getByText('No Teams Added')).toBeInTheDocument();
   });
 
@@ -275,46 +259,20 @@ describe('Team Analysis Page', () => {
       clearErrors: jest.fn()
     });
 
-    render(<TeamAnalysisPage />);
+    renderWithProviders(<TeamAnalysisPage />);
     expect(screen.getByText('Select a Team')).toBeInTheDocument();
   });
 
   it('should handle match loading state', () => {
-    (useTeamData as jest.Mock).mockReturnValue({
-      teams: [],
-      activeTeamId: null,
-      activeTeam: null,
-      teamData: null,
-      teamStats: null,
-      isLoadingTeams: false,
-      isLoadingTeamData: false,
-      isLoadingTeamStats: false,
-      teamsError: null,
-      teamDataError: null,
-      teamStatsError: null,
-      setActiveTeam: jest.fn(),
-      addTeam: jest.fn(),
-      removeTeam: jest.fn(),
-      refreshTeam: jest.fn(),
-      updateTeam: jest.fn(),
-      clearErrors: jest.fn()
-    });
     (useMatchData as jest.Mock).mockReturnValue({
-      error: null,
-      loading: true,
       matches: [],
       selectedMatch: null,
-      filters: {},
-      actions: {}
-    });
-    (usePlayerData as jest.Mock).mockReturnValue({
-      isLoadingPlayers: false,
-      isLoadingPlayerData: false,
-      isLoadingPlayerStats: false
+      loading: true,
+      error: null
     });
 
-    render(<TeamAnalysisPage />);
-    expect(screen.getByTestId('loading-skeleton')).toBeInTheDocument();
+    renderWithProviders(<TeamAnalysisPage />);
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   it('should handle match error state', () => {
@@ -322,24 +280,10 @@ describe('Team Analysis Page', () => {
       matches: [],
       selectedMatch: null,
       loading: false,
-      error: 'Failed to load matches',
-      filters: {
-        dateRange: { start: null, end: null },
-        result: 'all',
-        opponent: '',
-        heroes: [],
-        players: [],
-        duration: { min: null, max: null }
-      },
-      actions: {
-        selectMatch: jest.fn(),
-        setFilters: jest.fn(),
-        refreshMatches: jest.fn(),
-        clearError: jest.fn()
-      }
+      error: 'Failed to load matches'
     });
 
-    render(<TeamAnalysisPage />);
+    renderWithProviders(<TeamAnalysisPage />);
     expect(screen.getByText('Failed to load matches')).toBeInTheDocument();
   });
 }); 

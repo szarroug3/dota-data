@@ -12,8 +12,8 @@ interface PlayerGridProps {
 export const PlayerGrid: React.FC<PlayerGridProps> = ({ players, viewType }) => (
   <div className="space-y-4">
     {players.length === 0 ? (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="bg-card dark:bg-card rounded-lg shadow-md p-6 text-center">
+        <p className="text-muted-foreground dark:text-muted-foreground">
           No player data available for this team.
         </p>
       </div>

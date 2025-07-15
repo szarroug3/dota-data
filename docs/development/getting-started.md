@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will help you set up and run the Dota Data Dashboard for development.
+This guide will help you set up and run the Dota Scout Assistant for development.
 
 ## Prerequisites
 
@@ -319,4 +319,4 @@ pnpm build
 - Read the [Architecture Documentation](./architecture/) for detailed technical information
 - Review [Environment Variables](./environment-variables.md) for configuration options
 - Check the [Testing Guide](./testing.md) for testing strategies
-- See the [Implementation Plan](./implementation/implementation-plan.md) for the complete rebuild plan 
+- See the [Documentation Implementation Plan](./implementation/documentation-implementation-plan.md) for documentation tasks 

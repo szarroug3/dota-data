@@ -1,67 +1,62 @@
 import React from 'react';
 
-import type { Team } from '@/types/contexts/team-context-value';
-
 interface ControlsSectionProps {
-  analysisType: 'overview' | 'detailed' | 'comparison';
-  timeRange: number;
-  activeTeam: Team | null;
-  activeTeamId: string;
-  onAnalysisTypeChange: (type: 'overview' | 'detailed' | 'comparison') => void;
-  onTimeRangeChange: (range: number) => void;
+  analysisType: string;
+  timeRange: string;
+  onAnalysisTypeChange: (type: string) => void;
+  onTimeRangeChange: (range: string) => void;
 }
 
-export const ControlsSection: React.FC<ControlsSectionProps> = ({
-  analysisType,
-  timeRange,
-  activeTeam,
-  activeTeamId,
-  onAnalysisTypeChange,
-  onTimeRangeChange
+export const ControlsSection: React.FC<ControlsSectionProps> = ({ 
+  analysisType, 
+  timeRange, 
+  onAnalysisTypeChange, 
+  onTimeRangeChange 
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="bg-card text-card-foreground rounded-lg shadow-md p-4 mb-6">
+      <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Analysis for {activeTeam?.name || `Team ${activeTeamId}`}
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Analysis Controls
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            View detailed performance metrics and insights
+          <p className="text-sm text-muted-foreground">
+            Customize your analysis parameters to focus on specific aspects of team performance.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex items-center space-x-2">
-            <label htmlFor="analysis-type-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Analysis Type:
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="analysis-type-select" className="text-sm font-medium text-foreground">
+              Analysis Type
             </label>
             <select
               id="analysis-type-select"
               value={analysisType}
-              onChange={(e) => onAnalysisTypeChange(e.target.value as 'overview' | 'detailed' | 'comparison')}
-              className="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              onChange={(e) => onAnalysisTypeChange(e.target.value)}
+              className="mt-1 w-full p-2 border border-border rounded-md bg-background text-foreground text-sm"
             >
-              <option value="overview">Overview</option>
-              <option value="detailed">Detailed</option>
-              <option value="comparison">Comparison</option>
+              <option value="overall">Overall Performance</option>
+              <option value="heroes">Hero Performance</option>
+              <option value="time">Time-based Analysis</option>
+              <option value="recommendations">Recommendations</option>
             </select>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <label htmlFor="time-range-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Time Range:
+          <div>
+            <label htmlFor="time-range-select" className="text-sm font-medium text-foreground">
+              Time Range
             </label>
             <select
               id="time-range-select"
               value={timeRange}
-              onChange={(e) => onTimeRangeChange(Number(e.target.value))}
-              className="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              onChange={(e) => onTimeRangeChange(e.target.value)}
+              className="mt-1 w-full p-2 border border-border rounded-md bg-background text-foreground text-sm"
             >
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
-              <option value={180}>Last 6 months</option>
-              <option value={365}>Last year</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="all">All Time</option>
             </select>
           </div>
         </div>

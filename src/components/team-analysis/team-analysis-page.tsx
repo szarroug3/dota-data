@@ -5,7 +5,6 @@ import React, { Suspense, useState } from 'react';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { Header } from '@/components/layout/Header';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { useMatchData } from '@/hooks/use-match-data';
 import { usePlayerData } from '@/hooks/use-player-data';
 import { useTeamData } from '@/hooks/use-team-data';
@@ -23,10 +22,10 @@ const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ ty
   if (type === 'no-teams') {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-xl font-semibold text-foreground dark:text-foreground mb-4">
           No Teams Added
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted-foreground dark:text-muted-foreground mb-6">
           Add a team first to view team analysis.
         </p>
       </div>
@@ -35,10 +34,10 @@ const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ ty
 
   return (
     <div className="text-center py-12">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-xl font-semibold text-foreground dark:text-foreground mb-4">
         Select a Team
       </h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-muted-foreground dark:text-muted-foreground mb-6">
         Choose a team from the sidebar to view detailed analysis.
       </p>
     </div>
@@ -47,10 +46,10 @@ const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ ty
 
 const ErrorContent: React.FC<{ error: string }> = ({ error }) => (
   <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-6">
-    <h2 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+    <h2 className="text-lg font-semibold text-destructive dark:text-destructive mb-2">
       Error Loading Team Data
     </h2>
-    <p className="text-red-600 dark:text-red-300">
+    <p className="text-destructive dark:text-red-300">
       {error}
     </p>
   </div>
@@ -61,9 +60,9 @@ interface TeamAnalysisContentProps {
   activeTeamId: string;
 }
 
-function TeamAnalysisContent({ activeTeam, activeTeamId }: TeamAnalysisContentProps) {
-  const [analysisType, setAnalysisType] = useState<'overview' | 'detailed' | 'comparison'>('overview');
-  const [timeRange, setTimeRange] = useState(90);
+function TeamAnalysisContent({ activeTeamId }: TeamAnalysisContentProps) {
+  const [analysisType, setAnalysisType] = useState<string>('overall');
+  const [timeRange, setTimeRange] = useState<string>('30d');
 
   const { matches, players } = useMatchData();
   const { teamAnalysis } = useTeamAnalysis(matches, players, activeTeamId);
@@ -73,17 +72,18 @@ function TeamAnalysisContent({ activeTeam, activeTeamId }: TeamAnalysisContentPr
       <ControlsSection
         analysisType={analysisType}
         timeRange={timeRange}
-        activeTeam={activeTeam}
-        activeTeamId={activeTeamId}
         onAnalysisTypeChange={setAnalysisType}
         onTimeRangeChange={setTimeRange}
       />
       
-      <OverallPerformanceSection teamAnalysis={teamAnalysis} />
-      <StrengthsWeaknessesSection teamAnalysis={teamAnalysis} />
-      <TimePerformanceSection teamAnalysis={teamAnalysis} />
-      <HeroPerformanceSection teamAnalysis={teamAnalysis} />
-      <RecommendationsSection teamAnalysis={teamAnalysis} />
+      <OverallPerformanceSection performanceData={teamAnalysis} />
+      <StrengthsWeaknessesSection 
+        strengths={teamAnalysis?.strengths || []} 
+        weaknesses={teamAnalysis?.weaknesses || []} 
+      />
+      <TimePerformanceSection data={teamAnalysis} />
+      <HeroPerformanceSection heroData={teamAnalysis} />
+      <RecommendationsSection recommendations={teamAnalysis?.recommendations || []} />
     </>
   );
 }
@@ -116,26 +116,42 @@ export const TeamAnalysisPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title="Team Analysis" 
-          subtitle="Analyze your team's performance and get insights"
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSkeleton />}>
-              <div className="container mx-auto">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                  Team Analysis
-                </h1>
-                {renderContent()}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Header 
+        title="Team Analysis" 
+        subtitle="Analyze your team&apos;s performance and get insights"
+      />
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background text-foreground p-6 transition-colors duration-300">
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingSkeleton />}> 
+            <div className="container mx-auto">
+              <h1 className="text-2xl font-semibold text-foreground mb-6">
+                Team Analysis
+              </h1>
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-4">
+                    Team Analysis Overview
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Comprehensive analysis of your team&apos;s performance, strengths, and areas for improvement.
+                  </p>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-4">
+                    Performance Metrics
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Detailed breakdown of key performance indicators and trends.
+                  </p>
+                </div>
               </div>
-            </Suspense>
-          </ErrorBoundary>
-        </main>
-      </div>
+              {renderContent()}
+            </div>
+          </Suspense>
+        </ErrorBoundary>
+      </main>
     </div>
   );
 }; 

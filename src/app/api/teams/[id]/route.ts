@@ -1,60 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
-import { ProcessedTeam, processTeam } from '@/lib/services/team-processor';
 import { ApiErrorResponse } from '@/types/api';
-
-/**
- * Validate team ID parameter
- */
-function validateTeamId(teamId: string): ApiErrorResponse | null {
-  if (!teamId || isNaN(Number(teamId))) {
-    return {
-      error: 'Invalid team ID',
-      status: 400,
-      details: 'Team ID must be a valid number'
-    };
-  }
-  return null;
-}
-
-/**
- * Filter response data based on view parameter
- */
-function filterResponseByView(processedTeam: ProcessedTeam, view?: string): ProcessedTeam {
-  if (view === 'summary') {
-    return {
-      teamId: processedTeam.teamId,
-      name: processedTeam.name,
-      tag: processedTeam.tag,
-      logoUrl: processedTeam.logoUrl,
-      sponsor: processedTeam.sponsor,
-      countryCode: processedTeam.countryCode,
-      websiteUrl: processedTeam.websiteUrl,
-      profile: processedTeam.profile,
-      statistics: {
-        totalMatches: processedTeam.statistics.totalMatches,
-        wins: processedTeam.statistics.wins,
-        losses: processedTeam.statistics.losses,
-        winRate: processedTeam.statistics.winRate,
-        rating: processedTeam.statistics.rating,
-        lastMatchTime: processedTeam.statistics.lastMatchTime,
-        averageMatchDuration: processedTeam.statistics.averageMatchDuration,
-        totalPrizeMoney: processedTeam.statistics.totalPrizeMoney,
-        gamesPlayed: processedTeam.statistics.gamesPlayed,
-        streaks: processedTeam.statistics.streaks,
-        formFactor: processedTeam.statistics.formFactor
-      },
-      performance: processedTeam.performance,
-      roster: processedTeam.roster,
-      matches: processedTeam.matches,
-      achievements: processedTeam.achievements,
-      processed: processedTeam.processed
-    };
-  }
-  
-  return processedTeam;
-}
 
 /**
  * Handle team API errors
@@ -95,7 +42,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  * @swagger
  * /api/teams/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 team data
+ *     summary: Fetch and process Dota 2 team data for Dota Scout Assistant
  *     description: Retrieves comprehensive team data including statistics, performance metrics, and roster information from Dotabuff. Supports different view modes for optimized data delivery.
  *     tags:
  *       - Teams
@@ -309,52 +256,26 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const teamId = params.id;
-
-    // Validate team ID
-    const validationError = validateTeamId(teamId);
-    if (validationError) {
-      return NextResponse.json(validationError, { status: validationError.status });
-    }
+    const { id: teamId } = await params;
 
     // Extract query parameters
     const { searchParams } = new URL(request.url);
-    const force = searchParams.get('force') === 'true' || searchParams.get('force') === '1';
-    const view = searchParams.get('view') as 'full' | 'summary' | undefined;
-    const includeMatches = searchParams.get('includeMatches') === 'true' || searchParams.get('includeMatches') === '1';
-    const includeRoster = searchParams.get('includeRoster') === 'true' || searchParams.get('includeRoster') === '1';
+    const force = searchParams.get('force') === 'true';
 
     // Fetch raw team data (handles caching, rate limiting, mock mode)
-    const dotabuffTeam = await fetchDotabuffTeam(teamId, force);
-
-    // Process team through the processor
-    const processedTeam = processTeam({
-      dotabuffTeam,
-      teamId: Number(teamId)
-    });
-
-    // Filter response based on view parameter
-    const responseData = filterResponseByView(processedTeam, view);
+    const team = await fetchDotabuffTeam(teamId, force);
 
     // Return successful response
-    return NextResponse.json({
-      data: responseData,
-      timestamp: new Date().toISOString(),
-      view: view || 'full',
-      options: {
-        includeMatches,
-        includeRoster
-      }
-    });
-
+    return NextResponse.json(team);
   } catch (error) {
     console.error('Teams API Error:', error);
     
     if (error instanceof Error) {
-      const errorResponse = handleTeamError(error, params.id);
+      const { id } = await params;
+      const errorResponse = handleTeamError(error, id);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 

@@ -15,8 +15,8 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, size = 'defa
   };
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center`}>
-      <span className="text-gray-500 dark:text-gray-400 font-medium">
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-muted dark:bg-muted flex items-center justify-center`}>
+      <span className="text-muted-foreground dark:text-muted-foreground font-medium">
         {player.name.charAt(0).toUpperCase()}
       </span>
     </div>

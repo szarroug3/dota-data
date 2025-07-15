@@ -175,7 +175,7 @@ async function handleHeroesRequest(request: NextRequest, requestTracer: RequestT
  * @swagger
  * /api/heroes:
  *   get:
- *     summary: Fetch and process Dota 2 heroes data
+ *     summary: Fetch and process Dota 2 heroes data for Dota Scout Assistant
  *     description: Retrieves all Dota 2 heroes with optional filtering by complexity, role, primary attribute, and tier. Supports caching and rate limiting with comprehensive performance monitoring.
  *     tags:
  *       - Heroes

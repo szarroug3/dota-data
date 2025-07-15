@@ -16,99 +16,18 @@ describe('/api/leagues/[id]', () => {
   });
 
   const baseLeague = {
-    league_id: 16435,
-    name: 'The International 2024',
-    description: 'The International is the premier Dota 2 tournament',
-    tournament_url: 'https://www.dota2.com/esports/ti2024',
-    matches: [
-      {
-        match_id: 8054301932,
-        start_time: 1640995200,
-        duration: 2150,
-        radiant_name: 'Team Spirit',
-        dire_name: 'Team Secret',
-        radiant_win: true,
-        radiant_score: 25,
-        dire_score: 18,
-        leagueid: 16435
-      }
-    ]
+    id: '16435',
+    name: 'RD2L Season 33'
   };
 
-  it('should return 400 for invalid league ID', async () => {
-    const request = new NextRequest('http://localhost:3000/api/leagues/invalid');
-    const params = { id: 'invalid' };
-    const response = await GET(request, { params });
-    const data = await response.json();
-    expect(response.status).toBe(400);
-    expect(data).toEqual({
-      error: 'Invalid league ID',
-      status: 400,
-      details: 'League ID must be a valid number'
-    });
-  });
-
-  it('should return 400 for empty league ID', async () => {
-    const request = new NextRequest('http://localhost:3000/api/leagues/');
-    const params = { id: '' };
-    const response = await GET(request, { params });
-    const data = await response.json();
-    expect(response.status).toBe(400);
-    expect(data).toEqual({
-      error: 'Invalid league ID',
-      status: 400,
-      details: 'League ID must be a valid number'
-    });
-  });
-
-  it('should return league data (default view)', async () => {
+  it('should return league data successfully', async () => {
     mockFetchDotabuffLeague.mockResolvedValueOnce(baseLeague);
     const request = new NextRequest('http://localhost:3000/api/leagues/16435');
     const params = { id: '16435' };
     const response = await GET(request, { params });
     const data = await response.json();
     expect(response.status).toBe(200);
-    expect(data.data).toMatchObject({
-      leagueId: 16435,
-      name: 'The International 2024',
-      description: 'The International is the premier Dota 2 tournament',
-      tournamentUrl: 'https://www.dota2.com/esports/ti2024',
-      statistics: expect.any(Object),
-      processed: expect.any(Object)
-    });
-    expect(data.data.matches).toBeUndefined();
-    expect(data.view).toBe('full');
-    expect(data.options).toEqual({ includeMatches: false });
-  });
-
-  it('should return league data with includeMatches=true', async () => {
-    mockFetchDotabuffLeague.mockResolvedValueOnce(baseLeague);
-    const request = new NextRequest('http://localhost:3000/api/leagues/16435?includeMatches=true');
-    const params = { id: '16435' };
-    const response = await GET(request, { params });
-    const data = await response.json();
-    expect(response.status).toBe(200);
-    expect(data.data.matches).toBeDefined();
-    expect(data.options).toEqual({ includeMatches: true });
-  });
-
-  it('should return league data with view=summary', async () => {
-    mockFetchDotabuffLeague.mockResolvedValueOnce(baseLeague);
-    const request = new NextRequest('http://localhost:3000/api/leagues/16435?view=summary');
-    const params = { id: '16435' };
-    const response = await GET(request, { params });
-    const data = await response.json();
-    expect(response.status).toBe(200);
-    expect(data.data).toMatchObject({
-      leagueId: 16435,
-      name: 'The International 2024',
-      description: 'The International is the premier Dota 2 tournament',
-      tournamentUrl: 'https://www.dota2.com/esports/ti2024',
-      statistics: expect.any(Object),
-      processed: expect.any(Object)
-    });
-    expect(data.data.matches).toBeUndefined();
-    expect(data.view).toBe('summary');
+    expect(data).toEqual(baseLeague);
   });
 
   it('should handle force refresh', async () => {

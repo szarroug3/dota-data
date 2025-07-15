@@ -51,7 +51,7 @@ describe('LoadingSkeleton - Text and Card', () => {
     it('should render card skeleton', () => {
       render(<LoadingSkeleton type="card" />);
       
-      const cardContainer = document.querySelector('.bg-white');
+      const cardContainer = document.querySelector('.bg-card');
       expect(cardContainer).toBeInTheDocument();
       expect(cardContainer).toHaveClass('rounded-lg', 'border', 'p-4');
     });
@@ -59,7 +59,7 @@ describe('LoadingSkeleton - Text and Card', () => {
     it('should render CardSkeleton component', () => {
       render(<CardSkeleton />);
       
-      const cardContainer = document.querySelector('.bg-white');
+      const cardContainer = document.querySelector('.bg-card');
       expect(cardContainer).toBeInTheDocument();
     });
   });
@@ -144,16 +144,16 @@ describe('LoadingSkeleton - Avatar and Styling', () => {
     it('should render with dark mode classes', () => {
       render(<LoadingSkeleton type="card" />);
       
-      const cardContainer = document.querySelector('.bg-white');
-      expect(cardContainer).toHaveClass('dark:bg-gray-800');
+      const cardContainer = document.querySelector('.bg-card');
+      expect(cardContainer).toHaveClass('dark:bg-card');
     });
 
     it('should render skeleton elements with dark mode classes', () => {
       render(<LoadingSkeleton type="text" />);
       
-      const skeletonElements = document.querySelectorAll('.bg-gray-200');
+      const skeletonElements = document.querySelectorAll('.bg-muted');
       skeletonElements.forEach(element => {
-        expect(element).toHaveClass('dark:bg-gray-700');
+        expect(element).toHaveClass('dark:bg-muted');
       });
     });
   });

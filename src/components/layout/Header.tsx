@@ -14,12 +14,12 @@ export const Header: React.FC<HeaderProps> = ({
   actions,
 }) => {
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <header className="bg-background text-foreground border-b border-border dark:border-border px-6 py-4 transition-colors duration-300">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           {/* Breadcrumbs */}
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <nav className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground mb-2">
               {breadcrumbs.map((crumb, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && (
@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
                       />
                     </svg>
                   )}
-                  <span className="hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer">
+                  <span className="hover:text-foreground dark:hover:text-foreground cursor-pointer">
                     {crumb}
                   </span>
                 </React.Fragment>
@@ -47,11 +47,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Title and Subtitle */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-foreground dark:text-foreground">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
                 {subtitle}
               </p>
             )}

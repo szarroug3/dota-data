@@ -35,15 +35,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.setState({ hasError: false, error: undefined });
   };
 
-  handleReportError = () => {
-    const { error } = this.state;
-    if (error) {
-      // In a real app, this would send the error to an error reporting service
-      console.error('Error reported:', error);
-      alert('Error has been reported. Thank you for your feedback.');
-    }
-  };
-
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -51,12 +42,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="min-h-screen flex items-center justify-center bg-muted dark:bg-background">
+          <div className="max-w-md w-full bg-card dark:bg-card rounded-lg shadow-lg p-6">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
                 <svg
-                  className="h-6 w-6 text-red-600 dark:text-red-400"
+                  className="h-6 w-6 text-destructive dark:text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -70,11 +61,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 </svg>
               </div>
               
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-medium text-foreground dark:text-foreground mb-2">
                 Something went wrong
               </h3>
               
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
                 We encountered an unexpected error. Please try again or contact support if the problem persists.
               </p>
 
@@ -85,21 +76,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 >
                   Try Again
                 </button>
-                
-                <button
-                  onClick={this.handleReportError}
-                  className="w-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  Report Error
-                </button>
               </div>
 
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-4 text-left">
-                  <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+                  <summary className="text-sm text-muted-foreground dark:text-muted-foreground cursor-pointer">
                     Error Details (Development)
                   </summary>
-                  <pre className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900 p-2 rounded overflow-auto">
+                  <pre className="mt-2 text-xs text-destructive dark:text-red-400 bg-red-50 dark:bg-red-900 p-2 rounded overflow-auto">
                     {this.state.error.toString()}
                   </pre>
                 </details>

@@ -105,19 +105,19 @@ describe('ProgressIndicators', () => {
 
     it('should apply different variant classes', () => {
       const { rerender } = render(<Spinner variant="primary" />);
-      expect(screen.getByRole('status')).toHaveClass('text-blue-600');
+      expect(screen.getByRole('status')).toHaveClass('text-primary');
 
       rerender(<Spinner variant="success" />);
-      expect(screen.getByRole('status')).toHaveClass('text-green-600');
+      expect(screen.getByRole('status')).toHaveClass('text-success');
 
       rerender(<Spinner variant="warning" />);
       expect(screen.getByRole('status')).toHaveClass('text-yellow-600');
 
       rerender(<Spinner variant="error" />);
-      expect(screen.getByRole('status')).toHaveClass('text-red-600');
+      expect(screen.getByRole('status')).toHaveClass('text-destructive');
 
       rerender(<Spinner variant="default" />);
-      expect(screen.getByRole('status')).toHaveClass('text-gray-600');
+      expect(screen.getByRole('status')).toHaveClass('text-muted-foreground');
     });
 
     it('should have proper accessibility attributes', () => {
@@ -170,7 +170,7 @@ describe('ProgressIndicators', () => {
     it('should render card skeleton', () => {
       render(<Skeleton type="card" />);
 
-      const cardElement = document.querySelector('.bg-white.dark\\:bg-gray-800.rounded-lg.shadow');
+      const cardElement = document.querySelector('.bg-card.dark\\:bg-card.rounded-lg.shadow');
       expect(cardElement).toBeInTheDocument();
     });
 
@@ -190,7 +190,7 @@ describe('ProgressIndicators', () => {
       );
 
       expect(screen.getByRole('status')).toBeInTheDocument();
-      expect(screen.getByRole('status')).toHaveClass('text-blue-600');
+      expect(screen.getByRole('status')).toHaveClass('text-primary');
     });
 
     it('should render progress bar when type is progress-bar', () => {
@@ -235,13 +235,13 @@ describe('ProgressIndicators', () => {
 
       const container = screen.getByRole('status').parentElement;
       expect(container).toHaveClass('flex', 'justify-center', 'items-center', 'p-4');
-      expect(screen.getByRole('status')).toHaveClass('w-8', 'h-8', 'text-blue-600');
+      expect(screen.getByRole('status')).toHaveClass('w-8', 'h-8', 'text-primary');
     });
 
     it('should render LoadingCard with card skeleton', () => {
       render(<LoadingCard lines={4} />);
 
-      const cardElement = document.querySelector('.bg-white.dark\\:bg-gray-800.rounded-lg.shadow');
+      const cardElement = document.querySelector('.bg-card.dark\\:bg-card.rounded-lg.shadow');
       expect(cardElement).toBeInTheDocument();
     });
 
@@ -290,14 +290,14 @@ describe('ProgressIndicators', () => {
     it('should have dark mode classes for skeleton', () => {
       render(<Skeleton type="text" />);
 
-      const skeletonElements = document.querySelectorAll('.dark\\:bg-gray-700');
+      const skeletonElements = document.querySelectorAll('.dark\\:bg-muted');
       expect(skeletonElements.length).toBeGreaterThan(0);
     });
 
     it('should have dark mode classes for spinner', () => {
       render(<Spinner variant="default" />);
 
-      expect(screen.getByRole('status')).toHaveClass('dark:text-gray-400');
+      expect(screen.getByRole('status')).toHaveClass('dark:text-muted-foreground');
     });
   });
 

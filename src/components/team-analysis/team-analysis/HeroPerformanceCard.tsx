@@ -17,8 +17,8 @@ export const HeroPerformanceCard: React.FC<HeroPerformanceCardProps> = ({ title,
     : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
 
   const textColor = type === 'success'
-    ? 'text-green-800 dark:text-green-200'
-    : 'text-red-800 dark:text-red-200';
+    ? 'text-success dark:text-success'
+    : 'text-destructive dark:text-destructive';
 
   return (
     <div className={`${bgColor} border rounded-lg p-4`}>
@@ -26,10 +26,10 @@ export const HeroPerformanceCard: React.FC<HeroPerformanceCardProps> = ({ title,
       <div className="space-y-2">
         {heroes.map((hero, index) => (
           <div key={index} className="flex items-center justify-between text-sm">
-            <span className="font-medium text-gray-900 dark:text-white">{hero.heroName}</span>
+            <span className="font-medium text-foreground dark:text-foreground">{hero.heroName}</span>
             <div className="flex items-center space-x-3">
-              <span className="text-gray-600 dark:text-gray-400">{hero.matches} matches</span>
-              <span className={`font-semibold ${type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-muted-foreground dark:text-muted-foreground">{hero.matches} matches</span>
+              <span className={`font-semibold ${type === 'success' ? 'text-success' : 'text-destructive'}`}>
                 {hero.winRate.toFixed(1)}% WR
               </span>
             </div>

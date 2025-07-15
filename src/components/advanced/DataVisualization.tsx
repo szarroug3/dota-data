@@ -67,7 +67,7 @@ const LineChart: React.FC<{ data: LineChartData; height: number; width: number }
       <polyline
         points={points.map(p => `${p.x},${p.y}`).join(' ')}
         fill="none"
-        stroke="rgb(59, 130, 246)"
+        stroke="hsl(var(--primary))"
         strokeWidth="2"
       />
       
@@ -78,7 +78,7 @@ const LineChart: React.FC<{ data: LineChartData; height: number; width: number }
           cx={point.x}
           cy={point.y}
           r="4"
-          fill="rgb(59, 130, 246)"
+          fill="hsl(var(--primary))"
           className="hover:r-6 transition-all"
         />
       ))}
@@ -136,7 +136,7 @@ const BarChart: React.FC<{ data: BarChartData; height: number; width: number }> 
             y={bar.y}
             width={bar.width}
             height={bar.height}
-            fill="rgb(59, 130, 246)"
+            fill="hsl(var(--primary))"
             className="hover:fill-blue-600 transition-colors"
           />
           <text
@@ -237,7 +237,7 @@ export const DataVisualization: React.FC<DataVisualizationProps> = ({
 
   return (
     <div 
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 ${className}`}
+      className={`bg-card text-card-foreground rounded-lg shadow-md p-4 ${className}`}
       role="img"
       aria-label={`${type} chart showing ${data.title}`}
     >

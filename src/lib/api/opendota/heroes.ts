@@ -2,9 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { CacheService } from '@/lib/cache-service';
-import { RateLimiter } from '@/lib/rate-limiter';
 import { CacheValue } from '@/types/cache';
 import { OpenDotaHero } from '@/types/external-apis';
+
+import { RateLimiter } from '@/lib/rate-limiter';
 
 /**
  * Fetches the list of Dota 2 heroes from OpenDota API, with cache, rate limiting, and mock mode support.

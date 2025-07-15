@@ -5,9 +5,10 @@ import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/matches/[id]/route';
 import { CacheService } from '@/lib/cache-service';
-import { RateLimiter } from '@/lib/rate-limiter';
 import { processMatch } from '@/lib/services/match-processor';
 import { RateLimitResult } from '@/types/rate-limit';
+
+import { RateLimiter } from '@/lib/rate-limiter';
 
 function createMockCacheService(): jest.Mocked<CacheService> {
   const cache = Object.create(CacheService.prototype) as jest.Mocked<CacheService>;

@@ -20,21 +20,21 @@ export function DraftStateSection({
   onTeamSideChange,
 }: DraftStateSectionProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+    <div className="bg-card dark:bg-card rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground dark:text-foreground">
           Current Draft
         </h3>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <label htmlFor="team-side-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="team-side-select" className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
               Your team:
             </label>
             <select
               id="team-side-select"
               value={teamSide}
               onChange={(e) => onTeamSideChange(e.target.value as 'radiant' | 'dire')}
-              className="p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              className="p-2 border border-border dark:border-border rounded-md bg-card dark:bg-card text-foreground dark:text-foreground text-sm"
             >
               <option value="radiant">Radiant</option>
               <option value="dire">Dire</option>

@@ -14,12 +14,34 @@
  */
 export interface Team {
   id: string;
-  name: string;
+  name?: string;
   leagueId: string;
-  leagueName: string;
+  /**
+   * League name is optional because not all APIs provide it.
+   * If needed, fetch from the leagues API/context.
+   */
+  leagueName?: string;
+  logoUrl?: string;
   isActive: boolean;
+  isLoading: boolean;
+  error?: string;
   createdAt: string;
   updatedAt: string;
+  lastUpdated?: string;
+}
+
+/**
+ * League interface
+ */
+export interface League {
+  id: string;
+  name: string;
+  region: string;
+  tier: string;
+  prizePool: number;
+  startDate: string;
+  endDate: string;
+  lastUpdated: string;
 }
 
 /**
@@ -27,6 +49,7 @@ export interface Team {
  */
 export interface TeamData {
   team: Team;
+  league: League;
   matches: Match[];
   players: Player[];
   summary: TeamSummary;
@@ -112,29 +135,26 @@ export interface TeamSummary {
  */
 export interface TeamContextValue {
   // Team data
-  teams: Team[];
-  activeTeamId: string | null;
-  activeTeam: Team | null;
-  teamData: TeamData | null;
-  teamStats: TeamStats | null;
-  
-  // Loading states
-  isLoadingTeams: boolean;
-  isLoadingTeamData: boolean;
-  isLoadingTeamStats: boolean;
-  
-  // Error states
-  teamsError: string | null;
-  teamDataError: string | null;
-  teamStatsError: string | null;
+  teamDataList: TeamData[];
+  activeTeam: { teamId: string; leagueId: string } | null;
   
   // Actions
-  setActiveTeam: (teamId: string) => void;
   addTeam: (teamId: string, leagueId: string) => Promise<void>;
-  removeTeam: (teamId: string) => Promise<void>;
-  refreshTeam: (teamId: string) => Promise<void>;
-  updateTeam: (teamId: string) => Promise<void>;
-  clearErrors: () => void;
+  removeTeam: (teamId: string, leagueId: string) => Promise<void>;
+  refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
+  updateTeam: (
+    oldTeamId: string,
+    oldLeagueId: string,
+    newTeamId: string,
+    newLeagueId: string
+  ) => Promise<void>;
+  setActiveTeam: (teamId: string, leagueId: string) => void;
+  teamExists: (teamId: string, leagueId: string) => boolean;
+  
+  // Error handling
+  clearGlobalError: () => void;
+  getGlobalError: () => string | null;
+  isInitialized: () => boolean;
 }
 
 /**
@@ -180,7 +200,8 @@ export interface TeamDataLoadingState {
  */
 export interface TeamPreferences {
   defaultView: 'overview' | 'matches' | 'players' | 'analysis';
+  defaultLeagueId: string;
   autoRefresh: boolean;
-  refreshInterval: number; // in seconds
+  refreshInterval: number; // in milliseconds
   showArchived: boolean;
 } 

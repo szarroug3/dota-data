@@ -1,101 +1,93 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
-import { ExternalResources } from './ExternalResources';
-import { MobileSidebarToggle } from './MobileSidebarToggle';
-import { QuickLinks } from './QuickLinks';
-import { SidebarNavigation } from './SidebarNavigation';
-import { SidebarSettings } from './SidebarSettings';
-import { SidebarToggle } from './SidebarToggle';
+import { useConfigContext } from '@/contexts/config-context';
+import { useThemeContext } from '@/contexts/theme-context';
+import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 
-const useSidebarPreferences = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [preferredSite, setPreferredSite] = useState<'dotabuff' | 'opendota'>('dotabuff');
+import { ExternalResources } from '../sidebar/ExternalResources';
+import { MobileSidebarToggle } from '../sidebar/MobileSidebarToggle';
+import { QuickLinks } from '../sidebar/QuickLinks';
+import { SidebarHeader } from '../sidebar/SidebarHeader';
+import { SidebarNavigation } from '../sidebar/SidebarNavigation';
+import { SidebarSettings } from '../sidebar/SidebarSettings';
 
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedCollapsed = localStorage.getItem('sidebarCollapsed');
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-    const savedPreferredSite = localStorage.getItem('preferredSite') as 'dotabuff' | 'opendota';
+// Helper function to map pathname to current page
+const getCurrentPage = (pathname: string): string => {
+  if (pathname === '/') return 'team-management';
+  if (pathname.startsWith('/team-management')) return 'team-management';
+  if (pathname.startsWith('/match-history')) return 'match-history';
+  if (pathname.startsWith('/player-stats')) return 'player-stats';
+  if (pathname.startsWith('/draft-suggestions')) return 'draft-suggestions';
+  return 'team-management';
+};
 
-    if (savedCollapsed !== null) {
-      setIsCollapsed(JSON.parse(savedCollapsed));
-    }
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    if (savedPreferredSite) {
-      setPreferredSite(savedPreferredSite);
-    }
-  }, []);
-
-  // Save preferences to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
-
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-    // Apply theme to document
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('preferredSite', preferredSite);
-  }, [preferredSite]);
-
-  return {
-    isCollapsed,
-    setIsCollapsed,
-    theme,
-    setTheme,
-    preferredSite,
-    setPreferredSite,
+// Helper function to get navigation route
+const getNavigationRoute = (page: string): string => {
+  const routes: Record<string, string> = {
+    'team-management': '/team-management',
+    'match-history': '/match-history',
+    'player-stats': '/player-stats',
+    'draft-suggestions': '/draft-suggestions',
   };
+  return routes[page] || '/team-management';
 };
 
 export const Sidebar: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const { isCollapsed, setIsCollapsed, theme, setTheme, preferredSite, setPreferredSite } = useSidebarPreferences();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { config, updateConfig } = useConfigContext();
+  const { theme, setTheme } = useThemeContext();
+
+  // Extract values from config
+  const isCollapsed = config.sidebarCollapsed;
+  const preferredSite = (config.preferredExternalSite === 'dotabuff' || config.preferredExternalSite === 'opendota') 
+    ? config.preferredExternalSite 
+    : 'dotabuff';
+
+  // Convert theme to only 'light' or 'dark' for SidebarSettings
+  const sidebarTheme = theme === 'system' ? 'light' : theme;
+  const currentPage = getCurrentPage(pathname);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    // In a real app, this would use Next.js router
-    // For now, we'll just update the state
+    // Close mobile sidebar when navigating
+    if (isMobileOpen) {
+      setIsMobileOpen(false);
+    }
+
+    // Navigate to the appropriate route
+    const route = getNavigationRoute(page);
+    router.push(route);
   };
 
-  const handleTeamClick = (teamId: string) => {
-    // Handle team switching
-    console.log('Switch to team:', teamId);
-  };
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme as 'light' | 'dark');
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
   };
 
   const handlePreferredSiteChange = (site: string) => {
-    setPreferredSite(site as 'dotabuff' | 'opendota');
+    updateConfig({ preferredExternalSite: site as PreferredExternalSite });
   };
 
   const handleToggle = () => {
-    setIsCollapsed(!isCollapsed);
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] handleToggle for sidebar state`, isCollapsed);
+    updateConfig({ sidebarCollapsed: !isCollapsed });
   };
 
   const handleMobileToggle = () => {
     setIsMobileOpen(!isMobileOpen);
   };
 
-  // Mock teams data - in real app this would come from context
-  const teams = [
-    { id: '1', name: 'Team Alpha', league: 'Division 1' },
-    { id: '2', name: 'Team Beta', league: 'Division 2' },
-  ];
-
   const renderSidebarContent = () => (
     <div className="flex flex-col h-full">
+      <SidebarHeader
+        isCollapsed={isCollapsed}
+        onToggleCollapse={handleToggle}
+      />
+
       {/* Navigation */}
       <SidebarNavigation
         currentPage={currentPage}
@@ -105,31 +97,27 @@ export const Sidebar: React.FC = () => {
 
       {/* Quick Links */}
       <QuickLinks
-        teams={teams}
-        onTeamClick={handleTeamClick}
         isCollapsed={isCollapsed}
+        activeTeam={{
+          id: 'team-liquid',
+          name: 'Team Liquid',
+          league: 'ESL Pro League'
+        }}
       />
 
       {/* External Resources */}
       <ExternalResources
-        preferredSite={preferredSite}
-        onSiteChange={handlePreferredSiteChange}
         isCollapsed={isCollapsed}
       />
 
       {/* Settings */}
       <SidebarSettings
-        theme={theme}
+        theme={sidebarTheme}
         preferredSite={preferredSite}
         onThemeChange={handleThemeChange}
         onPreferredSiteChange={handlePreferredSiteChange}
         isCollapsed={isCollapsed}
       />
-
-      {/* Desktop Toggle */}
-      <div className="hidden md:block mt-auto p-4">
-        <SidebarToggle isCollapsed={isCollapsed} onToggle={handleToggle} />
-      </div>
     </div>
   );
 
@@ -143,7 +131,7 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar */}
       <div
         className={`
-          fixed left-0 top-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700
+          fixed left-0 top-0 h-full bg-background text-foreground border-r border-border
           transition-all duration-300 ease-in-out z-40
           ${isCollapsed ? 'w-16' : 'w-64'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}

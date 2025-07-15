@@ -8,10 +8,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
 
 import type {
-    AppConfig,
-    ConfigContextProviderProps,
-    ConfigContextValue,
-    UserPreferences
+  AppConfig,
+  ConfigContextProviderProps,
+  ConfigContextValue,
+  UserPreferences
 } from '@/types/contexts/config-context-value';
 
 // ============================================================================
@@ -140,7 +140,7 @@ const getDefaultConfig = (): AppConfig => ({
   cacheTTL: 3600, // 1 hour
   
   // UI preferences
-  sidebarCollapsed: false,
+  sidebarCollapsed: true, // Start collapsed by default
   showAdvancedStats: false,
   showPerformanceGraphs: true,
   showTrends: true,
@@ -213,25 +213,25 @@ const getDefaultPreferences = (): UserPreferences => ({
 // INITIAL STATE
 // ============================================================================
 
-const initialState: ConfigState = {
-  config: getDefaultConfig(),
-  preferences: getDefaultPreferences(),
-  isLoading: false,
-  isSaving: false,
-  error: null
-};
+// Note: Initial state is now created dynamically in the provider
+// to load localStorage values synchronously
 
 // ============================================================================
 // LOCAL STORAGE HELPERS
 // ============================================================================
 
 const STORAGE_KEYS = {
-  CONFIG: 'dota-data-config',
-  PREFERENCES: 'dota-data-preferences'
+  CONFIG: 'dota-scout-assistant-config',
+  PREFERENCES: 'dota-scout-assistant-preferences'
 } as const;
 
 // Helper function to load data from localStorage with proper typing
 function loadFromStorage<T>(key: string, defaultValue: T): T {
+  // Only access localStorage on the client side
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+  
   try {
     const stored = localStorage.getItem(key);
     if (stored) {
@@ -245,6 +245,11 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
 
 // Helper function to save data to localStorage
 function saveToStorage<T>(key: string, value: T): void {
+  // Only access localStorage on the client side
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
@@ -258,22 +263,29 @@ function saveToStorage<T>(key: string, value: T): void {
 // ============================================================================
 
 export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(configReducer, initialState);
+  const [state, dispatch] = useReducer(configReducer, {
+    config: getDefaultConfig(),
+    preferences: getDefaultPreferences(),
+    isLoading: true, // Start with loading true
+    isSaving: false,
+    error: null
+  });
 
-  // Load initial config from localStorage
+  // Load localStorage values on the client side after hydration
   useEffect(() => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    
-    try {
+    if (typeof window !== 'undefined') {
       const storedConfig = loadFromStorage(STORAGE_KEYS.CONFIG, getDefaultConfig());
       const storedPreferences = loadFromStorage(STORAGE_KEYS.PREFERENCES, getDefaultPreferences());
       
-      dispatch({ type: 'SET_CONFIG', payload: storedConfig });
-      dispatch({ type: 'SET_PREFERENCES', payload: storedPreferences });
-    } catch (error) {
-      console.error('Failed to load configuration:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load configuration' });
-    } finally {
+      // Only update if values are different from defaults to prevent unnecessary re-renders
+      if (JSON.stringify(storedConfig) !== JSON.stringify(getDefaultConfig())) {
+        dispatch({ type: 'SET_CONFIG', payload: storedConfig });
+      }
+      if (JSON.stringify(storedPreferences) !== JSON.stringify(getDefaultPreferences())) {
+        dispatch({ type: 'SET_PREFERENCES', payload: storedPreferences });
+      }
+      
+      // Mark as loaded
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);

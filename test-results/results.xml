@@ -1,0 +1,2601 @@
+<testsuites id="" name="" tests="198" failures="57" skipped="0" errors="0" time="48.263077">
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="chromium" tests="19" failures="6" skipped="0" time="14.725" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="1.007">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure ─────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="1.086">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="1.019">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ────────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="1.007">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management ───
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="1.096">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="1.01">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="1.006">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy ──
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="0.581">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="0.613">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="0.685">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="0.667">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.672">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.511">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.525">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="0.638">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.635">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.535">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="0.727">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="0.705">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [chromium] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls ──
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="chromium" tests="14" failures="3" skipped="0" time="15.153" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.697">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [chromium] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 3 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Select a Team</h1> aka getByRole('heading', { name: 'Select a Team' })
+        3) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="0.666">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [chromium] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 3 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        3) <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Choose a team from the sidebar to view their dash…</p> aka getByText('Choose a team from the')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.656">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.653">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="1.316">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="5.474">
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.221">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.6">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.509">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.628">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="0.876">
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.554">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [chromium] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: net::ERR_FAILED at http://localhost:3000/
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-chromium/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="0.66">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="0.643">
+</testcase>
+</testsuite>
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="firefox" tests="19" failures="6" skipped="0" time="26.429" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="1.165">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure ──────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="1.561">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="1.529">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ─────────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="2.386">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management ────
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="1.771">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="2.366">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="1.773">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy ───
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="1.455">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="1.382">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="1.59">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="1.548">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.891">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.787">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.811">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="1.569">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.83">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.795">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="1.352">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="0.868">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [firefox] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls ───
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="firefox" tests="14" failures="3" skipped="0" time="25.212" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.839">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [firefox] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="1.466">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [firefox] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 2 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.992">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.918">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="2.189">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="8.888">
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.736">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.767">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.794">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.806">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="1.349">
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.771">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [firefox] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: NS_ERROR_FAILURE
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="1.38">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="2.317">
+</testcase>
+</testsuite>
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="webkit" tests="19" failures="6" skipped="0" time="15.746" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="1.175">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure ───────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="0.937">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="1.085">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ──────────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="1.135">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management ─────
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="0.882">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="0.977">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="1.024">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy ────
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="0.791">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="0.648">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="0.731">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="0.898">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.578">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.658">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.698">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="0.568">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.71">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.757">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="0.703">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="0.791">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [webkit] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls ────
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="webkit" tests="14" failures="4" skipped="0" time="17.253" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.827">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [webkit] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="0.838">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [webkit] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 2 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.793">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.69">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="1.441">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="6.154">
+<failure message="navigation.spec.ts:141:7 should navigate between pages" type="FAILURE">
+<![CDATA[  [webkit] › navigation.spec.ts:141:7 › Navigation and Layout › should navigate between pages ──────
+
+    Error: page.goto: Navigation to "http://localhost:3000/draft-suggestions" is interrupted by another navigation to "http://localhost:3000/team-analysis"
+    Call log:
+      - navigating to "http://localhost:3000/draft-suggestions", waiting until "load"
+
+
+      60 | // Helper function to test a single page
+      61 | async function testSinglePage(page: Page, pageInfo: { path: string; title: string }) {
+    > 62 |   await page.goto(pageInfo.path);
+         |              ^
+      63 |   
+      64 |   // Verify page loads
+      65 |   await expect(page).toHaveTitle(/Dota Data/);
+        at testSinglePage (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:62:14)
+        at testPageNavigation (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:86:11)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:142:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.271">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.623">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.708">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.767">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="0.892">
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.592">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [webkit] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: Blocked by Web Inspector
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="0.87">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="0.787">
+</testcase>
+</testsuite>
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Mobile Chrome" tests="19" failures="6" skipped="0" time="16.695" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="1.591">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="1.92">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="1.616">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ───
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="1.411">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management 
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="1.208">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="0.857">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="0.67">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="0.64">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="0.678">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="0.601">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="0.673">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.549">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.556">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.583">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="0.528">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.673">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.645">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="0.64">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="0.656">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls 
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Mobile Chrome" tests="14" failures="3" skipped="0" time="16.53" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.641">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="0.722">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 2 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.56">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.514">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="1.18">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="6.744">
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.423">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.675">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.64">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.658">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="0.797">
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.485">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: net::ERR_FAILED at http://localhost:3000/
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Chrome/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="0.748">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="0.743">
+</testcase>
+</testsuite>
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Mobile Safari" tests="19" failures="6" skipped="0" time="14.658" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="0.624">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="0.95">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="0.864">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ───
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="0.951">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management 
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="1.03">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="0.84">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="0.981">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="0.814">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="0.571">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="0.745">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="0.715">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.585">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.723">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.745">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="0.548">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.738">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.724">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="0.701">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="0.809">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [Mobile Safari] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls 
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Mobile Safari" tests="14" failures="4" skipped="0" time="16.359" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.769">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [Mobile Safari] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="0.889">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Mobile Safari] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 2 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.689">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.686">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="1.284">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="4.081">
+<failure message="navigation.spec.ts:141:7 should navigate between pages" type="FAILURE">
+<![CDATA[  [Mobile Safari] › navigation.spec.ts:141:7 › Navigation and Layout › should navigate between pages 
+
+    Error: page.goto: Navigation to "http://localhost:3000/match-history" is interrupted by another navigation to "http://localhost:3000/team-management"
+    Call log:
+      - navigating to "http://localhost:3000/match-history", waiting until "load"
+
+
+      60 | // Helper function to test a single page
+      61 | async function testSinglePage(page: Page, pageInfo: { path: string; title: string }) {
+    > 62 |   await page.goto(pageInfo.path);
+         |              ^
+      63 |   
+      64 |   // Verify page loads
+      65 |   await expect(page).toHaveTitle(/Dota Data/);
+        at testSinglePage (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:62:14)
+        at testPageNavigation (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:86:11)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:142:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--49371-ould-navigate-between-pages-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.452">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.728">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.731">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.783">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="0.76">
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.513">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [Mobile Safari] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: Blocked by Web Inspector
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="0.718">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="2.276">
+</testcase>
+</testsuite>
+<testsuite name="accessibility.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Tablet Chrome" tests="19" failures="6" skipped="0" time="22.421" errors="0">
+<testcase name="Accessibility › should have proper page structure" classname="accessibility.spec.ts" time="1.186">
+<failure message="accessibility.spec.ts:234:7 should have proper page structure" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:234:7 › Accessibility › should have proper page structure 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      244 |     // Verify heading hierarchy
+      245 |     const headings = page.locator('h1, h2, h3, h4, h5, h6');
+    > 246 |     await expect(headings).toHaveCount(expect.any(Number));
+          |                            ^
+      247 |   });
+      248 |
+      249 |   test('should be keyboard navigable', async ({ page }) => {
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:246:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-abd4b--have-proper-page-structure-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should be keyboard navigable" classname="accessibility.spec.ts" time="2.126">
+</testcase>
+<testcase name="Accessibility › should have proper ARIA labels" classname="accessibility.spec.ts" time="2.024">
+<failure message="accessibility.spec.ts:268:7 should have proper ARIA labels" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:268:7 › Accessibility › should have proper ARIA labels ───
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      77 |   // Check for proper ARIA labels on interactive elements
+      78 |   const elementsWithAria = page.locator('[aria-label], [aria-labelledby], [aria-describedby]');
+    > 79 |   await expect(elementsWithAria).toHaveCount(expect.any(Number));
+         |                                  ^
+      80 |   
+      81 |   // Verify no empty ARIA labels
+      82 |   const emptyAriaLabels = page.locator('[aria-label=""]');
+        at checkAriaLabels (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:79:34)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:269:11
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibility-should-have-proper-ARIA-labels-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper focus management" classname="accessibility.spec.ts" time="2.051">
+<failure message="accessibility.spec.ts:272:7 should have proper focus management" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:272:7 › Accessibility › should have proper focus management 
+
+    Error: expect(locator('button, a, input, select, textarea, [tabindex]').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('button, a, input, select, textarea, [tabindex]').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      107 |     
+      108 |     // Verify it has focus
+    > 109 |     await expect(element).toHaveCSS('outline', expect.stringContaining(''));
+          |                           ^
+      110 |   }
+      111 | }
+      112 |
+        at checkFocusManagement (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:109:27)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:273:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-4e15c-ave-proper-focus-management-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have sufficient color contrast" classname="accessibility.spec.ts" time="2.21">
+</testcase>
+<testcase name="Accessibility › should have proper form labels" classname="accessibility.spec.ts" time="0.863">
+</testcase>
+<testcase name="Accessibility › should have proper heading hierarchy" classname="accessibility.spec.ts" time="1.225">
+<failure message="accessibility.spec.ts:284:7 should have proper heading hierarchy" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:284:7 › Accessibility › should have proper heading hierarchy 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+       9 |     // Check that we have at least one h1
+      10 |     const h1Elements = page.locator('h1');
+    > 11 |     await expect(h1Elements).toHaveCount(expect.any(Number));
+         |                              ^
+      12 |     
+      13 |     // Check heading hierarchy (basic check)
+      14 |     for (let i = 0; i < headingCount; i++) {
+        at checkHeadingHierarchy (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:11:30)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:285:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-2480b-ve-proper-heading-hierarchy-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have proper alt text for images" classname="accessibility.spec.ts" time="1.121">
+</testcase>
+<testcase name="Accessibility › should have proper skip links" classname="accessibility.spec.ts" time="1.146">
+</testcase>
+<testcase name="Accessibility › should handle screen reader announcements" classname="accessibility.spec.ts" time="1.167">
+</testcase>
+<testcase name="Accessibility › should have proper landmark roles" classname="accessibility.spec.ts" time="0.827">
+</testcase>
+<testcase name="Accessibility › should handle dynamic content updates" classname="accessibility.spec.ts" time="0.679">
+</testcase>
+<testcase name="Accessibility › should have proper error handling for screen readers" classname="accessibility.spec.ts" time="0.859">
+</testcase>
+<testcase name="Accessibility › should have accessible sidebar navigation" classname="accessibility.spec.ts" time="0.846">
+<failure message="accessibility.spec.ts:378:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:378:7 › Accessibility › should have accessible sidebar navigation 
+
+    Error: locator._expect: expectedNumber: expected number, got object
+
+      124 |     // Check for proper navigation structure
+      125 |     const navItems = sidebarElement.locator('a, button');
+    > 126 |     await expect(navItems).toHaveCount(expect.any(Number));
+          |                            ^
+      127 |   }
+      128 | }
+      129 |
+        at checkSidebarAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:126:28)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:379:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-6498a-cessible-sidebar-navigation-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Accessibility › should have accessible theme toggle" classname="accessibility.spec.ts" time="0.828">
+</testcase>
+<testcase name="Accessibility › should have accessible loading states" classname="accessibility.spec.ts" time="0.66">
+</testcase>
+<testcase name="Accessibility › should have accessible empty states" classname="accessibility.spec.ts" time="0.81">
+</testcase>
+<testcase name="Accessibility › should have accessible data tables" classname="accessibility.spec.ts" time="0.755">
+</testcase>
+<testcase name="Accessibility › should have accessible form controls" classname="accessibility.spec.ts" time="1.038">
+<failure message="accessibility.spec.ts:398:7 should have accessible form controls" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › accessibility.spec.ts:398:7 › Accessibility › should have accessible form controls 
+
+    Error: expect(locator('input, select, textarea, button').first()).toHaveCSS(StringContaining)
+
+    Locator: locator('input, select, textarea, button').first()
+
+
+    Matcher error: expected value must be a string or regular expression
+
+    Expected has type:  object
+    Expected has value: StringContaining ""
+
+      205 |   // Should have proper focus management
+      206 |   await control.focus();
+    > 207 |   await expect(control).toHaveCSS('outline', expect.stringContaining(''));
+          |                         ^
+      208 |   
+      209 |   // Should have proper ARIA attributes if needed
+      210 |   const type = await control.getAttribute('type');
+        at checkIndividualFormControl (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:207:25)
+        at checkFormControlsAccessibility (/Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:225:5)
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/accessibility.spec.ts:399:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|accessibility-Accessibilit-13425-ve-accessible-form-controls-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="navigation.spec.ts" timestamp="2025-07-11T17:34:19.850Z" hostname="Tablet Chrome" tests="14" failures="4" skipped="0" time="16.941" errors="0">
+<testcase name="Navigation and Layout › should load dashboard page successfully" classname="navigation.spec.ts" time="0.779">
+<failure message="navigation.spec.ts:95:7 should load dashboard page successfully" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › navigation.spec.ts:95:7 › Navigation and Layout › should load dashboard page successfully 
+
+    Error: expect.toContainText: Error: strict mode violation: locator('h1') resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+        2) <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Welcome to Dota Scout Assistant</h1> aka getByRole('heading', { name: 'Welcome to Dota Scout Assistant' })
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for locator('h1')
+
+
+       98 |     
+       99 |     // Verify main heading - should be "Dashboard" according to architecture
+    > 100 |     await expect(page.locator('h1')).toContainText('Dashboard');
+          |                                      ^
+      101 |     
+      102 |     // Verify page loads without errors
+      103 |     await expect(page.locator('body')).toBeVisible();
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:100:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--d9ab0-dashboard-page-successfully-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have accessible sidebar navigation" classname="navigation.spec.ts" time="0.704">
+<failure message="navigation.spec.ts:106:7 should have accessible sidebar navigation" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › navigation.spec.ts:106:7 › Navigation and Layout › should have accessible sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Dashboard') resolved to 2 elements:
+        1) <span class="truncate">Dashboard</span> aka getByRole('button', { name: '📊 Dashboard' })
+        2) <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1> aka getByRole('heading', { name: 'Dashboard' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Dashboard')
+
+
+      115 |       // Look for navigation elements with the text
+      116 |       const navElement = page.locator(`text=${link}`);
+    > 117 |       await expect(navElement).toBeVisible();
+          |                                ^
+      118 |     }
+      119 |   });
+      120 |
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:117:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--7a14a-cessible-sidebar-navigation-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should have external resources in sidebar" classname="navigation.spec.ts" time="0.808">
+</testcase>
+<testcase name="Navigation and Layout › should toggle sidebar collapse state" classname="navigation.spec.ts" time="0.989">
+</testcase>
+<testcase name="Navigation and Layout › should handle mobile sidebar toggle" classname="navigation.spec.ts" time="1.47">
+</testcase>
+<testcase name="Navigation and Layout › should navigate between pages" classname="navigation.spec.ts" time="5.402">
+</testcase>
+<testcase name="Navigation and Layout › should maintain sidebar state across navigation" classname="navigation.spec.ts" time="1.372">
+</testcase>
+<testcase name="Navigation and Layout › should handle theme toggle" classname="navigation.spec.ts" time="0.836">
+</testcase>
+<testcase name="Navigation and Layout › should handle preferred site toggle" classname="navigation.spec.ts" time="0.692">
+</testcase>
+<testcase name="Navigation and Layout › should handle keyboard navigation" classname="navigation.spec.ts" time="0.65">
+</testcase>
+<testcase name="Navigation and Layout › should display loading states" classname="navigation.spec.ts" time="0.97">
+<failure message="navigation.spec.ts:224:7 should display loading states" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › navigation.spec.ts:224:7 › Navigation and Layout › should display loading states 
+
+    Error: page.goto: Navigation to "http://localhost:3000/" is interrupted by another navigation to "http://localhost:3000/"
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      224 |   test('should display loading states', async ({ page }) => {
+      225 |     // Navigate to a page that might have loading states
+    > 226 |     await page.goto('/');
+          |                ^
+      227 |     
+      228 |     // Look for loading indicators (should follow consistent pattern per architecture)
+      229 |     const loadingIndicators = page.locator('[data-testid="loading"], .loading, .skeleton, [aria-busy="true"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:226:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--3c26b-ould-display-loading-states-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should handle error states gracefully" classname="navigation.spec.ts" time="0.621">
+<failure message="navigation.spec.ts:243:7 should handle error states gracefully" type="FAILURE">
+<![CDATA[  [Tablet Chrome] › navigation.spec.ts:243:7 › Navigation and Layout › should handle error states gracefully 
+
+    Error: page.goto: Blocked by Web Inspector
+    Call log:
+      - navigating to "http://localhost:3000/", waiting until "load"
+
+
+      246 |     
+      247 |     // Navigate to page
+    > 248 |     await page.goto('/');
+          |                ^
+      249 |     
+      250 |     // Look for error boundaries or error messages (should be user-friendly per architecture)
+      251 |     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
+        at /Users/samreenzarroug/git/personal/dota-data/tests/e2e/navigation.spec.ts:248:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/video.webm]]
+
+[[ATTACHMENT|navigation-Navigation-and--9167b-dle-error-states-gracefully-Tablet-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Navigation and Layout › should show welcome section when no team is selected" classname="navigation.spec.ts" time="0.819">
+</testcase>
+<testcase name="Navigation and Layout › should show dashboard content when team is selected" classname="navigation.spec.ts" time="0.829">
+</testcase>
+</testsuite>
+</testsuites>

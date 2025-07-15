@@ -1,4 +1,4 @@
-# Dota Data Dashboard
+# Dota Scout Assistant
 
 A modern, full-stack dashboard for analyzing Dota 2 team and player data, specifically designed for amateur league players to improve their drafting and team performance. Built with Next.js, TypeScript, and a robust backend architecture.
 
@@ -73,7 +73,8 @@ See [Rate Limiting Layer](./docs/architecture/rate-limiting-layer.md) for more i
 - **[Testing Guide](./docs/development/testing.md)**: Testing strategies and commands
 
 ### Implementation
-- **[Implementation Plan](./docs/implementation/implementation-plan.md)**: Complete rebuild implementation plan
+- **[Development Guide](./docs/development/getting-started.md)**: Complete setup and development guide
+- **[Testing Guide](./docs/development/testing.md)**: Testing strategies and commands
 
 ## API Documentation
 

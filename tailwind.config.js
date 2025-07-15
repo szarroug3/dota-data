@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Semantic color tokens for Dota Data theme
+        // Semantic color tokens for Dota Scout Assistant theme
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -38,7 +38,7 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        // Dota Data specific colors
+        // Dota Scout Assistant specific colors
         "dota-radiant": "#1e3a8a", // Blue for Radiant
         "dota-dire": "#ec4899", // Pink for Dire
         "dota-green": "#059669",

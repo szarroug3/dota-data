@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
 import { ApiErrorResponse } from '@/types/api';
-import { DotabuffLeague, DotabuffMatchSummary } from '@/types/external-apis';
+import { DotabuffMatchSummary } from '@/types/external-apis';
 
 /**
  * League statistics interface
@@ -31,83 +31,40 @@ interface ProcessedLeague {
   };
 }
 
-/**
- * Validate league ID parameter
- */
-function validateLeagueId(leagueId: string): ApiErrorResponse | null {
-  if (!leagueId || isNaN(Number(leagueId))) {
-    return {
-      error: 'Invalid league ID',
-      status: 400,
-      details: 'League ID must be a valid number'
-    };
-  }
-  return null;
-}
 
 /**
  * Calculate league statistics from matches
  */
-function calculateLeagueStatistics(matches: DotabuffMatchSummary[]): LeagueStatistics | undefined {
-  if (!matches || matches.length === 0) {
-    return undefined;
+function calculateLeagueStatistics(matches: DotabuffMatchSummary[]): LeagueStatistics {
+  if (matches.length === 0) {
+    return {
+      totalMatches: 0,
+      averageDuration: 0,
+      radiantWins: 0,
+      direWins: 0,
+      uniqueTeams: 0,
+    };
   }
 
-  const averageDuration = matches.reduce((sum, match) => sum + match.duration, 0) / matches.length;
-  const radiantWins = matches.filter(match => match.radiant_win).length;
-  const direWins = matches.filter(match => !match.radiant_win).length;
+  const radiantWins = matches.filter(match => match.result === 'won').length;
+  const direWins = matches.filter(match => match.result === 'lost').length;
   const uniqueTeams = new Set([
-    ...matches.map(match => match.radiant_name),
-    ...matches.map(match => match.dire_name)
+    ...matches.map(match => match.opponentName),
   ]).size;
+
+  const totalDuration = matches.reduce((sum, match) => sum + match.duration, 0);
+  const averageDuration = Math.round(totalDuration / matches.length);
 
   return {
     totalMatches: matches.length,
     averageDuration,
     radiantWins,
     direWins,
-    uniqueTeams
+    uniqueTeams,
   };
 }
 
-/**
- * Process raw league data
- */
-function processLeagueData(rawLeague: DotabuffLeague, includeMatches: boolean): ProcessedLeague {
-  const statistics = calculateLeagueStatistics(rawLeague.matches || []);
 
-  return {
-    leagueId: rawLeague.league_id,
-    name: rawLeague.name,
-    description: rawLeague.description,
-    tournamentUrl: rawLeague.tournament_url,
-    matches: includeMatches ? rawLeague.matches : undefined,
-    statistics,
-    processed: {
-      timestamp: new Date().toISOString(),
-      version: '1.0.0'
-    }
-  };
-}
-
-/**
- * Filter response data based on view parameter
- */
-function filterResponseByView(processedLeague: ProcessedLeague, view?: string): ProcessedLeague {
-  if (view === 'summary') {
-    return {
-      leagueId: processedLeague.leagueId,
-      name: processedLeague.name,
-      description: processedLeague.description,
-      tournamentUrl: processedLeague.tournamentUrl,
-      matches: processedLeague.matches,
-      statistics: processedLeague.statistics,
-      processed: processedLeague.processed
-    };
-  }
-  
-  return processedLeague;
-}
 
 /**
  * Handle league API errors
@@ -156,7 +113,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  * @swagger
  * /api/leagues/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 league data
+ *     summary: Fetch and process Dota 2 league data for Dota Scout Assistant
  *     description: Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.
  *     tags:
  *       - Leagues
@@ -363,47 +320,27 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
+  const leagueId = '';
   try {
-    const leagueId = params.id;
-
-    // Validate league ID
-    const validationError = validateLeagueId(leagueId);
-    if (validationError) {
-      return NextResponse.json(validationError, { status: validationError.status });
-    }
+    const { id: leagueId } = await params;
 
     // Extract query parameters
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
-    const includeMatches = searchParams.get('includeMatches') === 'true';
-    const view = searchParams.get('view') as 'full' | 'summary' | undefined;
 
     // Fetch raw league data (handles caching, rate limiting, mock mode)
-    const rawLeague = await fetchDotabuffLeague(leagueId, force);
-
-    // Process and format league data
-    const processedLeague = processLeagueData(rawLeague, includeMatches);
-
-    // Filter response based on view parameter
-    const responseData = filterResponseByView(processedLeague, view);
+    const league = await fetchDotabuffLeague(leagueId, force);
 
     // Return successful response
-    return NextResponse.json({
-      data: responseData,
-      timestamp: new Date().toISOString(),
-      view: view || 'full',
-      options: {
-        includeMatches
-      }
-    });
+    return NextResponse.json(league);
 
   } catch (error) {
     console.error('Leagues API Error:', error);
     
     if (error instanceof Error) {
-      const errorResponse = handleLeagueError(error, params.id);
+      const errorResponse = handleLeagueError(error, leagueId);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 

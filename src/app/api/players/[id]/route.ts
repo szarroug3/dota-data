@@ -108,7 +108,7 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
  * @swagger
  * /api/players/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 player data
+ *     summary: Fetch and process Dota 2 player data for Dota Scout Assistant
  *     description: Retrieves comprehensive player data including profile, statistics, performance metrics, and recent activity. Supports different view modes for optimized data delivery.
  *     tags:
  *       - Players

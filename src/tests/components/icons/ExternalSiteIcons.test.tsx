@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 
 import {
-    Dota2ProTrackerIcon,
-    DotabuffIcon,
-    OpenDotaIcon,
-    StratzIcon
+  Dota2ProTrackerIcon,
+  DotabuffIcon,
+  OpenDotaIcon,
+  StratzIcon
 } from '@/components/icons/ExternalSiteIcons';
 
 describe('ExternalSiteIcons', () => {
@@ -92,7 +92,7 @@ describe('ExternalSiteIcons', () => {
 
       const icon = screen.getByRole('img', { name: 'OpenDota icon' });
       const circle = icon.querySelector('circle');
-      expect(circle).toHaveClass('dark:stroke-white');
+      expect(circle).toHaveAttribute('stroke', '#000');
     });
   });
 
@@ -340,7 +340,7 @@ describe('ExternalSiteIcons', () => {
 
       render(<OpenDotaIcon />);
       const openDotaIcon = screen.getByRole('img', { name: 'OpenDota icon' });
-      // OpenDota uses black stroke on the circle element
+      // OpenDota uses foreground stroke on the circle element
       const circle = openDotaIcon.querySelector('circle');
       expect(circle).toHaveAttribute('stroke', '#000');
     });
@@ -349,7 +349,7 @@ describe('ExternalSiteIcons', () => {
       render(<OpenDotaIcon />);
       const openDotaIcon = screen.getByRole('img', { name: 'OpenDota icon' });
       const circle = openDotaIcon.querySelector('circle');
-      expect(circle).toHaveClass('dark:stroke-white');
+      expect(circle).toHaveAttribute('stroke', '#000');
     });
   });
 }); 

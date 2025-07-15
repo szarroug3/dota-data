@@ -17,7 +17,7 @@ export const PerformanceIndicator: React.FC<PerformanceIndicatorProps> = ({ stat
           {stats.recentPerformance.trend}
         </span>
       </div>
-      <div className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="text-sm text-muted-foreground dark:text-muted-foreground">
         {stats.recentPerformance.streak} game streak
       </div>
     </div>

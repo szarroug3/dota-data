@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
 
 import { DraftSuggestionsPage } from '@/components/draft-suggestions/draft-suggestions-page';
 import { useHeroData } from '@/hooks/use-hero-data';
 import { useTeamData } from '@/hooks/use-team-data';
+import { render, screen } from '@/tests/utils/test-utils';
 
 // Mock the hooks
 jest.mock('@/hooks/use-team-data');
@@ -118,6 +118,8 @@ const createMockUseHeroDataReturn = (overrides = {}) => ({
   },
   ...overrides
 });
+
+
 
 describe('Draft Suggestions Page', () => {
   beforeEach(() => {

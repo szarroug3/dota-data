@@ -1,4 +1,4 @@
-# Makefile for Dota Data Project
+# Makefile for Dota Scout Assistant Project
 
 # Variables
 NEXT_PORT ?= 3000

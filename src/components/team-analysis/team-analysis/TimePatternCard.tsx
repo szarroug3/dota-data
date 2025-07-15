@@ -18,17 +18,17 @@ export const TimePatternCard: React.FC<TimePatternCardProps> = ({ title, perform
 
   const getTrendColor = (trend: 'improving' | 'declining' | 'stable') => {
     switch (trend) {
-      case 'improving': return 'text-green-600';
-      case 'declining': return 'text-red-600';
-      case 'stable': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case 'improving': return 'text-success';
+      case 'declining': return 'text-destructive';
+      case 'stable': return 'text-muted-foreground';
+      default: return 'text-muted-foreground';
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 text-center">
-      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{title}</h4>
-      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+    <div className="bg-card dark:bg-card rounded-lg shadow p-4 text-center">
+      <h4 className="font-semibold text-foreground dark:text-foreground mb-2">{title}</h4>
+      <div className="text-2xl font-bold text-primary dark:text-blue-400 mb-1">
         {performance.toFixed(0)}%
       </div>
       <div className="flex items-center justify-center space-x-1">

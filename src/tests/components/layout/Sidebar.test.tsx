@@ -1,200 +1,212 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Sidebar } from '@/components/layout/Sidebar';
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
+// Mock Next.js navigation hooks
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
+  usePathname: jest.fn(),
+}));
 
-// Mock document.documentElement.classList
-Object.defineProperty(document.documentElement, 'classList', {
-  value: {
-    toggle: jest.fn(),
-  },
-  writable: true,
-});
+// Mock context providers
+jest.mock('@/contexts/config-context', () => ({
+  useConfigContext: () => ({
+    config: {
+      sidebarCollapsed: false,
+      preferredExternalSite: 'dotabuff' as const,
+    },
+    updateConfig: jest.fn(),
+  }),
+}));
 
-// Helper function to setup mocks
-const setupMocks = () => {
-  jest.clearAllMocks();
-  localStorageMock.getItem.mockReturnValue(null);
-};
+jest.mock('@/contexts/theme-context', () => ({
+  useThemeContext: () => ({
+    theme: 'light',
+    setTheme: jest.fn(),
+  }),
+}));
 
-// Helper function to find theme toggle button
-const findThemeToggle = () => {
-  return screen.getByText('Light Mode').closest('button');
-};
+// Mock sidebar components
+jest.mock('@/components/sidebar/SidebarHeader', () => ({
+  SidebarHeader: ({ isCollapsed, onToggleCollapse }: any) => (
+    <button onClick={onToggleCollapse} data-testid="sidebar-header">
+      {isCollapsed ? 'Collapsed' : 'Expanded'}
+    </button>
+  ),
+}));
 
-// Helper function to find external resource link
-const findExternalResourceLink = (text: string) => {
-  const elements = screen.getAllByText(text);
-  return elements.find(link => 
-    link.closest('button') && !link.closest('button')?.textContent?.includes('Set')
-  );
-};
+jest.mock('@/components/sidebar/SidebarNavigation', () => ({
+  SidebarNavigation: ({ currentPage, onNavigate }: any) => (
+    <nav data-testid="sidebar-navigation">
+      <button 
+        onClick={() => onNavigate('team-management')}
+        data-testid="nav-team-management"
+        aria-pressed={currentPage === 'team-management'}
+      >
+        Team Management
+      </button>
+      <button 
+        onClick={() => onNavigate('match-history')}
+        data-testid="nav-match-history"
+        aria-pressed={currentPage === 'match-history'}
+      >
+        Match History
+      </button>
+      <button 
+        onClick={() => onNavigate('player-stats')}
+        data-testid="nav-player-stats"
+        aria-pressed={currentPage === 'player-stats'}
+      >
+        Player Stats
+      </button>
+      <button 
+        onClick={() => onNavigate('draft-suggestions')}
+        data-testid="nav-draft-suggestions"
+        aria-pressed={currentPage === 'draft-suggestions'}
+      >
+        Draft Suggestions
+      </button>
+    </nav>
+  ),
+}));
 
-describe('Sidebar - Navigation and Toggle', () => {
-  beforeEach(setupMocks);
+jest.mock('@/components/sidebar/QuickLinks', () => ({
+  QuickLinks: ({ isCollapsed }: any) => (
+    <div data-testid="quick-links">
+      {isCollapsed ? 'Collapsed' : 'Expanded'}
+    </div>
+  ),
+}));
 
-  describe('Navigation', () => {
-    it('should render sidebar with navigation items', () => {
-      render(<Sidebar />);
-      
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Team Management')).toBeInTheDocument();
-      expect(screen.getByText('Match History')).toBeInTheDocument();
-      expect(screen.getByText('Player Stats')).toBeInTheDocument();
-      expect(screen.getByText('Team Analysis')).toBeInTheDocument();
-      expect(screen.getByText('Draft Suggestions')).toBeInTheDocument();
-    });
+jest.mock('@/components/sidebar/ExternalResources', () => ({
+  ExternalResources: ({ isCollapsed }: any) => (
+    <div data-testid="external-resources">
+      {isCollapsed ? 'Collapsed' : 'Expanded'}
+    </div>
+  ),
+}));
 
-    it('should handle navigation clicks', () => {
-      render(<Sidebar />);
-      
-      const teamManagementButton = screen.getByText('Team Management');
-      fireEvent.click(teamManagementButton);
-      
-      expect(teamManagementButton).toBeInTheDocument();
-    });
+jest.mock('@/components/sidebar/SidebarSettings', () => ({
+  SidebarSettings: ({ theme, preferredSite, onThemeChange, onPreferredSiteChange }: any) => (
+    <div data-testid="sidebar-settings">
+      <button onClick={() => onThemeChange('dark')} data-testid="theme-toggle">
+        {theme}
+      </button>
+      <button onClick={() => onPreferredSiteChange('opendota')} data-testid="site-toggle">
+        {preferredSite}
+      </button>
+    </div>
+  ),
+}));
 
-    it('should show active page highlighting', () => {
-      render(<Sidebar />);
-      
-      const dashboardButton = screen.getByText('Dashboard').closest('button');
-      expect(dashboardButton).toHaveClass('bg-blue-100');
-    });
+jest.mock('@/components/sidebar/MobileSidebarToggle', () => ({
+  MobileSidebarToggle: ({ isOpen, onToggle }: any) => (
+    <button onClick={onToggle} data-testid="mobile-toggle">
+      {isOpen ? 'Close' : 'Open'}
+    </button>
+  ),
+}));
+
+describe('Sidebar', () => {
+  const mockRouter = {
+    push: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  };
+
+  const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
+  const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseRouter.mockReturnValue(mockRouter);
+    mockUsePathname.mockReturnValue('/');
   });
 
-  describe('Sidebar toggle', () => {
-    it('should toggle collapse state when toggle button is clicked', () => {
-      render(<Sidebar />);
-      
-      const toggleButton = screen.getByTitle('Collapse sidebar');
-      fireEvent.click(toggleButton);
-      
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('sidebarCollapsed', 'true');
-    });
+  it('renders sidebar with navigation', () => {
+    render(<Sidebar />);
+    
+    expect(screen.getByTestId('sidebar-navigation')).toBeInTheDocument();
+    expect(screen.getByTestId('nav-team-management')).toBeInTheDocument();
+    expect(screen.getByTestId('nav-match-history')).toBeInTheDocument();
+    expect(screen.getByTestId('nav-player-stats')).toBeInTheDocument();
+    expect(screen.getByTestId('nav-draft-suggestions')).toBeInTheDocument();
   });
 
-  describe('Mobile functionality', () => {
-    it('should handle mobile toggle', () => {
-      render(<Sidebar />);
-      
-      const mobileToggle = screen.getByTitle('Open menu');
-      fireEvent.click(mobileToggle);
-      
-      expect(screen.getByTitle('Close menu')).toBeInTheDocument();
-    });
-  });
-});
-
-describe('Sidebar - Preferences and Settings', () => {
-  beforeEach(setupMocks);
-
-  describe('LocalStorage preferences', () => {
-    it('should load saved preferences from localStorage', () => {
-      localStorageMock.getItem
-        .mockReturnValueOnce('true') // sidebarCollapsed
-        .mockReturnValueOnce('dark') // theme
-        .mockReturnValueOnce('opendota'); // preferredSite
-
-      render(<Sidebar />);
-      
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('sidebarCollapsed');
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('theme');
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('preferredSite');
-    });
-
-    it('should save theme preference to localStorage', () => {
-      render(<Sidebar />);
-      
-      const themeToggle = findThemeToggle();
-      if (themeToggle) {
-        fireEvent.click(themeToggle);
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('theme', 'dark');
-      }
-    });
-
-    it('should apply theme to document when theme changes', () => {
-      render(<Sidebar />);
-      
-      const themeToggle = findThemeToggle();
-      if (themeToggle) {
-        fireEvent.click(themeToggle);
-        expect(document.documentElement.classList.toggle).toHaveBeenCalledWith('dark', true);
-      }
-    });
-  });
-});
-
-describe('Sidebar - Quick Links and External Resources', () => {
-  beforeEach(setupMocks);
-
-  describe('Quick links', () => {
-    it('should render teams in quick links', () => {
-      render(<Sidebar />);
-      
-      expect(screen.getByText('Team Alpha')).toBeInTheDocument();
-      expect(screen.getByText('Team Beta')).toBeInTheDocument();
-    });
-
-    it('should handle team clicks', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      
-      render(<Sidebar />);
-      
-      const teamButton = screen.getByText('Team Alpha');
-      fireEvent.click(teamButton);
-      
-      expect(consoleSpy).toHaveBeenCalledWith('Switch to team:', '1');
-      
-      consoleSpy.mockRestore();
-    });
+  it('navigates to team management when team management button is clicked', () => {
+    render(<Sidebar />);
+    
+    fireEvent.click(screen.getByTestId('nav-team-management'));
+    
+    expect(mockRouter.push).toHaveBeenCalledWith('/team-management');
   });
 
-  describe('External resources', () => {
-    it('should render external resources', () => {
-      render(<Sidebar />);
-      
-      expect(screen.getByText('External Resources')).toBeInTheDocument();
-      const dotabuffElements = screen.getAllByText('Dotabuff');
-      expect(dotabuffElements.length).toBeGreaterThan(0);
-      const opendotaElements = screen.getAllByText('OpenDota');
-      expect(opendotaElements.length).toBeGreaterThan(0);
-      expect(screen.getByText('Dota2ProTracker')).toBeInTheDocument();
-      expect(screen.getByText('Stratz')).toBeInTheDocument();
-    });
+  it('navigates to match history when match history button is clicked', () => {
+    render(<Sidebar />);
+    
+    fireEvent.click(screen.getByTestId('nav-match-history'));
+    
+    expect(mockRouter.push).toHaveBeenCalledWith('/match-history');
+  });
 
-    it('should handle external resource clicks', () => {
-      const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
-      
-      render(<Sidebar />);
-      
-      const externalResourceLink = findExternalResourceLink('Dotabuff');
-      
-      if (externalResourceLink) {
-        fireEvent.click(externalResourceLink);
-        expect(openSpy).toHaveBeenCalledWith('https://www.dotabuff.com', '_blank', 'noopener,noreferrer');
-      }
-      
-      openSpy.mockRestore();
-    });
+  it('navigates to player stats when player stats button is clicked', () => {
+    render(<Sidebar />);
+    
+    fireEvent.click(screen.getByTestId('nav-player-stats'));
+    
+    expect(mockRouter.push).toHaveBeenCalledWith('/player-stats');
+  });
 
-    it('should handle preferred site changes', () => {
-      render(<Sidebar />);
-      
-      const opendotaButton = screen.getByText('Set').closest('button');
-      if (opendotaButton) {
-        fireEvent.click(opendotaButton);
-        expect(localStorageMock.setItem).toHaveBeenCalledWith('preferredSite', 'opendota');
-      }
-    });
+  it('navigates to draft suggestions when draft suggestions button is clicked', () => {
+    render(<Sidebar />);
+    
+    fireEvent.click(screen.getByTestId('nav-draft-suggestions'));
+    
+    expect(mockRouter.push).toHaveBeenCalledWith('/draft-suggestions');
+  });
+
+  it('highlights current page based on pathname', () => {
+    mockUsePathname.mockReturnValue('/team-management');
+    
+    render(<Sidebar />);
+    
+    expect(screen.getByTestId('nav-team-management')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('nav-match-history')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('highlights team management when on root path', () => {
+    mockUsePathname.mockReturnValue('/');
+    
+    render(<Sidebar />);
+    
+    expect(screen.getByTestId('nav-team-management')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('handles mobile sidebar toggle', () => {
+    render(<Sidebar />);
+    
+    const mobileToggle = screen.getByTestId('mobile-toggle');
+    expect(mobileToggle).toHaveTextContent('Open');
+    
+    fireEvent.click(mobileToggle);
+    expect(mobileToggle).toHaveTextContent('Close');
+  });
+
+  it('closes mobile sidebar when navigating', () => {
+    render(<Sidebar />);
+    
+    // Open mobile sidebar
+    fireEvent.click(screen.getByTestId('mobile-toggle'));
+    expect(screen.getByTestId('mobile-toggle')).toHaveTextContent('Close');
+    
+    // Navigate to a page
+    fireEvent.click(screen.getByTestId('nav-team-management'));
+    
+    // Mobile sidebar should close
+    expect(screen.getByTestId('mobile-toggle')).toHaveTextContent('Open');
   });
 }); 

@@ -1,33 +1,44 @@
 import React from 'react';
 
-import { StrengthCard } from './StrengthCard';
-import type { TeamAnalysis } from './useTeamAnalysis';
-import { WeaknessCard } from './WeaknessCard';
-
-interface StrengthsWeaknessesSectionProps {
-  teamAnalysis: TeamAnalysis;
+interface StrengthWeakness {
+  category: string;
+  score: number;
+  description: string;
+  examples?: string[];
+  improvements?: string[];
 }
 
-export const StrengthsWeaknessesSection: React.FC<StrengthsWeaknessesSectionProps> = ({ teamAnalysis }) => {
+interface StrengthsWeaknessesSectionProps {
+  strengths: StrengthWeakness[];
+  weaknesses: StrengthWeakness[];
+}
+
+export const StrengthsWeaknessesSection: React.FC<StrengthsWeaknessesSectionProps> = ({ strengths, weaknesses }) => {
   return (
-    <div className="mb-8">
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Strengths & Weaknesses</h3>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold text-foreground mb-4">Strengths & Weaknesses</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Strengths</h4>
-          <div className="space-y-3">
-            {teamAnalysis.strengths.map((strength, index) => (
-              <StrengthCard key={index} strength={strength} />
+          <h4 className="text-lg font-medium text-foreground mb-3">Strengths</h4>
+          <ul className="space-y-2">
+            {strengths.map((strength, index) => (
+              <li key={index} className="text-sm text-muted-foreground">
+                • {strength.description}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
+        
         <div>
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Areas for Improvement</h4>
-          <div className="space-y-3">
-            {teamAnalysis.weaknesses.map((weakness, index) => (
-              <WeaknessCard key={index} weakness={weakness} />
+          <h4 className="text-lg font-medium text-foreground mb-3">Areas for Improvement</h4>
+          <ul className="space-y-2">
+            {weaknesses.map((weakness, index) => (
+              <li key={index} className="text-sm text-muted-foreground">
+                • {weakness.description}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     </div>

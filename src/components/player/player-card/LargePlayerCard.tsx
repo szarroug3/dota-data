@@ -27,7 +27,7 @@ const PlayerCardActions: React.FC<PlayerCardActionsProps> = ({ onHide, onViewDet
     {onHide && (
       <button
         onClick={onHide}
-        className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+        className="px-3 py-1 text-sm bg-muted text-foreground rounded-md hover:bg-accent"
         tabIndex={0}
       >
         Hide
@@ -77,7 +77,7 @@ export const LargePlayerCard: React.FC<LargePlayerCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700
+      className={`bg-card dark:bg-card rounded-xl shadow-lg border border-border dark:border-border
         hover:shadow-xl transition-all duration-300
         ${isSelected ? 'ring-4 ring-blue-500/50 border-blue-500' : ''}
         ${className}`}
@@ -88,7 +88,7 @@ export const LargePlayerCard: React.FC<LargePlayerCardProps> = ({
           <div className="flex items-center space-x-5">
             <PlayerAvatar player={player} size="large" />
             <div>
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{player.name}</h2>
+              <h2 className="text-2xl font-extrabold text-foreground dark:text-foreground">{player.name}</h2>
               {showRank && <PlayerRankBadge rank={rank} />}
             </div>
           </div>
@@ -96,22 +96,22 @@ export const LargePlayerCard: React.FC<LargePlayerCardProps> = ({
         </div>
 
         {showStats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 text-center p-4 bg-muted dark:bg-muted/50 rounded-lg mb-5">
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Win Rate</div>
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">Win Rate</div>
               <div className={`text-2xl font-bold ${getWinRateColor(stats.winRate)}`}>{stats.winRate.toFixed(1)}%</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Avg. KDA</div>
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">Avg. KDA</div>
               <div className={`text-2xl font-bold ${getKDAColor(stats.averageKDA)}`}>{stats.averageKDA.toFixed(1)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Avg. GPM</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(stats.averageGPM)}</div>
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">Avg. GPM</div>
+              <div className="text-2xl font-bold text-foreground dark:text-foreground">{formatNumber(stats.averageGPM)}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Avg. XPM</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(stats.averageXPM)}</div>
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">Avg. XPM</div>
+              <div className="text-2xl font-bold text-foreground dark:text-foreground">{formatNumber(stats.averageXPM)}</div>
             </div>
           </div>
         )}
@@ -124,13 +124,13 @@ export const LargePlayerCard: React.FC<LargePlayerCardProps> = ({
         )}
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 rounded-b-xl">
-        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">Favorite Hero</h4>
+      <div className="bg-muted dark:bg-muted/50 px-6 py-4 rounded-b-xl">
+        <h4 className="text-sm font-semibold text-foreground dark:text-foreground mb-2">Favorite Hero</h4>
         <div className="flex items-center justify-between">
-          <span className="font-medium text-gray-900 dark:text-white">{stats.favoriteHero.name}</span>
+          <span className="font-medium text-foreground dark:text-foreground">{stats.favoriteHero.name}</span>
           <div className="text-right">
             <div className="text-sm font-bold">{stats.favoriteHero.winRate.toFixed(1)}% WR</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">{stats.favoriteHero.matches} matches</div>
+            <div className="text-xs text-muted-foreground dark:text-muted-foreground">{stats.favoriteHero.matches} matches</div>
           </div>
         </div>
       </div>

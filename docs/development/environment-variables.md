@@ -1,6 +1,6 @@
 # Environment Variables
 
-This document describes all environment variables used by the Dota Data Dashboard.
+This document describes all environment variables used by the Dota Scout Assistant.
 
 ## Quick Setup
 

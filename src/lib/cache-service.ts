@@ -1,238 +1,107 @@
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
-import { CacheBackend, CacheBackendType, CacheStats, CacheValue } from '@/types/cache';
-
-interface CacheServiceConfig {
-  useRedis?: boolean;
-  redisUrl?: string;
-  fallbackToMemory?: boolean;
-  maxMemoryUsage?: number;
-}
+import { CacheBackend, CacheStats } from '@/types/cache';
 
 /**
  * Main cache service with automatic backend selection and fallback
  */
 export class CacheService implements CacheBackend {
   private backend: CacheBackend;
-  private redisBackend?: CacheBackend;
-  private memoryBackend: CacheBackend;
-  private config: CacheServiceConfig;
+  private fallbackBackend: MemoryCacheBackend;
 
-  constructor(config: CacheServiceConfig = {}) {
-    this.config = config;
-    this.memoryBackend = new MemoryCacheBackend(config.maxMemoryUsage);
-    
-    // Initialize backend with proper null checks
-    if (config.useRedis && config.redisUrl) {
-      try {
-        this.redisBackend = new RedisCacheBackend(config.redisUrl);
-        this.backend = this.redisBackend;
-      } catch (err) {
-        // Fallback to memory if Redis fails to initialize
-        this.backend = this.memoryBackend;
-        this.log('Redis unavailable at startup, using memory cache', err as Error | string | object);
-      }
+  constructor() {
+    this.fallbackBackend = new MemoryCacheBackend();
+    if (process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DB === 'true') {
+      this.backend = this.fallbackBackend;
+    } else if (process.env.REDIS_URL) {
+      this.backend = new RedisCacheBackend(process.env.REDIS_URL);
     } else {
-      this.backend = this.memoryBackend;
+      throw new Error('No cache backend configured');
     }
   }
 
-  private async ensureBackend(): Promise<void> {
-    if (this.backend === this.redisBackend && this.redisBackend) {
-      const healthy = await this.redisBackend.isHealthy();
-      if (!healthy && this.config.fallbackToMemory) {
-        this.log('Redis unhealthy, falling back to memory cache');
-        this.backend = this.memoryBackend;
-      }
-    }
-  }
-
-  private log(message: string, error?: Error | string | object) {
-    // Replace with centralized logger if available
-    if (process.env.DEBUG_LOGGING === 'true') {
-      console.error('[CacheService]', message, error || '');
-    }
-  }
-
-  async get(key: string): Promise<CacheValue | null> {
-    await this.ensureBackend();
+  async get<T>(key: string): Promise<T | null> {
+    let response;
     try {
-      return await this.backend.get(key);
-    } catch (err) {
-      this.log('Error in get()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.get(key);
-      }
-      throw err;
+      response = await this.backend.get(key);
+    } catch {
+      response = await this.fallbackBackend.get(key);
     }
+    if (response) {
+      return JSON.parse(response) as T;
+    }
+    return null;
   }
 
   async set(key: string, value: CacheValue, ttl?: number): Promise<void> {
-    await this.ensureBackend();
     try {
       await this.backend.set(key, value, ttl);
-    } catch (err) {
-      this.log('Error in set()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        await this.memoryBackend.set(key, value, ttl);
-      } else {
-        throw err;
-      }
+    } catch {
+      await this.fallbackBackend.set(key, value, ttl);
     }
   }
 
   async delete(key: string): Promise<boolean> {
-    await this.ensureBackend();
     try {
       return await this.backend.delete(key);
-    } catch (err) {
-      this.log('Error in delete()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.delete(key);
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.delete(key);
     }
   }
 
   async exists(key: string): Promise<boolean> {
-    await this.ensureBackend();
     try {
       return await this.backend.exists(key);
-    } catch (err) {
-      this.log('Error in exists()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.exists(key);
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.exists(key);
     }
   }
 
   async mget(keys: string[]): Promise<(CacheValue | null)[]> {
-    await this.ensureBackend();
     try {
       return await this.backend.mget(keys);
-    } catch (err) {
-      this.log('Error in mget()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.mget(keys);
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.mget(keys);
     }
   }
 
   async mset(entries: Array<{ key: string; value: CacheValue; ttl?: number }>): Promise<void> {
-    await this.ensureBackend();
     try {
       await this.backend.mset(entries);
-    } catch (err) {
-      this.log('Error in mset()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        await this.memoryBackend.mset(entries);
-      } else {
-        throw err;
-      }
+    } catch {
+      await this.fallbackBackend.mset(entries);
     }
   }
 
   async mdelete(keys: string[]): Promise<number> {
-    await this.ensureBackend();
     try {
       return await this.backend.mdelete(keys);
-    } catch (err) {
-      this.log('Error in mdelete()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.mdelete(keys);
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.mdelete(keys);
     }
   }
 
   async invalidatePattern(pattern: string): Promise<number> {
-    await this.ensureBackend();
     try {
       return await this.backend.invalidatePattern(pattern);
-    } catch (err) {
-      this.log('Error in invalidatePattern()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.invalidatePattern(pattern);
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.invalidatePattern(pattern);
     }
   }
 
   async getStats(): Promise<CacheStats> {
-    await this.ensureBackend();
     try {
       return await this.backend.getStats();
-    } catch (err) {
-      this.log('Error in getStats()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.getStats();
-      }
-      throw err;
+    } catch {
+      return await this.fallbackBackend.getStats();
     }
   }
 
   async clear(): Promise<void> {
-    await this.ensureBackend();
     try {
       await this.backend.clear();
-    } catch (err) {
-      this.log('Error in clear()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        await this.memoryBackend.clear();
-      } else {
-        throw err;
-      }
-    }
-  }
-
-  async isHealthy(): Promise<boolean> {
-    await this.ensureBackend();
-    try {
-      return await this.backend.isHealthy();
-    } catch (err) {
-      this.log('Error in isHealthy()', err as Error | string | object);
-      if (this.backend !== this.memoryBackend && this.config.fallbackToMemory) {
-        this.backend = this.memoryBackend;
-        return this.memoryBackend.isHealthy();
-      }
-      throw err;
-    }
-  }
-
-  getBackendType(): CacheBackendType {
-    if (this.backend === this.memoryBackend) return 'memory';
-    if (this.backend === this.redisBackend) return 'redis';
-    return 'memory';
-  }
-
-  /**
-   * Disconnect from cache backends
-   */
-  async disconnect(): Promise<void> {
-    try {
-      // Disconnect from Redis backend if it exists
-      if (this.redisBackend) {
-        // Redis backend should handle its own disconnection
-        // This is a placeholder for proper Redis disconnection
-        console.log('[CacheService] Redis backend disconnected');
-      }
-      
-      // Memory backend doesn't need explicit disconnection
-      console.log('[CacheService] Cache service disconnected');
-    } catch (error) {
-      this.log('Error during disconnect', error as Error | string | object);
+    } catch {
+      await this.fallbackBackend.clear();
     }
   }
 } 

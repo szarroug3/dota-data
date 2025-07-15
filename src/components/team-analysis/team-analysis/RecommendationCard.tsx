@@ -15,17 +15,17 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
     switch (priority) {
       case 'high': return 'border-red-500 bg-red-50 dark:bg-red-900/20';
       case 'medium': return 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20';
-      case 'low': return 'border-blue-500 bg-blue-50 dark:bg-blue-900/20';
-      default: return 'border-gray-500 bg-gray-50 dark:bg-gray-900/20';
+      case 'low': return 'border-blue-500 bg-accent dark:bg-accent';
+      default: return 'border-gray-500 bg-muted dark:bg-background/20';
     }
   };
 
   const getPriorityTextColor = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
-      case 'high': return 'text-red-800 dark:text-red-200';
+      case 'high': return 'text-destructive dark:text-destructive';
       case 'medium': return 'text-yellow-800 dark:text-yellow-200';
-      case 'low': return 'text-blue-800 dark:text-blue-200';
-      default: return 'text-gray-800 dark:text-gray-200';
+      case 'low': return 'text-primary dark:text-primary';
+      default: return 'text-foreground dark:text-foreground';
     }
   };
 
@@ -35,11 +35,11 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({ recommen
         <span className={`text-xs font-semibold uppercase ${getPriorityTextColor(recommendation.priority)}`}>
           {recommendation.priority} Priority
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{recommendation.category}</span>
+        <span className="text-xs text-muted-foreground dark:text-muted-foreground">{recommendation.category}</span>
       </div>
-      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{recommendation.title}</h4>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{recommendation.description}</p>
-      <div className="text-xs text-gray-500 dark:text-gray-400">
+      <h4 className="font-semibold text-foreground dark:text-foreground mb-2">{recommendation.title}</h4>
+      <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">{recommendation.description}</p>
+      <div className="text-xs text-muted-foreground dark:text-muted-foreground">
         <strong>Action Items:</strong>
         <ul className="mt-1 space-y-1">
           {recommendation.actionItems.map((item, index) => (

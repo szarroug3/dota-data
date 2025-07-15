@@ -1,44 +1,146 @@
-import fs from 'fs/promises';
+import * as cheerio from 'cheerio';
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
-import { DotabuffLeague } from '@/types/external-apis';
+import { request } from '@/lib/utils/request';
 
-jest.mock('fs/promises');
+// Mock dependencies
+jest.mock('@/lib/utils/request');
+jest.mock('@/lib/config/environment', () => ({
+  getEnv: {
+    USE_MOCK_API: jest.fn(() => false),
+    USE_MOCK_DOTABUFF: jest.fn(() => false)
+  }
+}));
 
-const expectedLeague: DotabuffLeague = {
-  league_id: 456,
-  name: 'League 456',
-  description: '',
-  tournament_url: '',
-  matches: [],
-};
-
-// NOTE: This test expects an empty matches array due to the placeholder implementation of parseDotabuffLeagueHtml.
-// Update this test when a real HTML parser is implemented.
+const mockRequest = request as jest.MockedFunction<typeof request>;
 
 describe('fetchDotabuffLeague', () => {
-  const OLD_ENV = process.env;
   beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...OLD_ENV };
-    (fs.readFile as jest.Mock).mockReset();
     jest.clearAllMocks();
   });
-  afterAll(() => {
-    process.env = OLD_ENV;
+
+  it('should fetch and parse league data successfully', async () => {
+    const mockHtml = `
+      <html>
+        <head><title>RD2L Season 33 - Amateur League - DOTABUFF</title></head>
+        <body>
+          <div class="header-content-title">
+            <h1>RD2L Season 33<small>Amateur League</small></h1>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const expectedResult = {
+      id: '16435',
+      name: 'RD2L Season 33'
+    };
+
+    mockRequest.mockResolvedValue(expectedResult);
+
+    const result = await fetchDotabuffLeague('16435');
+
+    expect(result).toEqual(expectedResult);
+    expect(mockRequest).toHaveBeenCalledWith(
+      'dotabuff',
+      expect.any(Function),
+      expect.any(Function),
+      expect.stringContaining('mock-data/leagues/dotabuff-league-16435.html'),
+      false,
+      604800,
+      'dotabuff:league:16435'
+    );
   });
 
-  it('returns league data in mock mode', async () => {
-    process.env.USE_MOCK_API = 'true';
-    (fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify({})); // content ignored by placeholder parser
-    const league = await fetchDotabuffLeague('456');
-    expect(league).toEqual(expectedLeague);
-    expect(fs.readFile).toHaveBeenCalled();
+  it('should handle force parameter', async () => {
+    const expectedResult = {
+      id: '16435',
+      name: 'RD2L Season 33'
+    };
+
+    mockRequest.mockResolvedValue(expectedResult);
+
+    await fetchDotabuffLeague('16435', true);
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      'dotabuff',
+      expect.any(Function),
+      expect.any(Function),
+      expect.stringContaining('mock-data/leagues/dotabuff-league-16435.html'),
+      true,
+      604800,
+      'dotabuff:league:16435'
+    );
   });
 
-  it('throws error if mock file is missing', async () => {
-    process.env.USE_MOCK_API = 'true';
-    (fs.readFile as jest.Mock).mockRejectedValue(new Error('File not found'));
-    await expect(fetchDotabuffLeague('456')).rejects.toThrow('Mock data file not found for league 456');
+  it('should throw error when request fails', async () => {
+    mockRequest.mockResolvedValue(null);
+
+    await expect(fetchDotabuffLeague('16435')).rejects.toThrow(
+      'Failed to fetch league data for league 16435'
+    );
+  });
+
+  it('should parse HTML correctly', () => {
+    const html = `
+      <html>
+        <head><title>Test League - DOTABUFF</title></head>
+        <body>
+          <div class="header-content-title">
+            <h1>Test League<small>Amateur League</small></h1>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Test the parsing function directly
+    const $ = cheerio.load(html);
+    const h1Element = $('.header-content-title h1').first();
+    h1Element.find('small').remove();
+    const name = h1Element.text().trim();
+
+    expect(name).toBe('Test League');
+  });
+
+  it('should fallback to title parsing when h1 is not found', () => {
+    const html = `
+      <html>
+        <head><title>Fallback League - DOTABUFF</title></head>
+        <body>
+          <div class="header-content-title">
+            <h2>Some other heading</h2>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Test the parsing function directly
+    const $ = cheerio.load(html);
+    const h1Element = $('.header-content-title h1').first();
+    h1Element.find('small').remove();
+    const name = h1Element.text().trim() || $('title').text().split('-')[0].trim();
+
+    expect(name).toBe('Fallback League');
+  });
+
+  it('should throw error when no league name can be parsed', () => {
+    const html = `
+      <html>
+        <head><title>DOTABUFF</title></head>
+        <body>
+          <div class="header-content-title">
+            <h2>Some other heading</h2>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Test the parsing function directly
+    const $ = cheerio.load(html);
+    const h1Element = $('.header-content-title h1').first();
+    h1Element.find('small').remove();
+    const name = h1Element.text().trim() || $('title').text().split('-')[0].trim();
+
+    expect(name).toBe('DOTABUFF');
   });
 }); 

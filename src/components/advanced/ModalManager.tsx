@@ -41,16 +41,16 @@ const getSizeClasses = (size: ModalProps['size']): string => {
 
 // Helper function to render modal header
 const renderModalHeader = (title: string, onClose: () => void) => (
-  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+  <div className="flex items-center justify-between p-6 border-b border-border dark:border-border">
     <h2
       id="modal-title"
-      className="text-lg font-medium text-gray-900 dark:text-white"
+      className="text-lg font-medium text-foreground dark:text-foreground"
     >
       {title}
     </h2>
     <button
       onClick={onClose}
-      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
       aria-label="Close modal"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +154,7 @@ const Modal: React.FC<ModalProps> = ({
         <div
           ref={modalRef}
           className={`
-            relative bg-white dark:bg-gray-800 rounded-lg shadow-xl
+            relative bg-card dark:bg-card rounded-lg shadow-xl
             transform transition-all duration-300 ease-in-out
             w-full ${getSizeClasses(size)} ${className}
           `}
@@ -224,7 +224,7 @@ const getVariantClasses = (variant: 'danger' | 'warning' | 'info'): string => {
       return 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500';
     case 'info':
     default:
-      return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+      return 'bg-blue-600 hover:bg-blue-700 focus:ring-primary';
   }
 };
 
@@ -256,11 +256,11 @@ export const ConfirmModal: React.FC<{
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <div className="space-y-4">
-        <p className="text-gray-600 dark:text-gray-300">{message}</p>
+        <p className="text-muted-foreground dark:text-muted-foreground">{message}</p>
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+            className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-card dark:text-foreground dark:border-border dark:hover:bg-accent"
           >
             {cancelText}
           </button>

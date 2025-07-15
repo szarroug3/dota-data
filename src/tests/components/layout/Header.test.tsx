@@ -91,17 +91,17 @@ describe('Header - Styling and layout', () => {
   it('should have proper header styling', () => {
     render(<Header title="Test Page" />);
     const header = screen.getByRole('banner');
-    expect(header).toHaveClass('bg-white', 'dark:bg-gray-900', 'border-b');
+    expect(header).toHaveClass('bg-background', 'text-foreground', 'border-b', 'border-border');
   });
   it('should have proper title styling', () => {
     render(<Header title="Test Page" />);
     const title = screen.getByRole('heading', { level: 1 });
-    expect(title).toHaveClass('text-2xl', 'font-bold', 'text-gray-900', 'dark:text-white');
+    expect(title).toHaveClass('text-2xl', 'font-bold', 'text-foreground', 'dark:text-foreground');
   });
   it('should have proper subtitle styling', () => {
     render(<Header title="Test Page" subtitle="Page description" />);
     const subtitle = screen.getByText('Page description');
-    expect(subtitle).toHaveClass('text-sm', 'text-gray-500', 'dark:text-gray-400');
+    expect(subtitle).toHaveClass('text-sm', 'text-muted-foreground', 'dark:text-muted-foreground');
   });
 });
 
@@ -110,14 +110,14 @@ describe('Header - Dark mode support', () => {
   it('should have dark mode classes', () => {
     render(<Header title="Test Page" />);
     const header = screen.getByRole('banner');
-    expect(header).toHaveClass('dark:bg-gray-900', 'dark:border-gray-700');
+    expect(header).toHaveClass('dark:border-border');
   });
   it('should have dark mode text classes', () => {
     render(<Header title="Test Page" subtitle="Description" />);
     const title = screen.getByRole('heading', { level: 1 });
     const subtitle = screen.getByText('Description');
-    expect(title).toHaveClass('dark:text-white');
-    expect(subtitle).toHaveClass('dark:text-gray-400');
+    expect(title).toHaveClass('dark:text-foreground');
+    expect(subtitle).toHaveClass('dark:text-muted-foreground');
   });
 });
 

@@ -1,5 +1,7 @@
 // Jest globals are available without import
 
+import { DotabuffMatchSummary, DotabuffTeam, OpenDotaTeam } from '@/types/external-apis';
+
 import {
     batchProcessTeams,
     ProcessedTeam,
@@ -7,7 +9,6 @@ import {
     RawTeamData,
     validateProcessedTeam
 } from '@/lib/services/team-processor';
-import { DotabuffMatchSummary, DotabuffTeam, OpenDotaTeam } from '@/types/external-apis';
 
 describe('Team Processor', () => {
   let mockRawTeamData: RawTeamData;

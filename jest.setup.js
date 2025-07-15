@@ -26,26 +26,6 @@ jest.mock('@upstash/redis', () => ({
   Redis: MockRedis,
 }));
 
-// Jest setup file
-// Suppress console logging during tests
-const originalConsoleLog = console.log;
-const originalConsoleWarn = console.warn;
-const originalConsoleError = console.error;
-
-beforeAll(() => {
-  // Suppress console output during tests
-  console.log = jest.fn();
-  console.warn = jest.fn();
-  console.error = jest.fn();
-});
-
-afterAll(() => {
-  // Restore console functions
-  console.log = originalConsoleLog;
-  console.warn = originalConsoleWarn;
-  console.error = originalConsoleError;
-});
-
 // Mock NextResponse globally for backend API tests
 jest.mock('next/server', () => {
   class NextResponse {

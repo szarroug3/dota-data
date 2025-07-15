@@ -1,104 +1,171 @@
-import fs from 'fs/promises';
-import path from 'path';
+import * as path from 'path';
 
-import { CacheService } from '@/lib/cache-service';
-import { RateLimiter } from '@/lib/rate-limiter';
-import { CacheValue } from '@/types/cache';
-import { DotabuffTeam } from '@/types/external-apis';
+import * as cheerio from 'cheerio';
+import { Element } from 'domhandler';
+
+import { request, requestWithRetry } from '@/lib/utils/request';
+import { DotabuffMatchSummary, DotabuffTeam } from '@/types/external-apis';
 
 /**
- * Fetches a Dota 2 team profile from Dotabuff, with cache, rate limiting, and mock mode support.
+ * Fetches a Dota 2 team profile from Dotabuff using the generic request function.
  * Dotabuff endpoint: https://www.dotabuff.com/esports/teams/{teamId}
  *
  * @param teamId The team ID to fetch
  * @param force If true, bypasses cache and fetches fresh data
  * @returns DotabuffTeam object
- * @throws Error if data cannot be loaded from any source
  */
 export async function fetchDotabuffTeam(teamId: string, force = false): Promise<DotabuffTeam> {
   const cacheKey = `dotabuff:team:${teamId}`;
   const cacheTTL = 60 * 60 * 6; // 6 hours
-  const cache = new CacheService({
-    useRedis: process.env.USE_REDIS === 'true',
-    redisUrl: process.env.REDIS_URL,
-    fallbackToMemory: true,
-  });
-  const rateLimiter = new RateLimiter({
-    useRedis: process.env.USE_REDIS === 'true',
-    redisUrl: process.env.REDIS_URL,
-    fallbackToMemory: true,
-  });
+  const mockFilename = path.join(process.cwd(), 'mock-data', 'teams', `dotabuff-team-${teamId}.html`);
 
-  if (process.env.USE_MOCK_API === 'true') {
-    return loadMockTeam(teamId);
+  const result = await request<DotabuffTeam>(
+    'dotabuff',
+    () => fetchTeamFromDotabuff(teamId),
+    (html: string) => parseDotabuffTeamHtml(html, teamId),
+    mockFilename,
+    force,
+    cacheTTL,
+    cacheKey
+  );
+
+  if (!result) {
+    throw new Error(`Failed to fetch team data for team ${teamId}`);
   }
 
-  if (!force) {
-    const cached = await cache.get(cacheKey);
-    const parsed = parseCachedTeam(cached);
-    if (parsed) return parsed;
-  }
-
-  await ensureNotRateLimited(rateLimiter);
-
-  const team = await fetchTeamFromDotabuff(teamId);
-  await cache.set(cacheKey, JSON.stringify(team), cacheTTL);
-  return team;
+  return result;
 }
 
-async function loadMockTeam(teamId: string): Promise<DotabuffTeam> {
-  const mockPath = path.join(process.cwd(), 'mock-data', 'teams', `dotabuff-team-${teamId}.json`);
+/**
+ * Fetch team HTML from Dotabuff with delay
+ */
+async function fetchTeamFromDotabuff(teamId: string): Promise<string> {
+  const url = `https://www.dotabuff.com/esports/teams/${teamId}/matches`;
+  
   try {
-    const data = await fs.readFile(mockPath, 'utf-8');
-    return JSON.parse(data) as DotabuffTeam;
-  } catch (err) {
-    throw new Error(`Failed to load Dotabuff team ${teamId} from mock data: ${err}`);
-  }
-}
-
-function parseCachedTeam(cached: CacheValue): DotabuffTeam | null {
-  if (typeof cached === 'string') {
-    try {
-      const parsed = JSON.parse(cached);
-      if (parsed && typeof parsed === 'object') {
-        return parsed as DotabuffTeam;
-      }
-    } catch {
-      // ignore parse error
+    const response = await requestWithRetry('GET', url);
+    
+    if (!response.ok) {
+      throw new Error(`Dotabuff API error: ${response.status} ${response.statusText}`);
     }
-  }
-  return null;
-}
-
-async function ensureNotRateLimited(rateLimiter: RateLimiter): Promise<void> {
-  const rateResult = await rateLimiter.checkServiceLimit('dotabuff', 'teams');
-  if (!rateResult.allowed) {
-    throw new Error('Rate limited by Dotabuff');
-  }
-}
-
-async function fetchTeamFromDotabuff(teamId: string): Promise<DotabuffTeam> {
-  const baseUrl = process.env.DOTABUFF_BASE_URL || 'https://www.dotabuff.com';
-  const url = `${baseUrl}/esports/teams/${teamId}`;
-  const timeout = Number(process.env.DOTABUFF_REQUEST_DELAY) || 1000;
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  let response: Response;
-  try {
-    response = await fetch(url, { signal: controller.signal });
+    
+    return await response.text();
   } catch (err) {
-    clearTimeout(id);
     throw new Error(`Failed to fetch Dotabuff team ${teamId}: ${err}`);
   }
-  clearTimeout(id);
-  if (!response.ok) {
-    throw new Error(`Dotabuff API error: ${response.status} ${response.statusText}`);
+}
+
+/**
+ * Extract match ID from result link
+ */
+function extractMatchId(resultCell: cheerio.Cheerio<Element>): string | null {
+  const resultLink = resultCell.find('a').attr('href');
+  if (!resultLink) return null;
+  return resultLink.split('/').pop()?.split('-')[0] || null;
+}
+
+/**
+ * Extract match result (won/lost) from result text
+ */
+function extractMatchResult(resultCell: cheerio.Cheerio<Element>): 'won' | 'lost' {
+  const resultText = resultCell.find('a').text().toLowerCase();
+  return resultText.includes('won') ? 'won' : 'lost';
+}
+
+/**
+ * Extract opponent name from opponent cell
+ */
+function extractOpponentName(opponentCell: cheerio.Cheerio<Element>): string | null {
+  const opponentElement = opponentCell.find('.team-text-full');
+  return opponentElement.text().trim();
+}
+
+/**
+ * Extract league ID from league cell
+ */
+function extractLeagueId(leagueCell: cheerio.Cheerio<Element>): string {
+  const leagueLink = leagueCell.find('a').attr('href');
+  return leagueLink?.split('/').pop()?.split('-')[0] || '';
+}
+
+/**
+ * Extract match start time from result cell
+ */
+function extractStartTime(resultCell: cheerio.Cheerio<Element>): number {
+  const dateElement = resultCell.find('time');
+  const matchDate = dateElement.attr('datetime') || '';
+  return matchDate ? new Date(matchDate).getTime() / 1000 : 0;
+}
+
+/**
+ * Parse duration string into seconds
+ */
+function parseDuration(durationStr: cheerio.Cheerio<Element>): number {
+  // Get the text content and remove any HTML elements
+  const durationText = durationStr.text().trim();
+  
+  // Extract just the time part (e.g., "34:56" from "34:56<div class="bar...">")
+  const timeMatch = durationText.match(/(\d+):(\d+)/);
+  if (timeMatch) {
+    const minutes = parseInt(timeMatch[1], 10);
+    const seconds = parseInt(timeMatch[2], 10);
+    return minutes * 60 + seconds;
   }
-  try {
-    // In a real implementation, parse the HTML and extract team data here
-    // For now, assume the endpoint returns JSON (for mock/test purposes)
-    return await response.json();
-  } catch (err) {
-    throw new Error(`Failed to parse Dotabuff team response: ${err}`);
+  
+  // Handle "TBA" or other non-time formats
+  if (durationText === 'TBA' || durationText.includes('–')) {
+    return 0;
   }
+  
+  return 0;
+}
+
+/**
+ * Parse a single match row from the Dotabuff team table
+ */
+function parseMatchRow($: cheerio.CheerioAPI, row: cheerio.Cheerio<Element>): DotabuffMatchSummary | null {
+  const tds = row.find('td');
+  if (tds.length < 6) return null;
+
+  const matchId = extractMatchId($(tds[1])) || '';
+  const result = extractMatchResult($(tds[1]));
+  const duration = parseDuration($(tds[3]));
+  const opponentName = extractOpponentName($(tds[5])) || '';
+  const leagueId = extractLeagueId($(tds[0])) || '';
+  const startTime = extractStartTime($(tds[1])) || 0;
+
+  return {
+    matchId,
+    result,
+    duration,
+    opponentName,
+    leagueId,
+    startTime,
+  };
+}
+
+/**
+ * Parse Dotabuff team HTML into structured data
+ */
+function parseDotabuffTeamHtml(html: string, teamId: string): DotabuffTeam {
+  const $ = cheerio.load(html);
+
+  // Extract team name from the header
+  const teamName = $('.header-content-title h1').first().text().replace('Matches', '').trim() ||
+                   $('title').text().split('-')[0].trim();
+
+  if (!teamName) {
+    throw new Error('Could not parse team name from Dotabuff HTML');
+  }
+
+  const matches: DotabuffMatchSummary[] = [];
+
+  $('table.table.recent-esports-matches tbody tr').each((_, el) => {
+    const match = parseMatchRow($, $(el));
+    if (match) {
+      matches.push(match);
+    }
+  });
+
+  return { id: teamId, name: teamName, matches };
 } 

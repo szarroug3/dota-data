@@ -4,10 +4,11 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { CacheService } from '@/lib/cache-service';
-import { RateLimiter } from '@/lib/rate-limiter';
 import { ProcessedMatch, processMatch } from '@/lib/services/match-processor';
 import { ApiErrorResponse } from '@/types/api';
 import { OpenDotaMatch } from '@/types/external-apis';
+
+import { RateLimiter } from '@/lib/rate-limiter';
 
 /**
  * Validate match ID parameter
@@ -223,7 +224,7 @@ function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
  * @swagger
  * /api/matches/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 match data
+ *     summary: Fetch and process Dota 2 match data for Dota Scout Assistant
  *     description: Retrieves detailed match information including players, teams, statistics, and game events. Supports both parsed and unparsed match data with different view modes for optimized data delivery.
  *     tags:
  *       - Matches

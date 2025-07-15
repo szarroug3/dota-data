@@ -9,20 +9,20 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Dota Data - Team Performance Analytics',
+  title: 'Dota Scout Assistant - Team Performance Analytics',
   description: 'Comprehensive Dota 2 team performance analytics, match history, player statistics, and draft suggestions.',
   keywords: 'Dota 2, analytics, team performance, match history, player stats, draft suggestions',
-  authors: [{ name: 'Dota Data Team' }],
+  authors: [{ name: 'Dota Scout Assistant Team' }],
   robots: 'index, follow',
   openGraph: {
-    title: 'Dota Data - Team Performance Analytics',
+    title: 'Dota Scout Assistant - Team Performance Analytics',
     description: 'Comprehensive Dota 2 team performance analytics and insights',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dota Data - Team Performance Analytics',
+    title: 'Dota Scout Assistant - Team Performance Analytics',
     description: 'Comprehensive Dota 2 team performance analytics and insights',
   },
 };

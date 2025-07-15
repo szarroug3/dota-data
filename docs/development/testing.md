@@ -1,6 +1,6 @@
 # Testing Guide
 
-This guide covers testing strategies, commands, and best practices for the Dota Data Dashboard.
+This guide covers testing strategies, commands, and best practices for the Dota Scout Assistant.
 
 ## Testing Overview
 

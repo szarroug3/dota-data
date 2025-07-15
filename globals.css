@@ -1,5 +1,4 @@
-@tailwind base;
-@tailwind components;
+@import "tailwindcss/preflight";
 @tailwind utilities;
 
 @layer base {
@@ -55,6 +54,43 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Add smooth transitions for theme changes */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Add smooth transitions for theme-sensitive elements */
+  * {
+    transition: background-color 0.3s ease, 
+                color 0.3s ease, 
+                border-color 0.3s ease, 
+                box-shadow 0.3s ease;
+  }
+  
+  /* Ensure images and icons don't have jarring transitions */
+  img, svg {
+    transition: opacity 0.3s ease, filter 0.3s ease;
+  }
+  
+  /* Smooth transitions for form elements */
+  input, textarea, select {
+    transition: background-color 0.3s ease, 
+                border-color 0.3s ease, 
+                color 0.3s ease;
+  }
+  
+  /* Smooth transitions for buttons */
+  button {
+    transition: background-color 0.3s ease, 
+                border-color 0.3s ease, 
+                color 0.3s ease, 
+                transform 0.2s ease;
+  }
+  
+  /* Smooth transitions for cards and containers */
+  .card, .bg-card, .bg-background, .bg-popover {
+    transition: background-color 0.3s ease, 
+                border-color 0.3s ease, 
+                box-shadow 0.3s ease;
   }
 }
 

@@ -67,7 +67,7 @@ describe('DataTable', () => {
         />
       );
 
-      const tableContainer = screen.getByText('Name').closest('.bg-white');
+      const tableContainer = screen.getByText('Name').closest('.bg-card');
       expect(tableContainer).toHaveClass('custom-table');
     });
   });
@@ -241,7 +241,7 @@ describe('DataTable', () => {
       fireEvent.click(rowCheckboxes[0]);
 
       const selectedRow = screen.getByText('Alice').closest('tr');
-      expect(selectedRow).toHaveClass('bg-blue-50');
+      expect(selectedRow).toHaveClass('bg-accent', 'dark:bg-accent');
     });
   });
 
