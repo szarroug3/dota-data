@@ -21,47 +21,7 @@ describe('fetchOpenDotaHeroes', () => {
       primary_attr: 'agi',
       attack_type: 'Melee',
       roles: ['Carry', 'Escape', 'Nuker'],
-      img: '/apps/dota2/images/heroes/antimage_full.png?',
-      icon: '/apps/dota2/images/heroes/antimage_icon.png',
-      base_health: 200,
-      base_mana: 75,
-      base_armor: 0,
-      base_attack_min: 29,
-      base_attack_max: 33,
-      move_speed: 310,
-      base_attack_time: 1.4,
-      attack_point: 0.3,
-      attack_range: 150,
-      projectile_speed: 0,
-      turn_rate: 0.6,
-      cm_enabled: true,
       legs: 2,
-      day_vision: 1800,
-      night_vision: 800,
-      hero_id: 1,
-      turbo_picks: 0,
-      turbo_wins: 0,
-      pro_ban: 0,
-      pro_win: 0,
-      pro_pick: 0,
-      "1_pick": 0,
-      "1_win": 0,
-      "2_pick": 0,
-      "2_win": 0,
-      "3_pick": 0,
-      "3_win": 0,
-      "4_pick": 0,
-      "4_win": 0,
-      "5_pick": 0,
-      "5_win": 0,
-      "6_pick": 0,
-      "6_win": 0,
-      "7_pick": 0,
-      "7_win": 0,
-      "8_pick": 0,
-      "8_win": 0,
-      null_pick: 0,
-      null_win: 0,
     },
     {
       id: 2,
@@ -70,47 +30,7 @@ describe('fetchOpenDotaHeroes', () => {
       primary_attr: 'str',
       attack_type: 'Melee',
       roles: ['Initiator', 'Durable', 'Disabler', 'Jungler'],
-      img: '/apps/dota2/images/heroes/axe_full.png?',
-      icon: '/apps/dota2/images/heroes/axe_icon.png',
-      base_health: 200,
-      base_mana: 75,
-      base_armor: 0,
-      base_attack_min: 25,
-      base_attack_max: 27,
-      move_speed: 290,
-      base_attack_time: 1.7,
-      attack_point: 0.5,
-      attack_range: 150,
-      projectile_speed: 0,
-      turn_rate: 0.6,
-      cm_enabled: true,
       legs: 2,
-      day_vision: 1800,
-      night_vision: 800,
-      hero_id: 2,
-      turbo_picks: 0,
-      turbo_wins: 0,
-      pro_ban: 0,
-      pro_win: 0,
-      pro_pick: 0,
-      "1_pick": 0,
-      "1_win": 0,
-      "2_pick": 0,
-      "2_win": 0,
-      "3_pick": 0,
-      "3_win": 0,
-      "4_pick": 0,
-      "4_win": 0,
-      "5_pick": 0,
-      "5_win": 0,
-      "6_pick": 0,
-      "6_win": 0,
-      "7_pick": 0,
-      "7_win": 0,
-      "8_pick": 0,
-      "8_win": 0,
-      null_pick: 0,
-      null_win: 0,
     },
   ];
 
@@ -173,8 +93,22 @@ describe('fetchOpenDotaHeroes', () => {
     it('should fetch JSON from OpenDota API', async () => {
       const mockResponse = {
         ok: true,
-        text: jest.fn().mockResolvedValue(JSON.stringify(mockHeroes))
-      };
+        text: jest.fn().mockResolvedValue(JSON.stringify(mockHeroes)),
+        headers: new Headers(),
+        redirected: false,
+        status: 200,
+        statusText: 'OK',
+        type: 'default' as ResponseType,
+        url: 'https://api.opendota.com/api/heroes',
+        body: null,
+        bodyUsed: false,
+        clone: jest.fn(),
+        arrayBuffer: jest.fn(),
+        blob: jest.fn(),
+        formData: jest.fn(),
+        json: jest.fn(),
+        bytes: jest.fn(),
+      } as Response;
 
       mockRequestWithRetry.mockResolvedValue(mockResponse);
 
@@ -198,9 +132,9 @@ describe('fetchOpenDotaHeroes', () => {
         statusText: 'Internal Server Error'
       };
 
-      mockRequestWithRetry.mockResolvedValue(mockResponse);
+      mockRequestWithRetry.mockResolvedValue(mockResponse as Response);
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });
@@ -213,7 +147,7 @@ describe('fetchOpenDotaHeroes', () => {
     it('should throw error when fetch fails', async () => {
       mockRequestWithRetry.mockRejectedValue(new Error('Network error'));
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });
@@ -226,7 +160,7 @@ describe('fetchOpenDotaHeroes', () => {
     it('should handle API timeout', async () => {
       mockRequestWithRetry.mockRejectedValue(new Error('Request timeout'));
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });
@@ -315,7 +249,7 @@ describe('fetchOpenDotaHeroes', () => {
       });
 
       await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to fetch heroes data'
+        'Failed to parse OpenDota heroes data'
       );
     });
   });
@@ -324,10 +258,12 @@ describe('fetchOpenDotaHeroes', () => {
     it('should handle complete flow with real API response', async () => {
       const apiResponse = {
         ok: true,
-        text: jest.fn().mockResolvedValue(JSON.stringify(mockHeroes))
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve(JSON.stringify(mockHeroes)),
       };
 
-      mockRequestWithRetry.mockResolvedValue(apiResponse);
+      mockRequestWithRetry.mockResolvedValue(apiResponse as Response);
       mockRequest.mockImplementation(async (service, fetcher, parser) => {
         const data = await fetcher();
         return parser(data);
@@ -345,10 +281,12 @@ describe('fetchOpenDotaHeroes', () => {
     it('should handle force refresh scenario', async () => {
       const apiResponse = {
         ok: true,
-        text: jest.fn().mockResolvedValue(JSON.stringify(mockHeroes))
+        status: 200,
+        statusText: 'OK',
+        text: () => Promise.resolve(JSON.stringify(mockHeroes)),
       };
 
-      mockRequestWithRetry.mockResolvedValue(apiResponse);
+      mockRequestWithRetry.mockResolvedValue(apiResponse as Response);
       mockRequest.mockImplementation(async (service, fetcher, parser) => {
         const data = await fetcher();
         return parser(data);
@@ -375,9 +313,9 @@ describe('fetchOpenDotaHeroes', () => {
         statusText: 'Too Many Requests'
       };
 
-      mockRequestWithRetry.mockResolvedValue(rateLimitResponse);
+      mockRequestWithRetry.mockResolvedValue(rateLimitResponse as Response);
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });
@@ -394,9 +332,9 @@ describe('fetchOpenDotaHeroes', () => {
         statusText: 'Unauthorized'
       };
 
-      mockRequestWithRetry.mockResolvedValue(authErrorResponse);
+      mockRequestWithRetry.mockResolvedValue(authErrorResponse as Response);
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });

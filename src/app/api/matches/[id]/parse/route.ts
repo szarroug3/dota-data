@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { ApiErrorResponse } from '@/types/api';
+import { QueueEnqueueResult, QueueJob } from '@/types/queue';
 
 import { RequestQueue } from '@/lib/request-queue';
-import { QueueEnqueueResult, QueueJob } from '@/types/queue';
 
 /**
  * Validate match ID parameter

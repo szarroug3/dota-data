@@ -18,16 +18,6 @@ describe('fetchDotabuffLeague', () => {
 
   describe('fetchDotabuffLeague', () => {
     it('should fetch and parse league data successfully', async () => {
-      const mockHtml = `
-        <html>
-          <head><title>RD2L Season 33 - Dotabuff</title></head>
-          <body>
-            <div class="header-content-title">
-              <h1>RD2L Season 33<small>Some additional info</small></h1>
-            </div>
-          </body>
-        </html>
-      `;
 
       const mockLeagueData = {
         id: '16435',
@@ -88,8 +78,23 @@ describe('fetchDotabuffLeague', () => {
               </div>
             </body>
           </html>
-        `)
-      };
+        `),
+        headers: new Headers(),
+        ok: true,
+        redirected: false,
+        status: 200,
+        statusText: 'OK',
+        type: 'default' as ResponseType,
+        url: 'https://www.dotabuff.com/esports/leagues/16435',
+        body: null,
+        bodyUsed: false,
+        clone: jest.fn(),
+        arrayBuffer: jest.fn(),
+        blob: jest.fn(),
+        formData: jest.fn(),
+        json: jest.fn(),
+        bytes: jest.fn(),
+      } as Response;
 
       mockRequestWithRetry.mockResolvedValue(mockResponse);
 

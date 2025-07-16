@@ -1,10 +1,10 @@
 import { fetchOpenDotaMatch } from '@/lib/api/opendota/matches';
+import { request } from '@/lib/utils/request';
 import { OpenDotaMatch } from '@/types/external-apis';
 
 // Mock external dependencies
 jest.mock('@/lib/utils/request');
-
-const mockRequest = require('@/lib/utils/request').request as jest.MockedFunction<any>;
+const mockRequest = request as jest.MockedFunction<any>;
 
 // Mock data
 const mockRawMatch: OpenDotaMatch = {

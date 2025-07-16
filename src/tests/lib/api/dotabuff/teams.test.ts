@@ -79,6 +79,15 @@ describe('fetchDotabuffTeam', () => {
     it('should fetch HTML from Dotabuff API', async () => {
       const mockResponse = {
         ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+        redirected: false,
+        type: 'default' as ResponseType,
+        url: 'https://www.dotabuff.com/esports/teams/9517508/matches',
+        body: null,
+        bodyUsed: false,
+        bytes: jest.fn(),
         text: jest.fn().mockResolvedValue(`
           <html>
             <head><title>Test Team - Dotabuff</title></head>
@@ -88,8 +97,13 @@ describe('fetchDotabuffTeam', () => {
               </div>
             </body>
           </html>
-        `)
-      };
+        `),
+        json: jest.fn(),
+        arrayBuffer: jest.fn(),
+        blob: jest.fn(),
+        formData: jest.fn(),
+        clone: jest.fn()
+      } as Response;
 
       mockRequestWithRetry.mockResolvedValue(mockResponse);
 
@@ -113,9 +127,9 @@ describe('fetchDotabuffTeam', () => {
         statusText: 'Not Found'
       };
 
-      mockRequestWithRetry.mockResolvedValue(mockResponse);
+      mockRequestWithRetry.mockResolvedValue(mockResponse as Response);
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });
@@ -128,7 +142,7 @@ describe('fetchDotabuffTeam', () => {
     it('should throw error when fetch fails', async () => {
       mockRequestWithRetry.mockRejectedValue(new Error('Network error'));
 
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
+      mockRequest.mockImplementation(async (service, fetcher) => {
         await fetcher();
         return null;
       });

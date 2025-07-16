@@ -2,67 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
 import { ApiErrorResponse } from '@/types/api';
-import { DotabuffMatchSummary } from '@/types/external-apis';
-
-/**
- * League statistics interface
- */
-interface LeagueStatistics {
-  totalMatches: number;
-  averageDuration: number;
-  radiantWins: number;
-  direWins: number;
-  uniqueTeams: number;
-}
-
-/**
- * Processed league data interface
- */
-interface ProcessedLeague {
-  leagueId: number;
-  name: string;
-  description?: string;
-  tournamentUrl?: string;
-  matches?: DotabuffMatchSummary[];
-  statistics?: LeagueStatistics;
-  processed: {
-    timestamp: string;
-    version: string;
-  };
-}
 
 
-/**
- * Calculate league statistics from matches
- */
-function calculateLeagueStatistics(matches: DotabuffMatchSummary[]): LeagueStatistics {
-  if (matches.length === 0) {
-    return {
-      totalMatches: 0,
-      averageDuration: 0,
-      radiantWins: 0,
-      direWins: 0,
-      uniqueTeams: 0,
-    };
-  }
 
-  const radiantWins = matches.filter(match => match.result === 'won').length;
-  const direWins = matches.filter(match => match.result === 'lost').length;
-  const uniqueTeams = new Set([
-    ...matches.map(match => match.opponentName),
-  ]).size;
 
-  const totalDuration = matches.reduce((sum, match) => sum + match.duration, 0);
-  const averageDuration = Math.round(totalDuration / matches.length);
 
-  return {
-    totalMatches: matches.length,
-    averageDuration,
-    radiantWins,
-    direWins,
-    uniqueTeams,
-  };
-}
 
 
 
@@ -322,7 +266,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const leagueId = '';
   try {
     const { id: leagueId } = await params;
 
@@ -340,7 +283,7 @@ export async function GET(
     console.error('Leagues API Error:', error);
     
     if (error instanceof Error) {
-      const errorResponse = handleLeagueError(error, leagueId);
+      const errorResponse = handleLeagueError(error, ''); // Pass an empty string or a placeholder if leagueId is not available here
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 

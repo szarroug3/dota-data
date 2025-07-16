@@ -33,7 +33,9 @@ describe('CacheService', () => {
       invalidatePattern: jest.fn(),
       getStats: jest.fn(),
       clear: jest.fn(),
-    } as jest.Mocked<MemoryCacheBackend>;
+      isHealthy: jest.fn(),
+      destroy: jest.fn(),
+    } as unknown as jest.Mocked<MemoryCacheBackend>;
 
     mockRedisBackend = {
       get: jest.fn(),
@@ -46,7 +48,9 @@ describe('CacheService', () => {
       invalidatePattern: jest.fn(),
       getStats: jest.fn(),
       clear: jest.fn(),
-    } as jest.Mocked<RedisCacheBackend>;
+      isHealthy: jest.fn(),
+      destroy: jest.fn(),
+    } as unknown as jest.Mocked<RedisCacheBackend>;
 
     MockMemoryCacheBackend.mockImplementation(() => mockMemoryBackend);
     MockRedisCacheBackend.mockImplementation(() => mockRedisBackend);
@@ -350,7 +354,14 @@ describe('CacheService', () => {
     });
 
     it('should get stats from primary backend', async () => {
-      const mockStats = { hits: 10, misses: 5 };
+      const mockStats = {
+        keys: 10,
+        memoryUsage: 1024,
+        hitRate: 0.8,
+        missRate: 0.2,
+        uptime: 3600000,
+        backend: 'memory' as const
+      };
       mockMemoryBackend.getStats.mockResolvedValue(mockStats);
 
       const result = await cacheService.getStats();
@@ -360,7 +371,14 @@ describe('CacheService', () => {
     });
 
     it('should fallback to memory backend when primary fails', async () => {
-      const mockStats = { hits: 8, misses: 3 };
+      const mockStats = {
+        keys: 8,
+        memoryUsage: 512,
+        hitRate: 0.7,
+        missRate: 0.3,
+        uptime: 2400000,
+        backend: 'memory' as const
+      };
       mockMemoryBackend.getStats
         .mockRejectedValueOnce(new Error('Primary backend failed'))
         .mockResolvedValueOnce(mockStats);

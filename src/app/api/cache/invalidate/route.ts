@@ -326,7 +326,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Parse and validate request body
     let body: CacheInvalidateRequest;
     try {
-      body = await request.json();
+      body = await request.json() as CacheInvalidateRequest;
     } catch {
       const errorResponse: ApiErrorResponse = {
         error: 'Invalid request body',

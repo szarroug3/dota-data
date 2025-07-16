@@ -1,6 +1,6 @@
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
-import { CacheBackend, CacheStats } from '@/types/cache';
+import { CacheBackend, CacheStats, CacheValue } from '@/types/cache';
 
 /**
  * Main cache service with automatic backend selection and fallback
@@ -9,14 +9,14 @@ export class CacheService implements CacheBackend {
   private backend: CacheBackend;
   private fallbackBackend: MemoryCacheBackend;
 
-  constructor() {
+  constructor(config?: { useRedis?: boolean; redisUrl?: string; fallbackToMemory?: boolean }) {
     this.fallbackBackend = new MemoryCacheBackend();
     if (process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DB === 'true') {
       this.backend = this.fallbackBackend;
-    } else if (process.env.REDIS_URL) {
-      this.backend = new RedisCacheBackend(process.env.REDIS_URL);
+    } else if (config?.redisUrl || process.env.REDIS_URL) {
+      this.backend = new RedisCacheBackend(config?.redisUrl || process.env.REDIS_URL || '');
     } else {
-      throw new Error('No cache backend configured');
+      this.backend = this.fallbackBackend;
     }
   }
 
@@ -28,7 +28,7 @@ export class CacheService implements CacheBackend {
       response = await this.fallbackBackend.get(key);
     }
     if (response) {
-      return JSON.parse(response) as T;
+      return response as T;
     }
     return null;
   }
@@ -102,6 +102,27 @@ export class CacheService implements CacheBackend {
       await this.backend.clear();
     } catch {
       await this.fallbackBackend.clear();
+    }
+  }
+
+  /**
+   * Get the backend type (redis or memory)
+   */
+  getBackendType(): 'redis' | 'memory' {
+    if (this.backend instanceof RedisCacheBackend) {
+      return 'redis';
+    }
+    return 'memory';
+  }
+
+  /**
+   * Check if the cache backend is healthy
+   */
+  async isHealthy(): Promise<boolean> {
+    try {
+      return await this.backend.isHealthy();
+    } catch {
+      return await this.fallbackBackend.isHealthy();
     }
   }
 } 
