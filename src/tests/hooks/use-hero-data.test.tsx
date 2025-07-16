@@ -10,8 +10,47 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { HeroProvider } from '@/contexts/hero-context';
+import { HeroDataFetchingProvider, useHeroDataFetching } from '@/contexts/hero-data-fetching-context';
 import { useHeroData } from '@/hooks/use-hero-data';
 import type { HeroFilters } from '@/types/contexts/hero-context-value';
+import type { OpenDotaHero } from '@/types/external-apis';
+
+// Mock useHeroDataFetching to return mock hero data
+jest.mock('@/contexts/hero-data-fetching-context', () => {
+  const actual = jest.requireActual('@/contexts/hero-data-fetching-context');
+  return {
+    ...actual,
+    useHeroDataFetching: jest.fn()
+  };
+});
+
+const mockHeroes: OpenDotaHero[] = [
+  {
+    id: 1,
+    name: 'antimage',
+    localized_name: 'Anti-Mage',
+    primary_attr: 'agility',
+    attack_type: 'melee',
+    roles: ['Carry', 'Escape', 'Nuker'],
+    legs: 2
+  },
+  {
+    id: 2,
+    name: 'axe',
+    localized_name: 'Axe',
+    primary_attr: 'strength',
+    attack_type: 'melee',
+    roles: ['Initiator', 'Durable', 'Disabler', 'Jungler'],
+    legs: 2
+  }
+];
+
+// Set up the mock implementation before each test
+beforeEach(() => {
+  (useHeroDataFetching as jest.Mock).mockReturnValue({
+    fetchHeroesData: jest.fn().mockResolvedValue(mockHeroes)
+  });
+});
 
 // ============================================================================
 // TEST UTILITIES
@@ -30,7 +69,9 @@ const mockFilters: HeroFilters = {
 };
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <HeroProvider>{children}</HeroProvider>
+  <HeroDataFetchingProvider>
+    <HeroProvider>{children}</HeroProvider>
+  </HeroDataFetchingProvider>
 );
 
 // ============================================================================
@@ -45,7 +86,6 @@ function testInitialState() {
     expect(result.current.heroes).toEqual([]);
     expect(result.current.filteredHeroes).toEqual([]);
     // Loading might be true initially due to auto-refresh
-    expect(result.current.error).toBeNull();
     expect(result.current.filters).toEqual({
       primaryAttribute: [],
       attackType: [],
@@ -60,10 +100,12 @@ function testInitialState() {
   it('should provide actions object with all required methods', () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
-    expect(result.current.actions).toBeDefined();
-    expect(typeof result.current.actions.setFilters).toBe('function');
-    expect(typeof result.current.actions.refreshHeroes).toBe('function');
-    expect(typeof result.current.actions.clearError).toBe('function');
+    expect(result.current.setFilters).toBeDefined();
+    expect(typeof result.current.setFilters).toBe('function');
+    expect(result.current.refreshHeroes).toBeDefined();
+    expect(typeof result.current.refreshHeroes).toBe('function');
+    expect(result.current.clearErrors).toBeDefined();
+    expect(typeof result.current.clearErrors).toBe('function');
   });
 }
 
@@ -73,7 +115,7 @@ function testFiltering() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     act(() => {
-      result.current.actions.setFilters(mockFilters);
+      result.current.setFilters(mockFilters);
     });
 
     expect(result.current.filters).toEqual(mockFilters);
@@ -93,7 +135,7 @@ function testFiltering() {
     };
 
     act(() => {
-      result.current.actions.setFilters(emptyFilters);
+      result.current.setFilters(emptyFilters);
     });
 
     expect(result.current.filters).toEqual(emptyFilters);
@@ -113,7 +155,7 @@ function testFiltering() {
     };
 
     act(() => {
-      result.current.actions.setFilters(partialFilters);
+      result.current.setFilters(partialFilters);
     });
 
     expect(result.current.filters).toEqual(partialFilters);
@@ -126,22 +168,22 @@ function testRefreshFunctionality() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     await act(async () => {
-      await result.current.actions.refreshHeroes();
+      await result.current.refreshHeroes();
     });
 
     // The refresh should complete without throwing
-    expect(result.current.actions.refreshHeroes).toBeDefined();
+    expect(result.current.refreshHeroes).toBeDefined();
   });
 
   it('should call refreshHeroes with force parameter', async () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     await act(async () => {
-      await result.current.actions.refreshHeroes(true);
+      await result.current.refreshHeroes(true);
     });
 
     // The refresh should complete without throwing
-    expect(result.current.actions.refreshHeroes).toBeDefined();
+    expect(result.current.refreshHeroes).toBeDefined();
   });
 
   it('should handle refresh errors gracefully', async () => {
@@ -151,12 +193,12 @@ function testRefreshFunctionality() {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     await act(async () => {
-      await result.current.actions.refreshHeroes();
+      await result.current.refreshHeroes();
     });
 
     // The refresh should complete without throwing, so console.error might not be called
     // We're testing that the hook doesn't crash on errors
-    expect(result.current.actions.refreshHeroes).toBeDefined();
+    expect(result.current.refreshHeroes).toBeDefined();
     consoleSpy.mockRestore();
   });
 }
@@ -167,17 +209,17 @@ function testErrorHandling() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     act(() => {
-      result.current.actions.clearError();
+      result.current.clearErrors();
     });
 
-    expect(result.current.error).toBeNull();
+    expect(result.current.heroesError).toBeNull();
   });
 
   it('should handle multiple error sources', () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // The hook should handle multiple error sources gracefully
-    expect(result.current.error).toBeNull();
+    expect(result.current.heroesError).toBeNull();
   });
 }
 
@@ -187,14 +229,14 @@ function testLoadingStates() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // Loading state should be reactive to context changes
-    expect(typeof result.current.loading).toBe('boolean');
+    expect(typeof result.current.isLoadingHeroes).toBe('boolean');
   });
 
   it('should handle loading state changes', () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // Loading state should be reactive to context changes
-    expect(typeof result.current.loading).toBe('boolean');
+    expect(typeof result.current.isLoadingHeroes).toBe('boolean');
   });
 }
 
@@ -213,9 +255,9 @@ function testContextIntegration() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // Actions should delegate to context
-    expect(result.current.actions.setFilters).toBeDefined();
-    expect(result.current.actions.refreshHeroes).toBeDefined();
-    expect(result.current.actions.clearError).toBeDefined();
+    expect(result.current.setFilters).toBeDefined();
+    expect(result.current.refreshHeroes).toBeDefined();
+    expect(result.current.clearErrors).toBeDefined();
   });
 }
 
@@ -229,7 +271,7 @@ function testAutoRefresh() {
 
     // Wait for potential auto-refresh
     await waitFor(() => {
-      expect(result.current.actions.refreshHeroes).toBeDefined();
+      expect(result.current.refreshHeroes).toBeDefined();
     });
   });
 
@@ -237,7 +279,7 @@ function testAutoRefresh() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // If heroes are already loaded, should not trigger auto-refresh
-    expect(result.current.actions.refreshHeroes).toBeDefined();
+    expect(result.current.refreshHeroes).toBeDefined();
   });
 }
 
@@ -246,21 +288,21 @@ function testMemoization() {
   it('should memoize loading state correctly', () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
-    const initialLoading = result.current.loading;
+    const initialLoading = result.current.isLoadingHeroes;
 
     // Re-render should maintain same loading state
     const { result: result2 } = renderHook(() => useHeroData(), { wrapper });
-    expect(result2.current.loading).toBe(initialLoading);
+    expect(result2.current.isLoadingHeroes).toBe(initialLoading);
   });
 
   it('should memoize error state correctly', () => {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
-    const initialError = result.current.error;
+    const initialError = result.current.heroesError;
 
     // Re-render should maintain same error state
     const { result: result2 } = renderHook(() => useHeroData(), { wrapper });
-    expect(result2.current.error).toBe(initialError);
+    expect(result2.current.heroesError).toBe(initialError);
   });
 }
 
@@ -270,9 +312,9 @@ function testCallbackStability() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // All callbacks should be functions
-    expect(typeof result.current.actions.setFilters).toBe('function');
-    expect(typeof result.current.actions.refreshHeroes).toBe('function');
-    expect(typeof result.current.actions.clearError).toBe('function');
+    expect(typeof result.current.setFilters).toBe('function');
+    expect(typeof result.current.refreshHeroes).toBe('function');
+    expect(typeof result.current.clearErrors).toBe('function');
   });
 
   it('should provide callbacks with correct signatures', () => {
@@ -280,11 +322,11 @@ function testCallbackStability() {
 
     // Test that callbacks can be called with expected parameters
     expect(() => {
-      result.current.actions.setFilters(mockFilters);
+      result.current.setFilters(mockFilters);
     }).not.toThrow();
 
     expect(() => {
-      result.current.actions.clearError();
+      result.current.clearErrors();
     }).not.toThrow();
   });
 }
@@ -303,7 +345,7 @@ function testEdgeCases() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     // Should handle null error states properly
-    expect(result.current.error).toBeNull();
+    expect(result.current.heroesError).toBeNull();
   });
 
   it('should handle empty filters object', () => {
@@ -320,7 +362,7 @@ function testEdgeCases() {
     };
 
     act(() => {
-      result.current.actions.setFilters(emptyFilters);
+      result.current.setFilters(emptyFilters);
     });
 
     expect(result.current.filters).toEqual(emptyFilters);

@@ -1,432 +1,444 @@
 /**
- * Hero Context Provider
- *
- * Manages hero state, data fetching, filtering, and hero management actions.
- * Provides centralized hero data management for the entire application.
+ * Hero Context
+ * 
+ * Manages hero state and provides actions for hero operations.
+ * Handles hero filtering, selection, and data management.
+ * Uses hero data fetching context for API interactions.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import type {
-  Hero,
-  HeroContextProviderProps,
-  HeroContextValue,
-  HeroData,
-  HeroFilters,
-  HeroStats
-} from '@/types/contexts/hero-context-value';
+import { useHeroDataFetching } from '@/contexts/hero-data-fetching-context';
+import type { Hero, HeroContextProviderProps, HeroFilters } from '@/types/contexts/hero-context-value';
+import type { OpenDotaHero } from '@/types/external-apis';
 
 // ============================================================================
-// STATE TYPES
+// DEFAULTS
 // ============================================================================
 
-interface HeroState {
-  heroes: Hero[];
-  filteredHeroes: Hero[];
-  selectedHeroId: string | null;
-  selectedHero: HeroData | null;
-  heroStats: HeroStats | null;
-  filters: HeroFilters;
-  isLoadingHeroes: boolean;
-  isLoadingHeroData: boolean;
-  isLoadingHeroStats: boolean;
-  heroesError: string | null;
-  heroDataError: string | null;
-  heroStatsError: string | null;
-}
+const DEFAULT_HERO_FILTERS: HeroFilters = {
+  primaryAttribute: [],
+  attackType: [],
+  roles: [],
+  complexity: [],
+  difficulty: [],
+  pickRate: {
+    min: null,
+    max: null
+  },
+  winRate: {
+    min: null,
+    max: null
+  }
+};
 
 // ============================================================================
-// ACTION TYPES
+// HELPERS
 // ============================================================================
 
-type HeroAction =
-  | { type: 'SET_HEROES_LOADING'; payload: boolean }
-  | { type: 'SET_HEROES'; payload: Hero[] }
-  | { type: 'SET_HEROES_ERROR'; payload: string | null }
-  | { type: 'SET_FILTERED_HEROES'; payload: Hero[] }
-  | { type: 'SET_SELECTED_HERO_ID'; payload: string | null }
-  | { type: 'SET_SELECTED_HERO'; payload: HeroData | null }
-  | { type: 'SET_HERO_DATA_LOADING'; payload: boolean }
-  | { type: 'SET_HERO_DATA_ERROR'; payload: string | null }
-  | { type: 'SET_HERO_STATS'; payload: HeroStats | null }
-  | { type: 'SET_HERO_STATS_LOADING'; payload: boolean }
-  | { type: 'SET_HERO_STATS_ERROR'; payload: string | null }
-  | { type: 'SET_FILTERS'; payload: HeroFilters }
-  | { type: 'CLEAR_ERRORS' };
+const findHero = (heroList: Hero[], heroId: string): Hero | undefined => {
+  return heroList.find(hero => hero.id === heroId);
+};
 
-// ============================================================================
-// REDUCER
-// ============================================================================
+const heroExists = (heroList: Hero[], heroId: string): boolean => {
+  return heroList.some(hero => hero.id === heroId);
+};
 
-// Helper to check if all hero filters are empty
-function areAllHeroFiltersEmpty(filters: HeroFilters): boolean {
+const areAllHeroFiltersEmpty = (filters: HeroFilters): boolean => {
   return (
     filters.primaryAttribute.length === 0 &&
     filters.attackType.length === 0 &&
     filters.roles.length === 0 &&
     filters.complexity.length === 0 &&
     filters.difficulty.length === 0 &&
-    filters.pickRate.min == null && filters.pickRate.max == null &&
-    filters.winRate.min == null && filters.winRate.max == null
+    filters.pickRate.min === null &&
+    filters.pickRate.max === null &&
+    filters.winRate.min === null &&
+    filters.winRate.max === null
   );
-}
+};
 
-const handleHeroesActions = (state: HeroState, action: HeroAction): HeroState => {
-  switch (action.type) {
-    case 'SET_HEROES_LOADING':
-      return { ...state, isLoadingHeroes: action.payload };
-    case 'SET_HEROES': {
-      const allHeroes = action.payload;
-      const filters = state.filters;
-      const isAllFiltersEmpty = areAllHeroFiltersEmpty(filters);
-      return {
-        ...state,
-        heroes: allHeroes,
-        filteredHeroes: isAllFiltersEmpty ? allHeroes : [],
-        isLoadingHeroes: false
-      };
+const applyHeroFilters = (heroList: Hero[], filters: HeroFilters): Hero[] => {
+  return heroList.filter(hero => {
+    // Primary attribute filter
+    if (filters.primaryAttribute.length > 0 && !filters.primaryAttribute.includes(hero.primaryAttribute)) {
+      return false;
     }
-    case 'SET_HEROES_ERROR':
-      return { ...state, heroesError: action.payload, isLoadingHeroes: false };
-    case 'SET_FILTERED_HEROES':
-      return { ...state, filteredHeroes: action.payload };
-    default:
-      return state;
-  }
+    
+    // Attack type filter
+    if (filters.attackType.length > 0 && !filters.attackType.includes(hero.attackType)) {
+      return false;
+    }
+    
+    // Roles filter
+    if (filters.roles.length > 0 && !filters.roles.some(role => hero.roles.includes(role))) {
+      return false;
+    }
+    
+    // Complexity filter
+    if (filters.complexity.length > 0 && !filters.complexity.includes(hero.complexity)) {
+      return false;
+    }
+    
+    // For now, skip pickRate and winRate filters since we don't have this data
+    // TODO: Implement when we have hero stats data
+    
+    return true;
+  });
 };
 
-const handleHeroDataActions = (state: HeroState, action: HeroAction): HeroState => {
-  switch (action.type) {
-    case 'SET_SELECTED_HERO_ID':
-      return { ...state, selectedHeroId: action.payload };
-    case 'SET_SELECTED_HERO':
-      return { ...state, selectedHero: action.payload };
-    case 'SET_HERO_DATA_LOADING':
-      return { ...state, isLoadingHeroData: action.payload };
-    case 'SET_HERO_DATA_ERROR':
-      return { ...state, heroDataError: action.payload, isLoadingHeroData: false };
-    default:
-      return state;
-  }
-};
-
-const handleHeroStatsActions = (state: HeroState, action: HeroAction): HeroState => {
-  switch (action.type) {
-    case 'SET_HERO_STATS':
-      return { ...state, heroStats: action.payload, isLoadingHeroStats: false };
-    case 'SET_HERO_STATS_LOADING':
-      return { ...state, isLoadingHeroStats: action.payload };
-    case 'SET_HERO_STATS_ERROR':
-      return { ...state, heroStatsError: action.payload, isLoadingHeroStats: false };
-    default:
-      return state;
-  }
-};
-
-const handleFilterActions = (state: HeroState, action: HeroAction): HeroState => {
-  switch (action.type) {
-    case 'SET_FILTERS':
-      return { ...state, filters: action.payload };
-    case 'CLEAR_ERRORS':
-      return {
-        ...state,
-        heroesError: null,
-        heroDataError: null,
-        heroStatsError: null
-      };
-    default:
-      return state;
-  }
-};
-
-// Handler map for reducer actions
-const actionHandlers = {
-  'SET_HEROES_LOADING': handleHeroesActions,
-  'SET_HEROES': handleHeroesActions,
-  'SET_HEROES_ERROR': handleHeroesActions,
-  'SET_FILTERED_HEROES': handleHeroesActions,
-  'SET_SELECTED_HERO_ID': handleHeroDataActions,
-  'SET_SELECTED_HERO': handleHeroDataActions,
-  'SET_HERO_DATA_LOADING': handleHeroDataActions,
-  'SET_HERO_DATA_ERROR': handleHeroDataActions,
-  'SET_HERO_STATS': handleHeroStatsActions,
-  'SET_HERO_STATS_LOADING': handleHeroStatsActions,
-  'SET_HERO_STATS_ERROR': handleHeroStatsActions,
-  'SET_FILTERS': handleFilterActions,
-  'CLEAR_ERRORS': handleFilterActions
-} as const;
-
-const heroReducer = (state: HeroState, action: HeroAction): HeroState => {
-  const handler = actionHandlers[action.type as keyof typeof actionHandlers];
-  return handler ? handler(state, action) : state;
+const convertOpenDotaHeroToHero = (openDotaHero: OpenDotaHero): Hero => {
+  // Convert primary attribute string to proper type
+  const primaryAttribute = openDotaHero.primary_attr as 'strength' | 'agility' | 'intelligence';
+  
+  // Convert attack type string to proper type
+  const attackType = openDotaHero.attack_type as 'melee' | 'ranged';
+  
+  return {
+    id: openDotaHero.id.toString(),
+    name: openDotaHero.name,
+    localizedName: openDotaHero.localized_name,
+    primaryAttribute,
+    attackType,
+    roles: openDotaHero.roles,
+    complexity: 2, // Default complexity since OpenDotaHero doesn't have this
+    imageUrl: `/heroes/${openDotaHero.name}.png`
+  };
 };
 
 // ============================================================================
-// INITIAL STATE
+// CONTEXT
 // ============================================================================
 
-const initialState: HeroState = {
-  heroes: [],
-  filteredHeroes: [],
-  selectedHeroId: null,
-  selectedHero: null,
-  heroStats: null,
-  filters: {
-    primaryAttribute: [],
-    attackType: [],
-    roles: [],
-    complexity: [],
-    difficulty: [],
-    pickRate: { min: null, max: null },
-    winRate: { min: null, max: null }
-  },
-  isLoadingHeroes: false,
-  isLoadingHeroData: false,
-  isLoadingHeroStats: false,
-  heroesError: null,
-  heroDataError: null,
-  heroStatsError: null
-};
-
-// ============================================================================
-// CONTEXT CREATION
-// ============================================================================
+export interface HeroContextValue {
+  // Hero data
+  heroes: Hero[];
+  filteredHeroes: Hero[];
+  selectedHeroId: string | null;
+  selectedHero: Hero | null;
+  
+  // Filters and state
+  filters: HeroFilters;
+  
+  // Loading states
+  isLoadingHeroes: boolean;
+  isLoadingHeroData: boolean;
+  isLoadingHeroStats: boolean;
+  
+  // Error states
+  heroesError: string | null;
+  heroDataError: string | null;
+  heroStatsError: string | null;
+  
+  // Actions
+  setSelectedHero: (heroId: string) => void;
+  setFilters: (filters: HeroFilters) => void;
+  refreshHeroes: () => Promise<void>;
+  refreshHero: (heroId: string) => Promise<void>;
+  clearErrors: () => void;
+}
 
 const HeroContext = createContext<HeroContextValue | undefined>(undefined);
 
 // ============================================================================
-// PROVIDER
+// CUSTOM HOOKS
 // ============================================================================
 
-// Helper: Initial data loading effect
-function useInitialHeroLoad(fetchHeroes: () => Promise<void>) {
-  useEffect(() => {
-    fetchHeroes();
-  }, [fetchHeroes]);
-}
+const useHeroState = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-// Helper to return mock heroes
-function getMockHeroes(): Hero[] {
-  return [
-    {
-      id: '1',
-      name: 'Anti-Mage',
-      localizedName: 'Anti-Mage',
-      primaryAttribute: 'agility',
-      attackType: 'melee',
-      roles: ['Carry', 'Escape'],
-      complexity: 2,
-      imageUrl: '/heroes/anti-mage.png'
-    },
-    {
-      id: '2',
-      name: 'Invoker',
-      localizedName: 'Invoker',
-      primaryAttribute: 'intelligence',
-      attackType: 'ranged',
-      roles: ['Carry', 'Nuker', 'Disabler'],
-      complexity: 3,
-      imageUrl: '/heroes/invoker.png'
+  return {
+    isLoading,
+    setIsLoading,
+    error,
+    setError
+  };
+};
+
+const useHeroUtilities = (heroes: Hero[]) => {
+  const heroExistsCallback = useCallback((heroId: string) => {
+    return heroExists(heroes, heroId);
+  }, [heroes]);
+
+  const findHeroCallback = useCallback((heroId: string): Hero | undefined => {
+    return findHero(heroes, heroId);
+  }, [heroes]);
+
+  const areAllHeroFiltersEmptyCallback = useCallback((filters: HeroFilters): boolean => {
+    return areAllHeroFiltersEmpty(filters);
+  }, []);
+
+  const applyHeroFiltersCallback = useCallback((heroList: Hero[], filters: HeroFilters): Hero[] => {
+    return applyHeroFilters(heroList, filters);
+  }, []);
+
+  return {
+    heroExists: heroExistsCallback,
+    findHero: findHeroCallback,
+    areAllHeroFiltersEmpty: areAllHeroFiltersEmptyCallback,
+    applyHeroFilters: applyHeroFiltersCallback
+  };
+};
+
+// ============================================================================
+// OPERATIONS
+// ============================================================================
+
+const useRefreshHeroes = (
+  setHeroes: (heroes: Hero[]) => void,
+  setFilteredHeroes: (heroes: Hero[]) => void,
+  filters: HeroFilters,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: string | null) => void,
+  areAllHeroFiltersEmpty: (filters: HeroFilters) => boolean,
+  applyHeroFilters: (heroList: Hero[], filters: HeroFilters) => Hero[],
+  fetchHeroesData: () => Promise<OpenDotaHero[] | { error: string }>
+) => {
+  return useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await fetchHeroesData();
+      if ('error' in result) {
+        throw new Error(result.error);
+      }
+      
+      // Convert OpenDotaHero to Hero format
+      const convertedHeroes: Hero[] = result.map(convertOpenDotaHeroToHero);
+      
+      setHeroes(convertedHeroes);
+      
+      // Apply current filters
+      const isAllFiltersEmpty = areAllHeroFiltersEmpty(filters);
+      if (isAllFiltersEmpty) {
+        setFilteredHeroes(convertedHeroes);
+      } else {
+        const filtered = applyHeroFilters(convertedHeroes, filters);
+        setFilteredHeroes(filtered);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh heroes';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  ];
-}
+  }, [filters, setHeroes, setFilteredHeroes, areAllHeroFiltersEmpty, applyHeroFilters, fetchHeroesData, setIsLoading, setError]);
+};
 
-// Standalone async function for fetching heroes
-async function fetchHeroesData(dispatch: React.Dispatch<HeroAction>): Promise<void> {
-  try {
-    dispatch({ type: 'SET_HEROES_LOADING', payload: true });
-    await new Promise(resolve => setTimeout(resolve, 10));
-    const mockHeroes: Hero[] = getMockHeroes();
-    dispatch({ type: 'SET_HEROES', payload: mockHeroes });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch heroes';
-    dispatch({ type: 'SET_HEROES_ERROR', payload: errorMessage });
-  }
-}
+const useRefreshHero = (
+  heroExists: (heroId: string) => boolean,
+  refreshHeroes: () => Promise<void>,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: string | null) => void
+) => {
+  return useCallback(async (heroId: string) => {
+    if (!heroExists(heroId)) {
+      throw new Error('Hero not found');
+    }
 
-// Simple hook that returns the async function
-function useFetchHeroes(dispatch: React.Dispatch<HeroAction>) {
-  return useCallback(() => fetchHeroesData(dispatch), [dispatch]);
-}
+    setIsLoading(true);
+    setError(null);
 
-// Helper to create mock hero data
-function getMockHeroData(heroId: string, heroes: Hero[]): HeroData {
-  const hero = heroes.find(h => h.id === heroId) || {
-    id: heroId,
-    name: 'Unknown Hero',
-    localizedName: 'Unknown Hero',
-    primaryAttribute: 'strength',
-    attackType: 'melee',
-    roles: [],
-    complexity: 1,
-    imageUrl: ''
-  };
-  
-  return {
-    hero,
-    stats: {
-      totalGames: 100,
-      totalWins: 60,
-      totalLosses: 40,
-      winRate: 0.6,
-      averageKDA: 2.5,
-      averageGPM: 500,
-      averageXPM: 480,
-      averageMatchDuration: 2400,
-      pickRate: 0.15,
-      banRate: 0.05,
-      preferredRoles: hero.roles,
-      counters: [],
-      synergies: []
-    },
-    meta: {
-      pickRate: 0.15,
-      banRate: 0.05,
-      winRate: 0.6,
-      averageKDA: 2.5,
-      averageGPM: 500,
-      averageXPM: 480,
-      averageMatchDuration: 2400,
-      preferredRoles: hero.roles,
-      difficulty: 'medium'
-    },
-    counters: [],
-    synergies: []
-  };
-}
+    try {
+      // For now, we'll just refresh all heroes since individual hero data isn't implemented
+      await refreshHeroes();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh hero';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [heroExists, refreshHeroes, setIsLoading, setError]);
+};
 
-// Standalone async function for fetching hero data
-async function fetchHeroDataAndDispatch(heroId: string, state: HeroState, dispatch: React.Dispatch<HeroAction>): Promise<void> {
-  try {
-    dispatch({ type: 'SET_HERO_DATA_LOADING', payload: true });
-    await new Promise(resolve => setTimeout(resolve, 10));
-    const mockHeroData: HeroData = getMockHeroData(heroId, state.heroes);
-    dispatch({ type: 'SET_SELECTED_HERO', payload: mockHeroData });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch hero data';
-    dispatch({ type: 'SET_HERO_DATA_ERROR', payload: errorMessage });
-  }
-}
+const useSetSelectedHero = (
+  findHero: (heroId: string) => Hero | undefined,
+  setSelectedHeroId: (heroId: string | null) => void,
+  setSelectedHero: (hero: Hero | null) => void
+) => {
+  return useCallback(async (heroId: string | null) => {
+    if (!heroId) {
+      setSelectedHeroId(null);
+      setSelectedHero(null);
+      return;
+    }
+    const hero = findHero(heroId);
+    if (!hero) {
+      throw new Error('Hero not found');
+    }
+    setSelectedHeroId(heroId);
+    setSelectedHero(hero);
+  }, [findHero, setSelectedHeroId, setSelectedHero]);
+};
 
-// Simple hook that returns the async function
-function useFetchHeroData(state: HeroState, dispatch: React.Dispatch<HeroAction>) {
-  return useCallback((heroId: string) => fetchHeroDataAndDispatch(heroId, state, dispatch), [dispatch, state]);
-}
+const useSetFilters = (
+  heroes: Hero[],
+  setFilters: (filters: HeroFilters) => void,
+  setFilteredHeroes: (heroes: Hero[]) => void,
+  areAllHeroFiltersEmpty: (filters: HeroFilters) => boolean,
+  applyHeroFilters: (heroList: Hero[], filters: HeroFilters) => Hero[]
+) => {
+  return useCallback((newFilters: HeroFilters) => {
+    setFilters(newFilters);
+    
+    // Apply new filters to current heroes
+    const isAllFiltersEmpty = areAllHeroFiltersEmpty(newFilters);
+    if (isAllFiltersEmpty) {
+      setFilteredHeroes(heroes);
+    } else {
+      const filtered = applyHeroFilters(heroes, newFilters);
+      setFilteredHeroes(filtered);
+    }
+  }, [heroes, setFilters, setFilteredHeroes, areAllHeroFiltersEmpty, applyHeroFilters]);
+};
 
-// Helper to create mock hero stats
-function getMockHeroStats(): HeroStats {
-  return {
-    totalGames: 100,
-    totalWins: 60,
-    totalLosses: 40,
-    winRate: 0.6,
-    averageKDA: 2.5,
-    averageGPM: 500,
-    averageXPM: 480,
-    averageMatchDuration: 2400,
-    pickRate: 0.15,
-    banRate: 0.05,
-    preferredRoles: ['Carry'],
-    counters: [],
-    synergies: []
-  };
-}
+const useHeroOperations = (
+  heroes: Hero[],
+  setHeroes: (heroes: Hero[]) => void,
+  filteredHeroes: Hero[],
+  setFilteredHeroes: (heroes: Hero[]) => void,
+  selectedHeroId: string | null,
+  setSelectedHeroId: (heroId: string | null) => void,
+  selectedHero: Hero | null,
+  setSelectedHero: (hero: Hero | null) => void,
+  filters: HeroFilters,
+  setFilters: (filters: HeroFilters) => void,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: string | null) => void,
+  heroExists: (heroId: string) => boolean,
+  findHero: (heroId: string) => Hero | undefined,
+  areAllHeroFiltersEmpty: (filters: HeroFilters) => boolean,
+  applyHeroFilters: (heroList: Hero[], filters: HeroFilters) => Hero[],
+  fetchHeroesData: () => Promise<OpenDotaHero[] | { error: string }>
+) => {
+  const refreshHeroes = useRefreshHeroes(
+    setHeroes,
+    setFilteredHeroes,
+    filters,
+    setIsLoading,
+    setError,
+    areAllHeroFiltersEmpty,
+    applyHeroFilters,
+    fetchHeroesData
+  );
 
-// Standalone async function for fetching hero stats
-async function fetchHeroStatsAndDispatch(dispatch: React.Dispatch<HeroAction>): Promise<void> {
-  try {
-    dispatch({ type: 'SET_HERO_STATS_LOADING', payload: true });
-    await new Promise(resolve => setTimeout(resolve, 10));
-    const mockHeroStats: HeroStats = getMockHeroStats();
-    dispatch({ type: 'SET_HERO_STATS', payload: mockHeroStats });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch hero stats';
-    dispatch({ type: 'SET_HERO_STATS_ERROR', payload: errorMessage });
-  }
-}
+  const refreshHero = useRefreshHero(
+    heroExists,
+    refreshHeroes,
+    setIsLoading,
+    setError
+  );
 
-// Simple hook that returns the async function
-function useFetchHeroStats(dispatch: React.Dispatch<HeroAction>) {
-  return useCallback(() => fetchHeroStatsAndDispatch(dispatch), [dispatch]);
-}
+  const setSelectedHeroHandler = useSetSelectedHero(
+    findHero,
+    setSelectedHeroId,
+    setSelectedHero
+  );
 
-// Helper to apply hero filters
-function applyHeroFilters(heroes: Hero[], filters: HeroFilters): Hero[] {
-  if (areAllHeroFiltersEmpty(filters)) {
-    return heroes;
-  }
-  // For now, return empty array when filters are applied
-  // This can be expanded with actual filtering logic later
-  return [];
-}
-
-function useHeroActions(state: HeroState, dispatch: React.Dispatch<HeroAction>) {
-  const fetchHeroes = useFetchHeroes(dispatch);
-  const fetchHeroData = useFetchHeroData(state, dispatch);
-  const fetchHeroStats = useFetchHeroStats(dispatch);
-
-  // Actions
-  const setSelectedHero = useCallback((heroId: string): void => {
-    dispatch({ type: 'SET_SELECTED_HERO_ID', payload: heroId });
-    fetchHeroData(heroId);
-  }, [dispatch, fetchHeroData]);
-
-  const setFilters = useCallback((filters: HeroFilters): void => {
-    dispatch({ type: 'SET_FILTERS', payload: filters });
-    const filtered = applyHeroFilters(state.heroes, filters);
-    dispatch({ type: 'SET_FILTERED_HEROES', payload: filtered });
-  }, [dispatch, state.heroes]);
-
-  const refreshHeroes = useCallback(async (): Promise<void> => {
-    await fetchHeroes();
-  }, [fetchHeroes]);
-
-  const refreshHero = useCallback(async (): Promise<void> => {
-    await fetchHeroStats();
-  }, [fetchHeroStats]);
-
-  const clearErrors = useCallback((): void => {
-    dispatch({ type: 'CLEAR_ERRORS' });
-  }, [dispatch]);
-
-  return {
-    fetchHeroes,
-    fetchHeroData,
-    fetchHeroStats,
-    setSelectedHero,
+  const setFiltersHandler = useSetFilters(
+    heroes,
     setFilters,
+    setFilteredHeroes,
+    areAllHeroFiltersEmpty,
+    applyHeroFilters
+  );
+
+  return {
     refreshHeroes,
     refreshHero,
+    setSelectedHero: setSelectedHeroHandler,
+    setFilters: setFiltersHandler
+  };
+};
+
+const useErrorHandling = (setError: (error: string | null) => void) => {
+  const clearErrors = useCallback(() => {
+    setError(null);
+  }, [setError]);
+
+  return {
     clearErrors
   };
-}
+};
+
+// ============================================================================
+// PROVIDER IMPLEMENTATION
+// ============================================================================
 
 export const HeroProvider: React.FC<HeroContextProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(heroReducer, initialState);
-  const actions = useHeroActions(state, dispatch);
+  // State
+  const { isLoading, setIsLoading, error, setError } = useHeroState();
+  
+  // Hero data state
+  const [heroes, setHeroes] = useState<Hero[]>([]);
+  const [filteredHeroes, setFilteredHeroes] = useState<Hero[]>([]);
+  const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null);
+  const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
+  const [filters, setFilters] = useState<HeroFilters>(DEFAULT_HERO_FILTERS);
 
+  // Contexts
+  const { fetchHeroesData } = useHeroDataFetching();
+
+  // Utilities
+  const { heroExists, findHero, areAllHeroFiltersEmpty, applyHeroFilters } = useHeroUtilities(heroes);
+
+  // Operations
+  const {
+    refreshHeroes,
+    refreshHero,
+    setSelectedHero: setSelectedHeroHandler,
+    setFilters: setFiltersHandler
+  } = useHeroOperations(
+    heroes,
+    setHeroes,
+    filteredHeroes,
+    setFilteredHeroes,
+    selectedHeroId,
+    setSelectedHeroId,
+    selectedHero,
+    setSelectedHero,
+    filters,
+    setFilters,
+    setIsLoading,
+    setError,
+    heroExists,
+    findHero,
+    areAllHeroFiltersEmpty,
+    applyHeroFilters,
+    fetchHeroesData
+  );
+
+  const { clearErrors } = useErrorHandling(setError);
+
+  // Fetch heroes on mount
+  useEffect(() => {
+    refreshHeroes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Context value
   const contextValue: HeroContextValue = {
-    heroes: state.heroes,
-    filteredHeroes: state.filteredHeroes,
-    selectedHeroId: state.selectedHeroId,
-    selectedHero: state.selectedHero,
-    heroStats: state.heroStats,
-    filters: state.filters,
-    isLoadingHeroes: state.isLoadingHeroes,
-    isLoadingHeroData: state.isLoadingHeroData,
-    isLoadingHeroStats: state.isLoadingHeroStats,
-    heroesError: state.heroesError,
-    heroDataError: state.heroDataError,
-    heroStatsError: state.heroStatsError,
-    setSelectedHero: actions.setSelectedHero,
-    setFilters: actions.setFilters,
-    refreshHeroes: actions.refreshHeroes,
-    refreshHero: actions.refreshHero,
-    clearErrors: actions.clearErrors
+    heroes,
+    filteredHeroes,
+    selectedHeroId,
+    selectedHero,
+    filters,
+    isLoadingHeroes: isLoading,
+    isLoadingHeroData: false, // Not implemented yet
+    isLoadingHeroStats: false, // Not implemented yet
+    heroesError: error,
+    heroDataError: null, // Not implemented yet
+    heroStatsError: null, // Not implemented yet
+    refreshHeroes,
+    refreshHero,
+    setSelectedHero: setSelectedHeroHandler,
+    setFilters: setFiltersHandler,
+    clearErrors
   };
-
-  // Initial load
-  useInitialHeroLoad(actions.fetchHeroes);
 
   return (
     <HeroContext.Provider value={contextValue}>
@@ -435,10 +447,16 @@ export const HeroProvider: React.FC<HeroContextProviderProps> = ({ children }) =
   );
 };
 
+// ============================================================================
+// HOOK
+// ============================================================================
+
 export const useHeroContext = (): HeroContextValue => {
   const context = useContext(HeroContext);
+  
   if (context === undefined) {
     throw new Error('useHeroContext must be used within a HeroProvider');
   }
+  
   return context;
 }; 

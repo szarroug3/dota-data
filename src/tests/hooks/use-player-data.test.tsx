@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 
 import { PlayerProvider } from '@/contexts/player-context';
+import { PlayerDataFetchingProvider } from '@/contexts/player-data-fetching-context';
 import { usePlayerData } from '@/hooks/use-player-data';
-import type { UsePlayerDataParams } from '@/types/hooks/use-player-data';
 
 // Helper function to wait for async operations
 const waitForAsync = async () => {
@@ -12,11 +12,13 @@ const waitForAsync = async () => {
 };
 
 // Helper function to create a hook with wrapper
-const createHook = (params?: UsePlayerDataParams) => {
+const createHook = () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <PlayerProvider>{children}</PlayerProvider>
+    <PlayerDataFetchingProvider>
+      <PlayerProvider>{children}</PlayerProvider>
+    </PlayerDataFetchingProvider>
   );
-  return renderHook(() => usePlayerData(params), { wrapper });
+  return renderHook(() => usePlayerData(), { wrapper });
 };
 
 describe('usePlayerData - Basic State and Selection', () => {
@@ -27,13 +29,10 @@ describe('usePlayerData - Basic State and Selection', () => {
       expect(Array.isArray(result.current.filteredPlayers)).toBe(true);
       expect(result.current.selectedPlayerId).toBeNull();
       expect(result.current.selectedPlayer).toBeNull();
-      expect(result.current.playerStats).toBeNull();
       expect(typeof result.current.isLoadingPlayers).toBe('boolean');
       expect(typeof result.current.isLoadingPlayerData).toBe('boolean');
-      expect(typeof result.current.isLoadingPlayerStats).toBe('boolean');
       expect(result.current.playersError === null || typeof result.current.playersError === 'string').toBe(true);
       expect(result.current.playerDataError === null || typeof result.current.playerDataError === 'string').toBe(true);
-      expect(result.current.playerStatsError === null || typeof result.current.playerStatsError === 'string').toBe(true);
       expect(result.current.filters).toBeDefined();
       expect(typeof result.current.setSelectedPlayer).toBe('function');
       expect(typeof result.current.setFilters).toBe('function');
@@ -47,7 +46,6 @@ describe('usePlayerData - Basic State and Selection', () => {
       const { result } = createHook();
       expect(typeof result.current.isLoadingPlayers).toBe('boolean');
       expect(typeof result.current.isLoadingPlayerData).toBe('boolean');
-      expect(typeof result.current.isLoadingPlayerStats).toBe('boolean');
     });
   });
 
@@ -61,9 +59,12 @@ describe('usePlayerData - Basic State and Selection', () => {
       expect(result.current.selectedPlayerId).toBe('p1');
     });
 
-    it('supports playerId parameter', async () => {
-      const { result } = createHook({ playerId: 'p1' });
+    it('can select a player by ID', async () => {
+      const { result } = createHook();
       await waitForAsync();
+      act(() => {
+        result.current.setSelectedPlayer('p1');
+      });
       expect(result.current.selectedPlayerId).toBe('p1');
     });
   });
@@ -94,28 +95,7 @@ describe('usePlayerData - Basic State and Selection', () => {
   });
 });
 
-describe('usePlayerData - Actions and Options', () => {
-  describe('options and configuration', () => {
-    it('supports auto-refresh', async () => {
-      const { result, unmount } = createHook({ 
-        options: { autoRefresh: true, refreshInterval: 1 } 
-      });
-      await waitForAsync();
-      expect(Array.isArray(result.current.players)).toBe(true);
-      expect(typeof result.current.refreshPlayer).toBe('function');
-      unmount();
-    });
-
-    it('supports force refresh option', async () => {
-      const { result } = createHook({ 
-        options: { forceRefresh: true } 
-      });
-      await waitForAsync();
-      expect(Array.isArray(result.current.players)).toBe(true);
-      expect(typeof result.current.refreshPlayer).toBe('function');
-    });
-  });
-
+describe('usePlayerData - Actions', () => {
   describe('player actions', () => {
     it('handles addPlayer action', async () => {
       const { result } = createHook();

@@ -5,8 +5,6 @@
  * in the frontend application.
  */
 
-
-
 // ============================================================================
 // HERO DATA TYPES
 // ============================================================================
@@ -23,54 +21,6 @@ export interface Hero {
   roles: string[];
   complexity: 1 | 2 | 3;
   imageUrl: string;
-}
-
-/**
- * Hero data interface
- */
-export interface HeroData {
-  hero: Hero;
-  stats: HeroStats;
-  meta: HeroMeta;
-  counters: HeroCounter[];
-  synergies: HeroSynergy[];
-}
-
-/**
- * Hero meta interface
- */
-export interface HeroMeta {
-  pickRate: number;
-  banRate: number;
-  winRate: number;
-  averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
-  averageMatchDuration: number;
-  preferredRoles: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
-}
-
-/**
- * Hero counter interface
- */
-export interface HeroCounter {
-  heroId: string;
-  heroName: string;
-  counterStrength: 'strong' | 'medium' | 'weak';
-  winRate: number;
-  reason: string;
-}
-
-/**
- * Hero synergy interface
- */
-export interface HeroSynergy {
-  heroId: string;
-  heroName: string;
-  synergyStrength: 'strong' | 'medium' | 'weak';
-  winRate: number;
-  reason: string;
 }
 
 /**
@@ -92,54 +42,6 @@ export interface HeroFilters {
   };
 }
 
-/**
- * Hero stats interface
- */
-export interface HeroStats {
-  totalGames: number;
-  totalWins: number;
-  totalLosses: number;
-  winRate: number;
-  averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
-  averageMatchDuration: number;
-  pickRate: number;
-  banRate: number;
-  preferredRoles: string[];
-  counters: HeroCounter[];
-  synergies: HeroSynergy[];
-}
-
-/**
- * Hero trends interface
- */
-export interface HeroTrends {
-  pickRateTrend: TrendPoint[];
-  winRateTrend: TrendPoint[];
-  banRateTrend: TrendPoint[];
-  performanceTrend: TrendPoint[];
-}
-
-/**
- * Trend point interface
- */
-export interface TrendPoint {
-  period: string;
-  value: number;
-  change: number;
-}
-
-/**
- * Hero recommendations interface
- */
-export interface HeroRecommendations {
-  situationalPicks: Hero[];
-  strongCounters: Hero[];
-  goodSynergies: Hero[];
-  metaHeroes: Hero[];
-}
-
 // ============================================================================
 // HERO CONTEXT STATE
 // ============================================================================
@@ -152,8 +54,7 @@ export interface HeroContextValue {
   heroes: Hero[];
   filteredHeroes: Hero[];
   selectedHeroId: string | null;
-  selectedHero: HeroData | null;
-  heroStats: HeroStats | null;
+  selectedHero: Hero | null;
   
   // Filters and state
   filters: HeroFilters;
@@ -181,47 +82,4 @@ export interface HeroContextValue {
  */
 export interface HeroContextProviderProps {
   children: React.ReactNode;
-}
-
-// ============================================================================
-// HERO DATA TYPES
-// ============================================================================
-
-/**
- * Hero selection state
- */
-export interface HeroSelectionState {
-  selectedHeroId: string | null;
-  selectedHeroIds: string[];
-}
-
-/**
- * Hero filtering state
- */
-export interface HeroFilteringState {
-  filters: HeroFilters;
-  sortBy: 'name' | 'pickRate' | 'winRate' | 'complexity' | 'primaryAttribute';
-  sortDirection: 'asc' | 'desc';
-}
-
-/**
- * Hero data loading state
- */
-export interface HeroDataLoadingState {
-  isLoading: boolean;
-  isRefreshing: boolean;
-  lastUpdated: string | null;
-  error: string | null;
-}
-
-/**
- * Hero preferences and settings
- */
-export interface HeroPreferences {
-  defaultView: 'grid' | 'list' | 'stats';
-  showAdvancedStats: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number; // in seconds
-  showTrends: boolean;
-  showRecommendations: boolean;
 } 

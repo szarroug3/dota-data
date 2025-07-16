@@ -1,144 +1,54 @@
-/**
- * Player Data Hook
- *
- * Custom hook for managing player data, selection, filtering, and actions.
- * Provides a clean interface for components to interact with player data
- * without directly accessing the context.
- */
+// ============================================================================
+// usePlayerData: UI-Focused Player Data Hook
+//
+// Provides a high-level, UI-friendly interface for player data, actions, and state.
+// Aggregates context, loading, error, and convenience actions for components.
+// ============================================================================
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback } from 'react';
 
+import type { PlayerContextValue } from '@/contexts/player-context';
 import { usePlayerContext } from '@/contexts/player-context';
-import type { PlayerFilters, UsePlayerDataParams, UsePlayerDataReturn } from '@/types/hooks/use-player-data';
+import type { UsePlayerDataReturn } from '@/types/hooks/use-player-data';
 
-function usePlayerDataEffects(
-  autoRefresh: boolean,
-  refreshInterval: number,
-  selectedPlayerId: string | null,
-  playerId: string | undefined,
-  forceRefresh: boolean,
-  setSelectedPlayer: (id: string) => void,
-  refreshPlayer: (id: string) => Promise<void>
-) {
-  // Auto-refresh functionality
-  useEffect(() => {
-    if (!autoRefresh || !selectedPlayerId) return;
-    const interval = setInterval(() => {
-      refreshPlayer(selectedPlayerId);
-    }, refreshInterval * 1000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, selectedPlayerId, refreshPlayer]);
-
-  // Auto-select player if playerId is provided
-  useEffect(() => {
-    if (playerId && playerId !== selectedPlayerId) {
-      setSelectedPlayer(playerId);
-    }
-  }, [playerId, selectedPlayerId, setSelectedPlayer]);
-
-  // Force refresh on mount if requested
-  useEffect(() => {
-    if (forceRefresh && selectedPlayerId) {
-      refreshPlayer(selectedPlayerId);
-    }
-  }, [forceRefresh, selectedPlayerId, refreshPlayer]);
-}
-
-function usePlayerDataActions(
-  setSelectedPlayer: (id: string) => void,
-  setFilters: (filters: PlayerFilters) => void,
-  addPlayer: (id: string) => Promise<void>,
-  removePlayer: (id: string) => Promise<void>,
-  refreshPlayer: (id: string) => Promise<void>,
-  clearErrors: () => void
-) {
-  const handleSetSelectedPlayer = useCallback((id: string) => {
-    try {
-      setSelectedPlayer(id);
-    } catch (error) {
-      console.error('Error setting selected player:', error);
-    }
-  }, [setSelectedPlayer]);
-
-  const handleSetFilters = useCallback((newFilters: PlayerFilters) => {
-    try {
-      setFilters(newFilters);
-    } catch (error) {
-      console.error('Error setting filters:', error);
-    }
-  }, [setFilters]);
-
-  const handleAddPlayer = useCallback(async (id: string) => {
-    try {
-      await addPlayer(id);
-    } catch (error) {
-      console.error('Error adding player:', error);
-      throw error;
-    }
-  }, [addPlayer]);
-
-  const handleRemovePlayer = useCallback(async (id: string) => {
-    try {
-      await removePlayer(id);
-    } catch (error) {
-      console.error('Error removing player:', error);
-      throw error;
-    }
-  }, [removePlayer]);
-
-  const handleRefreshPlayer = useCallback(async (id: string) => {
-    try {
-      await refreshPlayer(id);
-    } catch (error) {
-      console.error('Error refreshing player:', error);
-      throw error;
-    }
-  }, [refreshPlayer]);
-
-  const handleClearErrors = useCallback(() => {
-    try {
-      clearErrors();
-    } catch (error) {
-      console.error('Error clearing errors:', error);
-    }
-  }, [clearErrors]);
-
-  return {
-    handleSetSelectedPlayer,
-    handleSetFilters,
-    handleAddPlayer,
-    handleRemovePlayer,
-    handleRefreshPlayer,
-    handleClearErrors
-  };
-}
-
-export const usePlayerData = (params?: UsePlayerDataParams): UsePlayerDataReturn => {
-  const { playerId, options = {} } = params || {};
-  const {
-    autoRefresh = false,
-    refreshInterval = 30,
-    forceRefresh = false
-  } = options;
-
-  const context = usePlayerContext();
-  if (!context) {
-    throw new Error('usePlayerData must be used within a PlayerProvider');
-  }
-
+// ============================================================================
+// Internal: Player Data Selector
+// ============================================================================
+function usePlayerDataSelector(context: PlayerContextValue) {
   const {
     players,
     filteredPlayers,
     selectedPlayerId,
     selectedPlayer,
-    playerStats,
-    filters,
-    isLoadingPlayers,
-    isLoadingPlayerData,
-    isLoadingPlayerStats,
-    playersError,
-    playerDataError,
-    playerStatsError,
+    filters
+  } = context;
+
+  return {
+    players,
+    filteredPlayers,
+    selectedPlayerId,
+    selectedPlayer,
+    filters
+  };
+}
+
+// ============================================================================
+// Internal: Player Loading & Error States
+// ============================================================================
+function usePlayerStates(context: PlayerContextValue) {
+  return {
+    isLoadingPlayers: context.isLoadingPlayers,
+    isLoadingPlayerData: context.isLoadingPlayerData,
+    playersError: context.playersError,
+    playerDataError: context.playerDataError
+  };
+}
+
+// ============================================================================
+// Internal: Player Actions
+// ============================================================================
+function usePlayerActions(context: PlayerContextValue) {
+  const {
     setSelectedPlayer,
     setFilters,
     addPlayer,
@@ -147,70 +57,89 @@ export const usePlayerData = (params?: UsePlayerDataParams): UsePlayerDataReturn
     clearErrors
   } = context;
 
-  usePlayerDataEffects(
-    autoRefresh,
-    refreshInterval,
-    selectedPlayerId,
-    playerId,
-    forceRefresh,
-    setSelectedPlayer,
-    refreshPlayer
-  );
+  const setSelectedPlayerHandler = useCallback((playerId: string) => {
+    setSelectedPlayer(playerId);
+  }, [setSelectedPlayer]);
 
+  const setFiltersHandler = useCallback((filters: Parameters<typeof setFilters>[0]) => {
+    setFilters(filters);
+  }, [setFilters]);
+
+  const addPlayerHandler = useCallback(async (playerId: string) => {
+    await addPlayer(playerId);
+  }, [addPlayer]);
+
+  const removePlayerHandler = useCallback(async (playerId: string) => {
+    await removePlayer(playerId);
+  }, [removePlayer]);
+
+  const refreshPlayerHandler = useCallback(async (playerId: string) => {
+    await refreshPlayer(playerId);
+  }, [refreshPlayer]);
+
+  const clearErrorsHandler = useCallback(() => {
+    clearErrors();
+  }, [clearErrors]);
+
+  return {
+    setSelectedPlayer: setSelectedPlayerHandler,
+    setFilters: setFiltersHandler,
+    addPlayer: addPlayerHandler,
+    removePlayer: removePlayerHandler,
+    refreshPlayer: refreshPlayerHandler,
+    clearErrors: clearErrorsHandler
+  };
+}
+
+// ============================================================================
+// Exported Hook: usePlayerData
+// ============================================================================
+
+export function usePlayerData(): UsePlayerDataReturn {
+  const context = usePlayerContext();
+  
+  // Data selectors
   const {
-    handleSetSelectedPlayer,
-    handleSetFilters,
-    handleAddPlayer,
-    handleRemovePlayer,
-    handleRefreshPlayer,
-    handleClearErrors
-  } = usePlayerDataActions(
+    players,
+    filteredPlayers,
+    selectedPlayerId,
+    selectedPlayer,
+    filters
+  } = usePlayerDataSelector(context);
+
+  // Loading and error states
+  const {
+    isLoadingPlayers,
+    isLoadingPlayerData,
+    playersError,
+    playerDataError
+  } = usePlayerStates(context);
+
+  // Actions
+  const {
     setSelectedPlayer,
     setFilters,
     addPlayer,
     removePlayer,
     refreshPlayer,
     clearErrors
-  );
+  } = usePlayerActions(context);
 
-  return useMemo((): UsePlayerDataReturn => ({
+  return {
     players,
     filteredPlayers,
     selectedPlayerId,
     selectedPlayer,
-    playerStats,
-    filters,
-    isLoadingPlayers,
-    isLoading: isLoadingPlayers, // Add alias for compatibility
-    isLoadingPlayerData,
-    isLoadingPlayerStats,
-    playersError,
-    playerDataError,
-    playerStatsError,
-    setSelectedPlayer: handleSetSelectedPlayer,
-    setFilters: handleSetFilters,
-    addPlayer: handleAddPlayer,
-    removePlayer: handleRemovePlayer,
-    refreshPlayer: handleRefreshPlayer,
-    clearErrors: handleClearErrors
-  }), [
-    players,
-    filteredPlayers,
-    selectedPlayerId,
-    selectedPlayer,
-    playerStats,
     filters,
     isLoadingPlayers,
     isLoadingPlayerData,
-    isLoadingPlayerStats,
     playersError,
     playerDataError,
-    playerStatsError,
-    handleSetSelectedPlayer,
-    handleSetFilters,
-    handleAddPlayer,
-    handleRemovePlayer,
-    handleRefreshPlayer,
-    handleClearErrors
-  ]);
-}; 
+    setSelectedPlayer,
+    setFilters,
+    addPlayer,
+    removePlayer,
+    refreshPlayer,
+    clearErrors
+  };
+} 

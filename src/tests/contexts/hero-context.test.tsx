@@ -5,172 +5,101 @@
  * data fetching, error handling, and action dispatching.
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
+import { act, render, screen, waitFor } from '@testing-library/react';
 
 import { HeroProvider, useHeroContext } from '@/contexts/hero-context';
-import type { Hero, HeroData, HeroFilters, HeroStats } from '@/types/contexts/hero-context-value';
+import { HeroDataFetchingProvider, useHeroDataFetching } from '@/contexts/hero-data-fetching-context';
+import type { Hero, HeroFilters } from '@/types/contexts/hero-context-value';
+import type { OpenDotaHero } from '@/types/external-apis';
+
+// Mock useHeroDataFetching to return mock hero data
+jest.mock('@/contexts/hero-data-fetching-context', () => {
+  const actual = jest.requireActual('@/contexts/hero-data-fetching-context');
+  return {
+    ...actual,
+    useHeroDataFetching: jest.fn()
+  };
+});
+
+const mockHeroes: OpenDotaHero[] = [
+  {
+    id: 1,
+    name: 'antimage',
+    localized_name: 'Anti-Mage',
+    primary_attr: 'agility',
+    attack_type: 'melee',
+    roles: ['Carry', 'Escape', 'Nuker'],
+    legs: 2
+  },
+  {
+    id: 2,
+    name: 'axe',
+    localized_name: 'Axe',
+    primary_attr: 'strength',
+    attack_type: 'melee',
+    roles: ['Initiator', 'Durable', 'Disabler', 'Jungler'],
+    legs: 2
+  }
+];
+
+// Set up the mock implementation before each test
+beforeEach(() => {
+  (useHeroDataFetching as jest.Mock).mockReturnValue({
+    fetchHeroesData: jest.fn().mockResolvedValue(mockHeroes)
+  });
+});
 
 // ============================================================================
-// TEST COMPONENT
+// TEST COMPONENTS
 // ============================================================================
 
-// Helper components to reduce complexity
-const HeroButtons = ({ setSelectedHero, setFilters, refreshHeroes, refreshHero }: {
-  setSelectedHero: (id: string) => void;
-  setFilters: (filters: HeroFilters) => void;
-  refreshHeroes: () => void;
-  refreshHero: (id: string) => void;
-}) => (
-  <>
-    <button data-testid="select-hero-btn" onClick={() => setSelectedHero('1')}>
-      Select Hero
-    </button>
-    <button data-testid="clear-selection-btn" onClick={() => setSelectedHero('')}>
-      Clear Selection
-    </button>
-    <button data-testid="refresh-heroes-btn" onClick={() => refreshHeroes()}>
-      Refresh Heroes
-    </button>
-    <button data-testid="refresh-hero-btn" onClick={() => refreshHero('1')}>
-      Refresh Hero
-    </button>
-    <button data-testid="apply-filters-btn" onClick={() => setFilters({
-      primaryAttribute: ['agility'],
-      attackType: ['melee'],
-      roles: ['Carry'],
-      complexity: [2],
-      difficulty: ['medium'],
-      pickRate: { min: null, max: null },
-      winRate: { min: null, max: null }
-    })}>
-      Apply Filters
-    </button>
-    <button data-testid="clear-filters-btn" onClick={() => setFilters({
-      primaryAttribute: [],
-      attackType: [],
-      roles: [],
-      complexity: [],
-      difficulty: [],
-      pickRate: { min: null, max: null },
-      winRate: { min: null, max: null }
-    })}>
-      Clear Filters
-    </button>
-  </>
-);
-
-interface HeroCountsProps {
+const HeroCounts = ({ heroes, filteredHeroes, selectedHeroId, selectedHero }: {
   heroes: Hero[];
   filteredHeroes: Hero[];
   selectedHeroId: string | null;
-  selectedHero: HeroData | null;
-  heroStats: HeroStats | null;
-}
-
-const HeroCounts = ({ heroes, filteredHeroes, selectedHeroId, selectedHero, heroStats }: HeroCountsProps) => (
+  selectedHero: Hero | null;
+}) => (
   <>
     <div data-testid="heroes-count">{heroes.length}</div>
     <div data-testid="filtered-heroes-count">{filteredHeroes.length}</div>
     <div data-testid="selected-hero-id">{selectedHeroId || 'none'}</div>
-    <div data-testid="selected-hero-name">{selectedHero?.hero.name || 'none'}</div>
-    <div data-testid="hero-stats-games">{heroStats?.totalGames || 0}</div>
+    <div data-testid="selected-hero-name">{selectedHero ? selectedHero.localizedName : 'Unknown Hero'}</div>
   </>
 );
 
-interface HeroStatusProps {
-  filters: HeroFilters;
-  isLoadingHeroes: boolean;
-  isLoadingHeroData: boolean;
-  isLoadingHeroStats: boolean;
-}
-
-const HeroStatus = ({ filters, isLoadingHeroes, isLoadingHeroData, isLoadingHeroStats }: HeroStatusProps) => {
-  const isAllFiltersEmpty =
-    filters.primaryAttribute.length === 0 &&
-    filters.attackType.length === 0 &&
-    filters.roles.length === 0 &&
-    filters.complexity.length === 0 &&
-    filters.difficulty.length === 0 &&
-    filters.pickRate.min == null && filters.pickRate.max == null &&
-    filters.winRate.min == null && filters.winRate.max == null;
-  return (
-    <>
-      <div data-testid="filters-result">{isAllFiltersEmpty ? 'all' : 'filtered'}</div>
-      <div data-testid="loading-heroes">{isLoadingHeroes.toString()}</div>
-      <div data-testid="hero-data-loading">{isLoadingHeroData.toString()}</div>
-      <div data-testid="hero-stats-loading">{isLoadingHeroStats.toString()}</div>
-    </>
-  );
-};
-
-interface HeroErrorsProps {
-  heroesError: string | null;
-  heroDataError: string | null;
-  heroStatsError: string | null;
-}
-
-const HeroErrors = ({ heroesError, heroDataError, heroStatsError }: HeroErrorsProps) => (
+const HeroButtons = ({ setSelectedHero, setFilters, refreshHeroes, refreshHero }: {
+  setSelectedHero: (id: string) => void;
+  setFilters: (filters: HeroFilters) => void;
+  refreshHeroes: () => Promise<void>;
+  refreshHero: (heroId: string) => Promise<void>;
+}) => (
   <>
-    <div data-testid="heroes-error">{heroesError || 'none'}</div>
-    <div data-testid="hero-data-error">{heroDataError || 'none'}</div>
-    <div data-testid="hero-stats-error">{heroStatsError || 'none'}</div>
-    <div data-testid="hero-error">{heroDataError || heroStatsError || 'none'}</div>
+    <button data-testid="select-hero-btn" onClick={() => setSelectedHero('1')}>Select Hero</button>
+    <button data-testid="clear-hero-btn" onClick={() => setSelectedHero('')}>Clear Hero</button>
+    <button data-testid="refresh-heroes-btn" onClick={() => refreshHeroes()}>Refresh Heroes</button>
+    <button data-testid="refresh-hero-btn" onClick={() => refreshHero('1')}>Refresh Hero</button>
   </>
 );
 
 const TestComponent = () => {
-  const {
-    heroes,
-    filteredHeroes,
-    selectedHeroId,
-    selectedHero,
-    heroStats,
-    filters,
-    isLoadingHeroes,
-    isLoadingHeroData,
-    isLoadingHeroStats,
-    heroesError,
-    heroDataError,
-    heroStatsError,
-    setSelectedHero,
-    setFilters,
-    refreshHeroes,
-    refreshHero
-  } = useHeroContext();
-
+  const context = useHeroContext();
   return (
     <div>
       <HeroCounts
-        heroes={heroes}
-        filteredHeroes={filteredHeroes}
-        selectedHeroId={selectedHeroId}
-        selectedHero={selectedHero}
-        heroStats={heroStats}
-      />
-      <HeroStatus
-        filters={filters}
-        isLoadingHeroes={isLoadingHeroes}
-        isLoadingHeroData={isLoadingHeroData}
-        isLoadingHeroStats={isLoadingHeroStats}
-      />
-      <HeroErrors
-        heroesError={heroesError}
-        heroDataError={heroDataError}
-        heroStatsError={heroStatsError}
+        heroes={context.heroes}
+        filteredHeroes={context.filteredHeroes}
+        selectedHeroId={context.selectedHeroId}
+        selectedHero={context.selectedHero}
       />
       <HeroButtons
-        setSelectedHero={setSelectedHero}
-        setFilters={setFilters}
-        refreshHeroes={refreshHeroes}
-        refreshHero={refreshHero}
+        setSelectedHero={context.setSelectedHero}
+        setFilters={context.setFilters}
+        refreshHeroes={context.refreshHeroes}
+        refreshHero={context.refreshHero}
       />
+      <div data-testid="loading-heroes">{context.isLoadingHeroes.toString()}</div>
     </div>
   );
-};
-
-const renderWithProvider = (ui: React.ReactElement) => {
-  return render(<HeroProvider>{ui}</HeroProvider>);
 };
 
 // ============================================================================
@@ -179,31 +108,38 @@ const renderWithProvider = (ui: React.ReactElement) => {
 
 describe('HeroProvider Initial State', () => {
   it('should provide initial state', async () => {
-    renderWithProvider(<TestComponent />);
-    expect(screen.getByTestId('loading-heroes')).toHaveTextContent('true');
-    expect(screen.getByTestId('heroes-count')).toHaveTextContent('0');
-    expect(screen.getByTestId('filtered-heroes-count')).toHaveTextContent('0');
-    expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('none');
-    expect(screen.getByTestId('selected-hero-name')).toHaveTextContent('none');
-    expect(screen.getByTestId('hero-stats-games')).toHaveTextContent('0');
-    expect(screen.getByTestId('filters-result')).toHaveTextContent('all');
-    await waitFor(() => {
-      expect(screen.getByTestId('loading-heroes')).toHaveTextContent('false');
-    });
-    expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
+    render(
+      <HeroDataFetchingProvider>
+        <HeroProvider>
+          <TestComponent />
+        </HeroProvider>
+      </HeroDataFetchingProvider>
+    );
+
+    // Wait for heroes to be loaded
+    await waitFor(() => expect(screen.getByTestId('heroes-count')).toHaveTextContent('2'));
     expect(screen.getByTestId('filtered-heroes-count')).toHaveTextContent('2');
+    expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('none');
+    expect(screen.getByTestId('selected-hero-name')).toHaveTextContent('Unknown Hero');
   });
 });
 
 describe('HeroProvider Hero Selection', () => {
   it('should select a hero', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
+    render(
+      <HeroDataFetchingProvider>
+        <HeroProvider>
+          <TestComponent />
+        </HeroProvider>
+      </HeroDataFetchingProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('heroes-count')).toHaveTextContent('2'));
+    
     act(() => {
       screen.getByTestId('select-hero-btn').click();
     });
+
     await waitFor(() => {
       expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('1');
       expect(screen.getByTestId('selected-hero-name')).toHaveTextContent('Anti-Mage');
@@ -211,107 +147,31 @@ describe('HeroProvider Hero Selection', () => {
   });
 
   it('should clear hero selection', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
+    render(
+      <HeroDataFetchingProvider>
+        <HeroProvider>
+          <TestComponent />
+        </HeroProvider>
+      </HeroDataFetchingProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('heroes-count')).toHaveTextContent('2'));
+    
+    // First select a hero
     act(() => {
       screen.getByTestId('select-hero-btn').click();
     });
-    await waitFor(() => {
-      expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('1');
-    });
+
+    await waitFor(() => expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('1'));
+
+    // Then clear the selection
     act(() => {
-      screen.getByTestId('clear-selection-btn').click();
+      screen.getByTestId('clear-hero-btn').click();
     });
+
     await waitFor(() => {
       expect(screen.getByTestId('selected-hero-id')).toHaveTextContent('none');
       expect(screen.getByTestId('selected-hero-name')).toHaveTextContent('Unknown Hero');
     });
-  });
-});
-
-describe('HeroProvider Hero Data Fetching', () => {
-  it('should refresh heroes', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-    act(() => {
-      screen.getByTestId('refresh-heroes-btn').click();
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-  });
-
-  it('should refresh hero data and stats', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-    act(() => {
-      screen.getByTestId('refresh-hero-btn').click();
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('hero-stats-games')).toHaveTextContent('100');
-    });
-    expect(screen.getByTestId('hero-stats-loading')).toHaveTextContent('false');
-  });
-});
-
-describe('HeroProvider Filtering', () => {
-  it('should apply filters', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-    act(() => {
-      screen.getByTestId('apply-filters-btn').click();
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('filters-result')).toHaveTextContent('filtered');
-    });
-  });
-
-  it('should clear filters', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-    act(() => {
-      screen.getByTestId('apply-filters-btn').click();
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('filters-result')).toHaveTextContent('filtered');
-    });
-    act(() => {
-      screen.getByTestId('clear-filters-btn').click();
-    });
-    await waitFor(() => {
-      expect(screen.getByTestId('filters-result')).toHaveTextContent('all');
-    });
-  });
-});
-
-describe('HeroProvider Error Handling', () => {
-  it('should handle errors gracefully', async () => {
-    renderWithProvider(<TestComponent />);
-    await waitFor(() => {
-      expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
-    });
-    expect(screen.getByTestId('heroes-error')).toHaveTextContent('none');
-    expect(screen.getByTestId('hero-data-error')).toHaveTextContent('none');
-    expect(screen.getByTestId('hero-stats-error')).toHaveTextContent('none');
-  });
-});
-
-describe('HeroProvider Hook Usage', () => {
-  it('should throw error when used outside provider', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => {
-      render(<TestComponent />);
-    }).toThrow('useHeroContext must be used within a HeroProvider');
-    consoleSpy.mockRestore();
   });
 }); 

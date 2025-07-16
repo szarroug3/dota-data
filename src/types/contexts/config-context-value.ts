@@ -5,6 +5,8 @@
  * in the frontend application.
  */
 
+import type { TeamData } from '@/types/contexts/team-types';
+
 // ============================================================================
 // CONFIG DATA TYPES
 // ============================================================================
@@ -156,14 +158,20 @@ export interface ConfigContextValue {
   // Configuration data
   config: AppConfig;
   preferences: UserPreferences;
-  
+
+  // Team data (persistent)
+  teamList: TeamData[];
+  setTeamList: (teamList: TeamData[]) => void;
+  activeTeam: { teamId: string; leagueId: string } | null;
+  setActiveTeam: (activeTeam: { teamId: string; leagueId: string } | null) => void;
+
   // Loading states
   isLoading: boolean;
   isSaving: boolean;
-  
+
   // Error states
   error: string | null;
-  
+
   // Actions
   updateConfig: (updates: Partial<AppConfig>) => Promise<void>;
   updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
@@ -182,34 +190,6 @@ export interface ConfigContextProviderProps {
 // ============================================================================
 // CONFIG DATA TYPES
 // ============================================================================
-
-/**
- * Config loading state
- */
-export interface ConfigLoadingState {
-  isLoading: boolean;
-  isSaving: boolean;
-  lastUpdated: string | null;
-  error: string | null;
-}
-
-/**
- * Config validation interface
- */
-export interface ConfigValidation {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-/**
- * Config migration interface
- */
-export interface ConfigMigration {
-  fromVersion: string;
-  toVersion: string;
-  changes: ConfigChange[];
-}
 
 /**
  * Config change interface

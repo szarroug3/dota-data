@@ -5,7 +5,7 @@
  * in the frontend application.
  */
 
-import { Match } from './team-context-value';
+import { Match } from './team-types';
 
 // Re-export Match type for use in other files
 export type { Match };

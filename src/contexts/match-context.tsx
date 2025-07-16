@@ -1,20 +1,21 @@
 /**
- * Match Context Provider
+ * Match Context
  *
- * Manages match state, data fetching, filtering, and match management actions.
- * Provides centralized match data management for the entire application.
+ * Manages match state, filtering, selection, preferences, and business logic.
+ * Uses MatchDataFetchingContext for all data fetching (no API calls here).
+ * Provides a clean, type-safe interface for match data and actions.
  */
 
-import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import type {
-    HeroStatsGrid,
-    Match,
-    MatchContextProviderProps,
-    MatchContextValue,
-    MatchDetails,
-    MatchFilters,
-    MatchPreferences
+  HeroStatsGrid,
+  Match,
+  MatchContextProviderProps,
+  MatchContextValue,
+  MatchDetails,
+  MatchFilters,
+  MatchPreferences
 } from '@/types/contexts/match-context-value';
 
 // ============================================================================
@@ -24,346 +25,199 @@ import type {
 const MatchContext = createContext<MatchContextValue | undefined>(undefined);
 
 // ============================================================================
-// TYPES
+// DEFAULTS & HELPERS
 // ============================================================================
 
-interface MatchState {
-  matches: Match[];
-  filteredMatches: Match[];
-  selectedMatchId: string | null;
-  selectedMatch: MatchDetails | null;
-  hiddenMatchIds: string[];
-  filters: MatchFilters;
-  heroStatsGrid: HeroStatsGrid;
-  isLoadingMatches: boolean;
-  isLoadingMatchDetails: boolean;
-  isLoadingHeroStats: boolean;
-  matchesError: string | null;
-  matchDetailsError: string | null;
-  heroStatsError: string | null;
-  preferences: MatchPreferences;
+const defaultFilters: MatchFilters = {
+  dateRange: { start: null, end: null },
+  result: 'all',
+  opponent: '',
+  heroes: [],
+  players: [],
+  duration: { min: null, max: null }
+};
+
+const defaultPreferences: MatchPreferences = {
+  defaultView: 'list',
+  showHiddenMatches: false,
+  refreshInterval: 300,
+  showAdvancedStats: false,
+  autoRefresh: false
+};
+
+// ============================================================================
+// CUSTOM HOOKS (STATE & LOGIC)
+// ============================================================================
+
+function useMatchState() {
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<MatchDetails | null>(null);
+  const [hiddenMatchIds, setHiddenMatchIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<MatchFilters>(defaultFilters);
+  const [heroStatsGrid, setHeroStatsGrid] = useState<HeroStatsGrid>({});
+  const [preferences, setPreferences] = useState<MatchPreferences>(defaultPreferences);
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [isLoadingMatchDetails, setIsLoadingMatchDetails] = useState(false);
+  const [isLoadingHeroStats, setIsLoadingHeroStats] = useState(false);
+  const [matchesError, setMatchesError] = useState<string | null>(null);
+  const [matchDetailsError, setMatchDetailsError] = useState<string | null>(null);
+  const [heroStatsError, setHeroStatsError] = useState<string | null>(null);
+  return {
+    matches, setMatches,
+    filteredMatches, setFilteredMatches,
+    selectedMatchId, setSelectedMatchId,
+    selectedMatch, setSelectedMatch,
+    hiddenMatchIds, setHiddenMatchIds,
+    filters, setFilters,
+    heroStatsGrid, setHeroStatsGrid,
+    preferences, setPreferences,
+    isLoadingMatches, setIsLoadingMatches,
+    isLoadingMatchDetails, setIsLoadingMatchDetails,
+    isLoadingHeroStats, setIsLoadingHeroStats,
+    matchesError, setMatchesError,
+    matchDetailsError, setMatchDetailsError,
+    heroStatsError, setHeroStatsError
+  };
 }
 
-type MatchAction =
-  | { type: 'SET_MATCHES_LOADING'; payload: boolean }
-  | { type: 'SET_MATCHES'; payload: Match[] }
-  | { type: 'SET_MATCHES_ERROR'; payload: string | null }
-  | { type: 'SET_FILTERS'; payload: MatchFilters }
-  | { type: 'SET_FILTERED_MATCHES'; payload: Match[] }
-  | { type: 'SET_SELECTED_MATCH_ID'; payload: string | null }
-  | { type: 'SET_SELECTED_MATCH'; payload: MatchDetails | null }
-  | { type: 'SET_MATCH_DETAILS_LOADING'; payload: boolean }
-  | { type: 'SET_MATCH_DETAILS_ERROR'; payload: string | null }
-  | { type: 'SET_HIDDEN_MATCH_IDS'; payload: string[] }
-  | { type: 'HIDE_MATCH'; payload: string }
-  | { type: 'SHOW_MATCH'; payload: string }
-  | { type: 'SET_HERO_STATS_LOADING'; payload: boolean }
-  | { type: 'SET_HERO_STATS_GRID'; payload: HeroStatsGrid }
-  | { type: 'SET_HERO_STATS_ERROR'; payload: string | null }
-  | { type: 'CLEAR_ERRORS' }
-  | { type: 'SET_PREFERENCES'; payload: Partial<MatchPreferences> };
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-const createMockMatch = (id: string): Match => ({
-  id,
-  teamId: '1',
-  opponent: 'Team Beta',
-  result: 'win',
-  date: '2024-06-01T12:00:00Z',
-  duration: 2400,
-  heroes: ['1', '2', '3', '4', '5'],
-  players: ['p1', 'p2', 'p3', 'p4', 'p5']
-});
-
-const createMockMatchDetails = (matchId: string): MatchDetails => ({
-  id: matchId,
-  teamId: '1',
-  opponent: 'Team Beta',
-  result: 'win',
-  date: '2024-06-01T12:00:00Z',
-  duration: 2400,
-  heroes: ['1', '2', '3', '4', '5'],
-  players: ['p1', 'p2', 'p3', 'p4', 'p5'],
-  radiantTeam: 'Team Alpha',
-  direTeam: 'Team Beta',
-  radiantScore: 30,
-  direScore: 20,
-  gameMode: 'All Pick',
-  lobbyType: 'Ranked',
-  radiantPlayers: [],
-  direPlayers: [],
-  radiantPicks: [],
-  radiantBans: [],
-  direPicks: [],
-  direBans: [],
-  events: [],
-  analysis: {
-    keyMoments: [],
-    teamFights: [],
-    objectives: [],
-    performance: {
-      radiantAdvantage: [],
-      direAdvantage: [],
-      goldGraph: [],
-      xpGraph: []
+function useMatchFiltering(matches: Match[], filters: MatchFilters, hiddenMatchIds: string[]) {
+  // Filtering logic (date, result, opponent, heroes, players, duration)
+  return useMemo(() => {
+    let result = matches;
+    if (filters.dateRange.start || filters.dateRange.end) {
+      result = result.filter(m => {
+        const date = new Date(m.date).getTime();
+        const start = filters.dateRange.start ? new Date(filters.dateRange.start).getTime() : -Infinity;
+        const end = filters.dateRange.end ? new Date(filters.dateRange.end).getTime() : Infinity;
+        return date >= start && date <= end;
+      });
     }
-  }
-});
+    if (filters.result !== 'all') {
+      result = result.filter(m => m.result === filters.result);
+    }
+    if (filters.opponent) {
+      result = result.filter(m => m.opponent.toLowerCase().includes(filters.opponent.toLowerCase()));
+    }
+    if (filters.heroes.length > 0) {
+      result = result.filter(m => m.heroes.some(h => filters.heroes.includes(h)));
+    }
+    if (filters.players.length > 0) {
+      result = result.filter(m => m.players.some(p => filters.players.includes(p.id)));
+    }
+    if (filters.duration.min !== null) {
+      result = result.filter(m => m.duration >= (filters.duration.min ?? 0));
+    }
+    if (filters.duration.max !== null) {
+      result = result.filter(m => m.duration <= (filters.duration.max ?? Infinity));
+    }
+    // Hide matches
+    result = result.filter(m => !hiddenMatchIds.includes(m.id));
+    return result;
+  }, [matches, filters, hiddenMatchIds]);
+}
 
-const handleLoadingStates = (state: MatchState, action: MatchAction): MatchState => {
-  switch (action.type) {
-    case 'SET_MATCHES_LOADING':
-      return { ...state, isLoadingMatches: action.payload };
-    case 'SET_MATCH_DETAILS_LOADING':
-      return { ...state, isLoadingMatchDetails: action.payload };
-    case 'SET_HERO_STATS_LOADING':
-      return { ...state, isLoadingHeroStats: action.payload };
-    default:
-      return state;
-  }
-};
+function useMatchActions(state: ReturnType<typeof useMatchState>) {
+  // Set filters
+  const setFilters = useCallback((filters: MatchFilters) => {
+    state.setFilters(filters);
+  }, [state]);
 
-const handleErrorStates = (state: MatchState, action: MatchAction): MatchState => {
-  switch (action.type) {
-    case 'SET_MATCHES_ERROR':
-      return { ...state, matchesError: action.payload, isLoadingMatches: false };
-    case 'SET_MATCH_DETAILS_ERROR':
-      return { ...state, matchDetailsError: action.payload, isLoadingMatchDetails: false };
-    case 'SET_HERO_STATS_ERROR':
-      return { ...state, heroStatsError: action.payload, isLoadingHeroStats: false };
-    case 'CLEAR_ERRORS':
-      return {
-        ...state,
-        matchesError: null,
-        matchDetailsError: null,
-        heroStatsError: null
-      };
-    default:
-      return state;
-  }
-};
+  // Select match
+  const selectMatch = useCallback((matchId: string) => {
+    state.setSelectedMatchId(matchId);
+    // Details will be loaded by effect or orchestrator
+  }, [state]);
 
-const handleDataStates = (state: MatchState, action: MatchAction): MatchState => {
-  switch (action.type) {
-    case 'SET_MATCHES':
-      return { ...state, matches: action.payload, isLoadingMatches: false };
-    case 'SET_FILTERED_MATCHES':
-      return { ...state, filteredMatches: action.payload };
-    case 'SET_SELECTED_MATCH':
-      return { ...state, selectedMatch: action.payload };
-    case 'SET_HERO_STATS_GRID':
-      return { ...state, heroStatsGrid: action.payload, isLoadingHeroStats: false };
-    default:
-      return state;
-  }
-};
+  // Hide/show match
+  const hideMatch = useCallback((matchId: string) => {
+    state.setHiddenMatchIds(prev => [...prev, matchId]);
+  }, [state]);
+  const showMatch = useCallback((matchId: string) => {
+    state.setHiddenMatchIds(prev => prev.filter(id => id !== matchId));
+  }, [state]);
 
-const handleSelectionStates = (state: MatchState, action: MatchAction): MatchState => {
-  switch (action.type) {
-    case 'SET_SELECTED_MATCH_ID':
-      return { ...state, selectedMatchId: action.payload };
-    case 'SET_FILTERS':
-      return { ...state, filters: action.payload };
-    case 'SET_HIDDEN_MATCH_IDS':
-      return { ...state, hiddenMatchIds: action.payload };
-    case 'HIDE_MATCH':
-      return { ...state, hiddenMatchIds: [...state.hiddenMatchIds, action.payload] };
-    case 'SHOW_MATCH':
-      return { ...state, hiddenMatchIds: state.hiddenMatchIds.filter(id => id !== action.payload) };
-    case 'SET_PREFERENCES':
-      return { ...state, preferences: { ...state.preferences, ...action.payload } };
-    default:
-      return state;
-  }
-};
+  // Preferences
+  const updatePreferences = useCallback((preferences: Partial<MatchPreferences>) => {
+    state.setPreferences(prev => ({ ...prev, ...preferences }));
+  }, [state]);
 
-// ============================================================================
-// REDUCER
-// ============================================================================
+  // Error handling
+  const clearErrors = useCallback(() => {
+    state.setMatchesError(null);
+    state.setMatchDetailsError(null);
+    state.setHeroStatsError(null);
+  }, [state]);
 
-const matchReducer = (state: MatchState, action: MatchAction): MatchState => {
-  // Try loading states first
-  const loadingState = handleLoadingStates(state, action);
-  if (loadingState !== state) return loadingState;
-
-  // Try error states
-  const errorState = handleErrorStates(state, action);
-  if (errorState !== state) return errorState;
-
-  // Try data states
-  const dataState = handleDataStates(state, action);
-  if (dataState !== state) return dataState;
-
-  // Try selection states
-  const selectionState = handleSelectionStates(state, action);
-  if (selectionState !== state) return selectionState;
-
-  return state;
-};
-
-// ============================================================================
-// INITIAL STATE
-// ============================================================================
-
-const initialState: MatchState = {
-  matches: [],
-  filteredMatches: [],
-  selectedMatchId: null,
-  selectedMatch: null,
-  hiddenMatchIds: [],
-  filters: {
-    dateRange: { start: null, end: null },
-    result: 'all',
-    opponent: '',
-    heroes: [],
-    players: [],
-    duration: { min: null, max: null }
-  },
-  heroStatsGrid: {},
-  isLoadingMatches: false,
-  isLoadingMatchDetails: false,
-  isLoadingHeroStats: false,
-  matchesError: null,
-  matchDetailsError: null,
-  heroStatsError: null,
-  preferences: {
-    defaultView: 'list',
-    showHiddenMatches: false,
-    autoRefresh: true,
-    refreshInterval: 300,
-    showAdvancedStats: false
-  }
-};
-
-// ============================================================================
-// FETCHER FUNCTIONS
-// ============================================================================
-
-const createFetchers = (dispatch: React.Dispatch<MatchAction>) => ({
-  fetchMatches: async (): Promise<void> => {
+  // Refresh actions (to be orchestrated by coordinator or data fetching context)
+  const refreshMatches = useCallback(async () => {
+    // Orchestrator should trigger data fetching and update state.setMatches
+    // Here, just set loading state for UI
+    state.setIsLoadingMatches(true);
     try {
-      dispatch({ type: 'SET_MATCHES_LOADING', payload: true });
-      const mockMatches: Match[] = [createMockMatch('m1')];
-      dispatch({ type: 'SET_MATCHES', payload: mockMatches });
-      dispatch({ type: 'SET_FILTERED_MATCHES', payload: mockMatches });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch matches';
-      dispatch({ type: 'SET_MATCHES_ERROR', payload: errorMessage });
+      // No-op
+    } finally {
+      state.setIsLoadingMatches(false);
     }
-  },
-
-  fetchMatchDetails: async (matchId: string): Promise<void> => {
+  }, [state]);
+  const refreshMatchDetails = useCallback(async (_matchId: string) => {
+    state.setIsLoadingMatchDetails(true);
     try {
-      dispatch({ type: 'SET_MATCH_DETAILS_LOADING', payload: true });
-      const mockMatchDetails = createMockMatchDetails(matchId);
-      dispatch({ type: 'SET_SELECTED_MATCH', payload: mockMatchDetails });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch match details';
-      dispatch({ type: 'SET_MATCH_DETAILS_ERROR', payload: errorMessage });
+      // No-op
+    } finally {
+      state.setIsLoadingMatchDetails(false);
     }
-  },
-
-  fetchHeroStatsGrid: async (): Promise<void> => {
+  }, [state]);
+  const refreshHeroStats = useCallback(async () => {
+    state.setIsLoadingHeroStats(true);
     try {
-      dispatch({ type: 'SET_HERO_STATS_LOADING', payload: true });
-      const mockHeroStats: HeroStatsGrid = {};
-      dispatch({ type: 'SET_HERO_STATS_GRID', payload: mockHeroStats });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch hero stats';
-      dispatch({ type: 'SET_HERO_STATS_ERROR', payload: errorMessage });
+      // No-op
+    } finally {
+      state.setIsLoadingHeroStats(false);
     }
-  }
-});
+  }, [state]);
+
+  return {
+    setFilters,
+    selectMatch,
+    hideMatch,
+    showMatch,
+    refreshMatches,
+    refreshMatchDetails,
+    refreshHeroStats,
+    clearErrors,
+    updatePreferences
+  };
+}
 
 // ============================================================================
-// ACTION FUNCTIONS
-// ============================================================================
-
-const createActions = (
-  dispatch: React.Dispatch<MatchAction>,
-  fetchers: ReturnType<typeof createFetchers>,
-  state: MatchState
-) => ({
-  setFilters: (filters: MatchFilters): void => {
-    dispatch({ type: 'SET_FILTERS', payload: filters });
-    const filteredMatches = state.matches.filter(m => 
-      filters.result === 'all' || m.result === filters.result
-    );
-    dispatch({ type: 'SET_FILTERED_MATCHES', payload: filteredMatches });
-  },
-
-  selectMatch: (matchId: string): void => {
-    dispatch({ type: 'SET_SELECTED_MATCH_ID', payload: matchId });
-    fetchers.fetchMatchDetails(matchId);
-  },
-
-  hideMatch: (matchId: string): void => {
-    dispatch({ type: 'HIDE_MATCH', payload: matchId });
-  },
-
-  showMatch: (matchId: string): void => {
-    dispatch({ type: 'SHOW_MATCH', payload: matchId });
-  },
-
-  refreshMatches: async (): Promise<void> => {
-    await fetchers.fetchMatches();
-  },
-
-  refreshMatchDetails: async (matchId: string): Promise<void> => {
-    await fetchers.fetchMatchDetails(matchId);
-  },
-
-  refreshHeroStats: async (): Promise<void> => {
-    await fetchers.fetchHeroStatsGrid();
-  },
-
-  clearErrors: (): void => {
-    dispatch({ type: 'CLEAR_ERRORS' });
-  },
-
-  updatePreferences: (preferences: Partial<MatchPreferences>): void => {
-    dispatch({ type: 'SET_PREFERENCES', payload: preferences });
-  }
-});
-
-// ============================================================================
-// MATCH CONTEXT PROVIDER
+// PROVIDER IMPLEMENTATION
 // ============================================================================
 
 export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(matchReducer, initialState);
-
-  // Memoized fetchers to prevent infinite loops
-  const fetchers = useMemo(() => createFetchers(dispatch), [dispatch]);
-
-  // Memoized actions
-  const actions = useMemo(() => createActions(dispatch, fetchers, state), [dispatch, fetchers, state]);
-
-  // Initial load - only run once
-  useEffect(() => {
-    fetchers.fetchMatches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array to run only once
+  const state = useMatchState();
+  // Filtering
+  const filteredMatches = useMatchFiltering(state.matches, state.filters, state.hiddenMatchIds);
+  // Actions
+  const actions = useMatchActions(state);
 
   // Context value
   const contextValue: MatchContextValue = {
     matches: state.matches,
-    filteredMatches: state.filteredMatches,
+    filteredMatches,
     selectedMatchId: state.selectedMatchId,
-    selectedMatch: state.selectedMatch,
+    selectedMatch: state.selectedMatch, // This can be set by orchestrator or effect
     hiddenMatchIds: state.hiddenMatchIds,
     filters: state.filters,
     heroStatsGrid: state.heroStatsGrid,
+    preferences: state.preferences,
     isLoadingMatches: state.isLoadingMatches,
     isLoadingMatchDetails: state.isLoadingMatchDetails,
     isLoadingHeroStats: state.isLoadingHeroStats,
     matchesError: state.matchesError,
     matchDetailsError: state.matchDetailsError,
     heroStatsError: state.heroStatsError,
-    preferences: state.preferences,
     setFilters: actions.setFilters,
     selectMatch: actions.selectMatch,
     hideMatch: actions.hideMatch,

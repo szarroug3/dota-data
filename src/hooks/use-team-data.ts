@@ -1,52 +1,135 @@
-import { useEffect, useRef } from 'react';
+// ============================================================================
+// useTeamData: UI-Focused Team Data Hook
+//
+// Provides a high-level, UI-friendly interface for team data, actions, and state.
+// Aggregates context, loading, error, and convenience actions for components.
+// ============================================================================
+
+import { useCallback } from 'react';
 
 import { useTeamContext } from '@/contexts/team-context';
-import type { UseTeamDataOptions, UseTeamDataReturn } from '@/types/hooks/use-team-data';
+import type { TeamContextValue, TeamData } from '@/types/contexts/team-types';
+import type { UseTeamDataReturn } from '@/types/hooks/use-team-data';
 
-/**
- * Custom hook for accessing and managing team data.
- * Supports auto-refresh and options for stats, matches, and players.
- */
-export function useTeamData(options?: UseTeamDataOptions): UseTeamDataReturn {
+// ============================================================================
+// Internal: Active Team Data Selector
+// ============================================================================
+function useActiveTeamData(teamDataList: TeamData[], activeTeam: { teamId: string; leagueId: string } | null) {
+  const activeTeamId = activeTeam?.teamId || null;
+  const activeTeamData = activeTeam
+    ? teamDataList.find((td: TeamData) => td.team.id === activeTeam.teamId && td.team.leagueId === activeTeam.leagueId)
+    : null;
+  const teamData = activeTeamData || null;
+  return { activeTeamId, activeTeamData, teamData };
+}
+
+// ============================================================================
+// Internal: Team Loading & Error States
+// ============================================================================
+function useTeamStates(context: TeamContextValue, activeTeamData: TeamData | null) {
+  return {
+    isLoadingTeams: false, // Placeholder for future multi-team loading
+    isLoadingTeamData: activeTeamData?.team.isLoading || false,
+    isLoadingTeamStats: false, // Placeholder for future stats loading
+    teamsError: context.error,
+    teamDataError: activeTeamData?.team.error || null,
+    teamStatsError: null // Placeholder for future stats error
+  };
+}
+
+// ============================================================================
+// Internal: Team Actions (ID-based)
+// ============================================================================
+function useTeamActions(
+  teamDataList: TeamData[],
+  setActiveTeam: (teamId: string, leagueId: string) => void,
+  addTeam: (teamId: string, leagueId: string) => Promise<void>,
+  removeTeam: (teamId: string, leagueId: string) => Promise<void> | void,
+  refreshTeam: (teamId: string, leagueId: string) => Promise<void>,
+  clearError: () => void
+) {
+  const setActiveTeamById = useCallback((teamId: string) => {
+    const team = teamDataList.find((td: TeamData) => td.team.id === teamId);
+    if (team) {
+      setActiveTeam(teamId, team.team.leagueId);
+    }
+  }, [teamDataList, setActiveTeam]);
+
+  const addTeamById = useCallback(async (teamId: string, leagueId: string) => {
+    await addTeam(teamId, leagueId);
+  }, [addTeam]);
+
+  const removeTeamById = useCallback(async (teamId: string) => {
+    const team = teamDataList.find((td: TeamData) => td.team.id === teamId);
+    if (team) {
+      await removeTeam(teamId, team.team.leagueId);
+    }
+  }, [teamDataList, removeTeam]);
+
+  const refreshTeamById = useCallback(async (teamId: string) => {
+    const team = teamDataList.find((td: TeamData) => td.team.id === teamId);
+    if (team) {
+      await refreshTeam(teamId, team.team.leagueId);
+    }
+  }, [teamDataList, refreshTeam]);
+
+  const updateTeamById = useCallback(async (teamId: string) => {
+    await refreshTeamById(teamId);
+  }, [refreshTeamById]);
+
+  const clearErrors = useCallback(() => {
+    clearError();
+  }, [clearError]);
+
+  return {
+    setActiveTeamById,
+    addTeamById,
+    removeTeamById,
+    refreshTeamById,
+    updateTeamById,
+    clearErrors
+  };
+}
+
+// ============================================================================
+// Exported Hook: useTeamData
+// ============================================================================
+
+export function useTeamData(): UseTeamDataReturn {
   const context = useTeamContext();
   const {
-    teams,
+    teamDataList,
     activeTeam,
-    activeTeamId,
-    teamData,
-    teamStats,
+    addTeam,
+    removeTeam,
+    refreshTeam,
+    setActiveTeam,
+    clearError
+  } = context;
+
+  const teams = teamDataList.map((teamData: TeamData) => teamData.team);
+  const { activeTeamId, activeTeamData, teamData } = useActiveTeamData(teamDataList, activeTeam);
+  const teamStats = null; // Placeholder for future stats aggregation
+  const {
     isLoadingTeams,
     isLoadingTeamData,
     isLoadingTeamStats,
     teamsError,
     teamDataError,
-    teamStatsError,
-    setActiveTeam,
-    addTeam,
-    removeTeam,
-    refreshTeam,
-    updateTeam,
+    teamStatsError
+  } = useTeamStates(context, activeTeamData ?? null);
+  const {
+    setActiveTeamById,
+    addTeamById,
+    removeTeamById,
+    refreshTeamById,
+    updateTeamById,
     clearErrors
-  } = context;
-
-  // Auto-refresh logic
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  useEffect(() => {
-    if (options?.autoRefresh && activeTeamId && refreshTeam) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = setInterval(() => {
-        refreshTeam(activeTeamId);
-      }, (options.refreshInterval ?? 300) * 1000);
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
-    }
-    return undefined;
-  }, [options?.autoRefresh, options?.refreshInterval, activeTeamId, refreshTeam]);
+  } = useTeamActions(teamDataList, setActiveTeam, addTeam, removeTeam, refreshTeam, clearError);
 
   return {
     teams,
-    activeTeam,
+    activeTeam: activeTeamData?.team || null,
     activeTeamId,
     teamData,
     teamStats,
@@ -56,11 +139,11 @@ export function useTeamData(options?: UseTeamDataOptions): UseTeamDataReturn {
     teamsError,
     teamDataError,
     teamStatsError,
-    setActiveTeam,
-    addTeam,
-    removeTeam,
-    refreshTeam,
-    updateTeam,
+    setActiveTeam: setActiveTeamById,
+    addTeam: addTeamById,
+    removeTeam: removeTeamById,
+    refreshTeam: refreshTeamById,
+    updateTeam: updateTeamById,
     clearErrors
   };
 } 

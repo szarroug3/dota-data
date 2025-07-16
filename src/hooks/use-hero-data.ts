@@ -6,94 +6,138 @@
  * data fetching, filtering, and state management.
  */
 
-import { useCallback, useEffect, useMemo } from 'react';
+// ============================================================================
+// useHeroData: UI-Focused Hero Data Hook
+//
+// Provides a high-level, UI-friendly interface for hero data, actions, and state.
+// Aggregates context, loading, error, and convenience actions for components.
+// ============================================================================
 
+import { useCallback } from 'react';
+
+import type { HeroContextValue } from '@/contexts/hero-context';
 import { useHeroContext } from '@/contexts/hero-context';
-import type { Hero, HeroFilters } from '@/types/contexts/hero-context-value';
+import type { UseHeroDataReturn } from '@/types/hooks/use-hero-data';
 
 // ============================================================================
-// HOOK RETURN TYPE
+// Internal: Selected Hero Data Selector
 // ============================================================================
+function useSelectedHeroData(heroes: any[], selectedHeroId: string | null, selectedHero: any) {
+  const selectedHeroData = selectedHero;
+  const heroData = selectedHeroData || null;
+  const heroStats = null; // Not implemented yet
+  return { selectedHeroData, heroData, heroStats };
+}
 
-export interface UseHeroDataReturn {
-  heroes: Hero[];
-  filteredHeroes: Hero[];
-  loading: boolean;
-  isLoading: boolean; // Add alias for compatibility
-  error: string | null;
-  filters: HeroFilters;
-  actions: {
-    setFilters: (filters: HeroFilters) => void;
-    refreshHeroes: (force?: boolean) => Promise<void>;
-    clearError: () => void;
+// ============================================================================
+// Internal: Hero Loading & Error States
+// ============================================================================
+function useHeroStates(context: HeroContextValue, heroData: any) {
+  return {
+    isLoadingHeroes: context.isLoadingHeroes,
+    isLoadingHeroData: context.isLoadingHeroData,
+    isLoadingHeroStats: context.isLoadingHeroStats,
+    heroesError: context.heroesError,
+    heroDataError: context.heroDataError,
+    heroStatsError: context.heroStatsError
   };
 }
 
 // ============================================================================
-// HOOK IMPLEMENTATION
+// Internal: Hero Actions
+// ============================================================================
+function useHeroActions(
+  heroes: any[],
+  setSelectedHero: (heroId: string) => void,
+  setFilters: (filters: any) => void,
+  refreshHeroes: () => Promise<void>,
+  refreshHero: (heroId: string) => Promise<void>,
+  clearErrors: () => void
+) {
+  const setSelectedHeroById = useCallback((heroId: string) => {
+    setSelectedHero(heroId);
+  }, [setSelectedHero]);
+
+  const setFiltersHandler = useCallback((filters: any) => {
+    setFilters(filters);
+  }, [setFilters]);
+
+  const refreshHeroesHandler = useCallback(async () => {
+    await refreshHeroes();
+  }, [refreshHeroes]);
+
+  const refreshHeroById = useCallback(async (heroId: string) => {
+    await refreshHero(heroId);
+  }, [refreshHero]);
+
+  const clearErrorsHandler = useCallback(() => {
+    clearErrors();
+  }, [clearErrors]);
+
+  return {
+    setSelectedHero: setSelectedHeroById,
+    setFilters: setFiltersHandler,
+    refreshHeroes: refreshHeroesHandler,
+    refreshHero: refreshHeroById,
+    clearErrors: clearErrorsHandler
+  };
+}
+
+// ============================================================================
+// Exported Hook: useHeroData
 // ============================================================================
 
 export function useHeroData(): UseHeroDataReturn {
   const context = useHeroContext();
+  const {
+    heroes,
+    filteredHeroes,
+    selectedHeroId,
+    selectedHero,
+    filters,
+    setSelectedHero,
+    setFilters,
+    refreshHeroes,
+    refreshHero,
+    clearErrors
+  } = context;
 
-  // ============================================================================
-  // DERIVED STATE
-  // ============================================================================
-
-  const loading = useMemo(() => {
-    return context.isLoadingHeroes || context.isLoadingHeroData || context.isLoadingHeroStats;
-  }, [context.isLoadingHeroes, context.isLoadingHeroData, context.isLoadingHeroStats]);
-
-  const error = useMemo(() => {
-    return context.heroesError || context.heroDataError || context.heroStatsError;
-  }, [context.heroesError, context.heroDataError, context.heroStatsError]);
-
-  // ============================================================================
-  // ACTIONS
-  // ============================================================================
-
-  const setFilters = useCallback((filters: HeroFilters) => {
-    context.setFilters(filters);
-  }, [context]);
-
-  const refreshHeroes = useCallback(async () => {
-    try {
-      await context.refreshHeroes();
-    } catch (err) {
-      console.error('Failed to refresh heroes:', err);
-    }
-  }, [context]);
-
-  const clearError = useCallback(() => {
-    context.clearErrors();
-  }, [context]);
-
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  // Auto-refresh heroes if needed
-  useEffect(() => {
-    if (context.heroes.length === 0 && !context.isLoadingHeroes && !context.heroesError) {
-      refreshHeroes();
-    }
-  }, [context.heroes.length, context.isLoadingHeroes, context.heroesError, refreshHeroes]);
-
-  // ============================================================================
-  // RETURN VALUE
-  // ============================================================================
+  const selectedHeroData = selectedHero;
+  const { heroData, heroStats } = useSelectedHeroData(heroes, selectedHeroId, selectedHero);
+  const {
+    isLoadingHeroes,
+    isLoadingHeroData,
+    isLoadingHeroStats,
+    heroesError,
+    heroDataError,
+    heroStatsError
+  } = useHeroStates(context, heroData);
+  const {
+    setSelectedHero: setSelectedHeroHandler,
+    setFilters: setFiltersHandler,
+    refreshHeroes: refreshHeroesHandler,
+    refreshHero: refreshHeroHandler,
+    clearErrors: clearErrorsHandler
+  } = useHeroActions(heroes, setSelectedHero, setFilters, refreshHeroes, refreshHero, clearErrors);
 
   return {
-    heroes: context.heroes,
-    filteredHeroes: context.filteredHeroes,
-    loading,
-    isLoading: loading, // Add alias for compatibility
-    error,
-    filters: context.filters,
-    actions: {
-      setFilters,
-      refreshHeroes,
-      clearError
-    }
+    heroes,
+    filteredHeroes,
+    selectedHero: selectedHero || null,
+    selectedHeroId,
+    heroData,
+    heroStats,
+    filters,
+    isLoadingHeroes,
+    isLoadingHeroData,
+    isLoadingHeroStats,
+    heroesError,
+    heroDataError,
+    heroStatsError,
+    setSelectedHero: setSelectedHeroHandler,
+    setFilters: setFiltersHandler,
+    refreshHeroes: refreshHeroesHandler,
+    refreshHero: refreshHeroHandler,
+    clearErrors: clearErrorsHandler
   };
 } 

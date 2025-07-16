@@ -6,7 +6,7 @@
  */
 
 // ============================================================================
-// TEAM DATA TYPES
+// CORE DATA TYPES
 // ============================================================================
 
 /**
@@ -14,20 +14,12 @@
  */
 export interface Team {
   id: string;
-  name?: string;
+  name: string;
   leagueId: string;
-  /**
-   * League name is optional because not all APIs provide it.
-   * If needed, fetch from the leagues API/context.
-   */
   leagueName?: string;
-  logoUrl?: string;
   isActive: boolean;
   isLoading: boolean;
   error?: string;
-  createdAt: string;
-  updatedAt: string;
-  lastUpdated?: string;
 }
 
 /**
@@ -36,12 +28,49 @@ export interface Team {
 export interface League {
   id: string;
   name: string;
-  region: string;
-  tier: string;
-  prizePool: number;
-  startDate: string;
-  endDate: string;
+}
+
+/**
+ * Match interface with team context
+ */
+export interface Match {
+  id: string;
+  teamId: string;
+  leagueId: string;
+  opponent: string;
+  result: 'win' | 'loss';
+  date: string;
+  duration: number;
+  teamSide: 'radiant' | 'dire';
+  players: Player[];
+  heroes: string[];
+}
+
+/**
+ * Player interface
+ */
+export interface Player {
+  id: string;
+  name: string;
+  accountId: number;
+  teamId: string;
+  role?: string;
+  totalMatches: number;
+  winRate: number;
   lastUpdated: string;
+}
+
+/**
+ * Team summary interface
+ */
+export interface TeamSummary {
+  totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  overallWinRate: number;
+  lastMatchDate: string | null;
+  averageMatchDuration: number;
+  totalPlayers: number;
 }
 
 /**
@@ -55,77 +84,6 @@ export interface TeamData {
   summary: TeamSummary;
 }
 
-/**
- * Team stats interface
- */
-export interface TeamStats {
-  totalMatches: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  averageMatchDuration: number;
-  mostPlayedHeroes: HeroStats[];
-  recentPerformance: PerformanceTrend[];
-}
-
-/**
- * Match interface
- */
-export interface Match {
-  id: string;
-  teamId: string;
-  opponent: string;
-  result: 'win' | 'loss';
-  date: string;
-  duration: number;
-  heroes: string[];
-  players: string[];
-}
-
-/**
- * Player interface
- */
-export interface Player {
-  id: string;
-  name: string;
-  teamId: string;
-  role: string;
-  totalMatches: number;
-  winRate: number;
-}
-
-/**
- * Hero stats interface
- */
-export interface HeroStats {
-  heroId: string;
-  heroName: string;
-  gamesPlayed: number;
-  wins: number;
-  winRate: number;
-}
-
-/**
- * Performance trend interface
- */
-export interface PerformanceTrend {
-  period: string;
-  wins: number;
-  losses: number;
-  winRate: number;
-}
-
-/**
- * Team summary interface
- */
-export interface TeamSummary {
-  totalMatches: number;
-  totalWins: number;
-  totalLosses: number;
-  overallWinRate: number;
-  lastMatchDate: string | null;
-}
-
 // ============================================================================
 // TEAM CONTEXT STATE
 // ============================================================================
@@ -134,27 +92,25 @@ export interface TeamSummary {
  * Team context value interface
  */
 export interface TeamContextValue {
-  // Team data
+  // State
   teamDataList: TeamData[];
   activeTeam: { teamId: string; leagueId: string } | null;
+  isLoading: boolean;
+  error: string | null;
   
-  // Actions
+  // Core team operations
   addTeam: (teamId: string, leagueId: string) => Promise<void>;
-  removeTeam: (teamId: string, leagueId: string) => Promise<void>;
+  removeTeam: (teamId: string, leagueId: string) => void;
+  setActiveTeam: (teamId: string | null, leagueId?: string) => Promise<void>;
   refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  updateTeam: (
-    oldTeamId: string,
-    oldLeagueId: string,
-    newTeamId: string,
-    newLeagueId: string
-  ) => Promise<void>;
-  setActiveTeam: (teamId: string, leagueId: string) => void;
-  teamExists: (teamId: string, leagueId: string) => boolean;
   
-  // Error handling
-  clearGlobalError: () => void;
-  getGlobalError: () => string | null;
-  isInitialized: () => boolean;
+  // League-specific operations
+  getTeamMatchesForLeague: (teamId: string, leagueId: string) => Match[];
+  getTeamPlayersForLeague: (teamId: string, leagueId: string) => Player[];
+  
+  // Utilities
+  teamExists: (teamId: string, leagueId: string) => boolean;
+  clearError: () => void;
 }
 
 /**
@@ -165,7 +121,7 @@ export interface TeamContextProviderProps {
 }
 
 // ============================================================================
-// TEAM DATA TYPES
+// UTILITY TYPES
 // ============================================================================
 
 /**

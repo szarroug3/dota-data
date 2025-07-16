@@ -178,7 +178,7 @@ const clickButton = (testId: string) => {
 const expectInitialConfigState = () => {
   expect(screen.getByTestId('theme')).toHaveTextContent('system');
   expect(screen.getByTestId('ui-density')).toHaveTextContent('comfortable');
-  expect(screen.getByTestId('preferred-site')).toHaveTextContent('opendota');
+  expect(screen.getByTestId('preferred-site')).toHaveTextContent('dotabuff');
   expect(screen.getByTestId('auto-refresh')).toHaveTextContent('true');
   expect(screen.getByTestId('sidebar-collapsed')).toHaveTextContent('true');
   expect(screen.getByTestId('debug-mode')).toHaveTextContent('false');

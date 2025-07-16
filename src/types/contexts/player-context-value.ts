@@ -5,7 +5,7 @@
  * in the frontend application.
  */
 
-import { Player } from './team-context-value';
+import { Player } from './team-types';
 
 // Re-export Player type for use in other files
 export type { Player };
@@ -140,7 +140,7 @@ export interface PlayerFilters {
   };
   heroes: string[];
   roles: string[];
-  result: 'all' | 'win' | 'loss';
+  result: 'all' | 'win' | 'lose';
   performance: {
     minKDA: number | null;
     minGPM: number | null;
