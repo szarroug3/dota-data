@@ -1,0 +1,147 @@
+[
+  {
+    "field": "kills",
+    "n": 9793,
+    "sum": 86212
+  },
+  {
+    "field": "deaths",
+    "n": 9793,
+    "sum": 62377
+  },
+  {
+    "field": "assists",
+    "n": 9793,
+    "sum": 116027
+  },
+  {
+    "field": "kda",
+    "n": 9793,
+    "sum": 33818.29
+  },
+  {
+    "field": "gold_per_min",
+    "n": 9793,
+    "sum": 5149859
+  },
+  {
+    "field": "xp_per_min",
+    "n": 9793,
+    "sum": 5901460
+  },
+  {
+    "field": "last_hits",
+    "n": 9793,
+    "sum": 2216552
+  },
+  {
+    "field": "denies",
+    "n": 9793,
+    "sum": 117011
+  },
+  {
+    "field": "lane_efficiency_pct",
+    "n": 7024,
+    "sum": 448694
+  },
+  {
+    "field": "duration",
+    "n": 9793,
+    "sum": 23062417
+  },
+  {
+    "field": "level",
+    "n": 9793,
+    "sum": 205933
+  },
+  {
+    "field": "hero_damage",
+    "n": 9508,
+    "sum": 215455663
+  },
+  {
+    "field": "tower_damage",
+    "n": 9508,
+    "sum": 37417295
+  },
+  {
+    "field": "hero_healing",
+    "n": 9508,
+    "sum": 5266592
+  },
+  {
+    "field": "stuns",
+    "n": 6926,
+    "sum": 185333.52224479817
+  },
+  {
+    "field": "tower_kills",
+    "n": 7040,
+    "sum": 12206
+  },
+  {
+    "field": "neutral_kills",
+    "n": 7040,
+    "sum": 635858
+  },
+  {
+    "field": "courier_kills",
+    "n": 7040,
+    "sum": 753
+  },
+  {
+    "field": "purchase_tpscroll",
+    "n": 6759,
+    "sum": 41273
+  },
+  {
+    "field": "purchase_ward_observer",
+    "n": 1360,
+    "sum": 5117
+  },
+  {
+    "field": "purchase_ward_sentry",
+    "n": 1110,
+    "sum": 5050
+  },
+  {
+    "field": "purchase_gem",
+    "n": 238,
+    "sum": 275
+  },
+  {
+    "field": "purchase_rapier",
+    "n": 21,
+    "sum": 23
+  },
+  {
+    "field": "pings",
+    "n": 6883,
+    "sum": 231233
+  },
+  {
+    "field": "throw",
+    "n": 3222,
+    "sum": 8811805
+  },
+  {
+    "field": "comeback",
+    "n": 3508,
+    "sum": 8345195
+  },
+  {
+    "field": "stomp",
+    "n": 3508,
+    "sum": 73861594
+  },
+  {
+    "field": "loss",
+    "n": 3222,
+    "sum": 65142600
+  },
+  {
+    "field": "actions_per_min",
+    "n": 7016,
+    "sum": 1035171
+  }
+]

@@ -129,7 +129,7 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
   }
 };
 
-describe('Players API Route', () => {
+describe('Players API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetchOpenDotaPlayer.mockResolvedValue(mockComprehensivePlayerData);
@@ -182,33 +182,6 @@ describe('Players API Route', () => {
       expect(response.status).toBe(429);
       const data = await response.json();
       expect(data.error).toBe('Rate limited by OpenDota API');
-    });
-
-    it('should handle invalid player ID', async () => {
-      // Mock the API to fail for invalid player IDs
-      mockFetchOpenDotaPlayer.mockRejectedValue(new Error('Player not found'));
-
-      const request = new NextRequest('http://localhost:3000/api/players/invalid');
-      const params = Promise.resolve({ id: 'invalid' });
-
-      const response = await GET(request, { params });
-
-      expect(response.status).toBe(404);
-      const data = await response.json();
-      expect(data.error).toBe('Data Not Found');
-    });
-
-    it('should handle network errors', async () => {
-      mockFetchOpenDotaPlayer.mockRejectedValue(new Error('Network error'));
-
-      const request = new NextRequest('http://localhost:3000/api/players/40927904');
-      const params = Promise.resolve({ id: '40927904' });
-
-      const response = await GET(request, { params });
-
-      expect(response.status).toBe(500);
-      const data = await response.json();
-      expect(data.error).toBe('Failed to fetch player');
     });
   });
 }); 

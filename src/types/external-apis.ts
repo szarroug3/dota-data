@@ -9,20 +9,7 @@
 // ============================================================================
 
 /**
- * OpenDota API base configuration
- */
-export interface OpenDotaConfig {
-  baseUrl: string;
-  apiKey?: string;
-  timeout: number;
-  rateLimit: {
-    window: number;
-    max: number;
-  };
-}
-
-/**
- * OpenDota Hero response
+ * OpenDota Hero response (matches real-data/heroes/heroes.json)
  */
 export interface OpenDotaHero {
   id: number;
@@ -31,47 +18,7 @@ export interface OpenDotaHero {
   primary_attr: string;
   attack_type: string;
   roles: string[];
-  img: string;
-  icon: string;
-  base_health: number;
-  base_mana: number;
-  base_armor: number;
-  base_attack_min: number;
-  base_attack_max: number;
-  move_speed: number;
-  base_attack_time: number;
-  attack_point: number;
-  attack_range: number;
-  projectile_speed: number;
-  turn_rate: number;
-  cm_enabled: boolean;
   legs: number;
-  day_vision: number;
-  night_vision: number;
-  hero_id: number;
-  turbo_picks: number;
-  turbo_wins: number;
-  pro_ban: number;
-  pro_win: number;
-  pro_pick: number;
-  "1_pick": number;
-  "1_win": number;
-  "2_pick": number;
-  "2_win": number;
-  "3_pick": number;
-  "3_win": number;
-  "4_pick": number;
-  "4_win": number;
-  "5_pick": number;
-  "5_win": number;
-  "6_pick": number;
-  "6_win": number;
-  "7_pick": number;
-  "7_win": number;
-  "8_pick": number;
-  "8_win": number;
-  null_pick: number;
-  null_win: number;
 }
 
 /**
@@ -101,38 +48,6 @@ export interface OpenDotaPlayer {
 }
 
 /**
- * OpenDota Player Match response
- */
-export interface OpenDotaPlayerMatch {
-  match_id: number;
-  player_slot: number;
-  radiant_win: boolean;
-  hero_id: number;
-  start_time: number;
-  duration: number;
-  game_mode: number;
-  lobby_type: number;
-  version: number | null;
-  kills: number;
-  deaths: number;
-  assists: number;
-  average_rank: number;
-  xp_per_min: number;
-  gold_per_min: number;
-  hero_damage: number;
-  tower_damage: number;
-  hero_healing: number;
-  last_hits: number;
-  lane: number | null;
-  lane_role: number | null;
-  is_roaming: boolean | null;
-  cluster: number;
-  leaver_status: number;
-  party_size: number | null;
-  hero_variant: number;
-}
-
-/**
  * OpenDota Player Hero response
  */
 export interface OpenDotaPlayerHero {
@@ -150,12 +65,12 @@ export interface OpenDotaPlayerHero {
  * OpenDota Player Counts response
  */
 export interface OpenDotaPlayerCounts {
-  leaver_status: number;
-  game_mode: number;
-  lobby_type: number;
-  lane_role: number;
-  region: number;
-  patch: number;
+  leaver_status: Record<string, { games: number; win: number }>;
+  game_mode: Record<string, { games: number; win: number }>;
+  lobby_type: Record<string, { games: number; win: number }>;
+  lane_role: Record<string, { games: number; win: number }>;
+  region: Record<string, { games: number; win: number }>;
+  patch: Record<string, { games: number; win: number }>;
 }
 
 /**
@@ -212,8 +127,49 @@ export interface OpenDotaPlayerRecentMatches {
 }
 
 /**
- * OpenDota Match Player response
+ * OpenDota Player Rankings response
  */
+export interface OpenDotaPlayerRanking {
+  hero_id: number;
+  score: number;
+  percent_rank: number;
+  card: number;
+}
+
+/**
+ * OpenDota Player Ratings response
+ */
+export interface OpenDotaPlayerRating {
+  account_id: number;
+  match_id: number;
+  solo_competitive_rank: number | null;
+  competitive_rank: number | null;
+  time: string;
+}
+
+/**
+ * OpenDota Player Ward Map response
+ */
+export interface OpenDotaPlayerWardMap {
+  obs: Record<string, Record<string, number>>;
+  sen: Record<string, Record<string, number>>;
+}
+
+/**
+ * Comprehensive OpenDota Player data containing all player information
+ */
+export interface OpenDotaPlayerComprehensive {
+  profile: OpenDotaPlayer;
+  counts: OpenDotaPlayerCounts;
+  heroes: OpenDotaPlayerHero[];
+  rankings: OpenDotaPlayerRanking[];
+  ratings: OpenDotaPlayerRating[];
+  recentMatches: OpenDotaPlayerRecentMatches[];
+  totals: OpenDotaPlayerTotals;
+  wl: OpenDotaPlayerWL;
+  wardMap: OpenDotaPlayerWardMap;
+}
+
 export interface OpenDotaMatchPlayer {
   account_id: number;
   player_slot: number;
@@ -240,11 +196,8 @@ export interface OpenDotaMatchPlayer {
   gold: number;
   gold_spent: number;
   hero_damage: number;
-  scaled_hero_damage: number;
   tower_damage: number;
-  scaled_tower_damage: number;
   hero_healing: number;
-  scaled_hero_healing: number;
   isRadiant: boolean;
   win: number;
   lose: number;
@@ -253,44 +206,78 @@ export interface OpenDotaMatchPlayer {
   kills_per_min: number;
   kda: number;
   abandons: number;
-  neutral_kills: number;
-  tower_kills: number;
-  courier_kills: number;
-  lane_kills: number;
-  hero_kills: number;
-  observer_kills: number;
-  sentry_kills: number;
-  roshan_kills: number;
-  necronomicon_kills: number;
-  ancient_kills: number;
-  buyback_count: number;
-  observer_uses: number;
-  sentry_uses: number;
-  lane_efficiency_pct: number;
-  lane: number;
-  lane_role: number;
-  is_roaming: boolean;
-  purchase_time: Record<string, number>;
-  first_purchase_time: Record<string, number>;
-  item_win: Record<string, number>;
-  item_usage: Record<string, number>;
-  purchase_tpscroll: number;
-  actions_per_min: number;
-  life_state_dead: number;
-  rank_tier: number;
-  cosmetics: number[];
-  benchmarks: Record<string, number>;
+  // Optional fields
+  party_id?: number;
+  permanent_buffs?: Array<{
+    permanent_buff: number;
+    stack_count: number;
+    grant_time: number;
+  }>;
+  party_size?: number;
+  team_number?: number;
+  team_slot?: number;
+  hero_variant?: number;
+  net_worth?: number;
+  aghanims_scepter?: number;
+  aghanims_shard?: number;
+  moonshard?: number;
+  ability_upgrades_arr?: number[];
+  personaname?: string;
+  name?: string | null;
+  last_login?: string;
+  rank_tier?: number;
+  is_subscriber?: boolean;
+  radiant_win?: boolean;
+  start_time?: number;
+  duration?: number;
+  cluster?: number;
+  lobby_type?: number;
+  game_mode?: number;
+  is_contributor?: boolean;
+  patch?: number;
+  region?: number;
+  neutral_kills?: number;
+  tower_kills?: number;
+  courier_kills?: number;
+  lane_kills?: number;
+  hero_kills?: number;
+  observer_kills?: number;
+  sentry_kills?: number;
+  roshan_kills?: number;
+  necronomicon_kills?: number;
+  ancient_kills?: number;
+  buyback_count?: number;
+  observer_uses?: number;
+  sentry_uses?: number;
+  lane_efficiency_pct?: number;
+  lane?: number;
+  lane_role?: number;
+  is_roaming?: boolean;
+  purchase_time?: Record<string, number>;
+  first_purchase_time?: Record<string, number>;
+  item_win?: Record<string, number>;
+  item_usage?: Record<string, number>;
+  purchase_tpscroll?: number;
+  actions_per_min?: number;
+  life_state_dead?: number;
+  scaled_hero_damage?: number;
+  scaled_tower_damage?: number;
+  scaled_hero_healing?: number;
+  cosmetics?: number[];
+  benchmarks?: Record<string, {
+    raw: number;
+    pct: number;
+  }>;
 }
 
-/**
- * OpenDota Match response
- */
 export interface OpenDotaMatch {
   match_id: number;
   start_time: number;
   duration: number;
   radiant_win: boolean;
   players: OpenDotaMatchPlayer[];
+  // Optional fields
+  version?: number;
   radiant_name?: string;
   dire_name?: string;
   radiant_team_id?: number;
@@ -298,11 +285,46 @@ export interface OpenDotaMatch {
   radiant_score?: number;
   dire_score?: number;
   leagueid?: number;
+  lobby_type?: number;
+  game_mode?: number;
+  cluster?: number;
+  patch?: number;
+  region?: number;
   picks_bans?: Array<{
     is_pick: boolean;
     hero_id: number;
     team: number;
     order: number;
+  }>;
+  draft_timings?: Array<{
+    order: number;
+    pick: boolean;
+    active_team: number;
+    hero_id: number;
+    player_slot: number | null;
+    extra_time: number;
+    total_time_taken: number;
+  }>;
+  teamfights?: Array<{
+    start: number;
+    end: number;
+    last_death: number;
+    deaths: number;
+    players: Array<{
+      deaths_pos: Record<string, Record<string, number>>;
+      ability_uses: Record<string, number>;
+      ability_targets: Record<string, Record<string, number>>;
+      item_uses: Record<string, number>;
+      killed: Record<string, number>;
+      deaths: number;
+      buybacks: number;
+      damage: number;
+      healing: number;
+      gold_delta: number;
+      xp_delta: number;
+      xp_start: number;
+      xp_end: number;
+    }>;
   }>;
 }
 
@@ -348,18 +370,6 @@ export interface OpenDotaLeague {
 // ============================================================================
 
 /**
- * Dotabuff API base configuration
- */
-export interface DotabuffConfig {
-  baseUrl: string;
-  requestDelay: number;
-  rateLimit: {
-    window: number;
-    max: number;
-  };
-}
-
-/**
  * Dotabuff Team response
  */
 export interface DotabuffTeam {
@@ -388,122 +398,6 @@ export interface DotabuffLeague {
   name: string;
 }
 
-/**
- * Dotabuff Hero Meta response
- */
-export interface DotabuffHeroMeta {
-  hero_id: number;
-  name: string;
-  pick_rate: number;
-  win_rate: number;
-  ban_rate: number;
-  position: string;
-  tier: string;
-}
-
-// ============================================================================
-// DOTA2PROTRACKER API TYPES
-// ============================================================================
-
-/**
- * Dota2ProTracker API base configuration
- */
-export interface D2PTConfig {
-  baseUrl: string;
-  requestDelay: number;
-  rateLimit: {
-    window: number;
-    max: number;
-  };
-}
-
-/**
- * D2PT Hero Meta response
- */
-export interface D2PTHeroMeta {
-  hero_id: number;
-  name: string;
-  pick_rate: number;
-  win_rate: number;
-  ban_rate: number;
-  position: string;
-  tier: string;
-  meta_score: number;
-}
-
-/**
- * D2PT Player response
- */
-export interface D2PTPlayer {
-  account_id: number;
-  name: string;
-  rank: string;
-  mmr: number;
-  recent_matches: D2PTPlayerMatch[];
-}
-
-/**
- * D2PT Player Match
- */
-export interface D2PTPlayerMatch {
-  match_id: number;
-  hero_id: number;
-  result: 'win' | 'loss';
-  duration: number;
-  start_time: number;
-  kills: number;
-  deaths: number;
-  assists: number;
-  gpm: number;
-  xpm: number;
-}
-
-// ============================================================================
-// STRATZ API TYPES
-// ============================================================================
-
-/**
- * Stratz API base configuration
- */
-export interface StratzConfig {
-  baseUrl: string;
-  apiKey?: string;
-  timeout: number;
-  rateLimit: {
-    window: number;
-    max: number;
-  };
-}
-
-/**
- * Stratz Hero response
- */
-export interface StratzHero {
-  id: number;
-  name: string;
-  localizedName: string;
-  primaryAttr: string;
-  attackType: string;
-  roles: string[];
-  img: string;
-  icon: string;
-  baseHealth: number;
-  baseMana: number;
-  baseArmor: number;
-  baseAttackMin: number;
-  baseAttackMax: number;
-  moveSpeed: number;
-  baseAttackTime: number;
-  attackPoint: number;
-  attackRange: number;
-  projectileSpeed: number;
-  turnRate: number;
-  cmEnabled: boolean;
-  legs: number;
-  dayVision: number;
-  nightVision: number;
-}
-
 // ============================================================================
 // EXTERNAL API ERROR TYPES
 // ============================================================================
@@ -525,7 +419,7 @@ export type ExternalApiErrorType =
  */
 export interface ExternalApiError extends Error {
   type: ExternalApiErrorType;
-  service: 'opendota' | 'dotabuff' | 'd2pt' | 'stratz';
+  service: 'opendota' | 'dotabuff';
   statusCode?: number;
   retryAfter?: number;
   retryable: boolean;
@@ -538,57 +432,16 @@ export interface ExternalApiError extends Error {
 /**
  * External API service enumeration
  */
-export type ExternalApiService = 'opendota' | 'dotabuff' | 'd2pt' | 'stratz';
+export type ExternalApiService = 'opendota' | 'dotabuff';
 
 /**
  * External API configuration union
  */
-export type ExternalApiConfigUnion = 
-  | OpenDotaConfig
-  | DotabuffConfig
-  | D2PTConfig
-  | StratzConfig;
+
 
 /**
  * External API response union
  */
-export type ExternalApiResponseUnion = 
-  | OpenDotaHero
-  | OpenDotaPlayer
-  | OpenDotaPlayerMatch
-  | OpenDotaPlayerHero
-  | OpenDotaPlayerCounts
-  | OpenDotaPlayerTotals
-  | OpenDotaPlayerWL
-  | OpenDotaPlayerRecentMatches
-  | OpenDotaMatch
-  | OpenDotaTeam
-  | OpenDotaLeague
-  | DotabuffTeam
-  | DotabuffLeague
-  | DotabuffHeroMeta
-  | D2PTHeroMeta
-  | D2PTPlayer
-  | StratzHero;
 
-/**
- * External API request options
- */
-export interface ExternalApiRequestOptions {
-  timeout?: number;
-  retries?: number;
-  retryDelay?: number;
-  headers?: Record<string, string>;
-  force?: boolean;
-}
 
-/**
- * External API response wrapper
- */
-export interface ExternalApiResponseWrapper<T> {
-  data: T;
-  service: ExternalApiService;
-  cached: boolean;
-  timestamp: string;
-  responseTime: number;
-} 
+ 
