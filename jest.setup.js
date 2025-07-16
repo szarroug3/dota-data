@@ -1,6 +1,21 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
 require('@testing-library/jest-dom');
 
+// Mock window.matchMedia for next-themes compatibility
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
 // Mock Upstash Redis modules globally to prevent any real connections or warnings
 const mockRedisInstance = {
   get: jest.fn(),
