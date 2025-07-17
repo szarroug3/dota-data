@@ -73,15 +73,12 @@ jest.mock('@/components/player/player-card/usePlayerCard', () => ({
 const mockPlayer = {
   id: '1',
   name: 'Player1',
-  avatar: '/avatars/player1.jpg',
-  rank: 'Legend',
-  team: 'Team Alpha',
-  role: 'Carry',
-  region: 'NA',
-  lastActive: '2024-01-15T18:30:00Z',
+  accountId: 123456789,
   teamId: 'team1',
+  role: 'Carry',
   totalMatches: 47,
-  winRate: 68.1
+  winRate: 68.1,
+  lastUpdated: '2024-01-15T18:30:00Z'
 };
 
 describe('PlayerCard', () => {
@@ -406,41 +403,32 @@ describe('PlayerCardList', () => {
     {
       id: '1',
       name: 'Player1',
-      avatar: '/avatars/player1.jpg',
-      rank: 'Legend',
-      team: 'Team Alpha',
-      role: 'Carry',
-      region: 'NA',
-      lastActive: '2024-01-15T18:30:00Z',
+      accountId: 123456789,
       teamId: 'team1',
+      role: 'Carry',
       totalMatches: 47,
-      winRate: 68.1
+      winRate: 68.1,
+      lastUpdated: '2024-01-15T18:30:00Z'
     },
     {
       id: '2',
       name: 'Player2',
-      avatar: '/avatars/player2.jpg',
-      rank: 'Ancient',
-      team: 'Team Beta',
-      role: 'Support',
-      region: 'EU',
-      lastActive: '2024-01-14T20:15:00Z',
+      accountId: 987654321,
       teamId: 'team2',
+      role: 'Support',
       totalMatches: 32,
-      winRate: 56.2
+      winRate: 56.2,
+      lastUpdated: '2024-01-14T20:15:00Z'
     },
     {
       id: '3',
       name: 'Player3',
-      avatar: '/avatars/player3.jpg',
-      rank: 'Divine',
-      team: 'Team Gamma',
-      role: 'Mid',
-      region: 'SEA',
-      lastActive: '2024-01-13T16:45:00Z',
+      accountId: 1122334455,
       teamId: 'team3',
+      role: 'Mid',
       totalMatches: 28,
-      winRate: 72.1
+      winRate: 72.1,
+      lastUpdated: '2024-01-13T16:45:00Z'
     }
   ];
 

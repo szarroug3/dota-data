@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { Team } from '@/types/contexts/team-context-value';
+import type { Team } from '@/types/contexts/team-types';
 
 interface PlayerStatsHeaderProps {
   activeTeam: Team | null;

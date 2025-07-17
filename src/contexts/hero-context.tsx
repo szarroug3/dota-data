@@ -1,9 +1,11 @@
+"use client";
+
 /**
  * Hero Context
  * 
- * Manages hero state and provides actions for hero operations.
- * Handles hero filtering, selection, and data management.
- * Uses hero data fetching context for API interactions.
+ * Manages hero data and provides actions for hero operations.
+ * Handles hero data filtering, sorting, and aggregation.
+ * Uses hero data fetching context for data retrieval.
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';

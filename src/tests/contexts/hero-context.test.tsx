@@ -9,7 +9,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 
 import { HeroProvider, useHeroContext } from '@/contexts/hero-context';
 import { HeroDataFetchingProvider, useHeroDataFetching } from '@/contexts/hero-data-fetching-context';
-import type { Hero, HeroFilters } from '@/types/contexts/hero-context-value';
+import type { Hero } from '@/types/contexts/hero-context-value';
 import type { OpenDotaHero } from '@/types/external-apis';
 
 // Mock useHeroDataFetching to return mock hero data
@@ -67,9 +67,8 @@ const HeroCounts = ({ heroes, filteredHeroes, selectedHeroId, selectedHero }: {
   </>
 );
 
-const HeroButtons = ({ setSelectedHero, setFilters, refreshHeroes, refreshHero }: {
+const HeroButtons = ({ setSelectedHero, refreshHeroes, refreshHero }: {
   setSelectedHero: (id: string) => void;
-  setFilters: (filters: HeroFilters) => void;
   refreshHeroes: () => Promise<void>;
   refreshHero: (heroId: string) => Promise<void>;
 }) => (
@@ -93,7 +92,6 @@ const TestComponent = () => {
       />
       <HeroButtons
         setSelectedHero={context.setSelectedHero}
-        setFilters={context.setFilters}
         refreshHeroes={context.refreshHeroes}
         refreshHero={context.refreshHero}
       />

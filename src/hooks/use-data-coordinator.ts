@@ -7,8 +7,8 @@
 
 import { useCallback } from 'react';
 
-import type { DataCoordinatorContextValue, UIStatus, UserAction } from '@/contexts/data-coordinator-context';
 import { useDataCoordinator as useDataCoordinatorContext } from '@/contexts/data-coordinator-context';
+import type { DataCoordinatorContextValue, UIStatus, UserAction } from '@/contexts/data-coordinator-types';
 
 // ============================================================================
 // Internal: Data Coordinator Selectors

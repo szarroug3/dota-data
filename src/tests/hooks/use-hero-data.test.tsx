@@ -179,7 +179,7 @@ function testRefreshFunctionality() {
     const { result } = renderHook(() => useHeroData(), { wrapper });
 
     await act(async () => {
-      await result.current.refreshHeroes(true);
+      await result.current.refreshHeroes();
     });
 
     // The refresh should complete without throwing

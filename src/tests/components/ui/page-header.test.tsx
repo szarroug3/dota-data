@@ -67,14 +67,16 @@ describe('PageHeader', () => {
   it('should render separator', () => {
     render(<PageHeader title="Test Title" />);
     
-    const separator = screen.getByText('Test Title').closest('.col-span-full')?.querySelector('hr');
+    // The separator is rendered as a Separator component, not an hr element
+    const separator = screen.getByText('Test Title').closest('.col-span-full')?.querySelector('[data-slot="separator"]');
     expect(separator).toBeInTheDocument();
   });
 
   it('should have proper separator styling', () => {
     render(<PageHeader title="Test Title" />);
     
-    const separator = screen.getByText('Test Title').closest('.col-span-full')?.querySelector('hr');
+    // The separator is rendered as a Separator component, not an hr element
+    const separator = screen.getByText('Test Title').closest('.col-span-full')?.querySelector('[data-slot="separator"]');
     expect(separator).toHaveClass('mt-2');
   });
 }); 

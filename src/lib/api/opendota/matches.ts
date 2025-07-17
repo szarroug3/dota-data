@@ -19,7 +19,7 @@ export async function fetchOpenDotaMatch(matchId: string, force = false): Promis
   const result = await request<OpenDotaMatch>(
     'opendota',
     () => fetchMatchFromOpenDota(matchId),
-    (data: string) => parseOpenDotaMatch(data),
+    (data: string) => parseOpenDotaMatchData(data),
     mockFilename,
     force,
     cacheTTL,
@@ -31,6 +31,173 @@ export async function fetchOpenDotaMatch(matchId: string, force = false): Promis
   }
 
   return result;
+}
+
+/**
+ * Initiates match parsing on OpenDota using requestWithRetry.
+ * OpenDota endpoint: https://api.opendota.com/api/request/{match_id}
+ *
+ * @param matchId The match ID to parse
+ * @returns Parse request response with jobId
+ */
+export async function initiateOpenDotaMatchParse(matchId: string): Promise<{ jobId: string }> {
+  try {
+    const response = await initiateParseRequest(matchId);
+    const result = JSON.parse(response) as { jobId: string };
+    
+    if (!result.jobId) {
+      throw new Error(`Invalid parse response for match ${matchId}`);
+    }
+    
+    return result;
+  } catch (err) {
+    throw new Error(`Failed to initiate parse request for match ${matchId}: ${err}`);
+  }
+}
+
+/**
+ * Checks the status of a parse request using requestWithRetry.
+ * OpenDota endpoint: https://api.opendota.com/api/request/{jobId}
+ *
+ * @param jobId The job ID to check
+ * @returns Parse request status
+ */
+export async function checkOpenDotaParseStatus(jobId: string): Promise<Record<string, string | number | boolean | null>> {
+  try {
+    const response = await checkParseStatus(jobId);
+    return JSON.parse(response);
+  } catch (err) {
+    throw new Error(`Failed to check parse status for job ${jobId}: ${err}`);
+  }
+}
+
+/**
+ * Complete match parsing workflow: initiate parse, poll for completion, and fetch parsed data.
+ * Uses the correct OpenDota API endpoints and follows the request.ts architecture.
+ *
+ * @param matchId The match ID to parse
+ * @param timeout Maximum time to wait for parsing completion (in milliseconds)
+ * @returns Parsed match data
+ */
+export async function parseOpenDotaMatchWithJobPolling(matchId: string, timeout = 60000): Promise<OpenDotaMatch> {
+  // Step 1: Initiate parse request and get jobId
+  const parseResponse = await initiateOpenDotaMatchParse(matchId);
+  const { jobId } = parseResponse;
+
+  // Step 2: Poll for completion using jobId
+  const startTime = Date.now();
+  const pollInterval = 2000; // 2 seconds
+
+  while (Date.now() - startTime < timeout) {
+    try {
+      // Check parse status using jobId
+      const statusResponse = await checkOpenDotaParseStatus(jobId);
+      
+      // If parsing is complete, fetch the parsed match data
+      if (isParseComplete(statusResponse)) {
+        return await fetchParsedOpenDotaMatch(matchId, true); // Force fresh data
+      }
+    } catch (error) {
+      // If the job is not found or not yet complete, continue polling
+      if (error instanceof Error && error.message.includes('Parse job not found')) {
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        continue;
+      }
+      // For other errors, re-throw
+      throw error;
+    }
+    
+    // Wait before next poll
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+  
+  throw new Error('Match parsing timed out');
+}
+
+/**
+ * Fetches parsed match data from OpenDota using the generic request function.
+ * This is used after initiating a parse to check if parsing is complete.
+ * OpenDota endpoint: https://api.opendota.com/api/matches/{matchId}
+ *
+ * @param matchId The match ID to fetch
+ * @param force If true, bypasses cache and fetches fresh data
+ * @returns OpenDotaMatch object
+ */
+export async function fetchParsedOpenDotaMatch(matchId: string, force = false): Promise<OpenDotaMatch> {
+  const cacheKey = `opendota:parsed-match:${matchId}`;
+  const cacheTTL = 60 * 60 * 24 * 14; // 14 days
+  const mockFilename = path.join(process.cwd(), 'mock-data', 'matches', `parsed-match-${matchId}.json`);
+
+  const result = await request<OpenDotaMatch>(
+    'opendota',
+    () => fetchMatchFromOpenDota(matchId),
+    (data: string) => parseOpenDotaMatchData(data),
+    mockFilename,
+    force,
+    cacheTTL,
+    cacheKey
+  );
+
+  if (!result) {
+    throw new Error(`Failed to fetch parsed match data for match ${matchId}`);
+  }
+
+  return result;
+}
+
+/**
+ * Initiates match parsing on OpenDota and polls for completion.
+ * OpenDota endpoint: https://api.opendota.com/api/request/{matchId}
+ *
+ * @param matchId The match ID to parse
+ * @param timeout Maximum time to wait for parsing completion (in milliseconds)
+ * @returns Parsed match data
+ */
+export async function parseOpenDotaMatchWithPolling(matchId: string, timeout = 60000): Promise<OpenDotaMatch> {
+  const baseUrl = process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api';
+  const startTime = Date.now();
+  const pollInterval = 2000; // 2 seconds
+
+  try {
+    // Step 1: Initiate parse request
+    const parseUrl = `${baseUrl}/request/${matchId}`;
+    const parseResponse = await requestWithRetry('POST', parseUrl);
+    
+    if (!parseResponse.ok) {
+      if (parseResponse.status === 404) {
+        throw new Error('Match not found');
+      }
+      if (parseResponse.status === 429) {
+        throw new Error('Rate limited');
+      }
+      throw new Error(`OpenDota parse API error: ${parseResponse.status} ${parseResponse.statusText}`);
+    }
+
+    // Step 2: Poll for completion
+    while (Date.now() - startTime < timeout) {
+      // Check if match is now available (parsed)
+      const matchUrl = `${baseUrl}/matches/${matchId}`;
+      const matchResponse = await requestWithRetry('GET', matchUrl);
+      
+      if (matchResponse.ok) {
+        const matchData = await matchResponse.text();
+        const parsedMatch = parseOpenDotaMatchData(matchData);
+        
+        // Check if the match has been parsed (has detailed data)
+        if (isMatchParsed(parsedMatch)) {
+          return parsedMatch;
+        }
+      }
+      
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    }
+    
+    throw new Error('Match parsing timed out');
+  } catch (err) {
+    throw new Error(`Failed to parse match from OpenDota: ${err}`);
+  }
 }
 
 /**
@@ -56,13 +223,86 @@ async function fetchMatchFromOpenDota(matchId: string): Promise<string> {
 }
 
 /**
+ * Initiate parse request to OpenDota API
+ */
+async function initiateParseRequest(matchId: string): Promise<string> {
+  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/request/${matchId}`;
+  
+  try {
+    const response = await requestWithRetry('POST', url);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Match not found');
+      }
+      if (response.status === 429) {
+        throw new Error('Rate limited');
+      }
+      throw new Error(`OpenDota parse API error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.text();
+  } catch (err) {
+    throw new Error(`Failed to initiate parse request to OpenDota: ${err}`);
+  }
+}
+
+/**
+ * Check parse request status from OpenDota API
+ */
+async function checkParseStatus(jobId: string): Promise<string> {
+  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/request/${jobId}`;
+  
+  try {
+    const response = await requestWithRetry('GET', url);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Parse job not found');
+      }
+      if (response.status === 429) {
+        throw new Error('Rate limited');
+      }
+      throw new Error(`OpenDota parse status API error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.text();
+  } catch (err) {
+    throw new Error(`Failed to check parse status from OpenDota: ${err}`);
+  }
+}
+
+/**
  * Parse OpenDota match data
  */
-function parseOpenDotaMatch(data: string): OpenDotaMatch {
+function parseOpenDotaMatchData(data: string): OpenDotaMatch {
   try {
     const match = JSON.parse(data) as OpenDotaMatch;
     return match;
   } catch (err) {
     throw new Error(`Failed to parse OpenDota match data: ${err}`);
   }
+}
+
+/**
+ * Check if a match has been parsed (has detailed data)
+ */
+function isMatchParsed(match: OpenDotaMatch): boolean {
+  // A match is considered parsed if it has detailed data like teamfights, draft_timings, etc.
+  return !!(match.teamfights && match.teamfights.length > 0) || 
+         !!(match.draft_timings && match.draft_timings.length > 0) ||
+         !!(match.picks_bans && match.picks_bans.length > 0);
+} 
+
+/**
+ * Check if a parse request is complete based on the status response
+ */
+function isParseComplete(statusResponse: Record<string, string | number | boolean | null>): boolean {
+  // The OpenDota API returns an empty object {} when parsing is complete
+  // We can also check for specific status fields if they exist
+  return (
+    typeof statusResponse === 'object' &&
+    statusResponse !== null &&
+    Object.keys(statusResponse).length === 0
+  );
 } 

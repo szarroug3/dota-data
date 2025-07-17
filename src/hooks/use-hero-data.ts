@@ -17,22 +17,22 @@ import { useCallback } from 'react';
 
 import type { HeroContextValue } from '@/contexts/hero-context';
 import { useHeroContext } from '@/contexts/hero-context';
+import type { Hero, HeroFilters } from '@/types/contexts/hero-context-value';
 import type { UseHeroDataReturn } from '@/types/hooks/use-hero-data';
 
 // ============================================================================
 // Internal: Selected Hero Data Selector
 // ============================================================================
-function useSelectedHeroData(heroes: any[], selectedHeroId: string | null, selectedHero: any) {
-  const selectedHeroData = selectedHero;
-  const heroData = selectedHeroData || null;
+function useSelectedHeroData(heroes: Hero[], selectedHeroId: string | null, selectedHero: Hero | null) {
+  const heroData = selectedHero || null;
   const heroStats = null; // Not implemented yet
-  return { selectedHeroData, heroData, heroStats };
+  return { heroData, heroStats };
 }
 
 // ============================================================================
 // Internal: Hero Loading & Error States
 // ============================================================================
-function useHeroStates(context: HeroContextValue, heroData: any) {
+function useHeroStates(context: HeroContextValue) {
   return {
     isLoadingHeroes: context.isLoadingHeroes,
     isLoadingHeroData: context.isLoadingHeroData,
@@ -47,9 +47,9 @@ function useHeroStates(context: HeroContextValue, heroData: any) {
 // Internal: Hero Actions
 // ============================================================================
 function useHeroActions(
-  heroes: any[],
+  heroes: Hero[],
   setSelectedHero: (heroId: string) => void,
-  setFilters: (filters: any) => void,
+  setFilters: (filters: HeroFilters) => void,
   refreshHeroes: () => Promise<void>,
   refreshHero: (heroId: string) => Promise<void>,
   clearErrors: () => void
@@ -58,7 +58,7 @@ function useHeroActions(
     setSelectedHero(heroId);
   }, [setSelectedHero]);
 
-  const setFiltersHandler = useCallback((filters: any) => {
+  const setFiltersHandler = useCallback((filters: HeroFilters) => {
     setFilters(filters);
   }, [setFilters]);
 
@@ -102,7 +102,6 @@ export function useHeroData(): UseHeroDataReturn {
     clearErrors
   } = context;
 
-  const selectedHeroData = selectedHero;
   const { heroData, heroStats } = useSelectedHeroData(heroes, selectedHeroId, selectedHero);
   const {
     isLoadingHeroes,
@@ -111,7 +110,7 @@ export function useHeroData(): UseHeroDataReturn {
     heroesError,
     heroDataError,
     heroStatsError
-  } = useHeroStates(context, heroData);
+  } = useHeroStates(context);
   const {
     setSelectedHero: setSelectedHeroHandler,
     setFilters: setFiltersHandler,

@@ -545,7 +545,7 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
       <PlayerHeader player={player} />
       <PlayerStats stats={player.stats} />
       {player.recent_matches && (
-        <PlayerMatches matches={player.recent_matches} />
+        <PlayerRecentMatches matches={player.recent_matches} />
       )}
       {player.heroes && (
         <PlayerHeroes heroes={player.heroes} />

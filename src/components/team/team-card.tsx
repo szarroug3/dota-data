@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import React from 'react';
 
-import { Team } from '@/types/contexts/team-context-value';
+import { Team } from '@/types/contexts/team-types';
 
 /**
  * Team Card Component
@@ -205,7 +205,7 @@ const TeamLogo: React.FC<{
   return (
     <div className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-muted dark:bg-muted flex items-center justify-center`}>
       <span className="text-muted-foreground dark:text-muted-foreground font-bold text-sm">
-        {team.name.substring(0, 2).toUpperCase()}
+        {(team.name || 'UN').substring(0, 2).toUpperCase()}
       </span>
     </div>
   );
@@ -273,7 +273,397 @@ const PlayerAvatar: React.FC<{
   );
 };
 
-// eslint-disable-next-line max-lines-per-function
+// Event handlers for team cards
+const createTeamCardEventHandlers = (
+  teamId: string,
+  onSelect?: (teamId: string) => void,
+  onActivate?: (teamId: string) => void,
+  onHide?: (teamId: string) => void,
+  onViewDetails?: (teamId: string) => void
+) => {
+  const handleSelect = () => {
+    if (onSelect) onSelect(teamId);
+  };
+
+  const handleActivate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onActivate) onActivate(teamId);
+  };
+
+  const handleHide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onHide) onHide(teamId);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onViewDetails) onViewDetails(teamId);
+  };
+
+  return { handleSelect, handleActivate, handleHide, handleViewDetails };
+};
+
+// Action buttons component
+const TeamCardActionButtons: React.FC<{
+  onViewDetails?: (e: React.MouseEvent) => void;
+  onActivate?: (e: React.MouseEvent) => void;
+  onHide?: (e: React.MouseEvent) => void;
+  isActive?: boolean;
+}> = ({ onViewDetails, onActivate, onHide, isActive }) => (
+  <div className="flex items-center space-x-1">
+    {onViewDetails && (
+      <button
+        onClick={onViewDetails}
+        className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+        aria-label="View team details"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </button>
+    )}
+    {onActivate && !isActive && (
+      <button
+        onClick={onActivate}
+        className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+        aria-label="Activate team"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
+    )}
+    {onHide && (
+      <button
+        onClick={onHide}
+        className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
+        aria-label="Hide team"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    )}
+  </div>
+);
+
+// Stats display component
+const TeamStatsDisplay: React.FC<{
+  stats: TeamStats;
+  layout: 'compact' | 'default' | 'detailed';
+}> = ({ stats, layout }) => {
+  if (layout === 'compact') {
+    return (
+      <div className="text-right">
+        <div className={`text-sm font-medium ${getWinRateColor(stats.winRate)}`}>
+          {stats.winRate.toFixed(1)}%
+        </div>
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground">
+          WR
+        </div>
+      </div>
+    );
+  }
+
+  if (layout === 'detailed') {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+          <div className={`text-2xl font-bold ${getWinRateColor(stats.winRate)}`}>
+            {stats.winRate.toFixed(1)}%
+          </div>
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">Win Rate</div>
+        </div>
+        
+        <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+          <div className="text-2xl font-bold text-foreground dark:text-foreground">
+            {stats.wins}-{stats.losses}
+          </div>
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">W-L Record</div>
+        </div>
+        
+        <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+          <div className={`text-2xl font-bold ${getRankingColor(stats.ranking.position)}`}>
+            #{stats.ranking.position}
+          </div>
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">Ranking</div>
+        </div>
+        
+        <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
+          <div className="text-2xl font-bold text-foreground dark:text-foreground">
+            <span data-testid="team-points">{stats.ranking.points}</span>
+          </div>
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">Points</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="text-center">
+        <div className={`text-lg font-semibold ${getWinRateColor(stats.winRate)}`}>
+          {stats.winRate.toFixed(1)}%
+        </div>
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground">Win Rate</div>
+      </div>
+      
+      <div className="text-center">
+        <div className="text-lg font-semibold text-foreground dark:text-foreground">
+          {stats.wins}-{stats.losses}
+        </div>
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground">W-L</div>
+      </div>
+      
+      <div className="text-center">
+        <div className={`text-lg font-semibold ${getRankingColor(stats.ranking.position)}`}>
+          #{stats.ranking.position}
+        </div>
+        <div className="text-xs text-muted-foreground dark:text-muted-foreground">Rank</div>
+      </div>
+    </div>
+  );
+};
+
+// Roster display component
+const TeamRosterDisplay: React.FC<{
+  roster: TeamRoster;
+  layout: 'compact' | 'default' | 'detailed';
+}> = ({ roster, layout }) => {
+  if (layout === 'compact') {
+    return (
+      <div className="flex items-center space-x-1 mt-1">
+        {roster.players.slice(0, 3).map((player) => (
+          <PlayerAvatar key={player.id} player={player} size="small" />
+        ))}
+        {roster.players.length > 3 && (
+          <span className="text-xs text-muted-foreground dark:text-muted-foreground">
+            +{roster.players.length - 3}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (layout === 'detailed') {
+    return (
+      <div className="mb-6">
+        <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Roster</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {roster.players.map((player) => (
+            <div key={player.id} className="flex items-center space-x-3 p-2 bg-muted dark:bg-muted rounded-lg">
+              <PlayerAvatar player={player} size="medium" />
+              <div>
+                <div className="font-medium text-foreground dark:text-foreground">
+                  {player.name}
+                  {roster.captain?.id === player.id && (
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                      Captain
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">{player.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {roster.coach && (
+          <div className="mt-3 p-2 bg-accent dark:bg-accent rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center">
+                <span className="text-primary dark:text-blue-400 font-medium text-sm">C</span>
+              </div>
+              <div>
+                <div className="font-medium text-foreground dark:text-foreground">
+                  {roster.coach.name}
+                </div>
+                <div className="text-sm text-muted-foreground dark:text-muted-foreground">Coach</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4">
+      <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">Roster</h4>
+      <div className="flex items-center space-x-2">
+        {roster.players.map((player) => (
+          <div key={player.id} className="flex items-center space-x-1">
+            <PlayerAvatar player={player} size="medium" />
+            <div className="text-xs">
+              <div className="font-medium text-foreground dark:text-foreground">{player.name}</div>
+              <div className="text-muted-foreground dark:text-muted-foreground">{player.role}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Schedule display component
+const TeamScheduleDisplay: React.FC<{
+  schedule: TeamSchedule;
+  layout: 'compact' | 'default' | 'detailed';
+}> = ({ schedule, layout }) => {
+  if (layout === 'detailed') {
+    return (
+      <div className="border-t border-border dark:border-border pt-4">
+        <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Upcoming Matches</h4>
+        <div className="space-y-2">
+          {schedule.upcomingMatches.slice(0, 3).map((match) => (
+            <div key={match.matchId} className="flex items-center justify-between p-2 bg-muted dark:bg-muted rounded">
+              <div className="flex items-center space-x-2">
+                <span className={`px-2 py-1 text-xs rounded-full ${getImportanceColor(match.importance)}`}>
+                  {match.importance}
+                </span>
+                <span className="text-sm font-medium text-foreground dark:text-foreground">
+                  vs {match.opponent}
+                </span>
+              </div>
+              <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+                {formatDate(match.date)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (schedule.nextMatch) {
+    return (
+      <div className="border-t border-border dark:border-border pt-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+            Next: <span className="font-medium text-foreground dark:text-foreground">vs {schedule.nextMatch.opponent}</span>
+          </div>
+          <div className="text-sm text-muted-foreground dark:text-muted-foreground">
+            {schedule.nextMatch.timeUntil}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+const getLayoutClasses = (layout: 'compact' | 'default' | 'detailed') => {
+  const logoSize: 'small' | 'medium' | 'large' = layout === 'compact' ? 'small' : layout === 'detailed' ? 'large' : 'medium';
+  const headerClass = layout === 'detailed' ? 'mb-6' : 'mb-4';
+  const titleClass = layout === 'detailed' ? 'text-xl font-bold' : 'font-semibold';
+  const containerClass = layout === 'detailed' ? 'space-x-4' : 'space-x-3';
+  
+  return { logoSize, headerClass, titleClass, containerClass };
+};
+
+const renderTeamInfo = (team: Team, titleClass: string, isActive?: boolean, isSelected?: boolean) => (
+  <div>
+    <div className="flex items-center space-x-2">
+      <h3 className={`${titleClass} text-foreground dark:text-foreground`}>
+        {team.name || 'Unknown Team'}
+        <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">
+          {team.name || 'Unknown Team'}
+        </span>
+      </h3>
+      <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
+    </div>
+    <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+      {team.leagueName}
+    </p>
+  </div>
+);
+
+const renderDetailedStats = (stats: TeamStats) => (
+  <div className="flex items-center space-x-2 mt-2">
+    <span className="text-sm text-muted-foreground dark:text-muted-foreground">
+      Current streak: 
+    </span>
+    <div className="flex items-center space-x-1">
+      <span className="text-sm">{getStreakIcon(stats.currentStreak.type)}</span>
+      <span className={`text-sm font-medium ${getStreakColor(stats.currentStreak.type)}`}>
+        {stats.currentStreak.count} {stats.currentStreak.type}
+      </span>
+    </div>
+  </div>
+);
+
+const renderActionButtons = (
+  onActivate?: (e: React.MouseEvent) => void,
+  onViewDetails?: (e: React.MouseEvent) => void,
+  onHide?: (e: React.MouseEvent) => void,
+  isActive?: boolean
+) => (
+  <div className="flex items-center space-x-2">
+    {onActivate && !isActive && (
+      <button
+        onClick={onActivate}
+        className="p-2 text-muted-foreground hover:text-success dark:hover:text-green-400 hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
+        aria-label="Activate team"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
+    )}
+    {onViewDetails && (
+      <button
+        onClick={onViewDetails}
+        className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
+        aria-label="View team details"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </button>
+    )}
+    {onHide && (
+      <button
+        onClick={onHide}
+        className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
+        aria-label="Hide team"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    )}
+  </div>
+);
+
+const TeamCardHeader: React.FC<{
+  team: Team;
+  stats?: TeamStats;
+  isSelected?: boolean;
+  isActive?: boolean;
+  layout: 'compact' | 'default' | 'detailed';
+  onActivate?: (e: React.MouseEvent) => void;
+  onViewDetails?: (e: React.MouseEvent) => void;
+  onHide?: (e: React.MouseEvent) => void;
+}> = ({ team, stats, isSelected, isActive, layout, onActivate, onViewDetails, onHide }) => {
+  const { logoSize, headerClass, titleClass, containerClass } = getLayoutClasses(layout);
+
+  return (
+    <div className={`flex items-start justify-between ${headerClass}`}>
+      <div className={`flex items-center ${containerClass}`}>
+        <TeamLogo team={team} size={logoSize} />
+        <div>
+          {renderTeamInfo(team, titleClass, isActive, isSelected)}
+          {layout === 'detailed' && stats && renderDetailedStats(stats)}
+        </div>
+      </div>
+      {renderActionButtons(onActivate, onViewDetails, onHide, isActive)}
+    </div>
+  );
+};
+
 const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: TeamRoster; schedule: TeamSchedule }> = ({
   team,
   stats,
@@ -288,24 +678,13 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
   showStats,
   className
 }) => {
-  const handleSelect = () => {
-    if (onSelect) onSelect(team.id);
-  };
-
-  const handleActivate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onActivate) onActivate(team.id);
-  };
-
-  const handleHide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onHide) onHide(team.id);
-  };
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onViewDetails) onViewDetails(team.id);
-  };
+  const { handleSelect, handleActivate, handleHide, handleViewDetails } = createTeamCardEventHandlers(
+    team.id,
+    onSelect,
+    onActivate,
+    onHide,
+    onViewDetails
+  );
 
   return (
     <div
@@ -322,81 +701,34 @@ const CompactTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
               <h3 className="font-medium text-foreground dark:text-foreground truncate">
-                {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
+                {team.name || 'Unknown Team'}
+                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name || 'Unknown Team'}</span>
               </h3>
               <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
             </div>
             {showRoster && (
-              <div className="flex items-center space-x-1 mt-1">
-                {roster.players.slice(0, 3).map((player) => (
-                  <PlayerAvatar key={player.id} player={player} size="small" />
-                ))}
-                {roster.players.length > 3 && (
-                  <span className="text-xs text-muted-foreground dark:text-muted-foreground">
-                    +{roster.players.length - 3}
-                  </span>
-                )}
-              </div>
+              <TeamRosterDisplay roster={roster} layout="compact" />
             )}
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
           {showStats && (
-            <div className="text-right">
-              <div className={`text-sm font-medium ${getWinRateColor(stats.winRate)}`}>
-                {stats.winRate.toFixed(1)}%
-              </div>
-              <div className="text-xs text-muted-foreground dark:text-muted-foreground">
-                WR
-              </div>
-            </div>
+            <TeamStatsDisplay stats={stats} layout="compact" />
           )}
           
-          <div className="flex items-center space-x-1">
-            {onViewDetails && (
-              <button
-                onClick={handleViewDetails}
-                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
-                aria-label="View team details"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-              </button>
-            )}
-            {onActivate && (
-              <button
-                onClick={handleActivate}
-                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
-                aria-label="Activate team"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
-            )}
-            {onHide && (
-              <button
-                onClick={handleHide}
-                className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
-                aria-label="Hide team"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
+          <TeamCardActionButtons
+            onViewDetails={handleViewDetails}
+            onActivate={handleActivate}
+            onHide={handleHide}
+            isActive={isActive}
+          />
         </div>
       </div>
     </div>
   );
 };
 
-// eslint-disable-next-line max-lines-per-function, complexity
 const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: TeamRoster; schedule: TeamSchedule }> = ({
   team,
   stats,
@@ -413,24 +745,13 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
   showSchedule,
   className
 }) => {
-  const handleSelect = () => {
-    if (onSelect) onSelect(team.id);
-  };
-
-  const handleActivate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onActivate) onActivate(team.id);
-  };
-
-  const handleHide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onHide) onHide(team.id);
-  };
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onViewDetails) onViewDetails(team.id);
-  };
+  const { handleSelect, handleActivate, handleHide, handleViewDetails } = createTeamCardEventHandlers(
+    team.id,
+    onSelect,
+    onActivate,
+    onHide,
+    onViewDetails
+  );
 
   return (
     <div
@@ -442,114 +763,27 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
         ${className}`}
       onClick={handleSelect}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <TeamLogo team={team} size="medium" />
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold text-foreground dark:text-foreground">
-                {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
-              </h3>
-              <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
-            </div>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-              {team.leagueName}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {onActivate && !isActive && (
-            <button
-              onClick={handleActivate}
-              className="p-2 text-muted-foreground hover:text-success dark:hover:text-green-400 hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="Activate team"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-          )}
-          {onViewDetails && (
-            <button
-              onClick={handleViewDetails}
-              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="View team details"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          )}
-          {onHide && (
-            <button
-              onClick={handleHide}
-              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="Hide team"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
+      <TeamCardHeader
+        team={team}
+        stats={stats}
+        isSelected={isSelected}
+        isActive={isActive}
+        layout="default"
+        onActivate={handleActivate}
+        onViewDetails={handleViewDetails}
+        onHide={handleHide}
+      />
 
       {showStats && (
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="text-center">
-            <div className={`text-lg font-semibold ${getWinRateColor(stats.winRate)}`}>
-              {stats.winRate.toFixed(1)}%
-            </div>
-            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Win Rate</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-lg font-semibold text-foreground dark:text-foreground">
-              {stats.wins}-{stats.losses}
-            </div>
-            <div className="text-xs text-muted-foreground dark:text-muted-foreground">W-L</div>
-          </div>
-          
-          <div className="text-center">
-            <div className={`text-lg font-semibold ${getRankingColor(stats.ranking.position)}`}>
-              #{stats.ranking.position}
-            </div>
-            <div className="text-xs text-muted-foreground dark:text-muted-foreground">Rank</div>
-          </div>
-        </div>
+        <TeamStatsDisplay stats={stats} layout="default" />
       )}
 
       {showRoster && (
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground mb-2">Roster</h4>
-          <div className="flex items-center space-x-2">
-            {roster.players.map((player) => (
-              <div key={player.id} className="flex items-center space-x-1">
-                <PlayerAvatar player={player} size="medium" />
-                <div className="text-xs">
-                  <div className="font-medium text-foreground dark:text-foreground">{player.name}</div>
-                  <div className="text-muted-foreground dark:text-muted-foreground">{player.role}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <TeamRosterDisplay roster={roster} layout="default" />
       )}
 
-      {showSchedule && schedule.nextMatch && (
-        <div className="border-t border-border dark:border-border pt-3">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
-              Next: <span className="font-medium text-foreground dark:text-foreground">vs {schedule.nextMatch.opponent}</span>
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">
-              {schedule.nextMatch.timeUntil}
-            </div>
-          </div>
-        </div>
+      {showSchedule && (
+        <TeamScheduleDisplay schedule={schedule} layout="default" />
       )}
 
       <div className="mt-3">
@@ -559,7 +793,6 @@ const DefaultTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Team
   );
 };
 
-// eslint-disable-next-line max-lines-per-function, complexity
 const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: TeamRoster; schedule: TeamSchedule }> = ({
   team,
   stats,
@@ -576,24 +809,13 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
   showSchedule,
   className
 }) => {
-  const handleSelect = () => {
-    if (onSelect) onSelect(team.id);
-  };
-
-  const handleActivate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onActivate) onActivate(team.id);
-  };
-
-  const handleHide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onHide) onHide(team.id);
-  };
-
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onViewDetails) onViewDetails(team.id);
-  };
+  const { handleSelect, handleActivate, handleHide, handleViewDetails } = createTeamCardEventHandlers(
+    team.id,
+    onSelect,
+    onActivate,
+    onHide,
+    onViewDetails
+  );
 
   return (
     <div
@@ -605,165 +827,27 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
         ${className}`}
       onClick={handleSelect}
     >
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <TeamLogo team={team} size="large" />
-          <div>
-            <div className="flex items-center space-x-2 mb-1">
-              <h3 className="text-xl font-bold text-foreground dark:text-foreground">
-                {team.name}
-                <span data-testid="team-tag" className="ml-2 text-xs text-muted-foreground dark:text-muted-foreground">{team.name}</span>
-              </h3>
-              <TeamStatusBadge isActive={isActive ?? false} isSelected={isSelected ?? false} />
-            </div>
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
-              {team.leagueName}
-            </p>
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-sm text-muted-foreground dark:text-muted-foreground">
-                Current streak: 
-              </span>
-              <div className="flex items-center space-x-1">
-                <span className="text-sm">{getStreakIcon(stats.currentStreak.type)}</span>
-                <span className={`text-sm font-medium ${getStreakColor(stats.currentStreak.type)}`}>
-                  {stats.currentStreak.count} {stats.currentStreak.type}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {onActivate && !isActive && (
-            <button
-              onClick={handleActivate}
-              className="p-2 text-muted-foreground hover:text-success dark:hover:text-green-400 hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="Activate team"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-          )}
-          {onViewDetails && (
-            <button
-              onClick={handleViewDetails}
-              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="View team details"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          )}
-          {onHide && (
-            <button
-              onClick={handleHide}
-              className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-accent dark:hover:bg-accent rounded-lg transition-colors"
-              aria-label="Hide team"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
+      <TeamCardHeader
+        team={team}
+        stats={stats}
+        isSelected={isSelected}
+        isActive={isActive}
+        layout="detailed"
+        onActivate={handleActivate}
+        onViewDetails={handleViewDetails}
+        onHide={handleHide}
+      />
 
       {showStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className={`text-2xl font-bold ${getWinRateColor(stats.winRate)}`}>
-              {stats.winRate.toFixed(1)}%
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Win Rate</div>
-          </div>
-          
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              {stats.wins}-{stats.losses}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">W-L Record</div>
-          </div>
-          
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className={`text-2xl font-bold ${getRankingColor(stats.ranking.position)}`}>
-              #{stats.ranking.position}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Ranking</div>
-          </div>
-          
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              <span data-testid="team-points">{stats.ranking.points}</span>
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Points</div>
-          </div>
-        </div>
+        <TeamStatsDisplay stats={stats} layout="detailed" />
       )}
 
       {showRoster && (
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Roster</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {roster.players.map((player) => (
-              <div key={player.id} className="flex items-center space-x-3 p-2 bg-muted dark:bg-muted rounded-lg">
-                <PlayerAvatar player={player} size="medium" />
-                <div>
-                  <div className="font-medium text-foreground dark:text-foreground">
-                    {player.name}
-                    {roster.captain?.id === player.id && (
-                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                        Captain
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">{player.role}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {roster.coach && (
-            <div className="mt-3 p-2 bg-accent dark:bg-accent rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center">
-                  <span className="text-primary dark:text-blue-400 font-medium text-sm">C</span>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground dark:text-foreground">
-                    {roster.coach.name}
-                  </div>
-                  <div className="text-sm text-muted-foreground dark:text-muted-foreground">Coach</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <TeamRosterDisplay roster={roster} layout="detailed" />
       )}
 
       {showSchedule && (
-        <div className="border-t border-border dark:border-border pt-4">
-          <h4 className="text-lg font-medium text-foreground dark:text-foreground mb-3">Upcoming Matches</h4>
-          <div className="space-y-2">
-            {schedule.upcomingMatches.slice(0, 3).map((match) => (
-              <div key={match.matchId} className="flex items-center justify-between p-2 bg-muted dark:bg-muted rounded">
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${getImportanceColor(match.importance)}`}>
-                    {match.importance}
-                  </span>
-                  <span className="text-sm font-medium text-foreground dark:text-foreground">
-                    vs {match.opponent}
-                  </span>
-                </div>
-                <div className="text-sm text-muted-foreground dark:text-muted-foreground">
-                  {formatDate(match.date)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <TeamScheduleDisplay schedule={schedule} layout="detailed" />
       )}
 
       <div className="mt-4 pt-4 border-t border-border dark:border-border">
@@ -773,33 +857,24 @@ const DetailedTeamCard: React.FC<TeamCardProps & { stats: TeamStats; roster: Tea
   );
 };
 
-// eslint-disable-next-line complexity
-export const TeamCard: React.FC<TeamCardProps> = ({
-  team,
-  isSelected = false,
-  isActive = false,
-  isHidden = false,
-  onSelect,
-  onActivate,
-  onHide,
-  onViewDetails,
-  layout = 'default',
+const getTeamCardProps = (
+  team: Team,
+  isSelected: boolean,
+  isActive: boolean,
+  onSelect?: (teamId: string) => void,
+  onActivate?: (teamId: string) => void,
+  onHide?: (teamId: string) => void,
+  onViewDetails?: (teamId: string) => void,
   showRoster = true,
   showStats = true,
   showSchedule = true,
   className = ''
-}) => {
-  // Don't render if team is hidden
-  if (isHidden) {
-    return null;
-  }
-
-  // Mock data - in real app, this would come from API/context
+) => {
   const stats = generateMockTeamStats();
   const roster = generateMockTeamRoster();
   const schedule = generateMockTeamSchedule();
 
-  const commonProps = {
+  return {
     team,
     stats,
     roster,
@@ -815,7 +890,9 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     showSchedule,
     className
   };
+};
 
+const renderTeamCardByLayout = (layout: 'compact' | 'default' | 'detailed', commonProps: ReturnType<typeof getTeamCardProps>) => {
   switch (layout) {
     case 'compact':
       return <CompactTeamCard {...commonProps} />;
@@ -824,6 +901,42 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     default:
       return <DefaultTeamCard {...commonProps} />;
   }
+};
+
+export const TeamCard: React.FC<TeamCardProps> = ({
+  team,
+  isSelected = false,
+  isActive = false,
+  isHidden = false,
+  onSelect,
+  onActivate,
+  onHide,
+  onViewDetails,
+  layout = 'default',
+  showRoster = true,
+  showStats = true,
+  showSchedule = true,
+  className = ''
+}) => {
+  if (isHidden) {
+    return null;
+  }
+
+  const commonProps = getTeamCardProps(
+    team,
+    isSelected,
+    isActive,
+    onSelect,
+    onActivate,
+    onHide,
+    onViewDetails,
+    showRoster,
+    showStats,
+    showSchedule,
+    className
+  );
+
+  return renderTeamCardByLayout(layout, commonProps);
 };
 
 /**

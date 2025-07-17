@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Hero Data Fetching Context
  * 

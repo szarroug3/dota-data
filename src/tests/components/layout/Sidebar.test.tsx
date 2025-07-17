@@ -217,15 +217,13 @@ describe('AppSidebar', () => {
   it('renders navigation items with correct labels', () => {
     render(<AppSidebar />);
     
-    expect(screen.getByText('Team Management')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Match History')).toBeInTheDocument();
     expect(screen.getByText('Player Stats')).toBeInTheDocument();
     expect(screen.getByText('Draft Suggestions')).toBeInTheDocument();
   });
 
-
-
-  it('does not render quick links when no active team', () => {
+  it('does not render quick links items when no active team', () => {
     render(<AppSidebar />);
     
     // Quick Links should not be rendered when activeTeam is null

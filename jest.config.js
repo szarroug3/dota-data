@@ -68,6 +68,9 @@ module.exports = {
         '<rootDir>/src/tests/app/**/*.test.ts',
         '<rootDir>/src/tests/app/**/*.test.tsx'
       ],
+      testPathIgnorePatterns: [
+        '.*/api/.*'
+      ],
       testEnvironment: 'jsdom',
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1'

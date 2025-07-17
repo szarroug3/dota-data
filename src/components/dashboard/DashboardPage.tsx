@@ -9,6 +9,7 @@ import { usePlayerData } from '@/hooks/use-player-data';
 import { useTeamData } from '@/hooks/use-team-data';
 
 import { AddTeamForm } from './AddTeamForm';
+import { EditTeamModal } from './EditTeamModal';
 import { TeamList } from './TeamList';
 
 // ============================================================================
@@ -29,6 +30,8 @@ export const DashboardPage: React.FC = () => {
       form.reset();
     } catch (error) {
       console.error('Failed to add team:', error);
+      // The error will be displayed in the team card if it's a team-specific error
+      // For now, we just log it to avoid the stack trace in the console
     } finally {
       form.setIsSubmitting(false);
     }
@@ -46,6 +49,20 @@ export const DashboardPage: React.FC = () => {
     modal.open(teamId, leagueId);
   }, [modal]);
 
+  // Handle edit team save
+  const handleEditTeamSave = useCallback(async (newTeamId: string, newLeagueId: string) => {
+    try {
+      await actions.handleEditTeam(modal.editingTeamId, modal.editingLeagueId, newTeamId, newLeagueId);
+      modal.close();
+    } catch (error) {
+      console.error('Failed to save edited team:', error);
+      // The error will be displayed in the team card if it's a team-specific error
+      // For now, we just log it to avoid the stack trace in the console
+    } finally {
+      // No need to set isSubmitting here, as it's handled by the action
+    }
+  }, [actions, modal]);
+
   return (
     <>
       <AddTeamForm
@@ -62,10 +79,19 @@ export const DashboardPage: React.FC = () => {
       <TeamList
         teamDataList={teamContext.teamDataList}
         activeTeam={teamContext.activeTeam}
-        onRefreshTeam={teamContext.refreshTeam}
+        onRefreshTeam={actions.handleRefreshTeam}
         onRemoveTeam={teamContext.removeTeam}
         onSetActiveTeam={teamContext.setActiveTeam}
         onEditTeam={handleEditTeam}
+      />
+
+      <EditTeamModal
+        isOpen={modal.isEditModalOpen}
+        onClose={modal.close}
+        currentTeamId={modal.editingTeamId}
+        currentLeagueId={modal.editingLeagueId}
+        onSave={handleEditTeamSave}
+        teamExists={checkTeamExists}
       />
     </>
   );
@@ -131,41 +157,56 @@ function useDashboardActions() {
   const teamData = useTeamData();
   const matchData = useMatchData();
   const playerData = usePlayerData();
-  const { selectTeam } = useDataCoordinator();
+  const { addTeamWithFullData, refreshTeamWithFullData } = useDataCoordinator();
 
   const handleAddTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      await teamData.addTeam(teamId, leagueId);
-      // After adding the team, trigger data fetching for it
-      await selectTeam(teamId, leagueId);
+      // Use the data coordinator to add team with full data (including matches)
+      await addTeamWithFullData(teamId, leagueId);
     } catch (error) {
       console.error('Failed to add team:', error);
+      // Don't re-throw the error - let the team be added with error state
+      // The team context will handle displaying the error in the UI
     }
-  }, [teamData, selectTeam]);
+  }, [addTeamWithFullData]);
 
   const handleRemoveTeam = useCallback(async (teamId: string, _leagueId: string) => {
     try {
       await teamData.removeTeam(teamId);
     } catch (error) {
       console.error('Failed to remove team:', error);
+      throw error;
     }
   }, [teamData]);
 
-  const handleRefreshTeam = useCallback(async (teamId: string, _leagueId: string) => {
+  const handleRefreshTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      await teamData.refreshTeam(teamId);
+      await refreshTeamWithFullData(teamId, leagueId);
     } catch (error) {
       console.error('Failed to refresh team:', error);
+      // Don't re-throw the error - let the team be refreshed with error state
     }
-  }, [teamData]);
+  }, [refreshTeamWithFullData]);
 
   const handleSetActiveTeam = useCallback(async (teamId: string, _leagueId: string) => {
     try {
       await teamData.setActiveTeam(teamId);
     } catch (error) {
       console.error('Failed to set active team:', error);
+      throw error;
     }
   }, [teamData]);
+
+  const handleEditTeam = useCallback(async (currentTeamId: string, currentLeagueId: string, newTeamId: string, newLeagueId: string) => {
+    try {
+      // Remove the old team and add the new one with full data
+      await teamData.removeTeam(currentTeamId);
+      await addTeamWithFullData(newTeamId, newLeagueId);
+    } catch (error) {
+      console.error('Failed to edit team:', error);
+      // Don't re-throw the error - handle it gracefully in the UI
+    }
+  }, [teamData, addTeamWithFullData]);
 
   const handleClearErrors = useCallback(() => {
     teamData.clearErrors();
@@ -178,6 +219,7 @@ function useDashboardActions() {
     handleRemoveTeam,
     handleRefreshTeam,
     handleSetActiveTeam,
+    handleEditTeam,
     handleClearErrors
   };
 } 

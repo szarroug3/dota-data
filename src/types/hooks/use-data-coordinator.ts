@@ -5,6 +5,6 @@
  * providing a clean interface for orchestration and coordination actions.
  */
 
-import type { DataCoordinatorContextValue } from '@/contexts/data-coordinator-context';
+import type { DataCoordinatorContextValue } from '@/contexts/data-coordinator-types';
 
 export type UseDataCoordinatorReturn = DataCoordinatorContextValue; 

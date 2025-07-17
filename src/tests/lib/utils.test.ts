@@ -62,15 +62,13 @@ describe('cn utility function', () => {
   });
 
   it('should handle complex conditional logic', () => {
-    const variant = 'primary';
-    const size = 'large';
     const result = cn(
       'btn',
       {
-        'btn-primary': variant === 'primary',
-        'btn-secondary': variant === 'secondary',
-        'btn-large': size === 'large',
-        'btn-small': size === 'small'
+        'btn-primary': true,
+        'btn-secondary': false,
+        'btn-large': true,
+        'btn-small': false
       }
     );
     expect(result).toBe('btn btn-primary btn-large');

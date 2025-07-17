@@ -1,4 +1,4 @@
-import type { Team } from '@/types/contexts/team-context-value';
+import type { Team } from '@/types/contexts/team-types';
 
 interface DraftControlsSectionProps {
   activeTeam: Team | null;

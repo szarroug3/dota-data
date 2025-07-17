@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { usePlayerData } from '@/hooks/use-player-data';
 import { useTeamData } from '@/hooks/use-team-data';
-import type { Player } from '@/types/contexts/team-context-value';
+import type { Player } from '@/types/contexts/team-types';
 
 export interface PlayerStats {
   playerId: string;

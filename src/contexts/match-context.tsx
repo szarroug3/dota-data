@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Match Context
  *
@@ -178,11 +180,17 @@ function useMatchActions(state: ReturnType<typeof useMatchState>) {
     }
   }, [state]);
 
+  // Add matches to context
+  const addMatches = useCallback((newMatches: Match[]) => {
+    state.setMatches(prev => [...prev, ...newMatches]);
+  }, [state]);
+
   return {
     setFilters,
     selectMatch,
     hideMatch,
     showMatch,
+    addMatches,
     refreshMatches,
     refreshMatchDetails,
     refreshHeroStats,
@@ -222,6 +230,7 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     selectMatch: actions.selectMatch,
     hideMatch: actions.hideMatch,
     showMatch: actions.showMatch,
+    addMatches: actions.addMatches,
     refreshMatches: actions.refreshMatches,
     refreshMatchDetails: actions.refreshMatchDetails,
     refreshHeroStats: actions.refreshHeroStats,

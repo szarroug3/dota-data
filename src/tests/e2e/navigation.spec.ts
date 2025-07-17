@@ -75,10 +75,9 @@ async function testSinglePage(page: Page, pageInfo: { path: string; title: strin
 async function testPageNavigation(page: Page) {
   const pages = [
     { path: '/', title: 'Dashboard' },
-    { path: '/team-management', title: 'Team Management' },
+    { path: '/dashboard', title: 'Dashboard' },
     { path: '/match-history', title: 'Match History' },
-    { path: '/player-stats', title: 'Player Statistics' },
-    { path: '/team-analysis', title: 'Team Analysis' },
+    { path: '/player-stats', title: 'Player Stats' },
     { path: '/draft-suggestions', title: 'Draft Suggestions' }
   ];
 
@@ -89,7 +88,7 @@ async function testPageNavigation(page: Page) {
 
 test.describe('Navigation and Layout', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/dashboard');
   });
 
   test('should load dashboard page successfully', async ({ page }) => {
@@ -109,7 +108,7 @@ test.describe('Navigation and Layout', () => {
     await expect(sidebar).toBeVisible();
     
     // Test navigation links - should match architecture specification
-    const navLinks = ['Dashboard', 'Team Management', 'Match History', 'Player Stats', 'Team Analysis', 'Draft Suggestions'];
+    const navLinks = ['Dashboard', 'Match History', 'Player Stats', 'Team Analysis', 'Draft Suggestions'];
     
     for (const link of navLinks) {
       // Look for navigation elements with the text
@@ -144,7 +143,7 @@ test.describe('Navigation and Layout', () => {
 
   test('should maintain sidebar state across navigation', async ({ page }) => {
     // Navigate to dashboard
-    await page.goto('/');
+    await page.goto('/dashboard');
     
     // Toggle sidebar if toggle button exists
     const toggleButton = page.locator('[data-testid="sidebar-toggle"], button[aria-label*="toggle"]');
@@ -223,7 +222,7 @@ test.describe('Navigation and Layout', () => {
 
   test('should display loading states', async ({ page }) => {
     // Navigate to a page that might have loading states
-    await page.goto('/');
+    await page.goto('/dashboard');
     
     // Look for loading indicators (should follow consistent pattern per architecture)
     const loadingIndicators = page.locator('[data-testid="loading"], .loading, .skeleton, [aria-busy="true"]');
@@ -245,7 +244,7 @@ test.describe('Navigation and Layout', () => {
     await page.route('**/*', route => route.abort());
     
     // Navigate to page
-    await page.goto('/');
+    await page.goto('/dashboard');
     
     // Look for error boundaries or error messages (should be user-friendly per architecture)
     const errorElements = page.locator('[data-testid="error"], .error, [role="alert"]');
@@ -258,7 +257,7 @@ test.describe('Navigation and Layout', () => {
 
   test('should show welcome section when no team is selected', async ({ page }) => {
     // Navigate to dashboard
-    await page.goto('/');
+    await page.goto('/dashboard');
     
     // Look for welcome section (should be shown when no team is selected per architecture)
     const welcomeSection = page.locator('[data-testid="welcome-section"], .welcome-section');
@@ -274,7 +273,7 @@ test.describe('Navigation and Layout', () => {
 
   test('should show dashboard content when team is selected', async ({ page }) => {
     // Navigate to dashboard
-    await page.goto('/');
+    await page.goto('/dashboard');
     
     // Look for dashboard content (should be shown when team is selected per architecture)
     const dashboardContent = page.locator('[data-testid="dashboard-content"], .dashboard-content');

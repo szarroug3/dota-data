@@ -114,13 +114,18 @@ function getQStashConfig() {
   };
 }
 
+// Helper to parse number env vars with default
+function parseNumberEnvVar(value: string | undefined, defaultValue: number): number {
+  return value && value !== '' ? Number(value) : defaultValue;
+}
+
 function getRateLimitConfig() {
   return {
-    RATE_LIMIT_OPENDOTA: process.env.RATE_LIMIT_OPENDOTA && process.env.RATE_LIMIT_OPENDOTA !== '' ? Number(process.env.RATE_LIMIT_OPENDOTA) : 60,
-    RATE_LIMIT_DOTABUFF: process.env.RATE_LIMIT_DOTABUFF && process.env.RATE_LIMIT_DOTABUFF !== '' ? Number(process.env.RATE_LIMIT_DOTABUFF) : 60,
-    RATE_LIMIT_STRATZ: process.env.RATE_LIMIT_STRATZ && process.env.RATE_LIMIT_STRATZ !== '' ? Number(process.env.RATE_LIMIT_STRATZ) : 20,
-    RATE_LIMIT_D2PT: process.env.RATE_LIMIT_D2PT && process.env.RATE_LIMIT_D2PT !== '' ? Number(process.env.RATE_LIMIT_D2PT) : 30,
-    RATE_LIMIT_WINDOW: process.env.RATE_LIMIT_WINDOW && process.env.RATE_LIMIT_WINDOW !== '' ? Number(process.env.RATE_LIMIT_WINDOW) : 60,
+    RATE_LIMIT_OPENDOTA: parseNumberEnvVar(process.env.RATE_LIMIT_OPENDOTA, 60),
+    RATE_LIMIT_DOTABUFF: parseNumberEnvVar(process.env.RATE_LIMIT_DOTABUFF, 60),
+    RATE_LIMIT_STRATZ: parseNumberEnvVar(process.env.RATE_LIMIT_STRATZ, 20),
+    RATE_LIMIT_D2PT: parseNumberEnvVar(process.env.RATE_LIMIT_D2PT, 30),
+    RATE_LIMIT_WINDOW: parseNumberEnvVar(process.env.RATE_LIMIT_WINDOW, 60),
   };
 }
 

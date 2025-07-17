@@ -1,8 +1,11 @@
+"use client";
+
 /**
- * Player Context Provider
- *
- * Manages player state, data fetching, filtering, and player management actions.
- * Provides centralized player data management for the entire application.
+ * Player Context
+ * 
+ * Manages player data and provides actions for player operations.
+ * Handles player data filtering, sorting, and aggregation.
+ * Uses player data fetching context for data retrieval.
  */
 
 import React, { createContext, useCallback, useContext, useState } from 'react';

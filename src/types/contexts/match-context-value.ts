@@ -195,6 +195,7 @@ export interface MatchContextValue {
   selectMatch: (matchId: string) => void;
   hideMatch: (matchId: string) => void;
   showMatch: (matchId: string) => void;
+  addMatches: (matches: Match[]) => void;
   refreshMatches: () => Promise<void>;
   refreshMatchDetails: (matchId: string) => Promise<void>;
   refreshHeroStats: () => Promise<void>;

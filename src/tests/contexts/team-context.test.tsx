@@ -28,9 +28,15 @@ const mockFetchTeamData = jest.fn().mockResolvedValue({
   ]
 });
 
+const mockFetchLeagueData = jest.fn().mockResolvedValue({
+  id: '16435',
+  name: 'Test League'
+});
+
 jest.mock('@/contexts/team-data-fetching-context', () => ({
   useTeamDataFetching: () => ({
-    fetchTeamData: mockFetchTeamData
+    fetchTeamData: mockFetchTeamData,
+    fetchLeagueData: mockFetchLeagueData
   })
 }));
 
@@ -277,9 +283,9 @@ describe('TeamContext', () => {
     });
 
     await waitFor(() => {
-      // Teams now start with empty matches and players arrays
+      // Teams now start with processed matches and players arrays
       // Match and player data will be fetched separately by their respective contexts
-      expect(screen.getByTestId('matches-count')).toHaveTextContent('0');
+      expect(screen.getByTestId('matches-count')).toHaveTextContent('1');
       expect(screen.getByTestId('players-count')).toHaveTextContent('0');
     });
   });

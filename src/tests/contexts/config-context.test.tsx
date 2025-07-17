@@ -41,7 +41,6 @@ const StateDisplay: React.FC = () => {
       <div data-testid="match-history-view">{preferences.matchHistory.defaultView}</div>
       <div data-testid="player-stats-view">{preferences.playerStats.defaultView}</div>
       <div data-testid="draft-suggestions-view">{preferences.draftSuggestions.defaultView}</div>
-      <div data-testid="team-analysis-view">{preferences.teamAnalysis.defaultView}</div>
     </>
   );
 
@@ -180,7 +179,7 @@ const expectInitialConfigState = () => {
   expect(screen.getByTestId('ui-density')).toHaveTextContent('comfortable');
   expect(screen.getByTestId('preferred-site')).toHaveTextContent('dotabuff');
   expect(screen.getByTestId('auto-refresh')).toHaveTextContent('true');
-  expect(screen.getByTestId('sidebar-collapsed')).toHaveTextContent('true');
+  expect(screen.getByTestId('sidebar-collapsed')).toHaveTextContent('false');
   expect(screen.getByTestId('debug-mode')).toHaveTextContent('false');
 };
 
@@ -190,7 +189,6 @@ const expectInitialPreferencesState = () => {
   expect(screen.getByTestId('match-history-view')).toHaveTextContent('list');
   expect(screen.getByTestId('player-stats-view')).toHaveTextContent('overview');
   expect(screen.getByTestId('draft-suggestions-view')).toHaveTextContent('suggestions');
-  expect(screen.getByTestId('team-analysis-view')).toHaveTextContent('overview');
 };
 
 const expectInitialLoadingState = () => {

@@ -3,6 +3,7 @@ import path from 'path';
 
 import { CacheService } from '@/lib/cache-service';
 import { getEnv } from '@/lib/config/environment';
+import { CacheValue } from '@/types/cache';
 
 const mockServices = {
   dotabuff: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_DOTABUFF(),
@@ -42,7 +43,8 @@ async function processData<T>(
   cacheTTL: number
 ): Promise<T> {
   const processed = await processingFn(data);
-  await cache.set(cacheKey, processed, cacheTTL);
+  // Ensure the processed data is compatible with CacheValue
+  await cache.set(cacheKey, processed as CacheValue, cacheTTL);
   return processed;
 }
 

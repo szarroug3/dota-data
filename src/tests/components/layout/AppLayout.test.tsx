@@ -13,9 +13,8 @@ jest.mock('@/components/layout/ErrorBoundary', () => ({
   ErrorBoundary: ({ children }: { children: React.ReactNode }) => <div data-testid="error-boundary">{children}</div>,
 }));
 
-// Mock the SidebarProvider and SidebarInset components
+// Mock the SidebarInset component
 jest.mock('@/components/ui/sidebar', () => ({
-  SidebarProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="sidebar-provider">{children}</div>,
   SidebarInset: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div data-testid="sidebar-inset" className={className}>{children}</div>
   ),
@@ -30,7 +29,6 @@ describe('AppLayout', () => {
     );
     
     expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
-    expect(screen.getByTestId('sidebar-provider')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-inset')).toBeInTheDocument();
     expect(screen.getByTestId('test-content')).toBeInTheDocument();

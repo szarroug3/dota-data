@@ -144,7 +144,8 @@ describe('DataCoordinatorContext', () => {
     setPreferences: jest.fn(),
     refreshMatchDetails: jest.fn(),
     refreshHeroStats: jest.fn(),
-    updatePreferences: jest.fn()
+    updatePreferences: jest.fn(),
+    addMatches: jest.fn()
   };
 
   const mockPlayerContext = {

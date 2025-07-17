@@ -6,9 +6,9 @@ import {
     OpenDotaPlayerComprehensive,
     OpenDotaPlayerCounts,
     OpenDotaPlayerHero,
-    OpenDotaPlayerMatch,
     OpenDotaPlayerRanking,
     OpenDotaPlayerRating,
+    OpenDotaPlayerRecentMatches,
     OpenDotaPlayerTotals,
     OpenDotaPlayerWardMap,
     OpenDotaPlayerWL
@@ -90,7 +90,7 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
   let rankings: OpenDotaPlayerRanking[] = [];
   try {
     rankings = await fetchJson(`${baseUrl}/players/${playerId}/rankings`);
-  } catch (e) {
+  } catch {
     rankings = [];
   }
   await delay(delayMs);
@@ -99,13 +99,13 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
   let ratings: OpenDotaPlayerRating[] = [];
   try {
     ratings = await fetchJson(`${baseUrl}/players/${playerId}/ratings`);
-  } catch (e) {
+  } catch {
     ratings = [];
   }
   await delay(delayMs);
 
   // 6. Recent Matches
-  const recentMatches: OpenDotaPlayerMatch[] = await fetchJson(`${baseUrl}/players/${playerId}/recentMatches`);
+  const recentMatches: OpenDotaPlayerRecentMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/recentMatches`);
   await delay(delayMs);
 
   // 7. Totals
@@ -120,7 +120,7 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
   let wardMap: OpenDotaPlayerWardMap = { obs: {}, sen: {} };
   try {
     wardMap = await fetchJson(`${baseUrl}/players/${playerId}/wardMap`);
-  } catch (e) {
+  } catch {
     wardMap = { obs: {}, sen: {} };
   }
 

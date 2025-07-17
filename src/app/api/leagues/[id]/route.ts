@@ -266,9 +266,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
+  const { id: leagueId } = await params;
+  
   try {
-    const { id: leagueId } = await params;
-
     // Extract query parameters
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
@@ -283,7 +283,7 @@ export async function GET(
     console.error('Leagues API Error:', error);
     
     if (error instanceof Error) {
-      const errorResponse = handleLeagueError(error, ''); // Pass an empty string or a placeholder if leagueId is not available here
+      const errorResponse = handleLeagueError(error, leagueId);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 

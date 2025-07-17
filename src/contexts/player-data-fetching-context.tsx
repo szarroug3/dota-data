@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Player Data Fetching Context
  * 

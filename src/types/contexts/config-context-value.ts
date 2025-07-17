@@ -161,7 +161,7 @@ export interface ConfigContextValue {
 
   // Team data (persistent)
   teamList: TeamData[];
-  setTeamList: (teamList: TeamData[]) => void;
+  setTeamList: (teamList: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void;
   activeTeam: { teamId: string; leagueId: string } | null;
   setActiveTeam: (activeTeam: { teamId: string; leagueId: string } | null) => void;
 

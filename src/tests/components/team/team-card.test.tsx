@@ -5,100 +5,36 @@ import { TeamCard, TeamCardList, TeamCardSkeleton } from '@/components/team/team
 const mockTeam = {
   id: '1',
   name: 'Team Alpha',
-  tag: 'ALPHA',
-  logo: '/logos/team-alpha.png',
-  region: 'NA',
-  division: 'Division 1',
-  ranking: 8,
-  points: 1847,
-  coach: 'Coach Smith',
-  captain: 'Captain Johnson',
-  founded: '2020-01-15',
-  website: 'https://teamalpha.com',
-  social: {
-    twitter: '@teamalpha',
-    facebook: 'teamalpha',
-    instagram: 'teamalpha'
-  },
   leagueId: 'league1',
   leagueName: 'Pro League',
   isActive: true,
-  createdAt: '2020-01-15T00:00:00Z',
-  updatedAt: '2024-01-15T00:00:00Z'
+  isLoading: false
 };
 
 const mockTeams = [
   {
     id: '1',
     name: 'Team Alpha',
-    tag: 'ALPHA',
-    logo: '/logos/team-alpha.png',
-    region: 'NA',
-    division: 'Division 1',
-    ranking: 8,
-    points: 1847,
-    coach: 'Coach Smith',
-    captain: 'Captain Johnson',
-    founded: '2020-01-15',
-    website: 'https://teamalpha.com',
-    social: {
-      twitter: '@teamalpha',
-      facebook: 'teamalpha',
-      instagram: 'teamalpha'
-    },
     leagueId: 'league1',
     leagueName: 'Pro League',
     isActive: true,
-    createdAt: '2020-01-15T00:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z'
+    isLoading: false
   },
   {
     id: '2',
     name: 'Team Beta',
-    tag: 'BETA',
-    logo: '/logos/team-beta.png',
-    region: 'EU',
-    division: 'Division 2',
-    ranking: 12,
-    points: 1650,
-    coach: 'Coach Wilson',
-    captain: 'Captain Davis',
-    founded: '2021-03-20',
-    website: 'https://teambeta.com',
-    social: {
-      twitter: '@teambeta',
-      facebook: 'teambeta',
-      instagram: 'teambeta'
-    },
     leagueId: 'league1',
     leagueName: 'Pro League',
     isActive: true,
-    createdAt: '2021-03-20T00:00:00Z',
-    updatedAt: '2024-01-14T00:00:00Z'
+    isLoading: false
   },
   {
     id: '3',
     name: 'Team Gamma',
-    tag: 'GAMMA',
-    logo: '/logos/team-gamma.png',
-    region: 'SEA',
-    division: 'Division 1',
-    ranking: 5,
-    points: 2100,
-    coach: 'Coach Brown',
-    captain: 'Captain Lee',
-    founded: '2019-08-10',
-    website: 'https://teamgamma.com',
-    social: {
-      twitter: '@teamgamma',
-      facebook: 'teamgamma',
-      instagram: 'teamgamma'
-    },
     leagueId: 'league2',
     leagueName: 'Championship League',
     isActive: true,
-    createdAt: '2019-08-10T00:00:00Z',
-    updatedAt: '2024-01-13T00:00:00Z'
+    isLoading: false
   }
 ];
 

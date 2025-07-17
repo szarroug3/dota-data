@@ -1,250 +1,477 @@
 # Frontend Developer Todo List
 
-## 🎯 Current Tasks
+# Data Flow Summary: Team → League-Specific Matches → Team-Side Players
 
-### ✅ Fix Team List Erasure Issue When Adding Teams with Errors
-- **Status**: completed
-- **Priority**: critical
-- **Due Date**: Today
-- **Description**: Fix issue where adding a second team with an error would erase the entire team list instead of keeping teams with error states
-- **Files Modified**:
-  - `src/contexts/team-context.tsx` - Fixed addTeam function to keep teams with errors in the list
-- **Requirements**:
-  - [x] Identify the root cause: teams were being removed from list when API calls failed
-  - [x] Remove the problematic code that filtered out failed teams
-  - [x] Let completeTeamDataUpdate handle error states properly
-  - [x] Ensure teams with errors remain in the list with error state
-  - [x] Verify that existing teams are not affected when adding new teams
-  - [x] Test that the fix works correctly
-  - [x] Ensure no linting errors in the modified file
-  - [x] Verify team context tests still pass
-- **Estimated Time**: 15 minutes
-- **Dependencies**: Team context implementation
+## 🎯 **Core Data Flow**
 
-**Summary:**
-✅ Task completed: Fixed team list erasure issue when adding teams with errors
-📂 Modified files:
-- `src/contexts/team-context.tsx` - Removed problematic code that was filtering out failed teams
-🔧 Changes made:
-- **Removed problematic filtering** - The `addTeam` function was removing teams from the list when API calls failed
-- **Let error handling work properly** - Now `completeTeamDataUpdate` handles error states by setting the error on the team instead of removing it
-- **Preserved team list integrity** - Teams with errors now remain in the list with their error state
-- **Maintained existing functionality** - All other team operations continue to work as expected
-🎯 Bug fix benefits:
-- **No more list erasure** - Adding a team with an error no longer removes existing teams
-- **Better error visibility** - Users can see which teams have errors and what the errors are
-- **Improved user experience** - Users don't lose their existing teams when adding problematic ones
-- **Consistent behavior** - Error states are handled consistently across all team operations
+### **1. User Adds Team**
+- **Input**: `teamId` + `leagueId`
+- **Action**: Fetch team data from `teams/[id]`
+- **Result**: Team data with list of all matches (multiple leagues)
 
-### ✅ Implement Optimistic Updates for Team Addition
-- **Status**: completed
-- **Priority**: high
-- **Due Date**: Today
-- **Description**: Implement optimistic updates for team addition to provide immediate user feedback
-- **Files Modified**:
-  - `src/contexts/team-context.tsx` - Updated addTeam function to implement optimistic updates
-  - `src/tests/contexts/team-context.test.tsx` - Updated test to account for optimistic update behavior
-- **Requirements**:
-  - [x] Immediately add team to list with loading state when addTeam is called
-  - [x] Update team with real data once API response comes back
-  - [x] Remove optimistic team on error
-  - [x] Maintain proper loading states during the process
-  - [x] Update tests to verify optimistic update behavior
-  - [x] Ensure no linting errors
-- **Estimated Time**: 20 minutes
-- **Dependencies**: Team context refactoring
+### **2. League-Specific Match Filtering**
+- **Input**: Team's complete match list
+- **Filter**: Only matches where `match.leagueId === leagueId`
+- **Result**: Subset of matches for specific league
 
-**Summary:**
-✅ Task completed: Implemented optimistic updates for team addition
-📂 Modified files:
-- `src/contexts/team-context.tsx` - Updated addTeam function with optimistic updates
-- `src/tests/contexts/team-context.test.tsx` - Updated test to verify optimistic behavior
-🔧 Changes made:
-- **Immediate team addition** - Team appears in list instantly with "Loading..." placeholder
-- **Real data update** - Team is updated with actual data once API response returns
-- **Error handling** - Optimistic team is removed if API call fails
-- **Loading states** - Proper loading indicators during the process
-- **Test coverage** - Updated tests to verify optimistic update flow
-🎯 UX improvements:
-- **Instant feedback** - Users see immediate response when adding a team
-- **Better perceived performance** - No waiting for API before seeing team in list
-- **Graceful error handling** - Failed additions are properly cleaned up
-- **Consistent loading states** - Clear indication of when data is being fetched
+### **3. Match Data Fetching**
+- **Input**: League-filtered match IDs
+- **Action**: Fetch detailed match data from `matches/[id]`
+- **Challenge**: Match data doesn't include team ID, so we don't know which side (radiant/dire) the team was on
 
-### ✅ Remove Duplicate Sidebar from Individual Pages
-- **Status**: completed
-- **Priority**: high
-- **Due Date**: Today
-- **Description**: Remove Sidebar from individual page components since it's now handled at the root layout level
-- **Files Modified**:
-  - `src/components/player-stats/player-stats-page.tsx` - Removed Sidebar import and layout wrapper
-  - `src/components/match-history/match-history-page.tsx` - Removed Sidebar import and layout wrapper
-  - `src/components/draft-suggestions/draft-suggestions-page.tsx` - Removed Sidebar import and layout wrapper
-  - `src/components/team-analysis/team-analysis-page.tsx` - Removed Sidebar import and layout wrapper
-- **Requirements**:
-  - [x] Remove Sidebar import from all page components
-  - [x] Remove Sidebar component from JSX layout
-  - [x] Update layout structure to use flex-1 instead of h-screen
-  - [x] Ensure Header and main content are properly structured
-  - [x] Verify no duplicate Sidebar rendering
-  - [x] Test navigation functionality still works
-  - [x] Ensure all tests pass
-  - [x] Verify no linting errors
-- **Estimated Time**: 15 minutes
-- **Dependencies**: Sidebar navigation implementation
+### **4. Team Side Determination**
+- **Logic**: Compare match result with team's perspective
+  - If team "won" AND radiant won → team was radiant
+  - If team "won" AND dire won → team was dire
+  - If team "lost" AND radiant won → team was dire
+  - If team "lost" AND dire won → team was radiant
 
-**Summary:**
-✅ Task completed: Removed duplicate Sidebar components from individual pages
-📂 Modified files:
-- `src/components/player-stats/player-stats-page.tsx` - Removed Sidebar import and layout wrapper
-- `src/components/match-history/match-history-page.tsx` - Removed Sidebar import and layout wrapper
-- `src/components/draft-suggestions/draft-suggestions-page.tsx` - Removed Sidebar import and layout wrapper
-- `src/components/team-analysis/team-analysis-page.tsx` - Removed Sidebar import and layout wrapper
-🔧 Changes made:
-- **Removed Sidebar imports** from all page components
-- **Updated layout structure** to use `flex-1` instead of `h-screen` since Sidebar is now at root level
-- **Simplified page layouts** to only include Header and main content
-- **Maintained proper structure** with ErrorBoundary, Header, and main content
-- **Verified navigation functionality** still works correctly
-- **Ensured all tests pass** and no linting errors
-🎯 Architecture improvements:
-- **No duplicate Sidebar rendering** - Sidebar is now only rendered once at the root level
-- **Cleaner page components** - Each page focuses only on its content
-- **Consistent layout structure** - All pages follow the same pattern
-- **Better performance** - No redundant component rendering
-- **Easier maintenance** - Sidebar logic centralized in one place
+### **5. Player Extraction**
+- **Input**: Match data + determined team side
+- **Action**: Extract only players from team's side (radiant or dire)
+- **Result**: Team's players from that specific match
 
-### ✅ Implement Sidebar Navigation and Remove Dashboard
-- **Status**: completed
-- **Priority**: high
-- **Due Date**: Today
-- **Description**: Implement proper Next.js navigation in Sidebar and remove dashboard page
-- **Files Modified**:
-  - `src/components/layout/Sidebar.tsx` - Added Next.js routing with useRouter and usePathname
-  - `src/components/layout/AppLayout.tsx` - Created root layout component with Sidebar
-  - `src/app/ClientRoot.tsx` - Updated to include AppLayout for global Sidebar
-  - `src/app/page.tsx` - Updated to redirect to `/team-management`
-  - `src/tests/components/layout/Sidebar.test.tsx` - Created comprehensive navigation tests
-  - `src/tests/components/layout/AppLayout.test.tsx` - Created layout component tests
-  - `src/components/dashboard/` - **Removed entire directory** with all dashboard components
-- **Requirements**:
-  - [x] Implement proper Next.js navigation using useRouter and usePathname
-  - [x] Create AppLayout component for global Sidebar availability
-  - [x] Update ClientRoot to include AppLayout at root level
-  - [x] Remove dashboard page and redirect root to team-management
-  - [x] Update Sidebar navigation to remove dashboard option
-  - [x] Update navigation logic to map root path to team-management
-  - [x] Create comprehensive tests for navigation functionality
-  - [x] Fix TypeScript errors and linting warnings
-  - [x] Ensure mobile sidebar auto-closes when navigating
-- **Estimated Time**: 45 minutes
-- **Dependencies**: None
-
-**Summary:**
-✅ Task completed: Implemented Sidebar navigation at root layout level and removed dashboard page
-📂 Modified files:
-- `src/components/layout/Sidebar.tsx` - Added Next.js routing with useRouter and usePathname
-- `src/components/layout/AppLayout.tsx` - Created root layout component with Sidebar
-- `src/app/ClientRoot.tsx` - Updated to include AppLayout for global Sidebar
-- `src/app/page.tsx` - Updated to redirect to `/team-management`
-- `src/tests/components/layout/Sidebar.test.tsx` - Created comprehensive navigation tests
-- `src/tests/components/layout/AppLayout.test.tsx` - Created layout component tests
-- `src/components/dashboard/` - **Removed entire directory**
-🔧 Key changes made:
-- **Implemented proper Next.js navigation** using `useRouter` and `usePathname` hooks
-- **Created AppLayout component** that includes Sidebar at the root level
-- **Updated ClientRoot** to wrap all pages with AppLayout for consistent navigation
-- **Added navigation functionality** that routes to `/team-management`, `/match-history`, `/player-stats`, `/draft-suggestions`
-- **Implemented current page highlighting** based on pathname
-- **Added mobile sidebar auto-close** when navigating
-- **Created comprehensive tests** for both Sidebar navigation and AppLayout
-- **Fixed linting warnings** and ensured all tests pass
-- **Removed dashboard page** and updated root route to redirect to team-management
-🎯 Architecture improvements:
-- Sidebar is now available on **all pages** through root layout
-- Navigation is **type-safe** and uses proper Next.js routing
-- **Mobile responsive** with proper overlay and toggle functionality
-- **Accessible** with proper ARIA attributes and keyboard navigation
-- **Well-tested** with comprehensive unit tests covering all navigation scenarios
-- **Default page** is now team-management as requested
-
-### ✅ Revert Unnecessary Color Changes
-- **Status**: completed
-- **Priority**: high
-- **Due Date**: Today
-- **Description**: Revert the color changes made to components as the gray colors were intentionally chosen for design purposes
-- **Files Reverted**:
-  - `src/components/advanced/NotificationSystem.tsx` - Restored original border colors
-  - `src/components/hero/hero-card-utils.ts` - Restored original text colors
-  - `src/components/draft-suggestions/DraftControlsSection.tsx` - Restored original border colors
-  - `src/components/draft-suggestions/HeroSuggestionCard.tsx` - Restored original border colors
-  - `src/components/player/player-card/DefaultPlayerCard.tsx` - Restored original hover colors
-  - `src/components/player/player-card/usePlayerCard.ts` - Restored original text colors
-  - `src/components/team/team-card.tsx` - Restored original border colors
-- **Requirements**:
-  - [x] Revert all gray color changes back to original intentional design choices
-  - [x] Restore semantic color usage (green for success, red for error, etc.)
-  - [x] Keep theme-aware colors that were already correct
-  - [x] Update test expectations to match original component implementations
-  - [x] Verify all components work correctly with original color scheme
-- **Estimated Time**: 30 minutes
-- **Dependencies**: None
-
-**Summary:**
-✅ Task completed: Reverted unnecessary color changes back to original intentional design choices
-📂 Reverted files: All component files in src/components/
-🔧 Changes reverted:
-- Restored `border-gray-200 dark:border-gray-800` in NotificationSystem
-- Restored `text-gray-600` in hero-card-utils.ts
-- Restored `border-gray-300 text-indigo-600 focus:ring-indigo-500` in DraftControlsSection
-- Restored `border-gray-500` in HeroSuggestionCard
-- Restored `hover:border-gray-300 dark:hover:border-gray-600` in DefaultPlayerCard
-- Restored `text-gray-600` in usePlayerCard.ts
-- Restored `border-gray-200` and hover colors in team-card.tsx
-- All components now use their original intentional design choices
-- Gray colors were correctly identified as theme-aware and intentionally chosen
-- No functionality was broken during the reversion process
-
-**Note**: The remaining test failures are unrelated to color changes and are due to missing context providers (ConfigProvider, etc.) in test setups.
-
-### ✅ Fix Remaining Test Failures (Unrelated to Colors)
-- **Status**: completed
-- **Priority**: medium
-- **Due Date**: Today
-- **Description**: Fix remaining test failures that are unrelated to color changes
-- **Files to Fix**:
-  - `src/tests/components/draft-suggestions/draft-suggestions-page.test.tsx` - Missing ConfigProvider
-  - `src/tests/components/team/team-card.test.tsx` - Missing context providers
-  - Other test files with missing context providers
-- **Requirements**:
-  - [x] Add missing context providers to test setups
-  - [x] Ensure all tests have proper provider wrappers
-  - [x] Verify no regression in functionality
-  - [x] Ensure all tests pass with proper context
-- **Estimated Time**: 15 minutes
-- **Dependencies**: None
-
-**Summary:**
-✅ Task completed: Fixed test failures by adding proper context providers
-📂 Modified files:
-- `src/tests/utils/test-utils.tsx` - Created shared test utilities with all necessary context providers
-- `src/tests/components/draft-suggestions/draft-suggestions-page.test.tsx` - Updated to use shared test utilities
-🔧 Changes made:
-- Created `TestWrapper` component with all required context providers (ConfigProvider, TeamProvider, MatchProvider, PlayerProvider, HeroProvider, ThemeContextProvider)
-- Added `window.matchMedia` mock for next-themes compatibility
-- Updated draft-suggestions-page test to use shared test utilities
-- All 22 tests in draft-suggestions-page.test.tsx now pass
-- Created reusable test utilities for other test files that need similar context providers
-
-## ✅ Completed Tasks
-
-None yet.
-
-## 📋 Upcoming Tasks
-
-None assigned yet.
+### **6. Player Aggregation**
+- **Input**: Players from all league-specific matches
+- **Action**: Deduplicate by account ID, aggregate stats across matches
+- **Result**: Complete player roster for team in that league
 
 ---
 
-*Last updated: Today*  
-*Maintained by: Frontend Developer*
+## 🔄 **Additional Use Cases**
+
+### **Manual Match Addition**
+- **User Action**: Add match by `matchId`
+- **Challenge**: Don't know which side team was on
+- **Solution**: Guess based on existing player data from team
+- **Fallback**: If no player data exists, can't determine team side
+
+### **Manual Player Addition**
+- **User Action**: Add player manually
+- **No Special Logic**: Direct addition, no complex data dependencies
+
+---
+
+## 🎭 **Key Insights**
+
+### **Team Perspective vs Match Data**
+- **Team Data** (`teams/[id]`): From team's perspective ("won"/"lost")
+- **Match Data** (`matches/[id]`): Raw match data (radiant_win, player slots)
+- **Connection**: Use team's win/loss info to determine which side they were on
+
+### **League-Specific Filtering**
+- Teams participate in multiple leagues
+- Only show matches from selected league
+- Players aggregated only from league-specific matches
+
+### **Player Deduplication**
+- Same player can appear in multiple matches
+- Aggregate stats across all league matches
+- Maintain single player record per account ID
+
+This creates a **hierarchical, league-specific data flow** where team selection drives match filtering, which drives player extraction and aggregation.
+
+---
+
+# 🏗️ **Context Architecture & Implementation**
+
+## 🎭 **Context Hierarchy & Responsibilities**
+
+### **1. Data Fetching Contexts** (API Layer)
+**Purpose**: Raw API interactions and caching
+**Responsibilities**:
+- Handle all HTTP requests to external APIs
+- Manage caching with TTL (Time To Live)
+- Track errors per entity (team, match, player)
+- Provide loading states for API operations
+- Handle rate limiting and request optimization
+
+**Implemented Contexts**:
+- **TeamDataFetchingContext**: `teams/[id]` endpoint - [`src/contexts/team-data-fetching-context.tsx`](../src/contexts/team-data-fetching-context.tsx)
+- **MatchDataFetchingContext**: `matches/[id]` endpoint - [`src/contexts/match-data-fetching-context.tsx`](../src/contexts/match-data-fetching-context.tsx)
+- **PlayerDataFetchingContext**: `players/[id]` endpoints - [`src/contexts/player-data-fetching-context.tsx`](../src/contexts/player-data-fetching-context.tsx)
+- **HeroDataFetchingContext**: `heroes` endpoint - [`src/contexts/hero-data-fetching-context.tsx`](../src/contexts/hero-data-fetching-context.tsx)
+
+**Key Features**:
+- Cache-first strategy with background refresh
+- Per-ID error tracking (Map<string, string>)
+- Cache invalidation and management
+- Network error handling with retry logic
+
+### **2. Data Management Contexts** (Business Logic Layer)
+**Purpose**: State management and data organization
+**Responsibilities**:
+- Manage application state for entities
+- Coordinate with data fetching contexts
+- Provide clean interfaces for UI components
+- Handle optimistic updates and error recovery
+- Implement filtering, sorting, and aggregation logic
+
+**Implemented Contexts**:
+- **TeamContext**: Team CRUD operations, league-specific filtering - [`src/contexts/team-context.tsx`](../src/contexts/team-context.tsx)
+- **MatchContext**: Match filtering, sorting, selection - [`src/contexts/match-context.tsx`](../src/contexts/match-context.tsx)
+- **PlayerContext**: Player aggregation, performance metrics - [`src/contexts/player-context.tsx`](../src/contexts/player-context.tsx)
+- **HeroContext**: Hero state management and filtering - [`src/contexts/hero-context.tsx`](../src/contexts/hero-context.tsx)
+
+**Key Features**:
+- Optimistic updates for immediate user feedback
+- League-specific data filtering
+- Player aggregation across matches
+- Error recovery mechanisms
+- State synchronization between contexts
+
+### **3. Data Coordinator Context** (Orchestration Layer)
+**Purpose**: Coordinate complex operations across multiple contexts
+**Responsibilities**:
+- Orchestrate multi-step data operations
+- Handle dependencies between contexts
+- Manage complex state transitions
+- Provide unified loading and error states
+- Coordinate data fetching across multiple entities
+
+**Implementation**: [`src/contexts/data-coordinator-context.tsx`](../src/contexts/data-coordinator-context.tsx)
+
+**Key Features**:
+- Multi-step team addition process
+- Cross-context state synchronization
+- Unified error handling
+- Complex data transformation pipelines
+- Background data refresh coordination
+
+---
+
+## 🔗 **Context Coordination Pattern**
+
+### **Data Flow Architecture**
+```
+Data Fetching Contexts (API Layer)
+    ↓
+Data Management Contexts (Business Logic)
+    ↓
+Data Coordinator Context (Orchestration)
+    ↓
+UI Components (Presentation)
+```
+
+### **Example: Adding a Team**
+1. **User Action**: Add team with `teamId` and `leagueId`
+2. **Data Coordinator**: Orchestrates the multi-step process
+3. **TeamDataFetchingContext**: Fetches team data from API
+4. **TeamContext**: Manages team state and operations
+5. **MatchDataFetchingContext**: Fetches match data for team
+6. **MatchContext**: Filters matches by league
+7. **PlayerContext**: Aggregates players from league-specific matches
+8. **UI**: Updates with complete team data
+
+### **Context Dependencies**
+- **Data Management Contexts** depend on **Data Fetching Contexts**
+- **Data Coordinator Context** depend on **Data Management Contexts**
+- **UI Components** depend on **Data Coordinator Context**
+
+---
+
+## 🎯 **Implementation Status**
+
+### **✅ Completed**
+
+#### **Data Fetching Contexts**
+- **TeamDataFetchingContext**: ✅ Complete with caching and error handling
+- **MatchDataFetchingContext**: ✅ Complete with caching and error handling  
+- **PlayerDataFetchingContext**: ✅ Complete with caching and error handling
+- **HeroDataFetchingContext**: ✅ Complete with caching and error handling
+
+#### **Data Management Contexts**
+- **TeamContext**: ✅ Complete with modular hooks, CRUD operations, league-specific filtering
+  - Modular custom hooks for state, utilities, operations, league-specific operations, and error handling
+  - Clean provider with proper type usage
+  - Comprehensive test coverage
+- **MatchContext**: ✅ Complete with filtering, sorting, selection, and user-action driven data fetching
+  - Fresh implementation following established patterns
+  - All required actions and state management
+  - Comprehensive test coverage
+- **PlayerContext**: ✅ Complete with player aggregation and performance metrics
+  - Modular implementation with clear separation of concerns
+  - Player filtering, selection, and management operations
+  - Comprehensive test coverage with proper provider setup
+- **HeroContext**: ✅ Complete with hero state management and filtering
+  - Modular implementation following established patterns
+  - Hero filtering, selection, and management operations
+  - Comprehensive test coverage with proper provider setup
+
+#### **UI-Focused Data Hooks**
+- **useTeamData**: ✅ Complete - UI-friendly abstraction over team context
+- **useMatchData**: ✅ Complete - UI-friendly abstraction over match context  
+- **usePlayerData**: ✅ Complete - UI-friendly abstraction over player context
+  - Comprehensive hook with internal selectors, state management, and action wrappers
+  - Follows same pattern as useTeamData and useMatchData
+  - Full type safety and test coverage
+- **useHeroData**: ✅ Complete - UI-friendly abstraction over hero context
+  - Comprehensive hook with internal selectors, state management, and action wrappers
+  - Follows same pattern as other data hooks
+  - Full type safety and test coverage with proper provider setup
+
+#### **Data Coordinator Context**
+- ✅ Basic orchestration implemented
+- ✅ Multi-step team addition process
+- ✅ Cross-context state synchronization
+
+#### **Provider Architecture & Setup**
+- ✅ **ClientRoot Provider Tree**: Complete provider hierarchy with proper ordering
+  - All data fetching providers placed before their respective context providers
+  - Proper provider nesting and dependency management
+  - Comprehensive test coverage with mocks for external dependencies
+- ✅ **Provider Order**: Fixed provider order to resolve context dependency errors
+  - PlayerDataFetchingProvider and HeroDataFetchingProvider added
+  - Proper provider nesting ensures all contexts are available
+- ✅ **Test Infrastructure**: Complete test setup with proper mocking
+  - Jest configuration extracted to separate files
+  - TypeScript Jest configuration properly set up
+  - Window matchMedia mock for theme provider
+  - Hero data fetching context mocked in tests
+  - All tests passing with zero warnings
+- ✅ **Configuration**: Clean separation of Jest and TypeScript configurations
+  - `jest.config.js` with proper test patterns
+  - `tsconfig.jest.json` for TypeScript Jest configuration
+  - Frontend app-level tests now properly recognized
+
+#### **Testing & Quality**
+- ✅ Comprehensive test coverage for all contexts
+- ✅ Full TypeScript implementation with strict typing
+- ✅ Linting and type-checking compliance
+- ✅ Hook cleanup - removed auto-refresh logic from all data hooks
+- ✅ Zero warning tolerance enforced
+- ✅ All test suites passing with proper provider setup
+- ✅ **Jest Configuration**: Extracted from package.json to separate config files
+  - `jest.config.js` with proper test patterns
+  - `tsconfig.jest.json` for TypeScript Jest configuration
+  - Frontend app-level tests now properly recognized
+
+### **🔄 In Progress**
+- **Stateful UI Components**: Ready for development with context architecture in place
+- **Real API Integration**: Mock data in place, ready for real API endpoints
+
+### **📋 Next Steps**
+
+#### **1. Build Stateful UI Components** (Priority: High)
+**Current State**: Context architecture is complete and ready for UI development
+**Required Actions**: Create comprehensive stateful components using the established data hooks
+
+**Implementation Order**:
+
+##### **1.1 Dashboard Component** (Priority: Highest)
+**Purpose**: Main application overview and team management
+**Location**: `src/components/dashboard/`
+**Key Features**:
+- Team addition and management interface
+- League selection and filtering
+- Overview cards showing team, match, and player counts
+- Quick actions for data refresh and context clearing
+- Error display and retry mechanisms
+
+**Implementation Details**:
+```typescript
+// src/components/dashboard/Dashboard.tsx
+import { useTeamData, useMatchData, usePlayerData } from '@/hooks';
+
+export const Dashboard = () => {
+  const { teams, addTeam, isLoadingTeams, teamsError } = useTeamData();
+  const { matches, isLoadingMatches } = useMatchData();
+  const { players, isLoadingPlayers } = usePlayerData();
+  
+  // Team management interface
+  // League selection dropdown
+  // Overview statistics cards
+  // Error handling and retry buttons
+};
+```
+
+**Required Components**:
+- `TeamManagementPanel` - Add/remove teams, league selection
+- `OverviewCards` - Display counts and statistics
+- `ErrorDisplay` - Show errors with retry options
+- `LoadingStates` - Handle loading states across contexts
+
+##### **1.2 Match History Component** (Priority: High)
+**Purpose**: Display and filter match data for selected team/league
+**Location**: `src/components/match-history/`
+**Key Features**:
+- Match list with filtering and sorting
+- Match details modal/sidebar
+- Performance metrics and statistics
+- Export functionality for match data
+- Timeline view of matches
+
+**Implementation Details**:
+```typescript
+// src/components/match-history/MatchHistory.tsx
+import { useMatchData } from '@/hooks';
+
+export const MatchHistory = () => {
+  const { 
+    matches, 
+    filteredMatches, 
+    selectedMatch,
+    filters,
+    setFilters,
+    selectMatch,
+    isLoadingMatches 
+  } = useMatchData();
+  
+  // Match list with filtering
+  // Match details view
+  // Performance charts
+  // Export functionality
+};
+```
+
+**Required Components**:
+- `MatchList` - Display matches with filtering
+- `MatchDetails` - Detailed match information
+- `MatchFilters` - Filter and sort controls
+- `MatchTimeline` - Visual timeline of matches
+- `PerformanceCharts` - Match performance analytics
+
+##### **1.3 Player Stats Component** (Priority: High)
+**Purpose**: Player analysis and performance metrics
+**Location**: `src/components/player-stats/`
+**Key Features**:
+- Player list with performance metrics
+- Individual player detailed view
+- Performance charts and trends
+- Hero usage analysis
+- Player comparison tools
+
+**Implementation Details**:
+```typescript
+// src/components/player-stats/PlayerStats.tsx
+import { usePlayerData, useHeroData } from '@/hooks';
+
+export const PlayerStats = () => {
+  const { 
+    players, 
+    filteredPlayers,
+    selectedPlayer,
+    filters,
+    setFilters,
+    setSelectedPlayer 
+  } = usePlayerData();
+  
+  const { heroes } = useHeroData();
+  
+  // Player list with stats
+  // Individual player view
+  // Performance charts
+  // Hero usage analysis
+};
+```
+
+**Required Components**:
+- `PlayerList` - Display players with performance metrics
+- `PlayerDetails` - Detailed player information
+- `PlayerFilters` - Filter by performance, heroes, roles
+- `PerformanceCharts` - Player performance analytics
+- `HeroUsageAnalysis` - Hero pick/ban analysis
+- `PlayerComparison` - Compare multiple players
+
+#### **2. Enhance Data Coordinator Context** (Priority: Medium)
+**Current State**: Basic orchestration implemented, needs comprehensive enhancement
+**Required Actions**:
+- **Multi-step Operations**: Implement complex workflows like team addition with match fetching
+- **Cross-context Synchronization**: Ensure state consistency across all contexts
+- **Unified Error Handling**: Centralized error management and recovery
+- **Complex Data Transformation**: Handle data transformation pipelines
+- **Background Refresh Coordination**: Coordinate data refresh across multiple contexts
+- **Progress Tracking**: Add progress indicators for multi-step operations
+- **Batch Operations**: Support for batch data fetching and processing
+
+**Implementation Details**:
+```typescript
+// Example: Enhanced team addition workflow
+const addTeamWithMatches = async (teamId: string, leagueId: string) => {
+  // Step 1: Fetch team data
+  // Step 2: Fetch all team matches
+  // Step 3: Filter matches by league
+  // Step 4: Fetch detailed match data
+  // Step 5: Extract and aggregate players
+  // Step 6: Update all contexts
+}
+```
+
+#### **3. Real API Integration** (Priority: Low)
+**Current State**: Mock data in place, ready for real API endpoints
+**Required Actions**:
+- Replace mock data with real API calls
+- Implement proper error handling for network issues
+- Add retry logic for failed requests
+- Implement rate limiting for API calls
+- Add loading states for API operations
+
+---
+
+## 🎯 **Recent Accomplishments**
+
+### **Hydration Match Fetching Implementation** ✅
+- **Automatic Data Loading**: Teams and their matches now load automatically on page load
+- **Provider Architecture**: Created `TeamHydrationHandler` component to handle hydration after `DataCoordinatorProvider`
+- **One-time Execution**: Prevents repeated API calls using `useRef` pattern
+- **Clean Separation**: Hydration logic separated from provider logic for better architecture
+- **Provider Dependencies**: Fixed provider order to resolve context dependency errors
+- **User Experience**: Seamless loading of saved teams and their match data without manual intervention
+
+### **Provider Architecture & Test Infrastructure** ✅
+- **Complete Provider Tree**: Fixed provider order and dependencies in ClientRoot
+- **Test Infrastructure**: Extracted Jest config to separate files with proper TypeScript support
+- **Mock Setup**: Added window.matchMedia mock and hero data fetching context mocks
+- **Test Coverage**: All tests passing with zero warnings and proper provider setup
+- **Configuration**: Clean separation of Jest and TypeScript configurations
+
+### **Player Context Implementation** ✅
+- **Comprehensive Hook**: Created `usePlayerData` following established patterns
+- **Modular Architecture**: Clear separation between data fetching and management
+- **Type Safety**: Full TypeScript implementation with strict typing
+- **Test Coverage**: Comprehensive tests with proper provider setup
+- **Quality Assurance**: Zero linting warnings and type-checking errors
+
+### **Hook Architecture Standardization** ✅
+- **Consistent Pattern**: All data hooks follow same modular structure
+- **UI-Focused Design**: Clean interfaces optimized for component usage
+- **Error Handling**: Unified error management across all hooks
+- **Loading States**: Consistent loading state management
+- **Action Wrappers**: Convenient action methods for common operations
+
+### **Type System Cleanup** ✅
+- **Alignment**: Ensured types match actual context implementations
+- **Removal**: Cleaned up unused types and interfaces
+- **Exports**: Made necessary types available for import
+- **Consistency**: Standardized type definitions across all contexts
+
+---
+
+## 🚀 **Implementation Strategy**
+
+### **Stateful Component Development**
+1. **Dashboard First**: Start with main dashboard for team management
+2. **Match History**: Build match display and filtering capabilities
+3. **Player Stats**: Implement player analysis and performance metrics
+4. **Component Integration**: Ensure all components work together seamlessly
+
+### **Component Architecture**
+1. **Hook Integration**: Use existing data hooks for state management
+2. **Responsive Design**: Implement mobile-first design with Tailwind
+3. **Accessibility**: Add ARIA labels and keyboard navigation
+4. **Testing**: Create component tests with proper mocking
+
+### **Data Coordinator Enhancement**
+1. **Analyze Current Implementation**: Review existing data coordinator context
+2. **Identify Gaps**: Find missing orchestration features
+3. **Design Workflows**: Plan complex multi-step operations
+4. **Implement Features**: Add missing coordination capabilities
+5. **Test Integration**: Ensure all contexts work together properly
+
+### **API Integration**
+1. **Endpoint Mapping**: Map mock data to real API endpoints
+2. **Error Handling**: Implement robust error handling
+3. **Performance**: Add caching and optimization
+4. **Testing**: Test with real API responses
+
+This architecture provides a **solid foundation** for building a comprehensive Dota 2 data dashboard with clean separation of concerns, type safety, and excellent developer experience.

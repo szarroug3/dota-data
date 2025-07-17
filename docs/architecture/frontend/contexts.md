@@ -54,7 +54,6 @@ These contexts handle all direct API interactions and should be the only context
 - **Purpose:** Handles all API interactions for player-related data
 - **Endpoints Used:**
   - `POST /api/players/[id]` - Fetch player data
-  - `POST /api/players/[id]/matches` - Fetch player matches
   - `POST /api/players/[id]/heroes` - Fetch player heroes
   - `POST /api/players/[id]/counts` - Fetch player counts
   - `POST /api/players/[id]/totals` - Fetch player totals
@@ -62,7 +61,6 @@ These contexts handle all direct API interactions and should be the only context
   - `POST /api/players/[id]/recentMatches` - Fetch player recent matches
 - **Provides:**
   - `fetchPlayerData: (playerId: string, force?: boolean) => Promise<PlayerData>`
-  - `fetchPlayerMatches: (playerId: string, force?: boolean) => Promise<PlayerMatchData[]>`
   - `fetchPlayerHeroes: (playerId: string, force?: boolean) => Promise<PlayerHeroData[]>`
   - `fetchPlayerCounts: (playerId: string, force?: boolean) => Promise<PlayerCountData>`
   - `fetchPlayerTotals: (playerId: string, force?: boolean) => Promise<PlayerTotalData>`

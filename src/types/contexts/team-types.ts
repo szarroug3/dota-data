@@ -100,7 +100,7 @@ export interface TeamContextValue {
   
   // Core team operations
   addTeam: (teamId: string, leagueId: string) => Promise<void>;
-  removeTeam: (teamId: string, leagueId: string) => void;
+  removeTeam: (teamId: string, leagueId: string) => Promise<void>;
   setActiveTeam: (teamId: string | null, leagueId?: string) => Promise<void>;
   refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
   

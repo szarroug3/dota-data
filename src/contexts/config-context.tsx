@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Config Context Provider
  *
@@ -146,6 +148,99 @@ const getDefaultPreferences = (): UserPreferences => ({
 // CONFIG CONTEXT PROVIDER
 // ============================================================================
 
+// Custom hook to load config and preferences from localStorage
+function useLoadConfigAndPreferences(setConfig: (c: AppConfig) => void, setPreferences: (p: UserPreferences) => void, setIsLoading: (b: boolean) => void) {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedConfig = loadFromStorage(STORAGE_KEYS.CONFIG, getDefaultConfig());
+      const storedPreferences = loadFromStorage(STORAGE_KEYS.PREFERENCES, getDefaultPreferences());
+      console.log('storedConfig:', storedConfig);
+      console.log('storedPreferences:', storedPreferences);
+      if (JSON.stringify(storedConfig) !== JSON.stringify(getDefaultConfig())) {
+        setConfig(storedConfig);
+      }
+      if (JSON.stringify(storedPreferences) !== JSON.stringify(getDefaultPreferences())) {
+        setPreferences(storedPreferences);
+      }
+      setIsLoading(false);
+    }
+  }, [setConfig, setPreferences, setIsLoading]);
+}
+
+function useUpdateConfig(config: AppConfig, setConfig: (c: AppConfig) => void, setIsSaving: (b: boolean) => void, setError: (e: string | null) => void) {
+  return useCallback(async (updates: Partial<AppConfig>): Promise<void> => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const newConfig = { ...config, ...updates };
+      setConfig(newConfig);
+      saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
+    } catch (error) {
+      console.error('Failed to update configuration:', error);
+      setError('Failed to update configuration');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [config, setConfig, setIsSaving, setError]);
+}
+
+function useUpdatePreferences(preferences: UserPreferences, setPreferences: (p: UserPreferences) => void, setIsSaving: (b: boolean) => void, setError: (e: string | null) => void) {
+  return useCallback(async (updates: Partial<UserPreferences>): Promise<void> => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const newPreferences = { ...preferences, ...updates };
+      setPreferences(newPreferences);
+      saveToStorage(STORAGE_KEYS.PREFERENCES, newPreferences);
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      setError('Failed to update preferences');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [preferences, setPreferences, setIsSaving, setError]);
+}
+
+function useResetConfig(setConfig: (c: AppConfig) => void, setIsSaving: (b: boolean) => void, setError: (e: string | null) => void) {
+  return useCallback(async (): Promise<void> => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const defaultConfig = getDefaultConfig();
+      setConfig(defaultConfig);
+      saveToStorage(STORAGE_KEYS.CONFIG, defaultConfig);
+    } catch (error) {
+      console.error('Failed to reset configuration:', error);
+      setError('Failed to reset configuration');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [setConfig, setIsSaving, setError]);
+}
+
+function useResetPreferences(setPreferences: (p: UserPreferences) => void, setIsSaving: (b: boolean) => void, setError: (e: string | null) => void) {
+  return useCallback(async (): Promise<void> => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const defaultPreferences = getDefaultPreferences();
+      setPreferences(defaultPreferences);
+      saveToStorage(STORAGE_KEYS.PREFERENCES, defaultPreferences);
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      setError('Failed to reset preferences');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [setPreferences, setIsSaving, setError]);
+}
+
+function useClearErrors(setError: (e: string | null) => void) {
+  return useCallback((): void => {
+    setError(null);
+  }, [setError]);
+}
+
 export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children }) => {
   const [config, setConfig] = useState<AppConfig>(getDefaultConfig());
   const [preferences, setPreferences] = useState<UserPreferences>(getDefaultPreferences());
@@ -153,14 +248,27 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Team list and active team state (persistent)
-  const [teamList, setTeamListState] = useState<TeamData[]>(() => loadFromStorage<TeamData[]>(STORAGE_KEYS.TEAM_LIST, []));
-  const [activeTeam, setActiveTeamState] = useState<{ teamId: string; leagueId: string } | null>(() => loadFromStorage<{ teamId: string; leagueId: string } | null>(STORAGE_KEYS.ACTIVE_TEAM, null));
+  // Team list and active team state (persistent) - initialize with defaults, load from localStorage in useEffect
+  const [teamList, setTeamListState] = useState<TeamData[]>([]);
+  const [activeTeam, setActiveTeamState] = useState<{ teamId: string; leagueId: string } | null>(null);
+
+  // Load team data from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedTeamList = loadFromStorage<TeamData[]>(STORAGE_KEYS.TEAM_LIST, []);
+      const storedActiveTeam = loadFromStorage<{ teamId: string; leagueId: string } | null>(STORAGE_KEYS.ACTIVE_TEAM, null);
+      setTeamListState(storedTeamList);
+      setActiveTeamState(storedActiveTeam);
+    }
+  }, []);
 
   // Sync teamList to localStorage
-  const setTeamList = useCallback((newTeamList: TeamData[]) => {
-    setTeamListState(newTeamList);
-    saveToStorage(STORAGE_KEYS.TEAM_LIST, newTeamList);
+  const setTeamList = useCallback((update: TeamData[] | ((prev: TeamData[]) => TeamData[])) => {
+    setTeamListState(prev => {
+      const newTeamList = typeof update === 'function' ? update(prev) : update;
+      saveToStorage(STORAGE_KEYS.TEAM_LIST, newTeamList);
+      return newTeamList;
+    });
   }, []);
 
   // Sync activeTeam to localStorage
@@ -169,98 +277,14 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
     saveToStorage(STORAGE_KEYS.ACTIVE_TEAM, newActiveTeam);
   }, []);
 
-  // Load localStorage values on the client side after hydration
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedConfig = loadFromStorage(STORAGE_KEYS.CONFIG, getDefaultConfig());
-      const storedPreferences = loadFromStorage(STORAGE_KEYS.PREFERENCES, getDefaultPreferences());
-      console.log('storedConfig', storedConfig);
-      console.log('storedPreferences', storedPreferences);
-      
-      // Only update if values are different from defaults to prevent unnecessary re-renders
-      if (JSON.stringify(storedConfig) !== JSON.stringify(getDefaultConfig())) {
-        setConfig(storedConfig);
-      }
-      if (JSON.stringify(storedPreferences) !== JSON.stringify(getDefaultPreferences())) {
-        setPreferences(storedPreferences);
-      }
-      
-      // Mark as loaded
-      setIsLoading(false);
-    }
-  }, []);
+  // Load config and preferences from localStorage
+  useLoadConfigAndPreferences(setConfig, setPreferences, setIsLoading);
 
-  const updateConfig = useCallback(async (updates: Partial<AppConfig>): Promise<void> => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      const newConfig = { ...config, ...updates };
-      setConfig(newConfig);
-      // Save to localStorage after updating state
-      saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
-    } catch (error) {
-      console.error('Failed to update configuration:', error);
-      setError('Failed to update configuration');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [config]);
-
-  const updatePreferences = useCallback(async (updates: Partial<UserPreferences>): Promise<void> => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      const newPreferences = { ...preferences, ...updates };
-      setPreferences(newPreferences);
-      // Save to localStorage after updating state
-      saveToStorage(STORAGE_KEYS.PREFERENCES, newPreferences);
-    } catch (error) {
-      console.error('Failed to update preferences:', error);
-      setError('Failed to update preferences');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [preferences]);
-
-  const resetConfig = useCallback(async (): Promise<void> => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      const defaultConfig = getDefaultConfig();
-      setConfig(defaultConfig);
-      // Save to localStorage after updating state
-      saveToStorage(STORAGE_KEYS.CONFIG, defaultConfig);
-    } catch (error) {
-      console.error('Failed to reset configuration:', error);
-      setError('Failed to reset configuration');
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
-
-  const resetPreferences = useCallback(async (): Promise<void> => {
-    setIsSaving(true);
-    setError(null);
-    
-    try {
-      const defaultPreferences = getDefaultPreferences();
-      setPreferences(defaultPreferences);
-      // Save to localStorage after updating state
-      saveToStorage(STORAGE_KEYS.PREFERENCES, defaultPreferences);
-    } catch (error) {
-      console.error('Failed to reset preferences:', error);
-      setError('Failed to reset preferences');
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
-
-  const clearErrors = useCallback((): void => {
-    setError(null);
-  }, []);
+  const updateConfig = useUpdateConfig(config, setConfig, setIsSaving, setError);
+  const updatePreferences = useUpdatePreferences(preferences, setPreferences, setIsSaving, setError);
+  const resetConfig = useResetConfig(setConfig, setIsSaving, setError);
+  const resetPreferences = useResetPreferences(setPreferences, setIsSaving, setError);
+  const clearErrors = useClearErrors(setError);
 
   const contextValue: ConfigContextValue = {
     config,

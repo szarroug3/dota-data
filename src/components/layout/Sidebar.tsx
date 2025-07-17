@@ -38,7 +38,7 @@ const Navigation = () => {
   const router = useRouter();
   const pathname = usePathname();
   const navigationItems = [
-    { id: 'team-management', label: 'Team Management', icon: <Building />, path: '/team-management' },
+    { id: 'dashboard', label: 'Dashboard', icon: <Building />, path: '/dashboard' },
     { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
     { id: 'player-stats', label: 'Player Stats', icon: <BarChart />, path: '/player-stats' },
     { id: 'draft-suggestions', label: 'Draft Suggestions', icon: <Target />, path: '/draft-suggestions' },
@@ -119,7 +119,7 @@ const QuickLinks = () => {
       id: 'league-page',
       label: 'League Page',
       icon: <Trophy />, 
-      url: `https://dotabuff.com/leagues/${activeTeam.leagueId}`
+      url: `https://dotabuff.com/esports/leagues/${activeTeam.leagueId}`
     },
   ];
 
@@ -149,10 +149,35 @@ const QuickLinks = () => {
  * Theme toggle switch component
  */
 const ThemeSwitch = ({ open } : { open: boolean }) => {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  // Only render after client-side mount to prevent hydration mismatch
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show loading state until mounted
+  if (!mounted) {
+    return (
+      <SidebarMenuItem>
+        { open ? (
+          <div className="flex items-center space-x-2 transition-all duration-200">
+            <Sun className="w-5 h-5" />
+            <div className="w-8 h-4 rounded-full animate-pulse" />
+            <Moon className="w-5 h-5" />
+          </div>
+        ) : (
+          <SidebarMenuButton tooltip="Loading theme...">
+            <div className="w-5 h-5 rounded animate-pulse" />
+          </SidebarMenuButton>
+        )}
+      </SidebarMenuItem>
+    );
+  }
 
   const handleThemeChange = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+    setTheme(resolvedTheme === "light" ? "dark" : "light");
   }
 
   return (
@@ -160,7 +185,7 @@ const ThemeSwitch = ({ open } : { open: boolean }) => {
       { open ? (
         <div className="flex items-center space-x-2 transition-all duration-200">
           <Sun className="w-5 h-5" />
-          <Switch id="theme" checked={theme === "dark"} onCheckedChange={handleThemeChange} />
+          <Switch id="theme" checked={resolvedTheme === "dark"} onCheckedChange={handleThemeChange} />
           <Moon className="w-5 h-5" />
         </div>
       ) : (
@@ -168,7 +193,7 @@ const ThemeSwitch = ({ open } : { open: boolean }) => {
           onClick={handleThemeChange}
           tooltip="Toggle theme"
         >
-          { theme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" /> }
+          { resolvedTheme === "light" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" /> }
         </SidebarMenuButton>
       )}
     </SidebarMenuItem>
