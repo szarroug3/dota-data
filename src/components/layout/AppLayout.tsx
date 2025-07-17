@@ -11,7 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <ErrorBoundary>
       <AppSidebar />
       <SidebarInset className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 gap-6">
           {children}
         </div>
       </SidebarInset>

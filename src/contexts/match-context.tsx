@@ -120,6 +120,68 @@ function useMatchFiltering(matches: Match[], filters: MatchFilters, hiddenMatchI
   }, [matches, filters, hiddenMatchIds]);
 }
 
+function buildMatchDetails(selectedMatch: Match): MatchDetails {
+  return {
+    ...selectedMatch,
+    radiantTeam: selectedMatch.teamSide === 'radiant' ? 'Active Team' : selectedMatch.opponent,
+    direTeam: selectedMatch.teamSide === 'dire' ? 'Active Team' : selectedMatch.opponent,
+    radiantScore: selectedMatch.teamSide === 'radiant' ? (selectedMatch.result === 'win' ? 1 : 0) : (selectedMatch.result === 'win' ? 0 : 1),
+    direScore: selectedMatch.teamSide === 'dire' ? (selectedMatch.result === 'win' ? 1 : 0) : (selectedMatch.result === 'win' ? 0 : 1),
+    gameMode: 'Captains Mode',
+    lobbyType: 'Tournament',
+    radiantPlayers: selectedMatch.players
+      .filter((_, index) => index < 5)
+      .map((player, index) => ({
+        playerId: player.id,
+        playerName: player.name,
+        heroId: selectedMatch.heroes[index] || '',
+        heroName: selectedMatch.heroes[index] || 'Unknown Hero',
+        level: 25,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+        lastHits: 0,
+        denies: 0,
+        netWorth: 0,
+        items: [],
+        role: player.role || 'Unknown'
+      })),
+    direPlayers: selectedMatch.players
+      .filter((_, index) => index >= 5)
+      .map((player, index) => ({
+        playerId: player.id,
+        playerName: player.name,
+        heroId: selectedMatch.heroes[index + 5] || '',
+        heroName: selectedMatch.heroes[index + 5] || 'Unknown Hero',
+        level: 25,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+        lastHits: 0,
+        denies: 0,
+        netWorth: 0,
+        items: [],
+        role: player.role || 'Unknown'
+      })),
+    radiantPicks: selectedMatch.heroes.slice(0, 5),
+    radiantBans: [],
+    direPicks: selectedMatch.heroes.slice(5, 10),
+    direBans: [],
+    events: [],
+    analysis: {
+      keyMoments: [],
+      teamFights: [],
+      objectives: [],
+      performance: {
+        radiantAdvantage: [],
+        direAdvantage: [],
+        goldGraph: [],
+        xpGraph: []
+      }
+    }
+  };
+}
+
 function useMatchActions(state: ReturnType<typeof useMatchState>) {
   // Set filters
   const setFilters = useCallback((filters: MatchFilters) => {
@@ -129,7 +191,12 @@ function useMatchActions(state: ReturnType<typeof useMatchState>) {
   // Select match
   const selectMatch = useCallback((matchId: string) => {
     state.setSelectedMatchId(matchId);
-    // Details will be loaded by effect or orchestrator
+    const selectedMatch = state.matches.find(m => m.id === matchId);
+    if (selectedMatch) {
+      state.setSelectedMatch(buildMatchDetails(selectedMatch));
+    } else {
+      state.setSelectedMatch(null);
+    }
   }, [state]);
 
   // Hide/show match
@@ -152,10 +219,8 @@ function useMatchActions(state: ReturnType<typeof useMatchState>) {
     state.setHeroStatsError(null);
   }, [state]);
 
-  // Refresh actions (to be orchestrated by coordinator or data fetching context)
+  // Refresh actions
   const refreshMatches = useCallback(async () => {
-    // Orchestrator should trigger data fetching and update state.setMatches
-    // Here, just set loading state for UI
     state.setIsLoadingMatches(true);
     try {
       // No-op

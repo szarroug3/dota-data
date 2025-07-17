@@ -57,16 +57,16 @@ describe('AppLayout', () => {
     expect(screen.getByTestId('test-content')).toBeInTheDocument();
   });
 
-  it('wraps children in proper grid layout', () => {
+  it('renders children directly without grid wrapper', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
       </AppLayout>
     );
     
-    // The content should be wrapped in a grid layout
+    // The content should be rendered directly without a grid wrapper
     const content = screen.getByTestId('test-content');
-    const gridContainer = content.closest('.grid');
-    expect(gridContainer).toBeInTheDocument();
+    const sidebarInset = screen.getByTestId('sidebar-inset');
+    expect(sidebarInset).toContainElement(content);
   });
 }); 

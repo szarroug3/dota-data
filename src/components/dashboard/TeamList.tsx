@@ -51,7 +51,7 @@ export const TeamList: React.FC<TeamListProps> = ({
           Manage your tracked teams and view their performance
         </CardDescription>
       </CardHeader>
-      <CardContent className="max-h-[calc(100vh-18rem)] min-h-[139px] overflow-y-auto px-4">
+      <CardContent className="max-h-[calc(100vh-34rem)] min-h-[139px] overflow-y-auto px-4">
         <div>
           {teamDataList.map((teamData) => (
             <TeamCard

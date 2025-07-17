@@ -130,8 +130,8 @@ function useAddTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((pr
       const [teamResult, leagueResult] = await Promise.all([
         fetchTeamData(teamId), fetchLeagueData(leagueId)
       ]);
-      if ('error' in teamResult) throw new Error(`Failed to fetch team data: ${teamResult.error}`);
-      if ('error' in leagueResult) throw new Error(`Failed to fetch league data: ${leagueResult.error}`);
+      if ('error' in teamResult) throw new Error('Failed to fetch team data');
+      if ('error' in leagueResult) throw new Error('Failed to fetch league data');
       const finalTeamData = processTeamData(teamId, leagueId, teamResult.name, leagueResult.name, teamResult);
       const finalTeamList = updatedTeamList.map(td => td.team.id === teamId && td.team.leagueId === leagueId ? finalTeamData : td);
       setTeamList(finalTeamList);
@@ -207,8 +207,8 @@ function useRefreshTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | 
       const [teamResult, leagueResult] = await Promise.all([
         fetchTeamData(teamId, true), fetchLeagueData(leagueId, true)
       ]);
-      if ('error' in teamResult) throw new Error(`Failed to fetch team data: ${teamResult.error}`);
-      if ('error' in leagueResult) throw new Error(`Failed to fetch league data: ${leagueResult.error}`);
+      if ('error' in teamResult) throw new Error('Failed to fetch team data');
+      if ('error' in leagueResult) throw new Error('Failed to fetch league data');
       const finalTeamData = processTeamData(teamId, leagueId, teamResult.name, leagueResult.name, teamResult);
       
       // Update the team in place

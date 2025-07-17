@@ -99,7 +99,7 @@ export interface TeamManagementPreferences {
  * Match history preferences
  */
 export interface MatchHistoryPreferences {
-  defaultView: 'list' | 'grid' | 'timeline';
+  defaultView: 'list' | 'card' | 'grid';
   showHiddenMatches: boolean;
   defaultFilters: {
     dateRange: number; // days
