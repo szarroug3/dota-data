@@ -9,6 +9,7 @@ import { MatchListView, MatchListViewMode } from './MatchListView';
 interface MatchesListProps {
   matches: Match[];
   onHideMatch: (matchId: string) => void;
+  onRefreshMatch: (matchId: string) => void;
   viewMode: MatchListViewMode;
   setViewMode: (mode: MatchListViewMode) => void;
   selectedMatchId?: string | null;
@@ -20,6 +21,7 @@ interface MatchesListProps {
 const MatchesList: React.FC<MatchesListProps> = ({ 
   matches, 
   onHideMatch, 
+  onRefreshMatch,
   viewMode, 
   setViewMode,
   selectedMatchId,
@@ -28,16 +30,16 @@ const MatchesList: React.FC<MatchesListProps> = ({
   onShowHiddenMatches
 }) => (
   <div className="bg-card dark:bg-card rounded-lg shadow-md flex flex-col max-h-[calc(100vh-14rem)]">
-    <div className="p-6 flex items-center justify-between flex-shrink-0">
-      <div>
-        <h3 className="text-lg font-semibold text-foreground dark:text-foreground">
+    <div className="p-6 flex items-center justify-between flex-shrink-0 min-w-0">
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
           Match History
         </h3>
-        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
           {matches.length} matches found
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {hiddenMatchesCount > 0 && onShowHiddenMatches && (
           <Button
             variant="outline"
@@ -81,6 +83,7 @@ const MatchesList: React.FC<MatchesListProps> = ({
         selectedMatchId={selectedMatchId || null}
         onSelectMatch={onSelectMatch || (() => {})}
         onHideMatch={onHideMatch}
+        onRefreshMatch={onRefreshMatch}
         viewMode={viewMode}
       />
     </div>

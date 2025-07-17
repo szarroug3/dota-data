@@ -42,6 +42,7 @@ export interface Match {
   date: string;
   duration: number;
   teamSide: 'radiant' | 'dire';
+  pickOrder: 'first' | 'second';
   players: Player[];
   heroes: string[];
 }

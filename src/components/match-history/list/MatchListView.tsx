@@ -13,6 +13,7 @@ interface MatchListViewProps {
   selectedMatchId: string | null;
   onSelectMatch: (matchId: string) => void;
   onHideMatch: (matchId: string) => void;
+  onRefreshMatch: (matchId: string) => void;
   viewMode: MatchListViewMode;
   className?: string;
 }
@@ -22,6 +23,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   selectedMatchId,
   onSelectMatch,
   onHideMatch,
+  onRefreshMatch,
   viewMode,
   className = '',
 }) => {
@@ -32,6 +34,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         selectedMatchId={selectedMatchId}
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
+        onRefreshMatch={onRefreshMatch}
         className={className}
       />
     );
@@ -43,6 +46,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         selectedMatchId={selectedMatchId}
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
+        onRefreshMatch={onRefreshMatch}
         className={className}
       />
     );

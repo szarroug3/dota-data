@@ -120,7 +120,7 @@ jest.mock('@/contexts/team-context', () => ({
         team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
         league: { id: 'league1', name: 'Test League' },
         matches: [
-          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', players: [], heroes: [] }
+          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
         ],
         players: [],
         summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
@@ -145,7 +145,7 @@ jest.mock('@/contexts/team-context', () => ({
 jest.mock('@/contexts/match-context', () => ({
   useMatchContext: () => ({
     matches: [
-      { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', players: [], heroes: [] }
+      { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
     ],
     filteredMatches: [],
     selectedMatchId: null,
@@ -179,12 +179,10 @@ jest.mock('@/hooks/useViewMode', () => {
   return () => {
     const initial = (() => {
       let viewMode = 'list';
-      try {
-        const prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
-        if (prefs.matchHistory && prefs.matchHistory.defaultView) {
-          viewMode = prefs.matchHistory.defaultView;
-        }
-      } catch (e) {}
+      const prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
+      if (prefs.matchHistory && prefs.matchHistory.defaultView) {
+        viewMode = prefs.matchHistory.defaultView;
+      }
       return viewMode;
     })();
     const [viewMode, setViewModeState] = React.useState(initial);
@@ -192,9 +190,7 @@ jest.mock('@/hooks/useViewMode', () => {
       setViewModeState(mode);
       // Simulate updating localStorage like the real hook
       let prefs: any = {};
-      try {
-        prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
-      } catch (e) {}
+      prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
       if (!prefs.matchHistory) prefs.matchHistory = {};
       prefs.matchHistory.defaultView = mode;
       localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(prefs));

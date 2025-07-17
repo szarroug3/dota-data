@@ -23,7 +23,8 @@ const mockFetchTeamData = jest.fn().mockResolvedValue({
       duration: 2100,
       opponentName: 'Opponent Team',
       leagueId: '16435',
-      startTime: 1725926427
+      startTime: 1725926427,
+      pickOrder: 'first'
     }
   ]
 });

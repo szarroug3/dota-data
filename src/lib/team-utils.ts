@@ -95,6 +95,7 @@ export function convertToMatch(
     date: new Date(matchSummary.startTime * 1000).toISOString(),
     duration: matchSummary.duration,
     teamSide,
+    pickOrder: 'first', // Default value, will be updated with detailed data
     players: teamPlayers.map(player => convertOpenDotaPlayerToPlayer(player, teamId)),
     heroes: teamPlayers.map(player => player.hero_id.toString())
   };

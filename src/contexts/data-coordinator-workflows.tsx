@@ -18,9 +18,9 @@ import type { Match } from '@/types/contexts/match-context-value';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 import type {
-  ErrorState,
-  OperationState,
-  OperationType
+    ErrorState,
+    OperationState,
+    OperationType
 } from './data-coordinator-types';
 
 // ============================================================================
@@ -153,6 +153,7 @@ export function useTeamAdditionWorkflow(
                 date: new Date(matchData.start_time * 1000).toISOString(),
                 duration: matchData.duration,
                 teamSide: 'radiant' as const, // Default, will be updated with detailed data
+                pickOrder: 'first' as const, // Default, will be updated with detailed data
                 players: [], // Will be populated with detailed data
                 heroes: [] // Will be populated with detailed data
               };

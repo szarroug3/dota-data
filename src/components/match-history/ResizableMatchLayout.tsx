@@ -21,6 +21,7 @@ interface ResizableMatchLayoutProps {
   // Match list
   visibleMatches: Match[];
   onHideMatch: (matchId: string) => void;
+  onRefreshMatch: (matchId: string) => void;
   viewMode: MatchListViewMode;
   setViewMode: (mode: MatchListViewMode) => void;
   selectedMatchId?: string | null;
@@ -40,6 +41,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   activeTeamMatches,
   visibleMatches,
   onHideMatch,
+  onRefreshMatch,
   viewMode,
   setViewMode,
   selectedMatchId,
@@ -65,11 +67,12 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       <div className="flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Match List Panel */}
-          <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
+          <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
             <div className="h-full p-4 pt-2">
               <MatchesList
                 matches={visibleMatches}
                 onHideMatch={onHideMatch}
+                onRefreshMatch={onRefreshMatch}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
                 selectedMatchId={selectedMatchId}
@@ -84,7 +87,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
           <ResizableHandle withHandle />
           
           {/* Match Details Panel */}
-          <ResizablePanel defaultSize={50} minSize={25} maxSize={75}>
+          <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
             <div className="h-full p-4 pt-2">
               {selectedMatch ? (
                 <MatchDetailsPanel

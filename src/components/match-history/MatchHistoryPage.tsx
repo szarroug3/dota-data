@@ -80,7 +80,8 @@ const renderMatchHistoryContent = (
   selectedMatch: MatchDetails | null,
   selectMatch: (matchId: string) => void,
   matchDetailsViewMode: MatchDetailsPanelMode,
-  setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void
+  setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
+  handleRefreshMatch: (id: string) => void
 ) => {
   const emptyState = getMatchHistoryEmptyState(teamDataList, activeTeam);
   if (emptyState) return emptyState;
@@ -98,6 +99,7 @@ const renderMatchHistoryContent = (
           activeTeamMatches={activeTeamMatches}
           visibleMatches={visibleMatches}
           onHideMatch={handleHideMatch}
+          onRefreshMatch={handleRefreshMatch}
           viewMode={viewMode}
           setViewMode={setViewMode}
           selectedMatchId={selectedMatch?.id || null}
@@ -162,10 +164,11 @@ export const MatchHistoryPage: React.FC = () => {
   // State for match details view mode
   const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('summary');
 
-  // Handle match selection using context
-  const handleSelectMatch = useCallback((matchId: string) => {
-    selectMatch(matchId);
-  }, [selectMatch]);
+  // Refresh a match (stub for now)
+  const handleRefreshMatch = (id: string) => {
+    // TODO: Implement actual refresh logic
+    console.log('Refresh match', id);
+  };
 
   // Filter matches by active team
   const activeTeamMatches = useMemo(() => {
@@ -225,9 +228,10 @@ export const MatchHistoryPage: React.FC = () => {
                 viewMode,
                 setViewMode,
                 selectedMatch,
-                handleSelectMatch,
+                selectMatch,
                 matchDetailsViewMode,
-                setMatchDetailsViewMode
+                setMatchDetailsViewMode,
+                handleRefreshMatch
               )}
             </Suspense>
           </div>

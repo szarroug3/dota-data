@@ -127,6 +127,7 @@ const mockMatch: Match = {
   duration: 1800,
   result: 'win',
   teamSide: 'radiant',
+  pickOrder: 'first',
   players: [],
   heroes: ['hero1', 'hero2']
 };
@@ -173,6 +174,7 @@ const defaultProps = {
   activeTeamMatches: [mockMatch],
   visibleMatches: [mockMatch],
   onHideMatch: jest.fn(),
+  onRefreshMatch: jest.fn(),
   viewMode: 'list' as MatchListViewMode,
   setViewMode: jest.fn(),
   selectedMatchId: null,

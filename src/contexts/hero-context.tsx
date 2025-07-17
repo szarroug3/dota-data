@@ -104,7 +104,7 @@ const convertOpenDotaHeroToHero = (openDotaHero: OpenDotaHero): Hero => {
     attackType,
     roles: openDotaHero.roles,
     complexity: 2, // Default complexity since OpenDotaHero doesn't have this
-    imageUrl: `/heroes/${openDotaHero.name}.png`
+    imageUrl: `https://dota2protracker.com/static/heroes/${openDotaHero.name}_vert.jpg`
   };
 };
 

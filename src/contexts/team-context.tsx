@@ -37,6 +37,7 @@ const processTeamData = (teamId: string, leagueId: string, teamName: string, lea
     date: new Date(match.startTime * 1000).toISOString(),
     duration: match.duration,
     teamSide: 'radiant', // Default value, will be updated when detailed match data is fetched
+    pickOrder: 'first', // Default value, will be updated when detailed match data is fetched
     players: [], // Will be populated when detailed match data is fetched
     heroes: [] // Will be populated when detailed match data is fetched
   }));
