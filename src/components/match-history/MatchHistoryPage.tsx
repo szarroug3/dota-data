@@ -14,11 +14,11 @@ import { filterMatches } from '@/utils/match-filter';
 
 import { EmptyState } from './common/EmptyState';
 import { ErrorState } from './common/ErrorState';
-import { MatchDetailsPanel, type MatchDetailsPanelMode } from './details/MatchDetailsPanel';
-import { MatchFilters, type MatchFilters as MatchFiltersType } from './filters/MatchFilters';
+import { type MatchDetailsPanelMode } from './details/MatchDetailsPanel';
+import { type MatchFilters as MatchFiltersType } from './filters/MatchFilters';
 import { HiddenMatchesModal } from './list/HiddenMatchesModal';
-import MatchesList from './list/MatchesList';
 import { MatchListViewMode } from './list/MatchListView';
+import { ResizableMatchLayout } from './ResizableMatchLayout';
 
 // ============================================================================
 // TYPES
@@ -91,14 +91,12 @@ const renderMatchHistoryContent = (
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        <MatchFilters
+      <div className="h-full">
+        <ResizableMatchLayout
           filters={filters}
           onFiltersChange={setFilters}
-          matches={activeTeamMatches}
-        />
-        <MatchesList
-          matches={visibleMatches}
+          activeTeamMatches={activeTeamMatches}
+          visibleMatches={visibleMatches}
           onHideMatch={handleHideMatch}
           viewMode={viewMode}
           setViewMode={setViewMode}
@@ -106,21 +104,10 @@ const renderMatchHistoryContent = (
           onSelectMatch={selectMatch}
           hiddenMatchesCount={hiddenMatches.length}
           onShowHiddenMatches={() => setShowHiddenModal(true)}
+          selectedMatch={selectedMatch}
+          matchDetailsViewMode={matchDetailsViewMode}
+          setMatchDetailsViewMode={setMatchDetailsViewMode}
         />
-        {selectedMatch ? (
-          <MatchDetailsPanel
-            match={selectedMatch}
-            viewMode={matchDetailsViewMode}
-            onViewModeChange={setMatchDetailsViewMode}
-          />
-        ) : (
-          <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground">
-            <div className="text-center">
-              <div className="text-lg font-medium mb-2">No Match Selected</div>
-              <div className="text-sm">Select a match from the list to view details</div>
-            </div>
-          </div>
-        )}
       </div>
       {showHiddenModal && (
         <HiddenMatchesModal

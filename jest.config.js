@@ -84,7 +84,7 @@ module.exports = {
         ]
       },
       transformIgnorePatterns: [
-        'node_modules/(?!(@upstash/redis|uncrypto|cheerio|domhandler)/)'
+        'node_modules/(?!(@upstash/redis|uncrypto|cheerio|domhandler|react-resizable-panels)/)'
       ],
       setupFilesAfterEnv: [
         '<rootDir>/jest.setup.js'

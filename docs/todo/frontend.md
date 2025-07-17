@@ -302,9 +302,20 @@ UI Components (Presentation)
 
 ### ✅ Recently Completed
 - Refactored MatchDetailsPanel to use a single Card container with a view mode selector at the top, and updated MatchDetailsPanelSummary to remove nested cards and use a simple layout.
+- Fixed linter warnings in MatchHistoryPage.tsx and match-context.tsx by refactoring complex functions into smaller helpers.
 
 ### 🔄 In Progress / Up Next
-- Fix up the Match Details card: improve layout, add missing data, and ensure all view modes (summary, minimal, detailed, analytics) are visually consistent and accessible.
+- **Resizable Layout Implementation**: Replace the fixed grid layout with shadcn's Resizable component
+  - Two panels: Match List (left) and Match Details (right)
+  - Users can drag to resize panels to their preference
+  - Adaptive content based on available space:
+    - **Wide List Panel**: Show full match info (opponent, date, duration, result, team side)
+    - **Medium List Panel**: Show condensed info (opponent, result, duration)
+    - **Narrow List Panel**: Show minimal info (opponent, result icon)
+  - **Wide Details Panel**: Show comprehensive match details with all sections
+  - **Narrow Details Panel**: Show essential info only (match header, score, key stats)
+  - Responsive breakpoints for mobile (stacked layout)
+  - Smooth transitions and proper accessibility
 
 ### **🔄 In Progress**
 - **Match History UI Redesign Phase 2**: Data processing and enhanced match details implementation

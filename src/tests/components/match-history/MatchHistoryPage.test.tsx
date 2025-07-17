@@ -60,6 +60,152 @@ jest.mock('@/components/match-history/list/HiddenMatchesModal', () => ({
   HiddenMatchesModal: () => <div data-testid="hidden-matches-modal">Hidden Modal</div>
 }));
 
+// Mock the ResizableMatchLayout component to avoid the react-resizable-panels issue
+jest.mock('@/components/match-history/ResizableMatchLayout', () => ({
+  ResizableMatchLayout: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
+    <div data-testid="resizable-match-layout">
+      <div data-testid="current-view-mode">{viewMode}</div>
+      <button 
+        data-testid="set-list-view" 
+        onClick={() => setViewMode('list')}
+      >
+        List View
+      </button>
+      <button 
+        data-testid="set-card-view" 
+        onClick={() => setViewMode('card')}
+      >
+        Card View
+      </button>
+      <button 
+        data-testid="set-grid-view" 
+        onClick={() => setViewMode('grid')}
+      >
+        Grid View
+      </button>
+    </div>
+  ),
+}));
+
+// Mock the hero context to prevent API calls during tests
+jest.mock('@/contexts/hero-context', () => ({
+  useHeroContext: () => ({
+    heroes: [],
+    isLoading: false,
+    error: null,
+    refreshHeroes: jest.fn(),
+    clearError: jest.fn(),
+  }),
+  HeroProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock the hero data fetching context
+jest.mock('@/contexts/hero-data-fetching-context', () => ({
+  useHeroDataFetching: () => ({
+    heroes: new Map(),
+    isLoading: false,
+    errors: new Map(),
+    fetchHero: jest.fn(),
+    refreshHero: jest.fn(),
+    clearError: jest.fn(),
+  }),
+  HeroDataFetchingProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock the team context to provide some teams for testing
+jest.mock('@/contexts/team-context', () => ({
+  useTeamContext: () => ({
+    teamDataList: [
+      {
+        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
+        league: { id: 'league1', name: 'Test League' },
+        matches: [
+          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', players: [], heroes: [] }
+        ],
+        players: [],
+        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
+      }
+    ],
+    activeTeam: { teamId: 'team1', leagueId: 'league1' },
+    isLoading: false,
+    error: null,
+    addTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    setActiveTeam: jest.fn(),
+    refreshTeam: jest.fn(),
+    getTeamMatchesForLeague: jest.fn(),
+    getTeamPlayersForLeague: jest.fn(),
+    teamExists: jest.fn(),
+    clearError: jest.fn(),
+  }),
+  TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock the match context to provide matches
+jest.mock('@/contexts/match-context', () => ({
+  useMatchContext: () => ({
+    matches: [
+      { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', players: [], heroes: [] }
+    ],
+    filteredMatches: [],
+    selectedMatchId: null,
+    selectedMatch: null,
+    hiddenMatchIds: [],
+    filters: { dateRange: { start: null, end: null }, result: 'all', opponent: '', heroes: [], players: [], duration: { min: null, max: null } },
+    heroStatsGrid: {},
+    preferences: { defaultView: 'list', showHiddenMatches: false, autoRefresh: false, refreshInterval: 30, showAdvancedStats: false },
+    isLoadingMatches: false,
+    isLoadingMatchDetails: false,
+    isLoadingHeroStats: false,
+    matchesError: null,
+    matchDetailsError: null,
+    heroStatsError: null,
+    setFilters: jest.fn(),
+    selectMatch: jest.fn(),
+    hideMatch: jest.fn(),
+    showMatch: jest.fn(),
+    addMatches: jest.fn(),
+    refreshMatches: jest.fn(),
+    refreshMatchDetails: jest.fn(),
+    refreshHeroStats: jest.fn(),
+    clearErrors: jest.fn(),
+    updatePreferences: jest.fn(),
+  }),
+  MatchProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock useViewMode to simulate localStorage preference and allow state updates
+jest.mock('@/hooks/useViewMode', () => {
+  return () => {
+    const initial = (() => {
+      let viewMode = 'list';
+      try {
+        const prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
+        if (prefs.matchHistory && prefs.matchHistory.defaultView) {
+          viewMode = prefs.matchHistory.defaultView;
+        }
+      } catch (e) {}
+      return viewMode;
+    })();
+    const [viewMode, setViewModeState] = React.useState(initial);
+    const setViewMode = (mode: string) => {
+      setViewModeState(mode);
+      // Simulate updating localStorage like the real hook
+      let prefs: any = {};
+      try {
+        prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
+      } catch (e) {}
+      if (!prefs.matchHistory) prefs.matchHistory = {};
+      prefs.matchHistory.defaultView = mode;
+      localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(prefs));
+    };
+    return {
+      viewMode,
+      setViewMode,
+    };
+  };
+});
+
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <ConfigProvider>
