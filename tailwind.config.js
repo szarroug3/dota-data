@@ -3,6 +3,28 @@ module.exports = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      screens: {
+        // Add arbitrary breakpoint support
+        '50px': '50px',
+        '100px': '100px',
+        '150px': '150px',
+        '200px': '200px',
+        '250px': '250px',
+        '300px': '300px',
+        '350px': '350px',
+        '500px': '500px',
+      },
+      containerQueries: {
+        // Add container query breakpoints
+        '50px': '50px',
+        '100px': '100px',
+        '150px': '150px',
+        '200px': '200px',
+        '250px': '250px',
+        '300px': '300px',
+        '350px': '350px',
+        '500px': '500px',
+      },
       colors: {
         // Semantic color tokens for Dota Scout Assistant theme
         primary: {

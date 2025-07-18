@@ -8,7 +8,7 @@ import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
 
 import { DateDuration } from './DateDuration';
-import { HeroAvatars } from './HeroAvatars';
+import { HeroAvatars } from '../common/HeroAvatars';
 import { ResponsiveBadge } from './ResponsiveBadge';
 
 interface MatchListViewCardProps {
