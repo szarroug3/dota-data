@@ -231,7 +231,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
       }}
       aria-label={`Select match vs ${match.opponent}`}
     >
-      <CardContent className="@container">
+      <CardContent>
         <div className="flex flex-col gap-2">
           {/* Row 1: Opponent name + date/duration on left, avatars on right */}
           <div className="flex items-start justify-between gap-2 min-w-0">

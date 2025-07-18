@@ -18,6 +18,42 @@ interface MatchesListProps {
   onShowHiddenMatches?: () => void;
 }
 
+interface MatchListLayoutButtonsProps {
+  viewMode: MatchListViewMode;
+  setViewMode: (mode: MatchListViewMode) => void;
+}
+
+const MatchListLayoutButtons: React.FC<MatchListLayoutButtonsProps> = ({ 
+  viewMode, 
+  setViewMode,
+}) => (
+  <div className="@[160px]:flex hidden">
+    <button
+      type="button"
+      className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
+      aria-label="List view"
+      onClick={() => setViewMode('list')}
+    >
+      <List className="w-5 h-5" />
+    </button>
+    <button
+      type="button"
+      className={`p-2 rounded-md ${viewMode === 'card' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
+      aria-label="Card view"
+      onClick={() => setViewMode('card')}
+    >
+      <SquareStack className="w-5 h-5" />
+    </button>
+    <button
+      type="button"
+      className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
+      aria-label="Grid view"
+      onClick={() => setViewMode('grid')}
+    >
+      <LayoutGrid className="w-5 h-5" />
+    </button>
+  </div>
+)
 const MatchesList: React.FC<MatchesListProps> = ({ 
   matches, 
   onHideMatch, 
@@ -51,30 +87,10 @@ const MatchesList: React.FC<MatchesListProps> = ({
             <span>{hiddenMatchesCount}</span>
           </Button>
         )}
-        <button
-          type="button"
-          className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-          aria-label="List view"
-          onClick={() => setViewMode('list')}
-        >
-          <List className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          className={`p-2 rounded-md ${viewMode === 'card' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-          aria-label="Card view"
-          onClick={() => setViewMode('card')}
-        >
-          <SquareStack className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-          aria-label="Grid view"
-          onClick={() => setViewMode('grid')}
-        >
-          <LayoutGrid className="w-5 h-5" />
-        </button>
+        <MatchListLayoutButtons
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
       </div>
     </div>
     <div className="flex-1 overflow-y-auto min-h-0 px-4 py-2">

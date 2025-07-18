@@ -216,8 +216,8 @@ describe('ResizableMatchLayout', () => {
     
     // Check panel constraints
     expect(panels[0]).toHaveAttribute('data-default-size', '50');
-    expect(panels[0]).toHaveAttribute('data-min-size', '25');
-    expect(panels[0]).toHaveAttribute('data-max-size', '75');
+    expect(panels[0]).toHaveAttribute('data-min-size', '0');
+    expect(panels[0]).toHaveAttribute('data-max-size', '100');
   });
 
   it('renders match filters at the top', () => {

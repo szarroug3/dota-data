@@ -111,9 +111,14 @@ export const HeroAvatars: React.FC<HeroAvatarsProps> = ({
         )}
       </div>
       
-      {/* Very small container: hide heroes completely */}
-      <div className={`@[${breakpoints.hideAll}]:hidden`}>
-        {/* No heroes shown on very small containers */}
+      {/* Default fallback: show at least 1 hero when container is very small */}
+      <div className={`@[${breakpoints.showOne}]:hidden flex`}>
+        {heroes.slice(0, 1).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+        {totalHeroes > 1 && (
+          <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
+        )}
       </div>
     </div>
   );

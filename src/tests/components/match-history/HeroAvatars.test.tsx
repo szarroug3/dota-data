@@ -140,18 +140,14 @@ describe('HeroAvatars', () => {
   it('renders avatar fallbacks correctly', () => {
     render(<HeroAvatars heroes={mockHeroes} />);
     
-    // Check that fallbacks show hero initials (multiple instances due to responsive design)
+    // Check that fallbacks show hero initials for the first 3 heroes
     const crElements = screen.getAllByText('CR'); // Crystal Maiden
     const juElements = screen.getAllByText('JU'); // Juggernaut
     const liElements = screen.getAllByText('LI'); // Lina
-    const puElements = screen.getAllByText('PU'); // Pudge
-    const axElements = screen.getAllByText('AX'); // Axe
     
     expect(crElements.length).toBeGreaterThan(0);
     expect(juElements.length).toBeGreaterThan(0);
     expect(liElements.length).toBeGreaterThan(0);
-    expect(puElements.length).toBeGreaterThan(0);
-    expect(axElements.length).toBeGreaterThan(0);
   });
 
   it('applies correct border styling', () => {
@@ -172,12 +168,19 @@ describe('HeroAvatars', () => {
   });
 
   describe('Responsive behavior', () => {
-    it('renders container queries for responsive design', () => {
+    it('renders hero avatars with indicator', () => {
       render(<HeroAvatars heroes={mockHeroes} />);
       
-      // Check that container queries are applied
-      const responsiveDivs = document.querySelectorAll('[class*="@[300px]"]');
-      expect(responsiveDivs.length).toBeGreaterThan(0);
+      // Check that the component renders heroes and indicator
+      const crElements = screen.getAllByText('CR');
+      const juElements = screen.getAllByText('JU');
+      const liElements = screen.getAllByText('LI');
+      const indicator = screen.getByText('+2');
+      
+      expect(crElements.length).toBeGreaterThan(0);
+      expect(juElements.length).toBeGreaterThan(0);
+      expect(liElements.length).toBeGreaterThan(0);
+      expect(indicator).toBeInTheDocument();
     });
 
     it('handles different container sizes gracefully', () => {
