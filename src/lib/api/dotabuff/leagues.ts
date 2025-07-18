@@ -2,7 +2,8 @@ import path from 'path';
 
 import * as cheerio from 'cheerio';
 
-import { request, requestWithRetry } from '@/lib/utils/request';
+import { request } from '@/lib/utils/request';
+import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
 import { DotabuffLeague } from '@/types/external-apis';
 
 /**
@@ -38,8 +39,7 @@ export async function fetchDotabuffLeague(leagueId: string, force = false): Prom
 
 async function fetchLeagueFromDotabuff(leagueId: string): Promise<string> {
   const url = `https://www.dotabuff.com/esports/leagues/${leagueId}`;
-  const response = await requestWithRetry('GET', url);
-  return response.text();
+  return await scrapeHtmlFromUrl(url, '.header-content-title');
 }
 
 function parseDotabuffLeagueHtml(html: string, leagueId: string): DotabuffLeague {

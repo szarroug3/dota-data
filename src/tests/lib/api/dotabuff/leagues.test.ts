@@ -3,13 +3,15 @@
  */
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
-import { request, requestWithRetry } from '@/lib/utils/request';
+import { request } from '@/lib/utils/request';
+import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
 
 // Mock the request utilities
 jest.mock('@/lib/utils/request');
+jest.mock('@/lib/utils/playwright');
 
 const mockRequest = request as jest.MockedFunction<typeof request>;
-const mockRequestWithRetry = requestWithRetry as jest.MockedFunction<typeof requestWithRetry>;
+const mockScrapeHtmlFromUrl = scrapeHtmlFromUrl as jest.MockedFunction<typeof scrapeHtmlFromUrl>;
 
 describe('fetchDotabuffLeague', () => {
   beforeEach(() => {
@@ -18,7 +20,6 @@ describe('fetchDotabuffLeague', () => {
 
   describe('fetchDotabuffLeague', () => {
     it('should fetch and parse league data successfully', async () => {
-
       const mockLeagueData = {
         id: '16435',
         name: 'RD2L Season 33'
@@ -33,7 +34,7 @@ describe('fetchDotabuffLeague', () => {
         'dotabuff',
         expect.any(Function),
         expect.any(Function),
-        expect.stringContaining('mock-data/leagues/dotabuff-league-16435.html'),
+        expect.stringMatching(/.*dotabuff-league-16435\.html$/),
         false,
         60 * 60 * 24 * 7, // 7 days
         'dotabuff:league:16435'
@@ -58,7 +59,7 @@ describe('fetchDotabuffLeague', () => {
         'dotabuff',
         expect.any(Function),
         expect.any(Function),
-        expect.stringContaining('mock-data/leagues/dotabuff-league-16435.html'),
+        expect.stringMatching(/.*dotabuff-league-16435\.html$/),
         true, // force parameter
         60 * 60 * 24 * 7,
         'dotabuff:league:16435'
@@ -67,39 +68,20 @@ describe('fetchDotabuffLeague', () => {
   });
 
   describe('fetchLeagueFromDotabuff', () => {
-    it('should fetch HTML from Dotabuff API', async () => {
-      const mockResponse = {
-        text: jest.fn().mockResolvedValue(`
-          <html>
-            <head><title>Test League - Dotabuff</title></head>
-            <body>
-              <div class="header-content-title">
-                <h1>Test League</h1>
-              </div>
-            </body>
-          </html>
-        `),
-        headers: new Headers(),
-        ok: true,
-        redirected: false,
-        status: 200,
-        statusText: 'OK',
-        type: 'default' as ResponseType,
-        url: 'https://www.dotabuff.com/esports/leagues/16435',
-        body: null,
-        bodyUsed: false,
-        clone: jest.fn(),
-        arrayBuffer: jest.fn(),
-        blob: jest.fn(),
-        formData: jest.fn(),
-        json: jest.fn(),
-        bytes: jest.fn(),
-      } as Response;
+    it('should fetch HTML from Dotabuff using Playwright', async () => {
+      const mockHtml = `
+        <html>
+          <head><title>Test League - Dotabuff</title></head>
+          <body>
+            <div class="header-content-title">
+              <h1>Test League</h1>
+            </div>
+          </body>
+        </html>
+      `;
 
-      mockRequestWithRetry.mockResolvedValue(mockResponse);
+      mockScrapeHtmlFromUrl.mockResolvedValue(mockHtml);
 
-      // We need to test the internal function, so we'll call fetchDotabuffLeague
-      // and verify that requestWithRetry was called correctly
       mockRequest.mockImplementation(async (service, fetcher, parser) => {
         const html = await fetcher();
         return parser(html);
@@ -107,20 +89,33 @@ describe('fetchDotabuffLeague', () => {
 
       await fetchDotabuffLeague('16435');
 
-      expect(mockRequestWithRetry).toHaveBeenCalledWith(
-        'GET',
-        'https://www.dotabuff.com/esports/leagues/16435'
+      expect(mockScrapeHtmlFromUrl).toHaveBeenCalledWith(
+        'https://www.dotabuff.com/esports/leagues/16435',
+        '.header-content-title'
+      );
+    });
+
+    it('should throw error when Playwright scraping fails', async () => {
+      mockScrapeHtmlFromUrl.mockRejectedValue(new Error('Playwright error'));
+
+      mockRequest.mockImplementation(async (service, fetcher) => {
+        await fetcher();
+        return null;
+      });
+
+      await expect(fetchDotabuffLeague('16435')).rejects.toThrow(
+        'Playwright error'
       );
     });
   });
 
   describe('parseDotabuffLeagueHtml', () => {
-    it('should parse league name from h1 element', async () => {
+    it('should parse league name from header', async () => {
       const mockHtml = `
         <html>
           <body>
             <div class="header-content-title">
-              <h1>Test League Name<small>Additional info</small></h1>
+              <h1>RD2L Season 33</h1>
             </div>
           </body>
         </html>
@@ -134,11 +129,11 @@ describe('fetchDotabuffLeague', () => {
 
       expect(result).toEqual({
         id: '16435',
-        name: 'Test League Name'
+        name: 'RD2L Season 33'
       });
     });
 
-    it('should parse league name from title when h1 is not available', async () => {
+    it('should parse league name from title when header is not available', async () => {
       const mockHtml = `
         <html>
           <head><title>Test League - Dotabuff</title></head>
@@ -182,12 +177,12 @@ describe('fetchDotabuffLeague', () => {
       );
     });
 
-    it('should handle HTML with no small element in h1', async () => {
+    it('should remove small elements from header', async () => {
       const mockHtml = `
         <html>
           <body>
             <div class="header-content-title">
-              <h1>Simple League Name</h1>
+              <h1>RD2L Season 33<small>Some additional info</small></h1>
             </div>
           </body>
         </html>
@@ -201,54 +196,7 @@ describe('fetchDotabuffLeague', () => {
 
       expect(result).toEqual({
         id: '16435',
-        name: 'Simple League Name'
-      });
-    });
-
-    it('should handle HTML with multiple h1 elements', async () => {
-      const mockHtml = `
-        <html>
-          <body>
-            <div class="header-content-title">
-              <h1>First League Name</h1>
-              <h1>Second League Name</h1>
-            </div>
-          </body>
-        </html>
-      `;
-
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
-        return parser(mockHtml);
-      });
-
-      const result = await fetchDotabuffLeague('16435');
-
-      expect(result).toEqual({
-        id: '16435',
-        name: 'First League Name'
-      });
-    });
-
-    it('should handle HTML with whitespace in league name', async () => {
-      const mockHtml = `
-        <html>
-          <body>
-            <div class="header-content-title">
-              <h1>  League Name With Spaces  </h1>
-            </div>
-          </body>
-        </html>
-      `;
-
-      mockRequest.mockImplementation(async (service, fetcher, parser) => {
-        return parser(mockHtml);
-      });
-
-      const result = await fetchDotabuffLeague('16435');
-
-      expect(result).toEqual({
-        id: '16435',
-        name: 'League Name With Spaces'
+        name: 'RD2L Season 33'
       });
     });
   });

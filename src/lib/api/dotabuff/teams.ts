@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as cheerio from 'cheerio';
 import { Element } from 'domhandler';
 
-import { request, requestWithRetry } from '@/lib/utils/request';
+import { request } from '@/lib/utils/request';
+import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
 import { DotabuffMatchSummary, DotabuffTeam } from '@/types/external-apis';
 
 /**
@@ -37,19 +38,13 @@ export async function fetchDotabuffTeam(teamId: string, force = false): Promise<
 }
 
 /**
- * Fetch team HTML from Dotabuff with delay
+ * Fetch team HTML from Dotabuff using Playwright
  */
 async function fetchTeamFromDotabuff(teamId: string): Promise<string> {
   const url = `https://www.dotabuff.com/esports/teams/${teamId}/matches`;
   
   try {
-    const response = await requestWithRetry('GET', url);
-    
-    if (!response.ok) {
-      throw new Error(`Dotabuff API error: ${response.status} ${response.statusText}`);
-    }
-    
-    return await response.text();
+    return await scrapeHtmlFromUrl(url, 'table.table');
   } catch (err) {
     throw new Error(`Failed to fetch Dotabuff team ${teamId}: ${err}`);
   }
