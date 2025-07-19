@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as cheerio from 'cheerio';
 import { Element } from 'domhandler';
 
-import { request } from '@/lib/utils/request';
 import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
+import { request } from '@/lib/utils/request';
 import { DotabuffMatchSummary, DotabuffTeam } from '@/types/external-apis';
 
 /**

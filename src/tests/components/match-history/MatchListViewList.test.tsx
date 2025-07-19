@@ -286,9 +286,9 @@ describe('MatchListViewList', () => {
     it('renders container queries for responsive design', () => {
       render(<MatchListViewList {...defaultProps} />);
       
-      // Check that container queries are applied
-      const cardContent = screen.getByText('Test Opponent 1').closest('[class*="@container"]');
-      expect(cardContent).toBeInTheDocument();
+      // Check that container queries are applied - look for elements with container query classes
+      const matchInfo = screen.getByText('Test Opponent 1').closest('[class*="@[170px]"]');
+      expect(matchInfo).toBeInTheDocument();
     });
 
     it('handles different container sizes gracefully', () => {

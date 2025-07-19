@@ -1,5 +1,23 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+import containerQueries from '@tailwindcss/container-queries';
+
+const breakpoints = ['130px', '150px', '250px', '270px', '300px', '350px', '500px'];
+const display = ['block', 'hidden', 'flex'];
+
+const safelist = [
+  ...display, // base utilities
+  // Also include base states like "w-fit" or "text-xs" if they're dynamic
+  ...breakpoints.flatMap(bp => display.map(d => `@[${bp}]:${d}`)),
+  ...breakpoints.flatMap(bp => display.map(d => `@container @[${bp}]:${d}`)), // optional backup
+];
+// const safelist = [
+//   ...display, // base utilities like "hidden" or "block"
+//   ...breakpoints.flatMap(bp =>
+//     display.map(d => `@[${bp}]:${d}`)
+//   ),
+// ];
+
+export default {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
@@ -7,9 +25,11 @@ module.exports = {
         // Add arbitrary breakpoint support
         '50px': '50px',
         '100px': '100px',
+        '130px': '130px',
         '150px': '150px',
         '200px': '200px',
         '250px': '250px',
+        '270px': '270px',
         '300px': '300px',
         '350px': '350px',
         '500px': '500px',
@@ -18,9 +38,11 @@ module.exports = {
         // Add container query breakpoints
         '50px': '50px',
         '100px': '100px',
+        '130px': '130px',
         '150px': '150px',
         '200px': '200px',
         '250px': '250px',
+        '270px': '270px',
         '300px': '300px',
         '350px': '350px',
         '500px': '500px',
@@ -143,5 +165,6 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [containerQueries],
+  safelist: safelist,
 };

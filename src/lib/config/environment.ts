@@ -57,6 +57,7 @@ export interface EnvironmentConfig {
   D2PT_REQUEST_DELAY: number;
   
   STRATZ_API_KEY?: string;
+  STEAM_API_KEY?: string;
   
   // Vercel Deployment Configuration
   VERCEL_OIDC_TOKEN?: string;

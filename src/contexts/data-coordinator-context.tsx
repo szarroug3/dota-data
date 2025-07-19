@@ -205,10 +205,7 @@ function useDataCoordinatorActions(
     // Only fetch matches that don't already exist in the context
     const newMatches = leagueMatches.filter(match => !existingMatchIds.has(match.matchId));
     
-    console.log('Fetching new matches for team:', teamId, 'league:', leagueId, 'new matches:', newMatches.length, 'total matches:', leagueMatches.length);
-    
     if (newMatches.length === 0) {
-      console.log('No new matches to fetch');
       return;
     }
     

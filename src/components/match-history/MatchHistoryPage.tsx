@@ -167,7 +167,7 @@ export const MatchHistoryPage: React.FC = () => {
   // Refresh a match (stub for now)
   const handleRefreshMatch = (id: string) => {
     // TODO: Implement actual refresh logic
-    console.log('Refresh match', id);
+    console.log('Refreshing match', id);
   };
 
   // Filter matches by active team

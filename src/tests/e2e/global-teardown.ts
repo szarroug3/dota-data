@@ -25,9 +25,6 @@ async function globalTeardown(config: FullConfig) {
       localStorage.setItem('sidebarCollapsed', 'false');
       localStorage.setItem('preferredSite', 'dotabuff');
     });
-    
-    console.log('✅ Global teardown completed successfully');
-    
   } catch (error) {
     console.error('❌ Global teardown failed:', error);
     // Don't throw error in teardown to avoid masking test failures

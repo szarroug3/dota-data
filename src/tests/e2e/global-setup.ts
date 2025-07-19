@@ -46,9 +46,6 @@ async function globalSetup(config: FullConfig) {
       ];
       localStorage.setItem('matches', JSON.stringify(testMatches));
     });
-    
-    console.log('✅ Global setup completed successfully');
-    
   } catch (error) {
     console.error('❌ Global setup failed:', error);
     throw error;

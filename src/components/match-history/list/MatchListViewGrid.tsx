@@ -1,11 +1,10 @@
 import React from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Match } from '@/types/contexts/match-context-value';
 
 import { HideButton } from '../common/HideButton';
-
-import { ResponsiveBadge } from './ResponsiveBadge';
 
 interface MatchListViewGridProps {
   matches: Match[];
@@ -66,20 +65,18 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
               className="flex items-center gap-1 mb-1 cursor-pointer"
               onClick={() => onSelectMatch(match.id)}
             >
-              <ResponsiveBadge
-                fullText={match.result === 'win' ? 'Victory' : 'Defeat'}
-                shortText={match.result === 'win' ? 'W' : 'L'}
-                breakpoint="250px"
+              <Badge
                 variant={match.result === 'win' ? 'success' : 'default'}
                 className="text-xs"
-              />
-              <ResponsiveBadge
-                fullText={match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}
-                shortText={match.teamSide === 'radiant' ? 'R' : 'D'}
-                breakpoint="250px"
+              >
+                {match.result === 'win' ? 'Victory' : 'Defeat'}
+              </Badge>
+              <Badge
                 variant="outline"
                 className="text-xs"
-              />
+              >
+                {match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}
+              </Badge>
               <span className="text-xs text-muted-foreground">{formatDuration(match.duration)}</span>
             </div>
             <div 
@@ -87,23 +84,21 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
               onClick={() => onSelectMatch(match.id)}
             >
               {match.heroes.slice(0, 2).map((hero, idx) => (
-                <ResponsiveBadge
+                <Badge
                   key={idx}
-                  fullText={hero}
-                  shortText={hero.substring(0, 2).toUpperCase()}
-                  breakpoint="200px"
                   variant="secondary"
                   className="text-xs"
-                />
+                >
+                  {hero}
+                </Badge>
               ))}
               {match.heroes.length > 2 && (
-                <ResponsiveBadge
-                  fullText={`+${match.heroes.length - 2}`}
-                  shortText={`+${match.heroes.length - 2}`}
-                  breakpoint="200px"
+                <Badge
                   variant="secondary"
                   className="text-xs"
-                />
+                >
+                  +{match.heroes.length - 2}
+                </Badge>
               )}
             </div>
           </CardContent>

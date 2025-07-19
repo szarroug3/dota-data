@@ -152,7 +152,6 @@ const usePlayerApiFetching = (
     }
 
     const player = await response.json() as OpenDotaPlayerComprehensive;
-    console.log('Player data fetched:', player);
     handlePlayerSuccess(playerId, player);
     return player;
   }, [handlePlayerError, handlePlayerSuccess]);
@@ -162,13 +161,11 @@ const usePlayerApiFetching = (
     if (!force && playerCache.has(playerId)) {
       const cachedPlayer = playerCache.get(playerId);
       if (cachedPlayer) {
-        console.log('Returning cached player data for:', playerId);
         return cachedPlayer;
       }
     }
 
     try {
-      console.log('Fetching player data from API:', playerId);
       const url = force ? `/api/players/${playerId}?force=true` : `/api/players/${playerId}`;
       const response = await fetch(url);
       return await processPlayerResponse(response, playerId);

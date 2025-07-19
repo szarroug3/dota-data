@@ -64,10 +64,11 @@ const MatchesList: React.FC<MatchesListProps> = ({
   onSelectMatch,
   hiddenMatchesCount = 0,
   onShowHiddenMatches
-}) => (
-  <div className="bg-card dark:bg-card rounded-lg shadow-md flex flex-col max-h-[calc(100vh-14rem)]">
+}) => {
+  return (
+    <div className="bg-card dark:bg-card rounded-lg shadow-md flex flex-col max-h-[calc(100vh-14rem)]">
     <div className="p-6 flex items-center justify-between flex-shrink-0 min-w-0">
-      <div className="min-w-0 flex-1 overflow-hidden">
+      <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
         <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
           Match History
         </h3>
@@ -105,5 +106,6 @@ const MatchesList: React.FC<MatchesListProps> = ({
     </div>
   </div>
 );
+};
 
-export default MatchesList; 
+export default MatchesList;

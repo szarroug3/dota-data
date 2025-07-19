@@ -1,25 +1,24 @@
 import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/leagues/[id]/route';
-import { fetchSteamLeague } from '@/lib/api/steam/leagues';
-import { SteamLeague } from '@/types/external-apis';
+import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
+import { DotabuffLeague } from '@/types/external-apis';
 
 // Mock external dependencies
-jest.mock('@/lib/api/steam/leagues');
+jest.mock('@/lib/api/dotabuff/leagues');
 
-const mockFetchSteamLeague = fetchSteamLeague as jest.MockedFunction<typeof fetchSteamLeague>;
+const mockFetchDotabuffLeague = fetchDotabuffLeague as jest.MockedFunction<typeof fetchDotabuffLeague>;
 
 // Mock data
-const mockLeagueData: SteamLeague = {
+const mockLeagueData: DotabuffLeague = {
   id: '16435',
   name: 'League 16435',
-  matches: []
 };
 
 describe('Leagues API Route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockFetchSteamLeague.mockResolvedValue(mockLeagueData);
+    mockFetchDotabuffLeague.mockResolvedValue(mockLeagueData);
   });
 
   describe('GET /api/leagues/[id]', () => {
@@ -33,7 +32,7 @@ describe('Leagues API Route', () => {
       const data = await response.json();
       
       expect(data).toEqual(mockLeagueData);
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('16435', false);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', false);
     });
 
     it('should handle force parameter', async () => {
@@ -42,11 +41,11 @@ describe('Leagues API Route', () => {
 
       await GET(request, { params });
 
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('16435', true);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', true);
     });
 
     it('should handle rate limiting errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Rate limited'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Rate limited'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -55,13 +54,13 @@ describe('Leagues API Route', () => {
 
       expect(response.status).toBe(429);
       const data = await response.json();
-      expect(data.error).toBe('Rate limited by Steam API');
+      expect(data.error).toBe('Rate limited by Dotabuff API');
       expect(data.status).toBe(429);
-      expect(data.details).toBe('Too many requests to Steam API. Please try again later.');
+      expect(data.details).toBe('Too many requests to Dotabuff API. Please try again later.');
     });
 
     it('should handle league not found errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Data Not Found'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Data Not Found'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/99999');
       const params = Promise.resolve({ id: '99999' });
@@ -76,7 +75,7 @@ describe('Leagues API Route', () => {
     });
 
     it('should handle failed to load errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Failed to load league data'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Failed to load league data'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -91,7 +90,7 @@ describe('Leagues API Route', () => {
     });
 
     it('should handle invalid league data errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Invalid league data format'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Invalid league data format'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -106,7 +105,7 @@ describe('Leagues API Route', () => {
     });
 
     it('should handle tournament not found errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Tournament not found'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Tournament not found'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -121,7 +120,7 @@ describe('Leagues API Route', () => {
     });
 
     it('should handle generic API errors', async () => {
-      mockFetchSteamLeague.mockRejectedValue(new Error('Network error'));
+      mockFetchDotabuffLeague.mockRejectedValue(new Error('Network error'));
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -136,7 +135,7 @@ describe('Leagues API Route', () => {
     });
 
     it('should handle non-Error exceptions', async () => {
-      mockFetchSteamLeague.mockRejectedValue('String error');
+      mockFetchDotabuffLeague.mockRejectedValue('String error');
 
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });
@@ -156,7 +155,7 @@ describe('Leagues API Route', () => {
 
       await GET(request, { params });
 
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('16435', false);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', false);
     });
 
     it('should handle false force parameter', async () => {
@@ -165,7 +164,7 @@ describe('Leagues API Route', () => {
 
       await GET(request, { params });
 
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('16435', false);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', false);
     });
 
     it('should handle case-insensitive force parameter', async () => {
@@ -174,7 +173,7 @@ describe('Leagues API Route', () => {
 
       await GET(request, { params });
 
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('16435', false);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', false);
     });
 
     it('should handle different league IDs', async () => {
@@ -183,7 +182,7 @@ describe('Leagues API Route', () => {
 
       await GET(request, { params });
 
-      expect(mockFetchSteamLeague).toHaveBeenCalledWith('12345', false);
+      expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('12345', false);
     });
   });
 }); 

@@ -134,7 +134,6 @@ const useHeroApiFetching = (
     }
 
     const heroes = await response.json() as OpenDotaHero[];
-    console.log('Heroes data fetched:', heroes);
     handleHeroesSuccess(heroes);
     return heroes;
   }, [handleHeroesError, handleHeroesSuccess]);
@@ -142,12 +141,10 @@ const useHeroApiFetching = (
   const fetchHeroesData = useCallback(async (force = false): Promise<OpenDotaHero[] | { error: string }> => {
     // Check cache first (unless force=true)
     if (!force && heroesCache !== null) {
-      console.log('Returning cached heroes data');
       return heroesCache;
     }
 
     try {
-      console.log('Fetching heroes data from API');
       const url = force ? '/api/heroes?force=true' : '/api/heroes';
       const response = await fetch(url);
       return await processHeroesResponse(response);

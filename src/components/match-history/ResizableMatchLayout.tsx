@@ -64,11 +64,11 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       </div>
       
       {/* Resizable Panels */}
-      <div className="flex-1 min-h-0 @container">
+      <div className="flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Match List Panel */}
           <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
-            <div className="h-full p-4 pt-2">
+            <div className="h-full p-4 pt-2 @container" style={{ containerType: 'inline-size' }}>
               <MatchesList
                 matches={visibleMatches}
                 onHideMatch={onHideMatch}

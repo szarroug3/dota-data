@@ -3,8 +3,8 @@
  */
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
-import { request } from '@/lib/utils/request';
 import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
+import { request } from '@/lib/utils/request';
 
 // Mock the request utilities
 jest.mock('@/lib/utils/request');

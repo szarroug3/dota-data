@@ -38,7 +38,6 @@ export async function scrapeHtmlFromUrl(
     page = await context.newPage();
 
     // Navigate to the page
-    console.log(`Navigating to ${url}`);
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     // Wait for the content to load
@@ -46,7 +45,6 @@ export async function scrapeHtmlFromUrl(
 
     // Extract HTML
     const html = await page.content();
-    console.log(`✅ Successfully scraped HTML from ${url}`);
 
     return html;
   } catch (error) {

@@ -154,8 +154,6 @@ function useLoadConfigAndPreferences(setConfig: (c: AppConfig) => void, setPrefe
     if (typeof window !== 'undefined') {
       const storedConfig = loadFromStorage(STORAGE_KEYS.CONFIG, getDefaultConfig());
       const storedPreferences = loadFromStorage(STORAGE_KEYS.PREFERENCES, getDefaultPreferences());
-      console.log('storedConfig:', storedConfig);
-      console.log('storedPreferences:', storedPreferences);
       if (JSON.stringify(storedConfig) !== JSON.stringify(getDefaultConfig())) {
         setConfig(storedConfig);
       }

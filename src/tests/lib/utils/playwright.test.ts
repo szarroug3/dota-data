@@ -2,8 +2,9 @@
  * @jest-environment node
  */
 
-import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
 import { chromium } from 'playwright';
+
+import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
 
 // Mock Playwright
 jest.mock('playwright', () => ({

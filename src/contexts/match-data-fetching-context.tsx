@@ -152,7 +152,6 @@ const useMatchApiFetching = (
     }
 
     const match = await response.json() as OpenDotaMatch;
-    console.log('Match data fetched:', match);
     handleMatchSuccess(matchId, match);
     return match;
   }, [handleMatchError, handleMatchSuccess]);
@@ -162,13 +161,11 @@ const useMatchApiFetching = (
     if (!force && matchCache.has(matchId)) {
       const cachedMatch = matchCache.get(matchId);
       if (cachedMatch) {
-        console.log('Returning cached match data for:', matchId);
         return cachedMatch;
       }
     }
 
     try {
-      console.log('Fetching match data from API:', matchId);
       const url = force ? `/api/matches/${matchId}?force=true` : `/api/matches/${matchId}`;
       const response = await fetch(url);
       return await processMatchResponse(response, matchId);

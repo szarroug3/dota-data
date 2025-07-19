@@ -2,8 +2,8 @@ import path from 'path';
 
 import * as cheerio from 'cheerio';
 
-import { request } from '@/lib/utils/request';
 import { scrapeHtmlFromUrl } from '@/lib/utils/playwright';
+import { request } from '@/lib/utils/request';
 import { DotabuffLeague } from '@/types/external-apis';
 
 /**

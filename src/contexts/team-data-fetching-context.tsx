@@ -201,7 +201,6 @@ const useTeamApiFetching = (
     }
 
     const team = await response.json() as DotabuffTeam;
-    console.log('Team data fetched:', team);
     handleTeamSuccess(teamId, team);
     return team;
   }, [handleTeamError, handleTeamSuccess]);
@@ -211,13 +210,11 @@ const useTeamApiFetching = (
     if (!force && teamCache.has(teamId)) {
       const cachedTeam = teamCache.get(teamId);
       if (cachedTeam) {
-        console.log('Returning cached team data for:', teamId);
         return cachedTeam;
       }
     }
 
     try {
-      console.log('Fetching team data from API:', teamId);
       const url = force ? `/api/teams/${teamId}?force=true` : `/api/teams/${teamId}`;
       const response = await fetch(url);
       return await processTeamResponse(response, teamId);
@@ -266,7 +263,6 @@ const useLeagueApiFetching = (
     }
 
     const league = await response.json() as DotabuffLeague;
-    console.log('League data fetched:', league);
     handleLeagueSuccess(leagueId, league);
     return league;
   }, [handleLeagueError, handleLeagueSuccess]);
@@ -276,13 +272,11 @@ const useLeagueApiFetching = (
     if (!force && leagueCache.has(leagueId)) {
       const cachedLeague = leagueCache.get(leagueId);
       if (cachedLeague) {
-        console.log('Returning cached league data for:', leagueId);
         return cachedLeague;
       }
     }
 
     try {
-      console.log('Fetching league data from API:', leagueId);
       const url = force ? `/api/leagues/${leagueId}?force=true` : `/api/leagues/${leagueId}`;
       const response = await fetch(url);
       return await processLeagueResponse(response, leagueId);

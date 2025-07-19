@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
@@ -8,8 +10,6 @@ import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
 
 import { DateDuration } from './DateDuration';
-import { HeroAvatars } from './HeroAvatars';
-import { ResponsiveBadge } from './ResponsiveBadge';
 
 interface MatchListViewProps {
   matches: Match[]; 
@@ -124,6 +124,113 @@ const mockHeroes: Hero[] = [
   }
 ];
 
+interface HeroAvatarsProps {
+  heroes: Hero[];
+  avatarSize?: {
+    width: string;
+    height: string;
+  };
+  className?: string;
+}
+
+interface HeroAvatarProps {
+  hero: Hero;
+  avatarSize: { width: string; height: string };
+}
+
+const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize }) => {
+  const { width, height } = avatarSize;
+  
+  return (
+    <Avatar className={`${width} ${height} border-2 border-background`}>
+      <AvatarImage 
+        src={hero.imageUrl} 
+        alt={hero.localizedName}
+        className="object-cover object-center"
+      />
+      <AvatarFallback className="text-xs">
+        {hero.localizedName.substring(0, 2).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
+};
+
+interface HeroIndicatorProps {
+  count: number;
+  avatarSize: { width: string; height: string };
+}
+
+const HeroIndicator: React.FC<HeroIndicatorProps> = ({ count, avatarSize }) => {
+  const { width, height } = avatarSize;
+  
+  return (
+    <div className={`${width} ${height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
+      <span className="text-xs font-medium text-muted-foreground">
+        +{count}
+      </span>
+    </div>
+  );
+};
+
+const HeroAvatars: React.FC<HeroAvatarsProps> = ({ 
+  heroes, 
+  avatarSize = { width: 'w-8', height: 'h-8' },
+  className = ''
+}) => {
+  const totalHeroes = heroes.length;
+
+  return (
+    <div className={`flex -space-x-1 @[150px]:block hidden ${className}`}>
+      {/* Large container: show all 5 heroes (if we have 5) */}
+      <div className="@[400px]:flex hidden">
+        {heroes.slice(0, 5).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+      </div>
+      
+      {/* Medium container: show 3 heroes + indicator */}
+      <div className="@[350px]:flex @[400px]:hidden hidden">
+        {heroes.slice(0, 3).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+        {totalHeroes > 3 && (
+          <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />
+        )}
+      </div>
+      
+      {/* Small container: show 2 heroes + indicator */}
+      <div className="@[290px]:flex @[350px]:hidden hidden">
+        {heroes.slice(0, 2).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+        {totalHeroes > 2 && (
+          <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />
+        )}
+      </div>
+      
+      {/* Very small container: show 1 hero + indicator */}
+      <div className="@[270px]:flex @[290px]:hidden hidden">
+        {heroes.slice(0, 1).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+        {totalHeroes > 1 && (
+          <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
+        )}
+      </div>
+      
+      {/* Default fallback: show at least 1 hero when container is very small */}
+      <div className="@[270px]:hidden flex">
+        {heroes.slice(0, 1).map((hero, index) => (
+          <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        ))}
+        {totalHeroes > 1 && (
+          <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
+        )}
+      </div>
+    </div>
+  );
+}; 
+
 interface MatchInfoProps {
   match: Match;
   onSelectMatch: (matchId: string) => void;
@@ -131,7 +238,7 @@ interface MatchInfoProps {
 
 const MatchInfo: React.FC<MatchInfoProps> = ({ match, onSelectMatch }) => (
   <div 
-    className="cursor-pointer min-w-0 flex-1"
+    className="cursor-pointer min-w-0 flex-1 @[170px]:opacity-100 opacity-0 invisible @[170px]:visible"
     onClick={() => onSelectMatch(match.id)}
   >
     <div className="font-medium truncate">{match.opponent}</div>
@@ -139,53 +246,39 @@ const MatchInfo: React.FC<MatchInfoProps> = ({ match, onSelectMatch }) => (
   </div>
 );
 
+ 
 interface MatchBadgesProps {
   match: Match;
 }
 
 const MatchBadges: React.FC<MatchBadgesProps> = ({ match }) => (
   <div className="flex items-center gap-2">
-    <ResponsiveBadge
-      fullText={match.result === 'win' ? 'Victory' : 'Defeat'}
-      shortText={match.result === 'win' ? 'W' : 'L'}
-      breakpoint="250px"
-      variant={match.result === 'win' ? 'success' : 'default'}
-      className="text-xs"
-    />
-    <ResponsiveBadge
-      fullText={match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}
-      shortText={match.teamSide === 'radiant' ? 'R' : 'D'}
-      breakpoint="250px"
-      variant="outline"
-      className="text-xs"
-    />
-    <ResponsiveBadge
-      fullText={match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}
-      shortText={match.pickOrder === 'first' ? 'FP' : 'SP'}
-      breakpoint="250px"
-      variant="secondary"
-      className="text-xs"
-    />
-  </div>
-);
-
-interface MatchActionsProps {
-  match: Match;
-  onHideMatch: (matchId: string) => void;
-  onRefreshMatch: (matchId: string) => void;
-}
-
-const MatchActions: React.FC<MatchActionsProps> = ({ match, onHideMatch, onRefreshMatch }) => (
-  <div className="flex items-center gap-0.5">
-    <RefreshButton
-      onClick={() => onRefreshMatch(match.id)}
-      ariaLabel={`Refresh match vs ${match.opponent}`}
-      className="h-5 w-5 p-0"
-    />
-    <HideButton
-      onClick={() => onHideMatch(match.id)}
-      ariaLabel={`Hide match vs ${match.opponent}`}
-    />
+    {/* Result Badge */}
+    <Badge 
+      variant={match.result === 'win' ? 'success' : 'default'} 
+      className="text-xs w-fit @[251px]:block hidden"
+    >
+      <span className="@[350px]:block hidden">{match.result === 'win' ? 'Victory' : 'Defeat'}</span>
+      <span className="@[350px]:hidden block">{match.result === 'win' ? 'W' : 'L'}</span>
+    </Badge>
+    
+    {/* Team Side Badge */}
+    <Badge 
+      variant="outline" 
+      className="text-xs w-fit @[251px]:block hidden"
+    >
+      <span className="@[350px]:block hidden">{match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}</span>
+      <span className="@[350px]:hidden block">{match.teamSide === 'radiant' ? 'R' : 'D'}</span>
+    </Badge>
+    
+    {/* Pick Order Badge */}
+    <Badge 
+      variant="secondary" 
+      className="text-xs w-fit @[251px]:block hidden"
+    >
+      <span className="@[350px]:block hidden">{match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}</span>
+      <span className="@[350px]:hidden block">{match.pickOrder === 'first' ? 'FP' : 'SP'}</span>
+    </Badge>
   </div>
 );
 
@@ -236,16 +329,26 @@ const MatchCard: React.FC<MatchCardProps> = ({
           {/* Row 1: Opponent name + date/duration on left, avatars on right */}
           <div className="flex items-start justify-between gap-2 min-w-0">
             <MatchInfo match={match} onSelectMatch={onSelectMatch} />
-            <HeroAvatars 
+            <HeroAvatars
               heroes={mockHeroesForMatch} 
               avatarSize={{ width: 'w-8', height: 'h-8' }}
             />
           </div>
-          
-          {/* Row 2: Badges on left, buttons on right */}
+
+          {/* Row 2: Badges on left, buttons on right aligned with avatar */}
           <div className="flex items-center justify-between gap-2 min-w-0">
             <MatchBadges match={match} />
-            <MatchActions match={match} onHideMatch={onHideMatch} onRefreshMatch={onRefreshMatch} />
+            <div className="flex items-center gap-0.5 opacity-0 invisible @[150px]:opacity-100 @[150px]:visible" style={{ marginRight: '-0.2rem' }}>
+              <RefreshButton
+                onClick={() => onRefreshMatch(match.id)}
+                ariaLabel={`Refresh match vs ${match.opponent}`}
+                className="h-5 w-5 p-0"
+              />
+              <HideButton
+                onClick={() => onHideMatch(match.id)}
+                ariaLabel={`Hide match vs ${match.opponent}`}
+              />
+            </div>
           </div>
         </div>
       </CardContent>
