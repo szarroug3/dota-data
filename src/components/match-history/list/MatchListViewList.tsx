@@ -3,13 +3,29 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { useConfigContext } from '@/contexts/config-context';
 import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 
+import { ExternalSiteButton } from '../common/ExternalSiteButton';
 import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
 
-import { DateDuration } from './DateDuration';
+// Helper functions for date and duration formatting
+const formatDuration = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
 
 interface MatchListViewProps {
   matches: Match[]; 
@@ -242,7 +258,27 @@ const MatchInfo: React.FC<MatchInfoProps> = ({ match, onSelectMatch }) => (
     onClick={() => onSelectMatch(match.id)}
   >
     <div className="font-medium truncate">{match.opponent}</div>
-    <DateDuration date={match.date} duration={match.duration} />
+    <div className="text-sm text-muted-foreground truncate">
+      {/* Show date and duration on larger containers */}
+      <span className="@[350px]:inline hidden">
+        {formatDate(match.date)} • {formatDuration(match.duration)}
+      </span>
+      
+      {/* Show only date on medium containers */}
+      <span className="@[280px]:inline @[350px]:hidden hidden">
+        {formatDate(match.date)}
+      </span>
+      
+      {/* Show only date on smaller containers */}
+      <span className="@[220px]:inline @[280px]:hidden hidden">
+        {formatDate(match.date)}
+      </span>
+      
+      {/* Hide on very small containers */}
+      <span className="@[220px]:hidden">
+        {formatDate(match.date)}
+      </span>
+    </div>
   </div>
 );
 
@@ -256,28 +292,28 @@ const MatchBadges: React.FC<MatchBadgesProps> = ({ match }) => (
     {/* Result Badge */}
     <Badge 
       variant={match.result === 'win' ? 'success' : 'default'} 
-      className="text-xs w-fit @[251px]:block hidden"
+      className="text-xs w-fit @[300px]:block hidden"
     >
-      <span className="@[350px]:block hidden">{match.result === 'win' ? 'Victory' : 'Defeat'}</span>
-      <span className="@[350px]:hidden block">{match.result === 'win' ? 'W' : 'L'}</span>
+      <span className="@[400px]:block hidden">{match.result === 'win' ? 'Victory' : 'Defeat'}</span>
+      <span className="@[400px]:hidden block">{match.result === 'win' ? 'W' : 'L'}</span>
     </Badge>
     
     {/* Team Side Badge */}
     <Badge 
       variant="outline" 
-      className="text-xs w-fit @[251px]:block hidden"
+      className="text-xs w-fit @[300px]:block hidden"
     >
-      <span className="@[350px]:block hidden">{match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}</span>
-      <span className="@[350px]:hidden block">{match.teamSide === 'radiant' ? 'R' : 'D'}</span>
+      <span className="@[400px]:block hidden">{match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}</span>
+      <span className="@[400px]:hidden block">{match.teamSide === 'radiant' ? 'R' : 'D'}</span>
     </Badge>
     
     {/* Pick Order Badge */}
     <Badge 
       variant="secondary" 
-      className="text-xs w-fit @[251px]:block hidden"
+      className="text-xs w-fit @[300px]:block hidden"
     >
-      <span className="@[350px]:block hidden">{match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}</span>
-      <span className="@[350px]:hidden block">{match.pickOrder === 'first' ? 'FP' : 'SP'}</span>
+      <span className="@[400px]:block hidden">{match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}</span>
+      <span className="@[400px]:hidden block">{match.pickOrder === 'first' ? 'FP' : 'SP'}</span>
     </Badge>
   </div>
 );
@@ -299,6 +335,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   onHideMatch,
   onRefreshMatch
 }) => {
+  const { config } = useConfigContext();
+  
   // Temporary: Generate exactly 5 mock heroes for each match
   const startIndex = (matchIndex * 5) % mockHeroes.length;
   const mockHeroesForMatch = [
@@ -338,11 +376,15 @@ const MatchCard: React.FC<MatchCardProps> = ({
           {/* Row 2: Badges on left, buttons on right aligned with avatar */}
           <div className="flex items-center justify-between gap-2 min-w-0">
             <MatchBadges match={match} />
-            <div className="flex items-center gap-0.5 opacity-0 invisible @[150px]:opacity-100 @[150px]:visible" style={{ marginRight: '-0.2rem' }}>
+            <div className="flex items-center gap-0.5 opacity-0 invisible @[200px]:opacity-100 @[200px]:visible" style={{ marginRight: '-0.2rem' }}>
+              <ExternalSiteButton
+                matchId={match.id}
+                preferredSite={config.preferredExternalSite}
+                size="sm"
+              />
               <RefreshButton
                 onClick={() => onRefreshMatch(match.id)}
                 ariaLabel={`Refresh match vs ${match.opponent}`}
-                className="h-5 w-5 p-0"
               />
               <HideButton
                 onClick={() => onHideMatch(match.id)}

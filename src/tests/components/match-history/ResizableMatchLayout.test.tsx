@@ -109,7 +109,7 @@ jest.mock('@/components/match-history/details/MatchDetailsPanel', () => ({
       {match ? (
         <div>
           <div>Match: {match.opponent}</div>
-          <button onClick={() => onViewModeChange?.('detailed')}>Set Detailed</button>
+          <button onClick={() => onViewModeChange?.('players')}>Set Players</button>
         </div>
       ) : (
         <div>No match selected</div>

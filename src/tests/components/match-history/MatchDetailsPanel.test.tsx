@@ -5,27 +5,21 @@ import { MatchDetailsPanel } from '@/components/match-history/details/MatchDetai
 import type { MatchDetails } from '@/types/contexts/match-context-value';
 
 // Mock the child components
-jest.mock('@/components/match-history/details/MatchDetailsPanelAnalytics', () => ({
-  MatchDetailsPanelAnalytics: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="analytics-panel">Analytics Panel</div>
+jest.mock('@/components/match-history/details/MatchDetailsPanelDraftEvents', () => ({
+  MatchDetailsPanelDraftEvents: ({ _match }: { _match: MatchDetails | null }) => (
+    <div data-testid="draft-events-panel">Draft & Events Panel</div>
   ),
 }));
 
-jest.mock('@/components/match-history/details/MatchDetailsPanelDetailed', () => ({
-  MatchDetailsPanelDetailed: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="detailed-panel">Detailed Panel</div>
+jest.mock('@/components/match-history/details/MatchDetailsPanelPlayers', () => ({
+  MatchDetailsPanelPlayers: ({ _match }: { _match: MatchDetails | null }) => (
+    <div data-testid="players-panel">Players Panel</div>
   ),
 }));
 
-jest.mock('@/components/match-history/details/MatchDetailsPanelMinimal', () => ({
-  MatchDetailsPanelMinimal: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="minimal-panel">Minimal Panel</div>
-  ),
-}));
-
-jest.mock('@/components/match-history/details/MatchDetailsPanelSummary', () => ({
-  MatchDetailsPanelSummary: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="summary-panel">Summary Panel</div>
+jest.mock('@/components/match-history/details/MatchDetailsPanelTimings', () => ({
+  MatchDetailsPanelTimings: ({ _match }: { _match: MatchDetails | null }) => (
+    <div data-testid="timings-panel">Timings Panel</div>
   ),
 }));
 
@@ -71,7 +65,7 @@ const mockMatch: MatchDetails = {
 describe('MatchDetailsPanel', () => {
   const defaultProps = {
     match: mockMatch,
-    viewMode: 'summary' as const,
+    viewMode: 'draft-events' as const,
     onViewModeChange: jest.fn(),
   };
 
@@ -86,23 +80,22 @@ describe('MatchDetailsPanel', () => {
     render(<MatchDetailsPanel {...defaultProps} match={null} />);
     
     expect(screen.getByText('Match Details')).toBeInTheDocument();
-    expect(screen.getByText('No match selected')).toBeInTheDocument();
+    expect(screen.getByText('Select a match to see details.')).toBeInTheDocument();
   });
 
   it('renders without view mode change handler', () => {
     render(<MatchDetailsPanel {...defaultProps} onViewModeChange={undefined} />);
     
     expect(screen.getByText('Match Details')).toBeInTheDocument();
-    expect(screen.queryByText('Summary')).not.toBeInTheDocument();
+    expect(screen.queryByText('Draft & Events')).not.toBeInTheDocument();
   });
 
   it('renders view mode buttons when handler is provided', () => {
     render(<MatchDetailsPanel {...defaultProps} />);
     
-    expect(screen.getByText('Summary')).toBeInTheDocument();
-    expect(screen.getByText('Minimal')).toBeInTheDocument();
-    expect(screen.getByText('Detailed')).toBeInTheDocument();
-    expect(screen.getByText('Analytics')).toBeInTheDocument();
+    expect(screen.getByText('Draft & Events')).toBeInTheDocument();
+    expect(screen.getByText('Players')).toBeInTheDocument();
+    expect(screen.getByText('Timings')).toBeInTheDocument();
   });
 
   it('calls onViewModeChange when buttons are clicked', async () => {
@@ -111,17 +104,17 @@ describe('MatchDetailsPanel', () => {
     
     render(<MatchDetailsPanel {...defaultProps} onViewModeChange={onViewModeChange} />);
     
-    await user.click(screen.getByText('Detailed'));
-    expect(onViewModeChange).toHaveBeenCalledWith('detailed');
+    await user.click(screen.getByText('Players'));
+    expect(onViewModeChange).toHaveBeenCalledWith('players');
     
-    await user.click(screen.getByText('Analytics'));
-    expect(onViewModeChange).toHaveBeenCalledWith('analytics');
+    await user.click(screen.getByText('Timings'));
+    expect(onViewModeChange).toHaveBeenCalledWith('timings');
   });
 
   it('renders correct content based on view mode', () => {
-    render(<MatchDetailsPanel {...defaultProps} viewMode="detailed" />);
+    render(<MatchDetailsPanel {...defaultProps} viewMode="players" />);
     
-    expect(screen.getByTestId('detailed-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('players-panel')).toBeInTheDocument();
   });
 
   it('renders fallback content for unknown view mode', () => {
@@ -152,14 +145,12 @@ describe('MatchDetailsPanel', () => {
     render(<MatchDetailsPanel {...defaultProps} />);
     
     // Check that the span elements have the correct classes
-    const summarySpan = screen.getByText('Summary');
-    const minimalSpan = screen.getByText('Minimal');
-    const detailedSpan = screen.getByText('Detailed');
-    const analyticsSpan = screen.getByText('Analytics');
+    const draftEventsSpan = screen.getByText('Draft & Events');
+    const playersSpan = screen.getByText('Players');
+    const timingsSpan = screen.getByText('Timings');
     
-    expect(summarySpan).toHaveClass('hidden', 'sm:inline');
-    expect(minimalSpan).toHaveClass('hidden', 'sm:inline');
-    expect(detailedSpan).toHaveClass('hidden', 'sm:inline');
-    expect(analyticsSpan).toHaveClass('hidden', 'sm:inline');
+    expect(draftEventsSpan).toHaveClass('hidden', 'sm:inline');
+    expect(playersSpan).toHaveClass('hidden', 'sm:inline');
+    expect(timingsSpan).toHaveClass('hidden', 'sm:inline');
   });
 }); 

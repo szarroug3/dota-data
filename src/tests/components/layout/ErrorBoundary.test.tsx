@@ -46,7 +46,7 @@ describe('ErrorBoundary - Error handling', () => {
       </ErrorBoundary>
     );
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('We encountered an unexpected error. Please try again or contact support if the problem persists.')).toBeInTheDocument();
+    expect(screen.getByText('Uhhhh complain to @FatSloth on Discord. Tell him to buy me chocolate and I\'ll fix it.')).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
   it('should render custom fallback when provided', () => {

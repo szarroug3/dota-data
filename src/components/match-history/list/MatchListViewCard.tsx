@@ -3,13 +3,29 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useConfigContext } from '@/contexts/config-context';
 import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 
+import { ExternalSiteButton } from '../common/ExternalSiteButton';
 import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
 
-import { DateDuration } from './DateDuration';
+// Helper functions for date and duration formatting
+const formatDuration = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
 
 interface HeroAvatarsProps {
   heroes: Hero[];
@@ -250,6 +266,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   onHideMatch,
   onRefreshMatch
 }) => {
+  const { config } = useConfigContext();
+  
   // Generate mock heroes for this match
   const startIndex = (matchIndex * 5) % mockHeroes.length;
   const mockHeroesForMatch = [
@@ -272,10 +290,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
             {match.opponent}
           </CardTitle>
           <div className="flex items-center gap-1">
+            <ExternalSiteButton
+              matchId={match.id}
+              preferredSite={config.preferredExternalSite}
+              size="sm"
+            />
             <RefreshButton
               onClick={() => onRefreshMatch(match.id)}
               ariaLabel={`Refresh match vs ${match.opponent}`}
-              className="h-5 w-5 p-0"
             />
             <HideButton
               onClick={() => onHideMatch(match.id)}
@@ -313,7 +335,27 @@ const MatchCard: React.FC<MatchCardProps> = ({
             {match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}
           </Badge>
         </div>
-        <DateDuration date={match.date} duration={match.duration} className="mb-2" />
+        <div className="text-sm text-muted-foreground mb-2">
+          {/* Show date and duration on larger containers */}
+          <span className="@[350px]:inline hidden">
+            {formatDate(match.date)} • {formatDuration(match.duration)}
+          </span>
+          
+          {/* Show only date on medium containers */}
+          <span className="@[280px]:inline @[350px]:hidden hidden">
+            {formatDate(match.date)}
+          </span>
+          
+          {/* Show only date on smaller containers */}
+          <span className="@[220px]:inline @[280px]:hidden hidden">
+            {formatDate(match.date)}
+          </span>
+          
+          {/* Hide on very small containers */}
+          <span className="@[220px]:hidden">
+            {formatDate(match.date)}
+          </span>
+        </div>
         <div className="flex flex-wrap gap-1">
           {match.heroes.slice(0, 4).map((hero, idx) => (
             <Badge

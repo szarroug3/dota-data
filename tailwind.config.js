@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 import containerQueries from '@tailwindcss/container-queries';
 
-const breakpoints = ['130px', '150px', '250px', '270px', '300px', '350px', '500px'];
+const breakpoints = ['130px', '150px', '250px', '270px', '300px', '350px', '400px', '450px', '500px'];
 const display = ['block', 'hidden', 'flex'];
 
 const safelist = [
@@ -32,6 +32,8 @@ export default {
         '270px': '270px',
         '300px': '300px',
         '350px': '350px',
+        '400px': '400px',
+        '450px': '450px',
         '500px': '500px',
       },
       containerQueries: {
@@ -45,6 +47,8 @@ export default {
         '270px': '270px',
         '300px': '300px',
         '350px': '350px',
+        '400px': '400px',
+        '450px': '450px',
         '500px': '500px',
       },
       colors: {

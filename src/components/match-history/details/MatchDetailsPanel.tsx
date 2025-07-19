@@ -1,20 +1,18 @@
-import { BarChart3, FileText, List, PieChart } from 'lucide-react';
+import { Users, Clock, Gamepad2 } from 'lucide-react';
 import React from 'react';
-
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { MatchDetails } from '@/types/contexts/match-context-value';
+import type { Match } from '@/types/contexts/match-context-value';
 
-import { MatchDetailsPanelAnalytics } from './MatchDetailsPanelAnalytics';
-import { MatchDetailsPanelDetailed } from './MatchDetailsPanelDetailed';
-import { MatchDetailsPanelMinimal } from './MatchDetailsPanelMinimal';
-import { MatchDetailsPanelSummary } from './MatchDetailsPanelSummary';
+import { MatchDetailsPanelDraftEvents } from './MatchDetailsPanelDraftEvents';
+import { MatchDetailsPanelPlayers } from './MatchDetailsPanelPlayers';
+import { MatchDetailsPanelTimings } from './MatchDetailsPanelTimings';
 
-export type MatchDetailsPanelMode = 'detailed' | 'minimal' | 'summary' | 'analytics';
+export type MatchDetailsPanelMode = 'draft-events' | 'players' | 'timings';
 
 interface MatchDetailsPanelProps {
-  match: MatchDetails | null;
+  match: Match | null;
   viewMode: MatchDetailsPanelMode;
   onViewModeChange?: (mode: MatchDetailsPanelMode) => void;
   className?: string;
@@ -27,23 +25,31 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   className = '',
 }) => {
   const renderContent = () => {
-    if (viewMode === 'detailed') {
-      return <MatchDetailsPanelDetailed match={match} />;
+    if (!match) {
+      return (
+        <div className="flex items-center justify-center p-8 text-muted-foreground">
+          <div className="text-center">
+            <div className="text-lg font-medium mb-2">No match selected</div>
+            <div className="text-sm">Select a match to see details.</div>
+          </div>
+        </div>
+      );
     }
-    if (viewMode === 'minimal') {
-      return <MatchDetailsPanelMinimal match={match} />;
+
+    if (viewMode === 'draft-events') {
+      return <MatchDetailsPanelDraftEvents match={match} />;
     }
-    if (viewMode === 'summary') {
-      return <MatchDetailsPanelSummary match={match} />;
+    if (viewMode === 'players') {
+      return <MatchDetailsPanelPlayers match={match} />;
     }
-    if (viewMode === 'analytics') {
-      return <MatchDetailsPanelAnalytics match={match} />;
+    if (viewMode === 'timings') {
+      return <MatchDetailsPanelTimings match={match} />;
     }
     return (
       <div className="flex items-center justify-center p-8 text-muted-foreground">
         <div className="text-center">
           <div className="text-lg font-medium mb-2">This details view mode is not yet implemented.</div>
-          <div className="text-sm">Try switching to detailed, minimal, summary, or analytics view.</div>
+          <div className="text-sm">Try switching to Draft & Events, Players, or Timings view.</div>
         </div>
       </div>
     );
@@ -64,40 +70,31 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
           {onViewModeChange && (
             <div className="flex items-center gap-2">
               <Button
-                variant={viewMode === 'summary' ? 'default' : 'outline'}
+                variant={viewMode === 'draft-events' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onViewModeChange('summary')}
+                onClick={() => onViewModeChange('draft-events')}
                 className="flex items-center gap-2"
               >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Summary</span>
+                <Gamepad2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Draft & Events</span>
               </Button>
               <Button
-                variant={viewMode === 'minimal' ? 'default' : 'outline'}
+                variant={viewMode === 'players' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onViewModeChange('minimal')}
+                onClick={() => onViewModeChange('players')}
                 className="flex items-center gap-2"
               >
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">Minimal</span>
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Players</span>
               </Button>
               <Button
-                variant={viewMode === 'detailed' ? 'default' : 'outline'}
+                variant={viewMode === 'timings' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onViewModeChange('detailed')}
+                onClick={() => onViewModeChange('timings')}
                 className="flex items-center gap-2"
               >
-                <PieChart className="h-4 w-4" />
-                <span className="hidden sm:inline">Detailed</span>
-              </Button>
-              <Button
-                variant={viewMode === 'analytics' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => onViewModeChange('analytics')}
-                className="flex items-center gap-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Analytics</span>
+                <Clock className="h-4 w-4" />
+                <span className="hidden sm:inline">Timings</span>
               </Button>
             </div>
           )}

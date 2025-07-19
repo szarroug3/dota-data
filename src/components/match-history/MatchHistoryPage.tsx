@@ -162,7 +162,7 @@ export const MatchHistoryPage: React.FC = () => {
   const { viewMode, setViewMode } = useViewMode();
 
   // State for match details view mode
-  const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('summary');
+  const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft-events');
 
   // Refresh a match (stub for now)
   const handleRefreshMatch = (id: string) => {

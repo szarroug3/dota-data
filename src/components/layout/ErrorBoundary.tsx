@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </h3>
               
               <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
-                We encountered an unexpected error. Please try again or contact support if the problem persists.
+                Uhhhh complain to @FatSloth on Discord. Tell him to buy me chocolate and I'll fix it.
               </p>
 
               <div className="space-y-3">

@@ -19,7 +19,7 @@ export type Theme = 'light' | 'dark' | 'system';
 /**
  * Preferred external site for links
  */
-export type PreferredExternalSite = 'opendota' | 'dotabuff' | 'stratz' | 'dota2protracker';
+export type PreferredExternalSite = 'opendota' | 'dotabuff';
 
 /**
  * UI density preference
