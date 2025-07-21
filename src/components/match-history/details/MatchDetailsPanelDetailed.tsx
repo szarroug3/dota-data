@@ -12,122 +12,72 @@ interface MatchDetailsPanelDetailedProps {
   className?: string;
 }
 
-// Mock player data for demonstration
-const mockPlayers = [
+// Mock hero data for testing
+const heroes = [
   {
-    id: '1',
-    name: 'Player1',
-    hero: {
-      id: '1',
-      name: 'crystal_maiden',
-      localizedName: 'Crystal Maiden',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?'
-    },
-    stats: {
-      kills: 8,
-      deaths: 2,
-      assists: 15,
-      gpm: 450,
-      xpm: 520,
-      heroDamage: 12500,
-      towerDamage: 800,
-      healing: 3500,
-      cs: 120,
-      denies: 8,
-      items: ['item_ward_observer', 'item_tranquil_boots', 'item_force_staff', 'item_glimmer_cape']
-    }
+    name: 'Crystal Maiden',
+    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg',
+    level: 25,
+    kills: 8,
+    deaths: 3,
+    assists: 12,
+    netWorth: 18000,
+    gpm: 450,
+    xpm: 520,
+    lastHits: 120,
+    denies: 8
   },
   {
-    id: '2',
-    name: 'Player2',
-    hero: {
-      id: '2',
-      name: 'juggernaut',
-      localizedName: 'Juggernaut',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?'
-    },
-    stats: {
-      kills: 12,
-      deaths: 3,
-      assists: 4,
-      gpm: 650,
-      xpm: 720,
-      heroDamage: 18500,
-      towerDamage: 3200,
-      healing: 0,
-      cs: 280,
-      denies: 15,
-      items: ['item_phase_boots', 'item_maelstrom', 'item_black_king_bar', 'item_butterfly']
-    }
+    name: 'Juggernaut',
+    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg',
+    level: 26,
+    kills: 15,
+    deaths: 2,
+    assists: 5,
+    netWorth: 28000,
+    gpm: 720,
+    xpm: 800,
+    lastHits: 250,
+    denies: 25
   },
   {
-    id: '3',
-    name: 'Player3',
-    hero: {
-      id: '3',
-      name: 'lina',
-      localizedName: 'Lina',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?'
-    },
-    stats: {
-      kills: 15,
-      deaths: 4,
-      assists: 6,
-      gpm: 580,
-      xpm: 650,
-      heroDamage: 22000,
-      towerDamage: 1500,
-      healing: 0,
-      cs: 200,
-      denies: 12,
-      items: ['item_arcane_boots', 'item_euls_scepter', 'item_bloodstone', 'item_octarine_core']
-    }
+    name: 'Lina',
+    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
+    level: 24,
+    kills: 12,
+    deaths: 4,
+    assists: 8,
+    netWorth: 22000,
+    gpm: 580,
+    xpm: 680,
+    lastHits: 200,
+    denies: 20
   },
   {
-    id: '4',
-    name: 'Player4',
-    hero: {
-      id: '4',
-      name: 'pudge',
-      localizedName: 'Pudge',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?'
-    },
-    stats: {
-      kills: 6,
-      deaths: 5,
-      assists: 18,
-      gpm: 380,
-      xpm: 420,
-      heroDamage: 8500,
-      towerDamage: 500,
-      healing: 0,
-      cs: 80,
-      denies: 5,
-      items: ['item_boots', 'item_blink', 'item_heart', 'item_aghanims_scepter']
-    }
+    name: 'Pudge',
+    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
+    level: 23,
+    kills: 10,
+    deaths: 6,
+    assists: 10,
+    netWorth: 20000,
+    gpm: 550,
+    xpm: 700,
+    lastHits: 160,
+    denies: 12
   },
   {
-    id: '5',
-    name: 'Player5',
-    hero: {
-      id: '5',
-      name: 'axe',
-      localizedName: 'Axe',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?'
-    },
-    stats: {
-      kills: 4,
-      deaths: 6,
-      assists: 12,
-      gpm: 420,
-      xpm: 480,
-      heroDamage: 9500,
-      towerDamage: 1200,
-      healing: 0,
-      cs: 150,
-      denies: 10,
-      items: ['item_vanguard', 'item_blink', 'item_blade_mail', 'item_crimson_guard']
-    }
+    name: 'Axe',
+    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
+    level: 22,
+    kills: 6,
+    deaths: 8,
+    assists: 15,
+    netWorth: 15000,
+    gpm: 480,
+    xpm: 620,
+    lastHits: 90,
+    denies: 5
   }
 ];
 
@@ -292,28 +242,28 @@ export const MatchDetailsPanelDetailed: React.FC<MatchDetailsPanelDetailedProps>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockPlayers.map((player, index) => (
-              <div key={player.id} className="border rounded-lg p-4">
+            {heroes.map((hero, index) => (
+              <div key={hero.name} className="border rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-10 h-10">
                     <AvatarImage 
-                      src={player.hero.imageUrl} 
-                      alt={player.hero.localizedName}
+                      src={hero.imageUrl} 
+                      alt={hero.name}
                     />
                     <AvatarFallback className="text-xs">
-                      {player.hero.localizedName.substring(0, 2).toUpperCase()}
+                      {hero.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="font-medium">{player.name}</div>
-                    <div className="text-sm text-muted-foreground">{player.hero.localizedName}</div>
+                    <div className="font-medium">{hero.name}</div>
+                    <div className="text-sm text-muted-foreground">Level {hero.level}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-mono text-sm">
-                      {formatKDA(player.stats.kills, player.stats.deaths, player.stats.assists)}
+                      {formatKDA(hero.kills, hero.deaths, hero.assists)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {player.stats.gpm} GPM / {player.stats.xpm} XPM
+                      {hero.gpm} GPM / {hero.xpm} XPM
                     </div>
                   </div>
                 </div>
@@ -321,30 +271,16 @@ export const MatchDetailsPanelDetailed: React.FC<MatchDetailsPanelDetailedProps>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <span>Hero Damage</span>
-                      <span className="font-mono">{player.stats.heroDamage.toLocaleString()}</span>
+                      <span>Net Worth</span>
+                      <span className="font-mono">{hero.netWorth.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tower Damage</span>
-                      <span className="font-mono">{player.stats.towerDamage.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Healing</span>
-                      <span className="font-mono">{player.stats.healing.toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span>CS</span>
-                      <span className="font-mono">{player.stats.cs}</span>
+                      <span>Last Hits</span>
+                      <span className="font-mono">{hero.lastHits}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Denies</span>
-                      <span className="font-mono">{player.stats.denies}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Items</span>
-                      <span className="font-mono">{player.stats.items.length}</span>
+                      <span className="font-mono">{hero.denies}</span>
                     </div>
                   </div>
                 </div>

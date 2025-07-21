@@ -5,7 +5,7 @@
  * in the frontend application.
  */
 
-import type { TeamData } from '@/types/contexts/team-types';
+import type { TeamData } from '@/types/contexts/team-context-value';
 
 // ============================================================================
 // CONFIG DATA TYPES
@@ -37,115 +37,20 @@ export interface AppConfig {
   // External site preferences
   preferredExternalSite: PreferredExternalSite;
   
-  // Data and refresh settings
-  autoRefresh: boolean;
-  refreshInterval: number; // in seconds
-  cacheEnabled: boolean;
-  cacheTTL: number; // in seconds
-  
   // UI preferences
   sidebarCollapsed: boolean;
-  showAdvancedStats: boolean;
-  showPerformanceGraphs: boolean;
-  showTrends: boolean;
-  
-  // Notification settings
-  notifications: {
-    matchUpdates: boolean;
-    teamUpdates: boolean;
-    errorAlerts: boolean;
-  };
-  
-  // Development settings
-  debugMode: boolean;
-  mockMode: boolean;
 }
 
 /**
- * User preferences interface
+ * View preferences interface
  */
-export interface UserPreferences {
-  // Page-specific preferences
-  dashboard: DashboardPreferences;
-  teamManagement: TeamManagementPreferences;
-  matchHistory: MatchHistoryPreferences;
-  playerStats: PlayerStatsPreferences;
-  draftSuggestions: DraftSuggestionsPreferences;
-  teamAnalysis: TeamAnalysisPreferences;
+export interface ViewPreferences {
+  // Match history view preferences
+  matchHistoryList: 'list' | 'card' | 'grid';
+  matchHistoryDetails: 'draft-events' | 'detailed' | 'minimal' | 'summary';
 }
 
-/**
- * Dashboard preferences
- */
-export interface DashboardPreferences {
-  defaultView: 'overview' | 'recent' | 'highlights' | 'quickActions';
-  showPerformanceHighlights: boolean;
-  showRecentMatches: boolean;
-  showQuickActions: boolean;
-  autoRefresh: boolean;
-}
 
-/**
- * Team management preferences
- */
-export interface TeamManagementPreferences {
-  defaultView: 'list' | 'grid' | 'details';
-  showArchivedTeams: boolean;
-  sortBy: 'name' | 'lastMatch' | 'winRate' | 'createdAt';
-  sortDirection: 'asc' | 'desc';
-}
-
-/**
- * Match history preferences
- */
-export interface MatchHistoryPreferences {
-  defaultView: 'list' | 'card' | 'grid';
-  showHiddenMatches: boolean;
-  defaultFilters: {
-    dateRange: number; // days
-    result: 'all' | 'win' | 'loss';
-    heroes: string[];
-  };
-  sortBy: 'date' | 'result' | 'duration' | 'opponent';
-  sortDirection: 'asc' | 'desc';
-}
-
-/**
- * Player stats preferences
- */
-export interface PlayerStatsPreferences {
-  defaultView: 'overview' | 'matches' | 'heroes' | 'trends';
-  showAdvancedStats: boolean;
-  showPerformanceGraphs: boolean;
-  defaultFilters: {
-    dateRange: number; // days
-    heroes: string[];
-    roles: string[];
-  };
-}
-
-/**
- * Draft suggestions preferences
- */
-export interface DraftSuggestionsPreferences {
-  defaultView: 'suggestions' | 'counters' | 'synergies' | 'meta';
-  showHeroIcons: boolean;
-  showWinRates: boolean;
-  showPickRates: boolean;
-  includeBans: boolean;
-  maxSuggestions: number;
-}
-
-/**
- * Team analysis preferences
- */
-export interface TeamAnalysisPreferences {
-  defaultView: 'overview' | 'performance' | 'trends' | 'comparison';
-  showAdvancedMetrics: boolean;
-  showTrends: boolean;
-  showComparisons: boolean;
-  defaultTimeRange: number; // days
-}
 
 // ============================================================================
 // CONFIG CONTEXT STATE
@@ -157,7 +62,7 @@ export interface TeamAnalysisPreferences {
 export interface ConfigContextValue {
   // Configuration data
   config: AppConfig;
-  preferences: UserPreferences;
+  viewPreferences: ViewPreferences;
 
   // Team data (persistent)
   teamList: TeamData[];
@@ -174,9 +79,9 @@ export interface ConfigContextValue {
 
   // Actions
   updateConfig: (updates: Partial<AppConfig>) => Promise<void>;
-  updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
+  updateViewPreferences: (updates: Partial<ViewPreferences>) => Promise<void>;
   resetConfig: () => Promise<void>;
-  resetPreferences: () => Promise<void>;
+  resetViewPreferences: () => Promise<void>;
   clearErrors: () => void;
 }
 

@@ -10,37 +10,47 @@ interface MatchDetailsPanelMinimalProps {
   className?: string;
 }
 
-// Mock hero data for demonstration
-const mockHeroes = [
+// Mock hero data for testing
+const heroes = [
   {
-    id: '1',
-    name: 'crystal_maiden',
-    localizedName: 'Crystal Maiden',
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?'
+    name: 'Crystal Maiden',
+    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg',
+    level: 25,
+    kills: 8,
+    deaths: 3,
+    assists: 12
   },
   {
-    id: '2',
-    name: 'juggernaut',
-    localizedName: 'Juggernaut',
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?'
+    name: 'Juggernaut',
+    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg',
+    level: 26,
+    kills: 15,
+    deaths: 2,
+    assists: 5
   },
   {
-    id: '3',
-    name: 'lina',
-    localizedName: 'Lina',
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?'
+    name: 'Lina',
+    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
+    level: 24,
+    kills: 12,
+    deaths: 4,
+    assists: 8
   },
   {
-    id: '4',
-    name: 'pudge',
-    localizedName: 'Pudge',
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?'
+    name: 'Pudge',
+    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
+    level: 23,
+    kills: 10,
+    deaths: 6,
+    assists: 10
   },
   {
-    id: '5',
-    name: 'axe',
-    localizedName: 'Axe',
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?'
+    name: 'Axe',
+    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
+    level: 22,
+    kills: 6,
+    deaths: 8,
+    assists: 15
   }
 ];
 
@@ -119,22 +129,22 @@ export const MatchDetailsPanelMinimal: React.FC<MatchDetailsPanelMinimalProps> =
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex -space-x-1">
-              {mockHeroes.slice(0, 3).map((hero, index) => (
+              {heroes.slice(0, 3).map((hero, index) => (
                 <Avatar key={index} className="w-8 h-8 border-2 border-background">
                   <AvatarImage 
                     src={hero.imageUrl} 
-                    alt={hero.localizedName}
+                    alt={hero.name}
                     className="object-cover"
                   />
                   <AvatarFallback className="text-xs">
-                    {hero.localizedName.substring(0, 2).toUpperCase()}
+                    {hero.name.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               ))}
-              {mockHeroes.length > 3 && (
+              {heroes.length > 3 && (
                 <div className="w-8 h-8 bg-muted rounded-full border-2 border-background flex items-center justify-center">
                   <span className="text-xs font-medium text-muted-foreground">
-                    +{mockHeroes.length - 3}
+                    +{heroes.length - 3}
                   </span>
                 </div>
               )}

@@ -9,14 +9,14 @@
 
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
-import { useHeroContext } from '@/contexts/hero-context';
+import { useConstantsContext } from '@/contexts/constants-context';
 import { useMatchContext } from '@/contexts/match-context';
 import { useMatchDataFetching } from '@/contexts/match-data-fetching-context';
 import { usePlayerContext } from '@/contexts/player-context';
 import { usePlayerDataFetching } from '@/contexts/player-data-fetching-context';
 import { useTeamContext } from '@/contexts/team-context';
 import { useTeamDataFetching } from '@/contexts/team-data-fetching-context';
-import type { Match } from '@/types/contexts/match-context-value';
+import type { OpenDotaMatch } from '@/types/external-apis';
 
 import type {
   DataCoordinatorContextValue,
@@ -35,6 +35,13 @@ import {
   usePlayerAggregationWorkflow,
   useTeamAdditionWorkflow
 } from './data-coordinator-workflows';
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+// Note: Data generation is handled by the appropriate contexts
+// (e.g., match context handles match data generation)
 
 // ============================================================================
 // CONTEXT CREATION
@@ -87,7 +94,7 @@ function useDataCoordinatorLogic() {
   const teamContext = useTeamContext();
   const matchContext = useMatchContext();
   const playerContext = usePlayerContext();
-  const heroContext = useHeroContext();
+  const constantsContext = useConstantsContext();
   
   // Data fetching contexts
   const teamDataFetching = useTeamDataFetching();
@@ -112,7 +119,7 @@ function useDataCoordinatorLogic() {
   
   // Cross-context coordination
   const contextSynchronization = useContextSynchronization(
-    teamContext, matchContext, playerContext, heroContext
+    teamContext, matchContext, playerContext, constantsContext
   );
   
   // Error handling
@@ -123,7 +130,7 @@ function useDataCoordinatorLogic() {
   
   // Actions
   const actions = useDataCoordinatorActions(
-    state, teamContext, teamDataFetching, matchDataFetching, matchContext
+    state, teamContext, teamDataFetching, matchDataFetching, matchContext, playerContext
   );
   
   const userActionHandler = useUserActionHandler(
@@ -176,7 +183,8 @@ function useDataCoordinatorActions(
   teamContext: ReturnType<typeof useTeamContext>,
   teamDataFetching: ReturnType<typeof useTeamDataFetching>,
   matchDataFetching: ReturnType<typeof useMatchDataFetching>,
-  matchContext: ReturnType<typeof useMatchContext>
+  matchContext: ReturnType<typeof useMatchContext>,
+  playerContext: ReturnType<typeof usePlayerContext>
 ) {
   const selectTeam = useCallback(async (teamId: string, leagueId: string) => {
     state.setActiveTeam({ teamId, leagueId });
@@ -184,11 +192,9 @@ function useDataCoordinatorActions(
   }, [state, teamContext]);
   
   const fetchMatchesForTeam = useCallback(async (teamId: string, leagueId: string) => {
-    // Get existing matches from the match context
-    const existingMatches = matchContext.matches.filter(match => 
-      match.teamId === teamId && match.leagueId === leagueId
-    );
-    const existingMatchIds = new Set(existingMatches.map(match => match.id));
+    // Get existing matches from the team context instead of match context
+    const existingMatches = teamContext.getTeamMatchesForLeague(teamId, leagueId);
+    const existingMatchIds = new Set(existingMatches.map(match => match.matchId));
     
     // Fetch team data with force=true to get fresh data
     const teamResult = await teamDataFetching.fetchTeamData(teamId, true);
@@ -198,57 +204,44 @@ function useDataCoordinatorActions(
     }
     
     // Filter matches for the specific league
-    const leagueMatches = (teamResult.matches || []).filter((match: { leagueId: string }) => 
-      match.leagueId === leagueId
+    const leagueMatches = (teamResult.matches || []).filter((matchSummary: { leagueId: string }) => 
+      matchSummary.leagueId === leagueId
     );
     
-    // Only fetch matches that don't already exist in the context
-    const newMatches = leagueMatches.filter(match => !existingMatchIds.has(match.matchId));
+    // Only fetch matches that don't already exist in the team context
+    const newMatches = leagueMatches.filter(matchSummary => !existingMatchIds.has(matchSummary.matchId));
     
     if (newMatches.length === 0) {
       return;
     }
     
-    // Fetch and add matches one by one for real-time updates
-    const internalMatches: Match[] = [];
-    
     // Initiate all match detail requests simultaneously using .then() blocks
-    const matchDetailPromises = newMatches.map(match => 
-      matchDataFetching.fetchMatchData(match.matchId)
+    const matchDetailPromises = newMatches.map(matchSummary => 
+      matchDataFetching.fetchMatchData(matchSummary.matchId)
         .then((matchData) => {
           if (matchData && !('error' in matchData)) {
-            const internalMatch: Match = {
-              id: matchData.match_id.toString(),
-              teamId: teamId,
-              leagueId: leagueId,
-              opponent: matchData.radiant_name || matchData.dire_name || 'Unknown',
-              result: matchData.radiant_win ? 'win' as const : 'loss' as const,
-              date: new Date(matchData.start_time * 1000).toISOString(),
-              duration: matchData.duration,
-              teamSide: 'radiant' as const, // Default, will be updated with detailed data
-              pickOrder: 'first' as const, // Default, will be updated with detailed data
-              players: [], // Will be populated with detailed data
-              heroes: [] // Will be populated with detailed data
-            };
+            // Let the match context handle the data generation and addition
+            const generatedMatch = matchContext.addMatch(matchData);
             
-            internalMatches.push(internalMatch);
-            // Add match to context immediately as it comes in
-            matchContext.addMatches([internalMatch]);
+            // Let the team context handle team-specific logic with both matchSummary and generatedMatch
+            teamContext.addMatch(generatedMatch, matchSummary, matchData, teamId, leagueId);
             
-            // Trigger detailed match data fetching for this match
-            return matchDataFetching.fetchMatchData(internalMatch.id);
+            // Let the player context handle player-specific logic
+            playerContext.addMatch(generatedMatch);
+            
+            return matchData;
           }
           return null;
         })
         .catch((error) => {
-          console.warn(`Failed to fetch match ${match.matchId}:`, error);
+          console.warn(`Failed to fetch match ${matchSummary.matchId}:`, error);
           return null;
         })
     );
     
     // Wait for all match detail requests to complete
     await Promise.allSettled(matchDetailPromises);
-  }, [teamDataFetching, matchDataFetching, matchContext]);
+  }, [teamDataFetching, matchDataFetching, matchContext, playerContext, teamContext]);
 
   const refreshTeamWithFullData = useCallback(async (teamId: string, leagueId: string) => {
     try {

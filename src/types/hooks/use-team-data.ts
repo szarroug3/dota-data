@@ -4,7 +4,8 @@
  * Provides type definitions for the useTeamData hook.
  */
 
-import type { Team, TeamData, TeamSummary } from '@/types/contexts/team-types';
+import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Team } from '@/types/contexts/league-types';
 
 export interface UseTeamDataReturn {
   // Team data

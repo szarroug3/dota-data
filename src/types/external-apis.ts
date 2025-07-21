@@ -206,6 +206,130 @@ export interface OpenDotaMatchPlayer {
   kills_per_min: number;
   kda: number;
   abandons: number;
+  // Additional fields from actual data
+  neutral_kills: number;
+  tower_kills: number;
+  courier_kills: number;
+  lane_kills: number;
+  hero_kills: number;
+  observer_kills: number;
+  sentry_kills: number;
+  roshan_kills: number;
+  necronomicon_kills: number;
+  ancient_kills: number;
+  buyback_count: number;
+  observer_uses: number;
+  sentry_uses: number;
+  lane_efficiency: number;
+  lane_efficiency_pct: number;
+  lane: number;
+  lane_role: number;
+  is_roaming: boolean;
+  purchase_time: Record<string, number>;
+  first_purchase_time: Record<string, number>;
+  item_win: Record<string, number>;
+  item_usage: Record<string, number>;
+  purchase_tpscroll: number;
+  actions_per_min: number;
+  life_state_dead: number;
+  scaled_hero_damage: number;
+  scaled_tower_damage: number;
+  scaled_hero_healing: number;
+  cosmetics: Array<{
+    item_id: number;
+    name: string;
+    prefab: string;
+    creation_date: string;
+    image_inventory: string;
+    image_path: string;
+    item_description: string;
+    item_name: string;
+    item_rarity: string;
+    item_type_name: string | null;
+    used_by_heroes: string | null;
+  }>;
+  benchmarks: Record<string, {
+    raw: number;
+    pct: number;
+  }>;
+  // Complex nested structures
+  times: number[];
+  gold_t: number[];
+  lh_t: number[];
+  dn_t: number[];
+  xp_t: number[];
+  obs_log: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    x: number;
+    y: number;
+    z: number;
+    entityleft: boolean;
+    ehandle: number;
+    key: string;
+    player_slot: number;
+  }>;
+  sen_log: any[];
+  obs_left_log: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    attackername: string;
+    x: number;
+    y: number;
+    z: number;
+    entityleft: boolean;
+    ehandle: number;
+    key: string;
+    player_slot: number;
+  }>;
+  sen_left_log: any[];
+  purchase_log: Array<{
+    time: number;
+    key: string;
+  }>;
+  kills_log: Array<{
+    time: number;
+    key: string;
+  }>;
+  buyback_log: any[];
+  runes_log: Array<{
+    time: number;
+    key: number;
+  }>;
+  connection_log: any[];
+  lane_pos: Record<string, Record<string, number>>;
+  obs: Record<string, Record<string, number>>;
+  sen: Record<string, Record<string, number>>;
+  actions: Record<string, number>;
+  pings: number;
+  purchase: Record<string, number>;
+  gold_reasons: Record<string, number>;
+  xp_reasons: Record<string, number>;
+  killed: Record<string, number>;
+  item_uses: Record<string, number>;
+  ability_uses: Record<string, number>;
+  ability_targets: Record<string, Record<string, number>>;
+  damage_targets: Record<string, Record<string, number>>;
+  hero_hits: Record<string, number>;
+  damage: Record<string, number>;
+  damage_taken: Record<string, number>;
+  damage_inflictor: Record<string, number>;
+  runes: Record<string, number>;
+  killed_by: Record<string, number>;
+  kill_streaks: Record<string, number>;
+  multi_kills: Record<string, number>;
+  life_state: Record<string, number>;
+  healing: Record<string, number>;
+  damage_inflictor_received: Record<string, number>;
+  randomed: boolean;
+  pred_vict: boolean;
+  neutral_tokens_log: Array<{
+    time: number;
+    key: string;
+  }>;
+  neutral_item_history: any[];
   // Optional fields
   party_id?: number;
   permanent_buffs?: Array<{
@@ -236,38 +360,6 @@ export interface OpenDotaMatchPlayer {
   is_contributor?: boolean;
   patch?: number;
   region?: number;
-  neutral_kills?: number;
-  tower_kills?: number;
-  courier_kills?: number;
-  lane_kills?: number;
-  hero_kills?: number;
-  observer_kills?: number;
-  sentry_kills?: number;
-  roshan_kills?: number;
-  necronomicon_kills?: number;
-  ancient_kills?: number;
-  buyback_count?: number;
-  observer_uses?: number;
-  sentry_uses?: number;
-  lane_efficiency_pct?: number;
-  lane?: number;
-  lane_role?: number;
-  is_roaming?: boolean;
-  purchase_time?: Record<string, number>;
-  first_purchase_time?: Record<string, number>;
-  item_win?: Record<string, number>;
-  item_usage?: Record<string, number>;
-  purchase_tpscroll?: number;
-  actions_per_min?: number;
-  life_state_dead?: number;
-  scaled_hero_damage?: number;
-  scaled_tower_damage?: number;
-  scaled_hero_healing?: number;
-  cosmetics?: number[];
-  benchmarks?: Record<string, {
-    raw: number;
-    pct: number;
-  }>;
 }
 
 export interface OpenDotaMatch {
@@ -326,6 +418,27 @@ export interface OpenDotaMatch {
       xp_end: number;
     }>;
   }>;
+  objectives?: Array<{
+    time: number;
+    type: string;
+    slot?: number;
+    key?: string;
+    value?: number;
+    killer?: number;
+    team?: number;
+    player_slot?: number;
+    unit?: string;
+  }>;
+  chat?: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    key: string;
+    player_slot: number;
+  }>;
+  radiant_gold_adv?: number[];
+  radiant_xp_adv?: number[];
+  cosmetics?: Record<string, number>;
 }
 
 /**
@@ -443,5 +556,39 @@ export type ExternalApiService = 'opendota' | 'dotabuff';
  * External API response union
  */
 
+
+export interface OpenDotaItem {
+  id: number;
+  img: string;
+  dname: string;
+  qual?: string;
+  cost?: number;
+  behavior?: string | string[] | false;
+  target_team?: string | string[];
+  target_type?: string | string[];
+  notes?: string;
+  attrib?: Array<{
+    key: string;
+    value: string | number;
+    display?: string;
+  }>;
+  mc?: number | false;
+  hc?: number | false;
+  cd?: number | false;
+  lore?: string;
+  components?: string[] | null;
+  created?: boolean;
+  charges?: number | false;
+  abilities?: Array<{
+    type: string;
+    title: string;
+    description: string;
+  }>;
+  hint?: string[];
+  dispellable?: string;
+  dmg_type?: string;
+  bkbpierce?: string;
+  tier?: number;
+}
 
  

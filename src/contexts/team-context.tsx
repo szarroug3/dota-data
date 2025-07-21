@@ -11,10 +11,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/contexts/config-context';
+import { useConstantsContext } from '@/contexts/constants-context';
 import { useDataCoordinator } from '@/contexts/data-coordinator-context';
 import { useTeamDataFetching } from '@/contexts/team-data-fetching-context';
-import type { Match, Player, TeamContextProviderProps, TeamContextValue, TeamData } from '@/types/contexts/team-types';
-import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
+import type { TeamData, TeamContextValue, TeamContextProviderProps, TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match } from '@/types/contexts/match-context-value';
+import type { Player } from '@/types/contexts/player-context-value';
+import type { DotabuffLeague, DotabuffTeam, OpenDotaMatch, DotabuffMatchSummary } from '@/types/external-apis';
 
 // ============================================================================
 // DEFAULTS
@@ -27,42 +30,31 @@ import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
 // ============================================================================
 
 const processTeamData = (teamId: string, leagueId: string, teamName: string, leagueName: string, teamResult: DotabuffTeam): TeamData => {
-  // Convert API matches to our Match format
-  const matches: Match[] = teamResult.matches.map(match => ({
-    id: match.matchId,
-    teamId,
-    leagueId: match.leagueId,
-    opponent: match.opponentName,
-    result: match.result === 'won' ? 'win' : 'loss',
-    date: new Date(match.startTime * 1000).toISOString(),
-    duration: match.duration,
-    teamSide: 'radiant', // Default value, will be updated when detailed match data is fetched
-    pickOrder: 'first', // Default value, will be updated when detailed match data is fetched
-    players: [], // Will be populated when detailed match data is fetched
-    heroes: [] // Will be populated when detailed match data is fetched
-  }));
+  // Convert API matches to TeamMatchParticipation format
+  const matches: TeamMatchParticipation[] = teamResult.matches.map(match => {
+    // For now, default to radiant side - this will be updated with detailed match data
+    const side = 'radiant' as const;
+    
+    return {
+      matchId: match.matchId,
+      side
+    };
+  });
 
-  // Calculate summary statistics
+  // Calculate performance statistics
   const totalMatches = matches.length;
-  const totalWins = matches.filter(match => match.result === 'win').length;
-  const totalLosses = matches.filter(match => match.result === 'loss').length;
+  const totalWins = teamResult.matches.filter(match => match.result === 'won').length;
+  const totalLosses = teamResult.matches.filter(match => match.result === 'lost').length;
   const overallWinRate = totalMatches > 0 ? (totalWins / totalMatches) * 100 : 0;
   
   // Calculate average match duration
-  const totalDuration = matches.reduce((sum, match) => sum + match.duration, 0);
+  const totalDuration = teamResult.matches.reduce((sum, match) => sum + match.duration, 0);
   const averageMatchDuration = totalMatches > 0 ? totalDuration / totalMatches : 0;
-  
-  // Find last match date
-  const lastMatchDate = matches.length > 0 
-    ? new Date(Math.max(...teamResult.matches.map(match => match.startTime * 1000))).toISOString()
-    : null;
 
   return {
     team: {
       id: teamId,
       name: teamName,
-      leagueId,
-      leagueName,
       isActive: false,
       isLoading: false,
       error: undefined
@@ -73,14 +65,35 @@ const processTeamData = (teamId: string, leagueId: string, teamName: string, lea
     },
     matches,
     players: [], // Players will be populated later
-    summary: {
+    performance: {
       totalMatches,
       totalWins,
       totalLosses,
       overallWinRate,
-      lastMatchDate,
+      heroUsage: {
+        picks: [],
+        bans: [],
+        picksAgainst: [],
+        bansAgainst: [],
+        picksByPlayer: {}
+      },
+      draftStats: {
+        firstPickCount: 0,
+        secondPickCount: 0,
+        firstPickWinRate: 0,
+        secondPickWinRate: 0,
+        uniqueHeroesPicked: 0,
+        uniqueHeroesBanned: 0,
+        mostPickedHero: '',
+        mostBannedHero: ''
+      },
+      currentWinStreak: 0,
+      currentLoseStreak: 0,
       averageMatchDuration,
-      totalPlayers: 0 // Will be updated when players are fetched
+      averageKills: 0,
+      averageDeaths: 0,
+      averageGold: 0,
+      averageExperience: 0
     }
   };
 };
@@ -88,6 +101,11 @@ const processTeamData = (teamId: string, leagueId: string, teamName: string, lea
 const findTeamData = (teamList: TeamData[], teamId: string, leagueId: string): TeamData | undefined => {
   return teamList.find(td => td.team.id === teamId && td.team.leagueId === leagueId);
 };
+
+// Helper function to determine if a team won based on their side and match result
+function didTeamWin(match: Match, teamSide: 'radiant' | 'dire'): boolean {
+  return match.result === teamSide;
+}
 
 // ============================================================================
 // CONTEXT CREATION
@@ -243,6 +261,62 @@ function useRefreshTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | 
   }, [teamList, setTeamList, fetchTeamData, fetchLeagueData, setIsLoading, setError]);
 }
 
+function useAddMatch(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void) {
+  return useCallback((match: Match, matchSummary: DotabuffMatchSummary, matchData: OpenDotaMatch, teamId: string, leagueId: string) => {
+    // Find the team data for this team/league combination
+    const teamData = findTeamData(teamList, teamId, leagueId);
+    if (!teamData) {
+      console.warn(`Team ${teamId} not found when adding match ${match.id}`);
+      return;
+    }
+
+    // Determine which side the team played on using the OpenDota match data
+    const teamName = teamData.team.name;
+    let teamSide: 'radiant' | 'dire' = 'radiant'; // Default fallback
+    
+    if (matchData.radiant_name && matchData.dire_name) {
+      if (matchData.radiant_name === teamName) {
+        teamSide = 'radiant';
+      } else if (matchData.dire_name === teamName) {
+        teamSide = 'dire';
+      }
+    }
+
+    // Update the team data with the new match
+    setTeamList(prevList => prevList.map(td => {
+      if (td.team.id === teamId && td.team.leagueId === leagueId) {
+        // Check if match already exists
+        const matchExists = td.matches.some(m => m.id === match.id);
+        if (matchExists) {
+          return td; // Don't add duplicate
+        }
+
+        // Create the match with the determined team side and opponent from matchSummary
+        const matchWithTeamSide = {
+          ...match,
+          teamSide,
+          opponent: matchSummary.opponentName // Use opponent name from Dotabuff data
+        };
+
+        // Determine if this team won based on their side and the match result
+        const teamWon = didTeamWin(matchWithTeamSide, teamSide);
+
+        return {
+          ...td,
+          matches: [...td.matches, matchWithTeamSide],
+          summary: {
+            ...td.summary,
+            totalMatches: td.matches.length + 1,
+            totalWins: td.matches.filter(m => didTeamWin(m, m.teamSide)).length + (teamWon ? 1 : 0),
+            totalLosses: td.matches.filter(m => !didTeamWin(m, m.teamSide)).length + (teamWon ? 0 : 1)
+          }
+        };
+      }
+      return td;
+    }));
+  }, [teamList, setTeamList]);
+}
+
 const useTeamOperations = (
   teamList: TeamData[],
   setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void,
@@ -316,6 +390,8 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     fetchLeagueData
   );
 
+  const addMatch = useAddMatch(teamList, setTeamList);
+
   const {
     getTeamMatchesForLeague,
     getTeamPlayersForLeague
@@ -333,6 +409,7 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     removeTeam,
     setActiveTeam: setActiveTeamHandler,
     refreshTeam,
+    addMatch,
     getTeamMatchesForLeague,
     getTeamPlayersForLeague,
     teamExists: (teamId: string, leagueId: string) => findTeamData(teamList, teamId, leagueId) !== undefined,
@@ -353,15 +430,23 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
 export const TeamHydrationHandler: React.FC = () => {
   const { activeTeam } = useTeamContext();
   const { fetchMatchesForTeam } = useDataCoordinator();
+  const { items, isLoadingItems } = useConstantsContext();
   const prevActiveTeam = useRef<{ teamId: string; leagueId: string } | null>(null);
 
   // On mount, hydrate matches for the active team (if any)
+  // Wait for items to be loaded before fetching matches
   useEffect(() => {
-    if (activeTeam && (!prevActiveTeam.current || prevActiveTeam.current.teamId !== activeTeam.teamId || prevActiveTeam.current.leagueId !== activeTeam.leagueId)) {
+    if (activeTeam && 
+        !isLoadingItems && 
+        Object.keys(items).length > 0 && 
+        (!prevActiveTeam.current || 
+         prevActiveTeam.current.teamId !== activeTeam.teamId || 
+         prevActiveTeam.current.leagueId !== activeTeam.leagueId)) {
+      
       fetchMatchesForTeam(activeTeam.teamId, activeTeam.leagueId);
       prevActiveTeam.current = activeTeam;
     }
-  }, [activeTeam, fetchMatchesForTeam]);
+  }, [activeTeam, fetchMatchesForTeam, items, isLoadingItems]);
 
   return null;
 };

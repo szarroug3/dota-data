@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useConfigContext } from '@/contexts/config-context';
-import type { Hero } from '@/types/contexts/hero-context-value';
+import { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 
 import { ExternalSiteButton } from '../common/ExternalSiteButton';
@@ -34,6 +34,7 @@ interface MatchListViewProps {
   onHideMatch: (matchId: string) => void;
   onRefreshMatch: (matchId: string) => void;
   className?: string;
+  activeTeamSide?: 'radiant' | 'dire'; // Which side the active team played on
 }
 
 // Temporary mock hero list for testing
@@ -46,7 +47,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler', 'Nuker'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg'
   },
   {
     id: '2',
@@ -56,7 +57,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Carry', 'Pusher'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg'
   },
   {
     id: '3',
@@ -66,7 +67,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Nuker'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg'
   },
   {
     id: '4',
@@ -76,7 +77,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Disabler', 'Initiator'],
     complexity: 3,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg'
   },
   {
     id: '5',
@@ -86,7 +87,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Initiator', 'Durable'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg'
   },
   {
     id: '6',
@@ -96,7 +97,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lion.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg'
   },
   {
     id: '7',
@@ -106,7 +107,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Carry', 'Nuker'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/nevermore.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/nevermore_vert.jpg'
   },
   {
     id: '8',
@@ -116,7 +117,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Initiator', 'Durable'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/tidehunter.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/tidehunter_vert.jpg'
   },
   {
     id: '9',
@@ -126,7 +127,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/witch_doctor.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/witch_doctor_vert.jpg'
   },
   {
     id: '10',
@@ -136,7 +137,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Carry', 'Escape'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg'
   }
 ];
 
@@ -285,38 +286,49 @@ const MatchInfo: React.FC<MatchInfoProps> = ({ match, onSelectMatch }) => (
  
 interface MatchBadgesProps {
   match: Match;
+  activeTeamSide?: 'radiant' | 'dire'; // Which side the active team played on
 }
 
-const MatchBadges: React.FC<MatchBadgesProps> = ({ match }) => (
-  <div className="flex items-center gap-2">
-    {/* Result Badge */}
-    <Badge 
-      variant={match.result === 'win' ? 'success' : 'default'} 
-      className="text-xs w-fit @[300px]:block hidden"
-    >
-      <span className="@[400px]:block hidden">{match.result === 'win' ? 'Victory' : 'Defeat'}</span>
-      <span className="@[400px]:hidden block">{match.result === 'win' ? 'W' : 'L'}</span>
-    </Badge>
-    
-    {/* Team Side Badge */}
-    <Badge 
-      variant="outline" 
-      className="text-xs w-fit @[300px]:block hidden"
-    >
-      <span className="@[400px]:block hidden">{match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}</span>
-      <span className="@[400px]:hidden block">{match.teamSide === 'radiant' ? 'R' : 'D'}</span>
-    </Badge>
-    
-    {/* Pick Order Badge */}
-    <Badge 
-      variant="secondary" 
-      className="text-xs w-fit @[300px]:block hidden"
-    >
-      <span className="@[400px]:block hidden">{match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}</span>
-      <span className="@[400px]:hidden block">{match.pickOrder === 'first' ? 'FP' : 'SP'}</span>
-    </Badge>
-  </div>
-);
+// Helper function to determine if the active team won
+const didActiveTeamWin = (match: Match, activeTeamSide?: 'radiant' | 'dire'): boolean => {
+  if (!activeTeamSide) return false;
+  return match.result === activeTeamSide;
+};
+
+const MatchBadges: React.FC<MatchBadgesProps> = ({ match, activeTeamSide }) => {
+  const teamWon = didActiveTeamWin(match, activeTeamSide);
+  
+  return (
+    <div className="flex items-center gap-2">
+      {/* Result Badge */}
+      <Badge 
+        variant={teamWon ? 'success' : 'default'} 
+        className="text-xs w-fit @[300px]:block hidden"
+      >
+        <span className="@[400px]:block hidden">{teamWon ? 'Victory' : 'Defeat'}</span>
+        <span className="@[400px]:hidden block">{teamWon ? 'W' : 'L'}</span>
+      </Badge>
+      
+      {/* Team Side Badge */}
+      <Badge 
+        variant="outline" 
+        className="text-xs w-fit @[300px]:block hidden"
+      >
+        <span className="@[400px]:block hidden">{match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}</span>
+        <span className="@[400px]:hidden block">{match.teamSide === 'radiant' ? 'R' : 'D'}</span>
+      </Badge>
+      
+      {/* Pick Order Badge */}
+      <Badge 
+        variant="secondary" 
+        className="text-xs w-fit @[300px]:block hidden"
+      >
+        <span className="@[400px]:block hidden">{match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}</span>
+        <span className="@[400px]:hidden block">{match.pickOrder === 'first' ? 'FP' : 'SP'}</span>
+      </Badge>
+    </div>
+  );
+};
 
 interface MatchCardProps {
   match: Match;
@@ -325,6 +337,7 @@ interface MatchCardProps {
   onSelectMatch: (matchId: string) => void;
   onHideMatch: (matchId: string) => void;
   onRefreshMatch: (matchId: string) => void;
+  activeTeamSide?: 'radiant' | 'dire'; // Which side the active team played on
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({ 
@@ -333,7 +346,8 @@ const MatchCard: React.FC<MatchCardProps> = ({
   selectedMatchId, 
   onSelectMatch, 
   onHideMatch,
-  onRefreshMatch
+  onRefreshMatch,
+  activeTeamSide
 }) => {
   const { config } = useConfigContext();
   
@@ -375,7 +389,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Row 2: Badges on left, buttons on right aligned with avatar */}
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <MatchBadges match={match} />
+            <MatchBadges match={match} activeTeamSide={activeTeamSide} />
             <div className="flex items-center gap-0.5 opacity-0 invisible @[200px]:opacity-100 @[200px]:visible" style={{ marginRight: '-0.2rem' }}>
               <ExternalSiteButton
                 matchId={match.id}
@@ -404,7 +418,8 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
   onSelectMatch,
   onHideMatch,
   onRefreshMatch,
-  className
+  className,
+  activeTeamSide
 }) => {
   if (matches.length === 0) {
     return (
@@ -428,6 +443,7 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
           onSelectMatch={onSelectMatch}
           onHideMatch={onHideMatch}
           onRefreshMatch={onRefreshMatch}
+          activeTeamSide={activeTeamSide} // Pass the active team side to MatchCard
         />
       ))}
     </div>

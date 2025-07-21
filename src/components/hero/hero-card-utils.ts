@@ -18,7 +18,6 @@ export const generateMockHeroInfo = (heroId: string): HeroInfo => {
       roles: ['Carry', 'Escape', 'Nuker'],
       image: '/heroes/antimage.jpg',
       icon: '/heroes/antimage_icon.png',
-      complexity: 1,
       stats: {
         baseHealth: 620,
         baseMana: 219,
@@ -39,7 +38,6 @@ export const generateMockHeroInfo = (heroId: string): HeroInfo => {
       roles: ['Support', 'Disabler', 'Nuker', 'Jungler'],
       image: '/heroes/crystal_maiden.jpg',
       icon: '/heroes/crystal_maiden_icon.png',
-      complexity: 1,
       stats: {
         baseHealth: 480,
         baseMana: 291,
@@ -60,7 +58,6 @@ export const generateMockHeroInfo = (heroId: string): HeroInfo => {
       roles: ['Carry', 'Nuker', 'Disabler', 'Escape', 'Pusher'],
       image: '/heroes/invoker.jpg',
       icon: '/heroes/invoker_icon.png',
-      complexity: 3,
       stats: {
         baseHealth: 492,
         baseMana: 195,
@@ -163,6 +160,4 @@ export const getWinRateColor = (winRate: number): string => {
   return 'text-red-600';
 };
 
-export const getComplexityStars = (complexity: number): string => {
-  return '★'.repeat(complexity) + '☆'.repeat(3 - complexity);
-}; 
+ 

@@ -27,7 +27,7 @@ export interface HeroInfo {
   roles: string[];
   image: string;
   icon: string;
-  complexity: number; // 1-3 scale
+
   stats: {
     baseHealth: number;
     baseMana: number;

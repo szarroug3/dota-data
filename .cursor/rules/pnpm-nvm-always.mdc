@@ -3,11 +3,13 @@ description: Ensure the correct Node version is active before running any pnpm c
 alwaysApply: true
 ---
 
-- Before running any pnpm command, execute nvm use to ensure the correct Node version is active.
+- If you run a pnpm command and see that you got an error about node, run nvm use then rerun the command.
 
 <example>
-Agent runs nvm use && pnpm install.
+pnpm test
+error about node
+nvm use && pnpm test
 </example>
 <example type="invalid">
-Agent runs pnpm install without setting the Node version.
+Agent runs pnpm test without setting the Node version if the first run shows an error related to node version.
 </example>

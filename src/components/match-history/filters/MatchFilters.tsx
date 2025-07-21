@@ -4,7 +4,7 @@ import { MultiSelectCombobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useHeroContext } from '@/contexts/hero-context';
+import { useConstantsContext } from '@/contexts/constants-context';
 import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 
@@ -173,7 +173,7 @@ function PickOrderFilter({ value, onChange }: { value: MatchFilters['pickOrder']
 }
 
 function HeroesPlayedFilter({ value, onChange, matches }: { value: string[]; onChange: (v: string[]) => void; matches: Match[] }) {
-  const { heroes } = useHeroContext();
+  const { heroes } = useConstantsContext();
   
   // Mock heroes for testing - will be replaced with real hero data later
   const mockHeroes: Hero[] = [
@@ -205,7 +205,7 @@ function HeroesPlayedFilter({ value, onChange, matches }: { value: string[]; onC
   ];
   
   // Use mock heroes for now, fallback to context heroes if available
-  const availableHeroes = heroes.length > 0 ? heroes : mockHeroes;
+  const availableHeroes = Object.values(heroes);
   
   // Get all hero IDs played in the matches
   const heroIdSet = new Set<string>();

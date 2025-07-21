@@ -387,27 +387,711 @@ UI Components (Presentation)
 - **✅ Responsive Design**: Mobile-first with collapsible match list
 
 ##### **🔄 1.4 Data Processing (Phase 2) - IN PROGRESS**
-- **🔄 Pick Order Calculation**: From teamSide + heroes data
-- **🔄 Enhanced Match Details**: Transform basic Match data into MatchDetails
-- **🔄 Hero Summary Aggregation**: Calculate stats across filtered matches
-- **✅ Team Side Determination**: Already available in teamSide field
 
-**Implementation Details**:
+**Complete Context Architecture Analysis**: 
+- **✅ MatchContext**: Comprehensive state management, filtering, and basic actions
+- **✅ MatchDataFetchingContext**: `fetchMatchData()`, cache management, and error handling
+- **✅ DataCoordinatorContext**: Coordinates between contexts and manages workflows
+- **✅ ConstantsContext**: Hero/item data management, filtering, and utilities
+- **✅ ConstantsDataFetchingContext**: Hero/item data fetching and caching
+- **✅ TeamContext**: Team data management, league operations, and team selection
+- **✅ TeamDataFetchingContext**: Team data fetching and caching
+- **✅ PlayerContext**: Player data management, filtering, and operations
+- **✅ PlayerDataFetchingContext**: Player data fetching and caching
+- **✅ Type System**: Complete type definitions for all data structures
+- **🔄 Missing**: Data generation functions for display components
+
+**✅ COMPLETED: Type System Updates**
+- **✅ MatchContextValue**: Updated with comprehensive types and new function signatures
+- **✅ PlayerContextValue**: Already comprehensive, no changes needed
+- **✅ TeamContextValue**: Already comprehensive, no changes needed  
+- **✅ ConstantsContextValue**: Already comprehensive, no changes needed
+
+**Current Available Functions by Context**:
 ```typescript
-// ✅ src/components/match-history/MatchHistoryPage.tsx
-export const MatchHistoryPage = () => {
-  // ✅ Local state for filters, view options, selected match
-  // ✅ Responsive layout logic
-  // ✅ Filter and view management
-};
+// ✅ MatchContext - Already Available
+- matches, filteredMatches, selectedMatchId, selectedMatch
+- filters, hiddenMatchIds, preferences, heroStatsGrid
+- isLoadingMatches, isLoadingMatchDetails, isLoadingHeroStats
+- matchesError, matchDetailsError, heroStatsError
+- setFilters, selectMatch, hideMatch, showMatch
+- addMatches, refreshMatches, refreshMatchDetails
+- clearErrors, updatePreferences
 
-// ✅ Stateless components
-// ✅ src/components/match-history/list/MatchesList.tsx
-// ✅ src/components/match-history/list/MatchListView.tsx
-// ✅ src/components/match-history/details/MatchDetailsPanel.tsx
-// ✅ src/components/match-history/filters/MatchFilters.tsx
-// 🔄 src/components/match-history/summary/HeroSummaryTable.tsx
+// ✅ MatchDataFetchingContext - Already Available  
+- fetchMatchData(matchId: string, force?: boolean)
+- clearMatchCache, clearAllCache, isMatchCached
+- clearMatchError, clearAllErrors, getMatchError
+
+// ✅ ConstantsContext - Already Available
+- heroes, filteredHeroes, selectedHeroId, selectedHero
+- items, filteredItems, selectedItemId, selectedItem
+- heroFilters, setHeroFilters
+- isLoadingHeroes, isLoadingItems, isLoadingHeroData, isLoadingItemData
+- heroesError, itemsError, heroDataError, itemDataError
+- refreshHeroes, refreshItems, refreshHero, refreshItem
+- setSelectedHero, setSelectedItem, clearHeroFilters
+- findHero, findItem, heroExists, itemExists
+- applyHeroFilters, areAllHeroFiltersEmpty
+- convertOpenDotaHeroToHero, getItemImageByTitle
+
+// ✅ ConstantsDataFetchingContext - Already Available
+- fetchHeroesData(force?: boolean), fetchItemsData(force?: boolean)
+- clearHeroesCache, clearItemsCache, clearAllCache
+- clearHeroesError, clearItemsError, clearAllErrors
+- isHeroesCached, isItemsCached, getHeroesError, getItemsError
+
+// ✅ TeamContext - Already Available
+- teamList, activeTeam, isLoading, error
+- addTeam(teamId, leagueId), removeTeam(teamId, leagueId)
+- setActiveTeam(teamId, leagueId), refreshTeam(teamId, leagueId)
+- getTeamsByLeague(leagueId), getAllLeagues()
+- processTeamData, findTeamData
+
+// ✅ TeamDataFetchingContext - Already Available
+- fetchTeamData(teamId, force?), fetchLeagueData(leagueId, force?)
+- clearTeamCache, clearLeagueCache, clearAllCache
+- clearTeamError, clearLeagueError, clearAllErrors
+- isTeamCached, isLeagueCached, getTeamError, getLeagueError
+
+// ✅ PlayerContext - Already Available
+- players, filteredPlayers, selectedPlayerId, selectedPlayer
+- filters, setFilters
+- isLoadingPlayers, isLoadingPlayerData
+- playersError, playerDataError
+- setSelectedPlayer, addPlayer, removePlayer, refreshPlayer
+- clearErrors, playerMatchesFilters
+
+// ✅ PlayerDataFetchingContext - Already Available
+- fetchPlayerData(playerId, force?), fetchPlayerMatches(playerId, force?)
+- clearPlayerCache, clearPlayerMatchesCache, clearAllCache
+- clearPlayerError, clearPlayerMatchesError, clearAllErrors
+- isPlayerCached, isPlayerMatchesCached, getPlayerError, getPlayerMatchesError
+
+// ✅ DataCoordinatorContext - Already Available
+- activeTeam, operationState, errorState
+- selectTeam, addTeamWithFullData, refreshTeamWithFullData
+- analyzeMatchesForTeam, aggregatePlayersForTeam
+- fetchMatchesForTeam, synchronizeContexts
+- clearAllContexts, refreshAllData, handleContextError
+- retryOperation, clearAllErrors, getUIStatus, handleUserAction
+- coordinateTeamContext, coordinateMatchContext, coordinatePlayerContext, coordinateHeroContext
 ```
+
+**Implementation Plan - What We Actually Need**:
+
+#### **Required Data Types and Structures**
+
+**Core Types:**
+```typescript
+// === MATCH TYPES ===
+interface Match {
+  id: string;
+  teamId: string;
+  leagueId: string;
+  opponent: string;
+  result: 'win' | 'loss';
+  date: string; // ISO string
+  duration: number; // in seconds
+  teamSide: 'radiant' | 'dire';
+  pickOrder: 'first' | 'second';
+  players: Player[];
+  heroes: string[]; // hero IDs
+}
+
+interface MatchDetails extends Match {
+  radiantTeam: string;
+  direTeam: string;
+  radiantScore: number;
+  direScore: number;
+  gameMode: string;
+  lobbyType: string;
+  radiantPlayers: MatchPlayer[];
+  direPlayers: MatchPlayer[];
+  radiantPicks: string[];
+  radiantBans: string[];
+  direPicks: string[];
+  direBans: string[];
+  events: MatchEvent[];
+  analysis: MatchAnalysis;
+}
+
+interface MatchPlayer {
+  playerId: string;
+  playerName: string;
+  heroId: string;
+  heroName: string;
+  level: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  lastHits: number;
+  denies: number;
+  netWorth: number;
+  items: string[];
+  role: string;
+}
+
+interface MatchEvent {
+  timestamp: number;
+  type: 'kill' | 'death' | 'assist' | 'tower' | 'roshan' | 'ward' | 'item';
+  playerId?: string;
+  heroId?: string;
+  position?: { x: number; y: number };
+  details?: Record<string, string | number | boolean | null>;
+}
+
+interface MatchAnalysis {
+  keyMoments: MatchMoment[];
+  teamFights: TeamFight[];
+  objectives: Objective[];
+  performance: PerformanceMetrics;
+}
+
+interface MatchMoment {
+  timestamp: number;
+  type: 'teamfight' | 'objective' | 'gank' | 'push';
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+  participants: string[];
+}
+
+interface TeamFight {
+  startTime: number;
+  endTime: number;
+  location: { x: number; y: number };
+  radiantDeaths: number;
+  direDeaths: number;
+  winner: 'radiant' | 'dire' | 'draw';
+}
+
+interface Objective {
+  type: 'tower' | 'roshan' | 'barracks' | 'ancient';
+  timestamp: number;
+  team: 'radiant' | 'dire';
+  location: { x: number; y: number };
+}
+
+interface PerformanceMetrics {
+  radiantAdvantage: number[];
+  direAdvantage: number[];
+  goldGraph: { time: number; radiant: number; dire: number }[];
+  xpGraph: { time: number; radiant: number; dire: number }[];
+}
+
+// === PLAYER TYPES ===
+interface Player {
+  id: string;
+  name: string;
+  accountId: number;
+  teamId: string;
+  role: string;
+  totalMatches: number;
+  winRate: number;
+  lastUpdated: string;
+}
+
+interface PlayerStats {
+  playerId: string;
+  playerName: string;
+  heroId: string;
+  heroName: string;
+  level: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  lastHits: number;
+  denies: number;
+  netWorth: number;
+  gpm: number;
+  xpm: number;
+  items: string[];
+  role: string;
+}
+
+interface PlayerPerformance {
+  playerId: string;
+  playerName: string;
+  kda: number; // (kills + assists) / deaths
+  gpm: number;
+  xpm: number;
+  netWorth: number;
+  lastHits: number;
+  denies: number;
+  level: number;
+  items: string[];
+  role: string;
+  performance: 'excellent' | 'good' | 'average' | 'poor';
+}
+
+interface TeamPerformance {
+  radiant: TeamPerformanceData;
+  dire: TeamPerformanceData;
+  overall: {
+    averageGpm: number;
+    averageXpm: number;
+    objectives: number;
+    teamFights: number;
+  };
+}
+
+interface TeamPerformanceData {
+  averageGpm: number;
+  averageXpm: number;
+  objectives: number;
+  teamFights: number;
+  players: PlayerPerformance[];
+}
+
+// === HERO TYPES ===
+interface Hero {
+  id: string;
+  name: string;
+  localizedName: string;
+  primaryAttribute: 'strength' | 'agility' | 'intelligence';
+  attackType: 'melee' | 'ranged';
+  roles: string[];
+  complexity: number;
+  imageUrl: string;
+}
+
+interface HeroSummary {
+  heroId: string;
+  heroName: string;
+  heroImageUrl: string;
+  count: number;
+  winRate: number;
+  usagePercentage: number;
+  performance: 'excellent' | 'good' | 'average' | 'poor';
+}
+
+interface HeroSummaryData {
+  activeTeamPicks: HeroSummary[];
+  opponentTeamPicks: HeroSummary[];
+  activeTeamBans: HeroSummary[];
+  opponentTeamBans: HeroSummary[];
+  totalMatches: number;
+  activeTeamWinRate: number;
+  opponentTeamWinRate: number;
+}
+
+interface HeroUsageStats {
+  [heroId: string]: {
+    pickCount: number;
+    banCount: number;
+    winCount: number;
+    totalGames: number;
+    pickRate: number;
+    banRate: number;
+    winRate: number;
+  };
+}
+
+// === TEAM TYPES ===
+interface Team {
+  id: string;
+  name: string;
+  leagueId: string;
+  leagueName: string;
+  isActive: boolean;
+  isLoading: boolean;
+  error?: string;
+}
+
+interface TeamData {
+  team: Team;
+  league: {
+    id: string;
+    name: string;
+  };
+  matches: Match[];
+  players: Player[];
+  summary: {
+    totalMatches: number;
+    totalWins: number;
+    totalLosses: number;
+    overallWinRate: number;
+    lastMatchDate: string | null;
+    averageMatchDuration: number;
+    totalPlayers: number;
+  };
+}
+
+interface TeamPerformanceStats {
+  totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  winRate: number;
+  averageGpm: number;
+  averageXpm: number;
+  averageObjectives: number;
+  averageTeamFights: number;
+}
+
+// === DRAFT TYPES ===
+interface DraftEvent {
+  timestamp: number;
+  type: 'pick' | 'ban';
+  team: 'radiant' | 'dire';
+  heroId: string;
+  heroName: string;
+  order: number;
+}
+
+interface PicksAndBans {
+  radiant: {
+    picks: string[];
+    bans: string[];
+  };
+  dire: {
+    picks: string[];
+    bans: string[];
+  };
+  order: DraftEvent[];
+}
+
+// === TIMING TYPES ===
+interface TimingData {
+  matchDuration: number;
+  keyMoments: KeyMoment[];
+  objectives: Objective[];
+  teamFights: TeamFight[];
+  intervals: {
+    early: number; // 0-10 minutes
+    mid: number;   // 10-30 minutes
+    late: number;  // 30+ minutes
+  };
+}
+
+interface KeyMoment {
+  timestamp: number;
+  type: 'objective' | 'teamfight' | 'gank' | 'push';
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+}
+
+// === UTILITY TYPES ===
+interface LoadingState {
+  isLoadingMatches: boolean;
+  isLoadingMatchDetails: boolean;
+  isLoadingHeroStats: boolean;
+  isLoadingPlayers: boolean;
+  isLoadingTeams: boolean;
+  isLoadingHeroes: boolean;
+  isLoadingItems: boolean;
+  overall: boolean;
+}
+
+interface OperationProgress {
+  isInProgress: boolean;
+  currentStep: number;
+  totalSteps: number;
+  operationType: string | null;
+  progress: {
+    teamFetch: boolean;
+    matchFetch: boolean;
+    playerFetch: boolean;
+    heroFetch: boolean;
+    dataTransformation: boolean;
+  };
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// === FILTER TYPES ===
+interface MatchFilters {
+  dateRange: {
+    start: string | null;
+    end: string | null;
+  };
+  result: 'all' | 'win' | 'loss';
+  opponent: string;
+  heroes: string[];
+  players: string[];
+  duration: {
+    min: number | null;
+    max: number | null;
+  };
+}
+
+interface PlayerFilters {
+  dateRange: { start: string | null; end: string | null };
+  heroes: string[];
+  roles: string[];
+  result: 'all' | 'win' | 'lose';
+  performance: {
+    minKDA: number | null;
+    minGPM: number | null;
+    minXPM: number | null;
+  };
+}
+
+interface HeroFilters {
+  primaryAttribute: string[];
+  attackType: string[];
+  roles: string[];
+  complexity: string[];
+  difficulty: string[];
+  pickRate: { min: number | null; max: number | null };
+  winRate: { min: number | null; max: number | null };
+}
+```
+
+**Data Requirements by Type:**
+
+**Match Types:**
+- `Match`: Basic match data (id, teams, result, date, duration, players, heroes)
+- `MatchDetails`: Extended match data (full player details, picks/bans, events, analysis)
+- `MatchPlayer`: Individual player performance in a match
+- `MatchEvent`: Individual events during a match (kills, objectives, etc.)
+- `MatchAnalysis`: Complete match analysis (key moments, team fights, performance)
+
+**Player Types:**
+- `Player`: Basic player information (id, name, team, role, stats)
+- `PlayerStats`: Detailed player performance in a specific match
+- `PlayerPerformance`: Calculated player performance metrics
+- `TeamPerformance`: Team-wide performance data
+
+**Hero Types:**
+- `Hero`: Basic hero information (id, name, attributes, roles)
+- `HeroSummary`: Aggregated hero statistics (usage, win rate, performance)
+- `HeroSummaryData`: Complete hero summary for both teams
+- `HeroUsageStats`: Detailed hero usage statistics
+
+**Team Types:**
+- `Team`: Basic team information (id, name, league)
+- `TeamData`: Complete team data with matches, players, and summary
+- `TeamPerformanceStats`: Calculated team performance metrics
+
+**Draft Types:**
+- `DraftEvent`: Individual draft event (pick/ban with timing)
+- `PicksAndBans`: Complete draft data for both teams
+
+**Timing Types:**
+- `TimingData`: Match timing information with key moments
+- `KeyMoment`: Individual key moment with impact assessment
+
+**Utility Types:**
+- `LoadingState`: Unified loading state across all contexts
+- `OperationProgress`: Progress tracking for multi-step operations
+- `ValidationResult`: Data validation results
+
+**Filter Types:**
+- `MatchFilters`: Match filtering criteria
+- `PlayerFilters`: Player filtering criteria
+- `HeroFilters`: Hero filtering criteria
+
+#### **Step 1: Data Generation Functions** (Display Components)
+**Purpose**: Generate data for stateless display components
+**Order**: First priority since components need this data
+
+1. **Match Details Generation** (Used by MatchDetailsPanel components)
+   - `generateMatchDetails(match: Match): MatchDetails` - Transform basic match to detailed match
+     - **Data Required**: Full match details including radiant/dire teams, scores, players, picks/bans, events, analysis
+     - **Output**: Complete MatchDetails object with all match information
+   - `generateDraftEvents(match: Match): DraftEvent[]` - Generate draft and pick/ban events
+     - **Data Required**: Pick/ban order, timestamps, hero selections, team sides
+     - **Output**: Array of draft events with timing and selection data
+   - `generatePicksAndBans(match: Match): PicksAndBans` - Generate picks and bans data
+     - **Data Required**: Hero selections for both teams, pick/ban order, team sides
+     - **Output**: Structured picks and bans data for both teams
+
+2. **Player Data Generation** (Used by MatchDetailsPanelPlayers)
+   - `generatePlayerStats(match: Match, playerId: string): PlayerStats` - Generate player performance stats
+     - **Data Required**: Player performance data (KDA, net worth, last hits, denies, level, items)
+     - **Output**: Complete player statistics for the specific player
+   - `generatePlayerPerformance(match: Match, playerId: string): PlayerPerformance` - Generate KDA, net worth, etc.
+     - **Data Required**: Player's kills, deaths, assists, net worth, GPM, XPM, items, role
+     - **Output**: Performance metrics and analysis for the player
+   - `generateTeamPerformance(match: Match): TeamPerformance` - Generate team performance data
+     - **Data Required**: Team-wide statistics, gold/XP graphs, team fight data, objectives
+     - **Output**: Team performance analysis and statistics
+
+3. **Hero Summary Data Generation** (Used by HeroSummaryTable)
+   - `generateHeroSummaryData(matches: Match[]): HeroSummaryData` - Generate aggregated hero data for summary table
+     - **Data Required**: All matches with hero selections, win/loss data, team sides
+     - **Output**: Complete hero summary data structure with active/opponent picks and bans
+   - `generateActiveTeamPicks(matches: Match[]): HeroSummary[]` - Generate active team pick statistics
+     - **Data Required**: Matches where active team picked each hero, win/loss data
+     - **Output**: Array of hero summaries with pick count, win rate, usage percentage
+   - `generateOpponentTeamPicks(matches: Match[]): HeroSummary[]` - Generate opponent team pick statistics
+     - **Data Required**: Matches where opponent team picked each hero, win/loss data
+     - **Output**: Array of hero summaries with pick count, win rate, usage percentage
+   - `generateActiveTeamBans(matches: Match[]): HeroSummary[]` - Generate active team ban statistics
+     - **Data Required**: Matches where active team banned each hero, win/loss data
+     - **Output**: Array of hero summaries with ban count, win rate, ban percentage
+   - `generateOpponentTeamBans(matches: Match[]): HeroSummary[]` - Generate opponent team ban statistics
+     - **Data Required**: Matches where opponent team banned each hero, win/loss data
+     - **Output**: Array of hero summaries with ban count, win rate, ban percentage
+   - `calculateHeroWinRate(heroId: string, matches: Match[], isActiveTeam: boolean): number` - Calculate win rate for specific hero
+     - **Data Required**: Matches where the specified team used the hero, win/loss results
+     - **Output**: Win rate percentage (0-100)
+   - `calculateHeroUsageCount(heroId: string, matches: Match[], isActiveTeam: boolean): number` - Calculate usage count for specific hero
+     - **Data Required**: Matches where the specified team used the hero
+     - **Output**: Total usage count for the hero
+
+4. **Timing & Analysis Generation** (Used by MatchDetailsPanelTimings)
+   - `generateMatchTimings(match: Match): TimingData` - Generate match timing data
+     - **Data Required**: Match duration, key event timestamps, objective timings
+     - **Output**: Structured timing data with key moments and intervals
+   - `generateMatchEvents(match: Match): MatchEvent[]` - Generate match events
+     - **Data Required**: All match events (kills, deaths, objectives, team fights)
+     - **Output**: Array of match events with timestamps and details
+   - `generateMatchAnalysis(match: Match): MatchAnalysis` - Generate analysis and key moments
+     - **Data Required**: Match performance data, key moments, team fight analysis
+     - **Output**: Complete match analysis with insights and key moments
+
+#### **Step 2: Utility Functions** (Formatting & Calculations)
+**Purpose**: Provide formatting and calculation utilities
+**Order**: After data generation (utilities may depend on generated data)
+
+5. **Formatting Utilities**
+   - `formatMatchDuration(duration: number): string` - Format match duration (e.g., "45:30")
+     - **Data Required**: Match duration in seconds
+     - **Output**: Formatted duration string (MM:SS format)
+   - `formatMatchDate(date: string): string` - Format match date (e.g., "Jan 15, 2024")
+     - **Data Required**: Match date as ISO string
+     - **Output**: Formatted date string for display
+   - `formatRelativeTime(date: string): string` - Format relative time (e.g., "2 hours ago")
+     - **Data Required**: Match date as ISO string
+     - **Output**: Relative time string (e.g., "2 hours ago", "3 days ago")
+   - `formatMatchId(matchId: string): string` - Format match ID for display
+     - **Data Required**: Raw match ID
+     - **Output**: Formatted match ID for display
+
+6. **Calculation Utilities**
+   - `calculateWinRate(matches: Match[]): number` - Calculate win rate percentage
+     - **Data Required**: Array of matches with win/loss results
+     - **Output**: Win rate percentage (0-100)
+   - `calculateAverageDuration(matches: Match[]): number` - Calculate average match duration
+     - **Data Required**: Array of matches with duration data
+     - **Output**: Average duration in seconds
+   - `calculateHeroUsage(matches: Match[]): HeroUsageStats` - Calculate hero usage statistics
+     - **Data Required**: Array of matches with hero selections and team sides
+     - **Output**: Hero usage statistics (pick rate, ban rate, win rate per hero)
+   - `calculateTeamPerformance(matches: Match[]): TeamPerformanceStats` - Calculate team performance metrics
+     - **Data Required**: Array of matches with team performance data
+     - **Output**: Team performance statistics (average GPM, XPM, objectives, etc.)
+
+#### **Step 3: Enhanced State Management** (Advanced Features)
+**Purpose**: Add advanced state management features
+**Order**: After utilities (may use utility functions)
+
+7. **Advanced State Functions**
+   - `getLoadingState(): LoadingState` - Get comprehensive loading state
+     - **Data Required**: Current loading states from all contexts
+     - **Output**: Unified loading state object
+   - `retryFailedOperation(): Promise<void>` - Retry last failed operation
+     - **Data Required**: Last failed operation details and error state
+     - **Output**: Promise that resolves when retry completes
+   - `getOperationProgress(): OperationProgress` - Get progress for multi-step operations
+     - **Data Required**: Current operation state and progress data
+     - **Output**: Progress information for ongoing operations
+   - `validateMatchData(match: Match): ValidationResult` - Validate match data integrity
+     - **Data Required**: Match data to validate
+     - **Output**: Validation result with errors/warnings
+
+#### **Step 4: Integration & Testing** (Final Steps)
+**Purpose**: Integrate with existing components and ensure quality
+**Order**: After all functions are implemented
+
+8. **Component Integration**
+    - Update `MatchHistoryPage` to use new context functions
+    - Replace local state management with context functions where appropriate
+    - Update stateless components to use generated data functions
+    - Ensure all components receive proper data through props
+
+9. **Testing & Quality Assurance**
+    - Add unit tests for all new context functions
+    - Add integration tests for component data flow
+    - Ensure zero linting warnings
+    - Verify TypeScript type safety
+    - Test error handling and edge cases
+
+**Updated MatchContext Interface**:
+```typescript
+interface MatchContextValue {
+  // === EXISTING DATA MANAGEMENT (✅ Already Available) ===
+  matches: Match[];
+  filteredMatches: Match[];
+  selectedMatchId: string | null;
+  selectedMatch: MatchDetails | null;
+  hiddenMatchIds: string[];
+  filters: MatchFilters;
+  heroStatsGrid: HeroStatsGrid;
+  preferences: MatchPreferences;
+  isLoadingMatches: boolean;
+  isLoadingMatchDetails: boolean;
+  isLoadingHeroStats: boolean;
+  matchesError: string | null;
+  matchDetailsError: string | null;
+  heroStatsError: string | null;
+  
+  // === EXISTING ACTIONS (✅ Already Available) ===
+  setFilters: (filters: MatchFilters) => void;
+  selectMatch: (matchId: string) => void;
+  hideMatch: (matchId: string) => void;
+  showMatch: (matchId: string) => void;
+  addMatches: (matches: Match[]) => void;
+  refreshMatches: () => Promise<void>;
+  refreshMatchDetails: (matchId: string) => Promise<void>;
+  clearErrors: () => void;
+  updatePreferences: (preferences: Partial<MatchPreferences>) => void;
+  
+  // === NEW DATA GENERATION (🔄 To Implement) ===
+  generateMatchDetails: (match: Match) => MatchDetails;
+  generateDraftEvents: (match: Match) => DraftEvent[];
+  generatePicksAndBans: (match: Match) => PicksAndBans;
+  generatePlayerStats: (match: Match, playerId: string) => PlayerStats;
+  generatePlayerPerformance: (match: Match, playerId: string) => PlayerPerformance;
+  generateTeamPerformance: (match: Match) => TeamPerformance;
+  generateHeroSummaryData: (matches: Match[]) => HeroSummaryData;
+  generateActiveTeamPicks: (matches: Match[]) => HeroSummary[];
+  generateOpponentTeamPicks: (matches: Match[]) => HeroSummary[];
+  generateActiveTeamBans: (matches: Match[]) => HeroSummary[];
+  generateOpponentTeamBans: (matches: Match[]) => HeroSummary[];
+  calculateHeroWinRate: (heroId: string, matches: Match[], isActiveTeam: boolean) => number;
+  calculateHeroUsageCount: (heroId: string, matches: Match[], isActiveTeam: boolean) => number;
+  generateMatchTimings: (match: Match) => TimingData;
+  generateMatchEvents: (match: Match) => MatchEvent[];
+  generateMatchAnalysis: (match: Match) => MatchAnalysis;
+  
+  // === NEW UTILITIES (🔄 To Implement) ===
+  formatMatchDuration: (duration: number) => string;
+  formatMatchDate: (date: string) => string;
+  formatRelativeTime: (date: string) => string;
+  formatMatchId: (matchId: string) => string;
+  calculateWinRate: (matches: Match[]) => number;
+  calculateAverageDuration: (matches: Match[]) => number;
+  calculateHeroUsage: (matches: Match[]) => HeroUsageStats;
+  calculateTeamPerformance: (matches: Match[]) => TeamPerformanceStats;
+  
+  // === NEW ADVANCED STATE (🔄 To Implement) ===
+  getLoadingState: () => LoadingState;
+  retryFailedOperation: () => Promise<void>;
+  getOperationProgress: () => OperationProgress;
+  validateMatchData: (match: Match) => ValidationResult;
+}
+```
+
+**Benefits of This Updated Plan**:
+1. **Leverages Existing Infrastructure**: Uses already-implemented context architecture
+2. **Focused Implementation**: Only implements what's actually missing
+3. **Component Ready**: Data generation functions are what components actually need
+4. **No Duplication**: Avoids reimplementing existing functionality
+5. **Logical Flow**: Data generation → Utilities → Advanced features → Integration
+6. **Rich Context Ecosystem**: Can leverage existing hero/item/team/player data
+
+**Expected Timeline**:
+- **Step 1**: 2-3 days (data generation functions)
+- **Step 2**: 1-2 days (utilities)
+- **Step 3**: 1 day (advanced state)
+- **Step 4**: 1-2 days (integration & testing)
+- **Total**: 5-8 days for complete implementation
 
 **✅ Required Components - COMPLETE**:
 - **✅ `MatchesList`** - Renders card/list/grid views with view mode persistence
@@ -417,6 +1101,31 @@ export const MatchHistoryPage = () => {
 - **🔄 `HeroSummaryTable`** - 2x2 hero summary grid (in progress)
 - **🔄 `AnalyticsModal`** - Charts and analytics (planned)
 - **✅ Utility components**: `HideButton`, `RefreshButton`, `ParseButton` (implemented)
+
+**Hero Summary Data Flow Architecture**:
+```
+MatchHistoryPage (Stateful)
+├── Filters: Match[] (filtered matches)
+├── HeroSummaryTable (Stateless)
+    ├── Props: matches: Match[]
+    ├── Data Source: generateHeroSummaryData(filteredMatches)
+    ├── Internal Logic: aggregateHeroes() function
+    └── Display: 2x2 grid with sorting and color-coded progress bars
+```
+
+**Hero Summary Implementation Details**:
+- **Data Source**: Uses `filteredMatches` from MatchHistoryPage state
+- **Data Generation**: `generateHeroSummaryData()` in match context processes matches
+- **Component Props**: `matches: Match[]` - receives filtered matches from parent
+- **Internal Processing**: Component aggregates hero data using `aggregateHeroes()` function
+- **Display Features**: 
+  - 2x2 grid layout (Active Picks | Opponent Picks | Active Bans | Opponent Bans)
+  - Sortable columns (Win Rate, Count, Name)
+  - Color-coded progress bars (blue for high-performance heroes)
+  - Hero avatars with proper fallback initials
+  - Responsive design with consistent column widths
+- **Performance**: Uses `useMemo` for efficient data aggregation and sorting
+- **State Management**: Each section maintains independent sort state
 
 ##### **✅ 1.5 Advanced Filtering - COMPLETE**
 - **✅ Multi-select Heroes Filter**: Searchable dropdown with all heroes played in matches
@@ -554,3 +1263,117 @@ export const MatchHistoryPage = () => {
 4. **Testing**: Test with real API responses
 
 This architecture provides a **solid foundation** for building a comprehensive Dota 2 data dashboard with clean separation of concerns, type safety, and excellent developer experience.
+
+**✅ COMPLETED: Type System**
+All context value files have been updated with comprehensive type definitions:
+- **MatchContextValue**: Updated with comprehensive types and new function signatures
+- **Complete Type System**: 8 categories with 30+ interfaces covering all data structures
+- **Type Safety**: All functions now have proper TypeScript signatures
+
+**🔄 NEXT: Implementation Plan**
+
+#### **Phase 1: Data Generation Functions Implementation** (Priority 1)
+**Purpose**: Implement the core data generation functions that components need
+**Timeline**: 2-3 days
+
+**Step 1.1: Match Details Generation** (Day 1)
+- Implement `generateMatchDetails(match: Match): MatchDetails`
+- Implement `generateDraftEvents(match: Match): DraftEvent[]`
+- Implement `generatePicksAndBans(match: Match): PicksAndBans`
+- **Testing**: Unit tests for each function
+- **Integration**: Test with existing MatchDetailsPanel components
+
+**Step 1.2: Player Data Generation** (Day 1-2)
+- Implement `generatePlayerStats(match: Match, playerId: string): PlayerStats`
+- Implement `generatePlayerPerformance(match: Match, playerId: string): PlayerPerformance`
+- Implement `generateTeamPerformance(match: Match): TeamPerformance`
+- **Testing**: Unit tests for each function
+- **Integration**: Test with existing MatchDetailsPanelPlayers components
+
+**Step 1.3: Hero Summary Data Generation** (Day 2-3)
+- Implement `generateHeroSummaryData(matches: Match[]): HeroSummaryData`
+- Implement `generateActiveTeamPicks(matches: Match[]): HeroSummary[]`
+- Implement `generateOpponentTeamPicks(matches: Match[]): HeroSummary[]`
+- Implement `generateActiveTeamBans(matches: Match[]): HeroSummary[]`
+- Implement `generateOpponentTeamBans(matches: Match[]): HeroSummary[]`
+- Implement `calculateHeroWinRate(heroId: string, matches: Match[], isActiveTeam: boolean): number`
+- Implement `calculateHeroUsageCount(heroId: string, matches: Match[], isActiveTeam: boolean): number`
+- **Testing**: Unit tests for each function
+- **Integration**: Test with existing HeroSummaryTable component
+
+**Step 1.4: Timing & Analysis Generation** (Day 3)
+- Implement `generateMatchTimings(match: Match): TimingData`
+- Implement `generateMatchEvents(match: Match): MatchEvent[]`
+- Implement `generateMatchAnalysis(match: Match): MatchAnalysis`
+- **Testing**: Unit tests for each function
+- **Integration**: Test with existing MatchDetailsPanelTimings components
+
+#### **Phase 2: Utility Functions Implementation** (Priority 2)
+**Purpose**: Implement formatting and calculation utilities
+**Timeline**: 1-2 days
+
+**Step 2.1: Formatting Utilities** (Day 4)
+- Implement `formatMatchDuration(duration: number): string`
+- Implement `formatMatchDate(date: string): string`
+- Implement `formatRelativeTime(date: string): string`
+- Implement `formatMatchId(matchId: string): string`
+- **Testing**: Unit tests for each function
+
+**Step 2.2: Calculation Utilities** (Day 4-5)
+- Implement `calculateWinRate(matches: Match[]): number`
+- Implement `calculateAverageDuration(matches: Match[]): number`
+- Implement `calculateHeroUsage(matches: Match[]): HeroUsageStats`
+- Implement `calculateTeamPerformance(matches: Match[]): TeamPerformanceStats`
+- **Testing**: Unit tests for each function
+
+#### **Phase 3: Advanced State Management** (Priority 3)
+**Purpose**: Implement advanced state management features
+**Timeline**: 1 day
+
+**Step 3.1: Advanced State Functions** (Day 6)
+- Implement `getLoadingState(): LoadingState`
+- Implement `retryFailedOperation(): Promise<void>`
+- Implement `getOperationProgress(): OperationProgress`
+- Implement `validateMatchData(match: Match): ValidationResult`
+- **Testing**: Unit tests for each function
+
+#### **Phase 4: Integration & Testing** (Priority 4)
+**Purpose**: Integrate with existing components and ensure quality
+**Timeline**: 1-2 days
+
+**Step 4.1: Component Integration** (Day 7)
+- Update `MatchHistoryPage` to use new context functions
+- Replace local state management with context functions where appropriate
+- Update stateless components to use generated data functions
+- Ensure all components receive proper data through props
+
+**Step 4.2: Quality Assurance** (Day 8)
+- Add integration tests for component data flow
+- Ensure zero linting warnings
+- Verify TypeScript type safety
+- Test error handling and edge cases
+- Performance testing and optimization
+
+**Implementation Strategy**:
+1. **Start with Phase 1**: Data generation functions are what components actually need
+2. **Test as you go**: Each function should have unit tests before moving to the next
+3. **Leverage existing contexts**: Use hero data from ConstantsContext, team data from TeamContext, etc.
+4. **Incremental integration**: Test each function with existing components
+5. **Quality first**: Ensure type safety and error handling throughout
+
+**Expected Outcomes**:
+- **Complete data generation**: All 15 data generation functions implemented and tested
+- **Rich utility functions**: 8 utility functions for formatting and calculations
+- **Advanced state management**: 4 advanced state functions for complex operations
+- **Full integration**: All components using the new context functions
+- **Zero technical debt**: Complete test coverage and type safety
+
+**Success Criteria**:
+- ✅ All data generation functions implemented and tested
+- ✅ All utility functions implemented and tested
+- ✅ All advanced state functions implemented and tested
+- ✅ Components successfully integrated with new functions
+- ✅ Zero linting errors or TypeScript warnings
+- ✅ Complete test coverage for all new functions
+- ✅ Performance meets requirements
+- ✅ Error handling works correctly

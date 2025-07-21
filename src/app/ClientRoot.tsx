@@ -5,9 +5,9 @@ import React from "react";
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ConfigProvider } from "@/contexts/config-context";
+import { ConstantsProvider } from "@/contexts/constants-context";
+import { ConstantsDataFetchingProvider } from "@/contexts/constants-data-fetching-context";
 import { DataCoordinatorProvider } from "@/contexts/data-coordinator-context";
-import { HeroProvider } from "@/contexts/hero-context";
-import { HeroDataFetchingProvider } from "@/contexts/hero-data-fetching-context";
 import { MatchProvider } from "@/contexts/match-context";
 import { MatchDataFetchingProvider } from "@/contexts/match-data-fetching-context";
 import { PlayerProvider } from "@/contexts/player-context";
@@ -24,7 +24,7 @@ export function ClientRoot({ children }: ClientRootProps) {
     <TeamDataFetchingProvider>
       <MatchDataFetchingProvider>
         <PlayerDataFetchingProvider>
-          <HeroDataFetchingProvider>
+          <ConstantsDataFetchingProvider>
             <ThemeProvider
               attribute="class"
               defaultTheme="system"
@@ -33,22 +33,22 @@ export function ClientRoot({ children }: ClientRootProps) {
             >
               <ConfigProvider>
                 <TeamProvider>
-                  <MatchProvider>
-                    <PlayerProvider>
-                      <HeroProvider>
+                  <ConstantsProvider>
+                    <MatchProvider>
+                      <PlayerProvider>
                         <DataCoordinatorProvider>
                           <TeamHydrationHandler />
                           <AppLayout>
                             {children}
                           </AppLayout>
                         </DataCoordinatorProvider>
-                      </HeroProvider>
-                    </PlayerProvider>
-                  </MatchProvider>
+                      </PlayerProvider>
+                    </MatchProvider>
+                  </ConstantsProvider>
                 </TeamProvider>
               </ConfigProvider>
             </ThemeProvider>
-          </HeroDataFetchingProvider>
+          </ConstantsDataFetchingProvider>
         </PlayerDataFetchingProvider>
       </MatchDataFetchingProvider>
     </TeamDataFetchingProvider>

@@ -21,6 +21,7 @@ interface MatchCardProps {
   match: Match;
   isSelected: boolean;
   onSelect: () => void;
+  activeTeamSide?: 'radiant' | 'dire'; // Which side the active team played on
 }
 
 // ============================================================================
@@ -43,12 +44,20 @@ const formatDate = (date: string): string => {
   });
 };
 
-const getResultColor = (result: 'win' | 'loss'): string => {
-  return result === 'win' ? 'bg-green-500' : 'bg-red-500';
+// Helper function to determine if the active team won
+const didActiveTeamWin = (match: Match, activeTeamSide?: 'radiant' | 'dire'): boolean => {
+  if (!activeTeamSide) return false;
+  return match.result === activeTeamSide;
 };
 
-const getResultText = (result: 'win' | 'loss'): string => {
-  return result === 'win' ? 'W' : 'L';
+const getResultColor = (match: Match, activeTeamSide?: 'radiant' | 'dire'): string => {
+  const teamWon = didActiveTeamWin(match, activeTeamSide);
+  return teamWon ? 'bg-green-500' : 'bg-red-500';
+};
+
+const getResultText = (match: Match, activeTeamSide?: 'radiant' | 'dire'): string => {
+  const teamWon = didActiveTeamWin(match, activeTeamSide);
+  return teamWon ? 'W' : 'L';
 };
 
 // ============================================================================
@@ -58,7 +67,8 @@ const getResultText = (result: 'win' | 'loss'): string => {
 export const MatchCard: React.FC<MatchCardProps> = ({
   match,
   isSelected,
-  onSelect
+  onSelect,
+  activeTeamSide
 }) => {
   return (
     <Card 
@@ -73,9 +83,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             vs {match.opponent}
           </CardTitle>
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${getResultColor(match.result)}`}
+            className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white ${getResultColor(match, activeTeamSide)}`}
           >
-            {getResultText(match.result)}
+            {getResultText(match, activeTeamSide)}
           </div>
         </div>
       </CardHeader>

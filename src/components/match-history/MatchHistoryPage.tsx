@@ -8,8 +8,8 @@ import { useDataCoordinator } from '@/contexts/data-coordinator-context';
 import { useMatchContext } from '@/contexts/match-context';
 import { useTeamContext } from '@/contexts/team-context';
 import useViewMode from '@/hooks/useViewMode';
-import type { Match, MatchDetails } from '@/types/contexts/match-context-value';
-import type { TeamData } from '@/types/contexts/team-types';
+import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamData } from '@/types/contexts/team-context-value';
 import { filterMatches } from '@/utils/match-filter';
 
 import { EmptyState } from './common/EmptyState';
@@ -19,6 +19,7 @@ import { type MatchFilters as MatchFiltersType } from './filters/MatchFilters';
 import { HiddenMatchesModal } from './list/HiddenMatchesModal';
 import { MatchListViewMode } from './list/MatchListView';
 import { ResizableMatchLayout } from './ResizableMatchLayout';
+import { HeroSummaryTable } from './summary/HeroSummaryTable';
 
 // ============================================================================
 // TYPES
@@ -77,7 +78,7 @@ const renderMatchHistoryContent = (
   handleUnhideMatch: (id: string) => void,
   viewMode: MatchListViewMode,
   setViewMode: (mode: MatchListViewMode) => void,
-  selectedMatch: MatchDetails | null,
+  selectedMatch: Match | null,
   selectMatch: (matchId: string) => void,
   matchDetailsViewMode: MatchDetailsPanelMode,
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
@@ -111,6 +112,12 @@ const renderMatchHistoryContent = (
           setMatchDetailsViewMode={setMatchDetailsViewMode}
         />
       </div>
+      
+      {/* Hero Summary Table - Bottom of page */}
+      <div className="p-4">
+        <HeroSummaryTable matches={visibleMatches} />
+      </div>
+      
       {showHiddenModal && (
         <HiddenMatchesModal
           hiddenMatches={hiddenMatches}
@@ -131,11 +138,10 @@ export const MatchHistoryPage: React.FC = () => {
   const { operationState, errorState } = useDataCoordinator();
   const isCoordinatorLoading = operationState.isInProgress;
   const coordinatorError = errorState.errorMessage;
-  const { teamDataList, activeTeam } = useTeamContext();
+  const { teamDataList, activeTeam, getTeamMatchesForLeague } = useTeamContext();
   const { 
-    matches, 
-    isLoadingMatches: isLoading, 
-    matchesError,
+    isLoading, 
+    error: matchesError,
     selectedMatch,
     selectMatch
   } = useMatchContext();
@@ -170,13 +176,11 @@ export const MatchHistoryPage: React.FC = () => {
     console.log('Refreshing match', id);
   };
 
-  // Filter matches by active team
+  // Get matches for active team from team context
   const activeTeamMatches = useMemo(() => {
     if (!activeTeam) return [];
-    return matches.filter(match =>
-      match.teamId === activeTeam.teamId && match.leagueId === activeTeam.leagueId
-    );
-  }, [matches, activeTeam]);
+    return getTeamMatchesForLeague(activeTeam.teamId, activeTeam.leagueId);
+  }, [activeTeam, getTeamMatchesForLeague]);
 
   // Apply filters
   const filteredMatches = useMemo(() => {

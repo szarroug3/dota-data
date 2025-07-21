@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Match, MatchDetails } from '@/types/contexts/match-context-value';
+import type { Match } from '@/types/contexts/match-context-value';
 
 import type { MatchDetailsPanelMode } from './details/MatchDetailsPanel';
 import { MatchDetailsPanel } from './details/MatchDetailsPanel';
@@ -30,7 +30,7 @@ interface ResizableMatchLayoutProps {
   onShowHiddenMatches?: () => void;
   
   // Match details
-  selectedMatch: MatchDetails | null;
+  selectedMatch: Match | null;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
 }

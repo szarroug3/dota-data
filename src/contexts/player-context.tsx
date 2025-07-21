@@ -11,6 +11,7 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
 import { usePlayerDataFetching } from '@/contexts/player-data-fetching-context';
+import type { Match } from '@/types/contexts/match-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
 import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
@@ -46,6 +47,14 @@ function extractPlayerFromOpenDota(
     winRate: 0,      // TODO: Replace with actual value if available in API response
     lastUpdated: new Date().toISOString()
   };
+}
+
+// Interface for player data in match
+interface MatchPlayerData {
+  playerId?: string;
+  account_id?: number;
+  playerName?: string;
+  role?: string;
 }
 
 // Helper for filtering - break down into smaller functions to reduce complexity
@@ -119,6 +128,7 @@ export interface PlayerContextValue {
   addPlayer: (playerId: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   refreshPlayer: (playerId: string) => Promise<void>;
+  addMatch: (match: Match) => void; // New: add match data to player context
   clearErrors: () => void;
 }
 
@@ -266,7 +276,54 @@ const usePlayerOperations = (
     }
   }, [players, setIsLoadingPlayers, setPlayersError, fetchPlayerData, setPlayers]);
 
-  return { addPlayer, removePlayer, refreshPlayer };
+  const addMatch = useCallback((match: Match) => {
+    // Extract player information from the match
+    // For now, we'll assume the match has player data in a specific format
+    // In a real implementation, we'd need to parse the match data to extract player info
+    
+    // Example: if match has players array with player IDs
+    if (match.players && Array.isArray(match.players)) {
+      match.players.forEach((playerData: MatchPlayerData) => {
+        const playerId = playerData.playerId || playerData.account_id?.toString();
+        if (!playerId) return;
+
+        // Check if player already exists
+        const existingPlayer = players.find(p => p.id === playerId);
+        
+        if (existingPlayer) {
+          // Update existing player with new match data
+          setPlayers(prev => prev.map(p => {
+            if (p.id === playerId) {
+              return {
+                ...p,
+                totalMatches: p.totalMatches + 1,
+                winRate: p.totalMatches > 0 ? 
+                  ((p.totalMatches * p.winRate + (match.result === 'win' ? 1 : 0)) / (p.totalMatches + 1)) : 
+                  (match.result === 'win' ? 1 : 0),
+                lastUpdated: new Date().toISOString()
+              };
+            }
+            return p;
+          }));
+        } else {
+          // Create new player entry
+          const newPlayer: Player = {
+            id: playerId,
+            name: playerData.playerName || `Player ${playerId}`,
+            accountId: playerData.account_id || parseInt(playerId),
+            teamId: match.teamId || '',
+            role: playerData.role || 'Unknown',
+            totalMatches: 1,
+            winRate: match.result === 'win' ? 1 : 0,
+            lastUpdated: new Date().toISOString()
+          };
+          setPlayers(prev => [...prev, newPlayer]);
+        }
+      });
+    }
+  }, [players, setPlayers]);
+
+  return { addPlayer, removePlayer, refreshPlayer, addMatch };
 };
 
 const usePlayerActions = (
@@ -276,7 +333,8 @@ const usePlayerActions = (
   setPlayerDataError: (error: string | null) => void,
   addPlayer: (playerId: string) => Promise<void>,
   removePlayer: (playerId: string) => Promise<void>,
-  refreshPlayer: (playerId: string) => Promise<void>
+  refreshPlayer: (playerId: string) => Promise<void>,
+  addMatch: (match: Match) => void
 ) => {
   const setFiltersAction = useCallback((newFilters: PlayerFilters) => {
     setFilters(newFilters);
@@ -297,6 +355,7 @@ const usePlayerActions = (
     addPlayer,
     removePlayer,
     refreshPlayer,
+    addMatch,
     clearErrors
   };
 };
@@ -332,7 +391,7 @@ export const PlayerProvider: React.FC<PlayerContextProviderProps> = ({ children 
   const { filteredPlayers } = usePlayerFiltering(players, filters);
   const { selectedPlayer } = usePlayerSelection(players, selectedPlayerId, setSelectedPlayerId);
 
-  const { addPlayer, removePlayer, refreshPlayer } = usePlayerOperations(
+  const { addPlayer, removePlayer, refreshPlayer, addMatch } = usePlayerOperations(
     players,
     setPlayers,
     setIsLoadingPlayers,
@@ -346,6 +405,7 @@ export const PlayerProvider: React.FC<PlayerContextProviderProps> = ({ children 
     addPlayer: addPlayerAction,
     removePlayer: removePlayerAction,
     refreshPlayer: refreshPlayerAction,
+    addMatch: addMatchAction,
     clearErrors
   } = usePlayerActions(
     setFilters,
@@ -354,7 +414,8 @@ export const PlayerProvider: React.FC<PlayerContextProviderProps> = ({ children 
     setPlayerDataError,
     addPlayer,
     removePlayer,
-    refreshPlayer
+    refreshPlayer,
+    addMatch
   );
 
   // ============================================================================
@@ -376,6 +437,7 @@ export const PlayerProvider: React.FC<PlayerContextProviderProps> = ({ children 
     addPlayer: addPlayerAction,
     removePlayer: removePlayerAction,
     refreshPlayer: refreshPlayerAction,
+    addMatch: addMatchAction,
     clearErrors
   };
 

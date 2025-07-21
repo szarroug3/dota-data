@@ -7,7 +7,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useHeroContext } from '@/contexts/hero-context';
+import { useConstantsContext } from '@/contexts/constants-context';
 import { useMatchContext } from '@/contexts/match-context';
 import { useMatchDataFetching } from '@/contexts/match-data-fetching-context';
 import { usePlayerContext } from '@/contexts/player-context';
@@ -271,7 +271,7 @@ export function useContextSynchronization(
   teamContext: ReturnType<typeof useTeamContext>,
   matchContext: ReturnType<typeof useMatchContext>,
   playerContext: ReturnType<typeof usePlayerContext>,
-  heroContext: ReturnType<typeof useHeroContext>
+  constantsContext: ReturnType<typeof useConstantsContext>
 ) {
   const synchronizeContexts = useCallback(async () => {
     // Ensure all contexts are in sync
@@ -284,8 +284,8 @@ export function useContextSynchronization(
     teamContext.setActiveTeam(null);
     matchContext.selectMatch('');
     playerContext.setSelectedPlayer('');
-    heroContext.setSelectedHero('');
-  }, [teamContext, matchContext, playerContext, heroContext]);
+    constantsContext.setSelectedHero('');
+  }, [teamContext, matchContext, playerContext, constantsContext]);
   const refreshAllData = useCallback(async () => {
     // Refresh all data for current team (user-initiated)
     if (teamContext.activeTeam) {

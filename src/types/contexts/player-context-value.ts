@@ -5,231 +5,113 @@
  * in the frontend application.
  */
 
-import { Player } from './team-types';
-
-// Re-export Player type for use in other files
-export type { Player };
-
 // ============================================================================
-// PLAYER DATA TYPES
+// PLAYER DATA STRUCTURES
 // ============================================================================
 
-/**
- * Player data interface
- */
-export interface PlayerData {
-  player: Player;
-  matches: PlayerMatch[];
-  heroes: PlayerHero[];
-  stats: PlayerStats;
-  trends: PlayerTrends;
+export interface Player {
+  // Global player information
+  accountId: number;
+  name: string;
+  rank: PlayerRank;
+  
+  // Global hero usage statistics
+  topHeroes: HeroStats[];
+  recentHeroes: HeroStats[];
 }
 
-/**
- * Player match interface
- */
-export interface PlayerMatch {
-  matchId: string;
-  date: string;
-  heroId: string;
-  heroName: string;
-  result: 'win' | 'loss';
-  kills: number;
-  deaths: number;
-  assists: number;
-  lastHits: number;
-  denies: number;
-  netWorth: number;
-  gpm: number;
-  xpm: number;
-  items: string[];
-  role: string;
-  team: 'radiant' | 'dire';
+export interface PlayerRank {
+  tier: RankTier;
+  division: RankDivision | null; // 1 | 2 | 3 | 4 | 5 (null for immortal)
+  immortalRank: number | null; // Ranking within immortal bracket (1 = top, 2 = second, etc.)
+  mmr: number;
 }
 
-/**
- * Player hero interface
- */
-export interface PlayerHero {
+export type RankTier = 
+  | 'herald'
+  | 'guardian'
+  | 'crusader'
+  | 'archon'
+  | 'legend'
+  | 'ancient'
+  | 'divine'
+  | 'immortal';
+
+export type RankDivision = 1 | 2 | 3 | 4 | 5;
+
+export interface HeroStats {
   heroId: string;
   heroName: string;
   gamesPlayed: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
-  bestPerformance: PlayerMatch | null;
-  worstPerformance: PlayerMatch | null;
-}
-
-/**
- * Player stats interface
- */
-export interface PlayerStats {
-  totalMatches: number;
-  totalWins: number;
-  totalLosses: number;
-  overallWinRate: number;
-  averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
-  mostPlayedHero: PlayerHero | null;
-  bestHero: PlayerHero | null;
-  preferredRole: string;
-  averageMatchDuration: number;
-}
-
-/**
- * Player trends interface
- */
-export interface PlayerTrends {
-  recentPerformance: PerformancePeriod[];
-  heroProgression: HeroProgression[];
-  roleEvolution: RoleEvolution[];
-}
-
-/**
- * Performance period interface
- */
-export interface PerformancePeriod {
-  period: string;
-  matches: number;
-  wins: number;
   winRate: number;
   averageKDA: number;
   averageGPM: number;
   averageXPM: number;
 }
 
-/**
- * Hero progression interface
- */
-export interface HeroProgression {
-  heroId: string;
-  heroName: string;
-  progression: {
-    period: string;
-    gamesPlayed: number;
-    winRate: number;
-    averageKDA: number;
-  }[];
-}
-
-/**
- * Role evolution interface
- */
-export interface RoleEvolution {
-  role: string;
-  evolution: {
-    period: string;
-    gamesPlayed: number;
-    winRate: number;
-    averagePerformance: number;
-  }[];
-}
-
-/**
- * Player filters interface
- */
-export interface PlayerFilters {
-  dateRange: {
-    start: string | null;
-    end: string | null;
-  };
-  heroes: string[];
-  roles: string[];
-  result: 'all' | 'win' | 'lose';
-  performance: {
-    minKDA: number | null;
-    minGPM: number | null;
-    minXPM: number | null;
-  };
-}
+export type PlayerRole = 
+  | 'carry'
+  | 'mid'
+  | 'offlane'
+  | 'support'
+  | 'hard_support'
+  | 'jungle'
+  | 'roaming'
+  | 'unknown';
 
 // ============================================================================
 // PLAYER CONTEXT STATE
 // ============================================================================
 
-/**
- * Player context value interface
- */
 export interface PlayerContextValue {
-  // Player data
+  // State
   players: Player[];
-  filteredPlayers: Player[];
-  selectedPlayerId: string | null;
-  selectedPlayer: PlayerData | null;
-  playerStats: PlayerStats | null;
-  
-  // Filters and state
-  filters: PlayerFilters;
   
   // Loading states
   isLoadingPlayers: boolean;
   isLoadingPlayerData: boolean;
-  isLoadingPlayerStats: boolean;
   
   // Error states
   playersError: string | null;
   playerDataError: string | null;
-  playerStatsError: string | null;
   
   // Actions
-  setSelectedPlayer: (playerId: string) => void;
-  setFilters: (filters: PlayerFilters) => void;
   addPlayer: (playerId: string) => Promise<void>;
   removePlayer: (playerId: string) => Promise<void>;
   refreshPlayer: (playerId: string) => Promise<void>;
   clearErrors: () => void;
+  
+  // Player-specific functions
+  getPlayerTopHeroes: (accountId: number) => HeroStats[];
+  getPlayerRecentHeroes: (accountId: number) => HeroStats[];
+  getPlayerRank: (accountId: number) => PlayerRank | undefined;
 }
 
-/**
- * Player context provider props
- */
 export interface PlayerContextProviderProps {
   children: React.ReactNode;
 }
 
 // ============================================================================
-// PLAYER DATA TYPES
+// ADDITIONAL TYPES FOR COMPONENTS
 // ============================================================================
 
 /**
- * Player selection state
+ * Player filters for filtering player lists
  */
-export interface PlayerSelectionState {
-  selectedPlayerId: string | null;
-  selectedPlayerIds: string[];
-}
-
-/**
- * Player filtering state
- */
-export interface PlayerFilteringState {
-  filters: PlayerFilters;
-  sortBy: 'name' | 'matches' | 'winRate' | 'role';
-  sortDirection: 'asc' | 'desc';
-}
-
-/**
- * Player data loading state
- */
-export interface PlayerDataLoadingState {
-  isLoading: boolean;
-  isRefreshing: boolean;
-  lastUpdated: string | null;
-  error: string | null;
-}
-
-/**
- * Player preferences and settings
- */
-export interface PlayerPreferences {
-  defaultView: 'overview' | 'matches' | 'heroes' | 'trends';
-  showAdvancedStats: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number; // in seconds
-  showPerformanceGraphs: boolean;
+export interface PlayerFilters {
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
+  heroes: string[];
+  roles: string[];
+  result: 'all' | 'radiant' | 'dire';
+  performance: {
+    minKDA: number | null;
+    maxKDA: number | null;
+    minGPM: number | null;
+    maxGPM: number | null;
+    minXPM: number | null;
+    maxXPM: number | null;
+  };
 } 

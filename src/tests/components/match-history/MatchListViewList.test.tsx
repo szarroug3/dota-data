@@ -15,7 +15,7 @@ jest.mock('@/contexts/hero-context', () => ({
         attackType: 'ranged',
         roles: ['Support', 'Disabler', 'Nuker'],
         complexity: 1,
-        imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?'
+        imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg'
       },
       {
         id: '2',
@@ -25,7 +25,7 @@ jest.mock('@/contexts/hero-context', () => ({
         attackType: 'melee',
         roles: ['Carry', 'Pusher'],
         complexity: 2,
-        imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?'
+        imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg'
       }
     ],
     loading: false,

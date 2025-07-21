@@ -109,7 +109,6 @@ describe('DataCoordinatorContext', () => {
     matches: [] as Match[],
     filteredMatches: [] as Match[],
     selectedMatchId: null,
-    selectedMatch: null,
     filters: {
       dateRange: { start: null, end: null },
       result: 'all' as const,
@@ -192,10 +191,6 @@ describe('DataCoordinatorContext', () => {
     },
     isLoadingHeroes: false,
     heroesError: null,
-    isLoadingHeroData: false,
-    isLoadingHeroStats: false,
-    heroDataError: null,
-    heroStatsError: null,
     setSelectedHero: jest.fn(),
     setFilters: jest.fn(),
     refreshHeroes: jest.fn(),

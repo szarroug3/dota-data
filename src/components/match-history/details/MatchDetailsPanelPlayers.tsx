@@ -31,108 +31,108 @@ interface Player {
 
 export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ match }) => {
   // Mock player data - in real implementation this would come from the match data
-  const players: Player[] = [
+  const players = [
     {
       id: '1',
       name: 'Player1',
       hero: 'Lina',
-      team: 'radiant',
+      team: 'radiant' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
       level: 25,
       kills: 12,
       deaths: 3,
       assists: 8,
-      gpm: 650,
-      xpm: 750,
       netWorth: 25000,
       lastHits: 180,
       denies: 15,
-      items: ['Bloodstone', 'Boots of Travel', 'Aghanim\'s Scepter', 'Blink Dagger', 'Force Staff', 'Glimmer Cape'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?'
+      gpm: 650,
+      xpm: 750,
+      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Eul\'s Scepter', 'Force Staff', 'Aether Lens']
     },
     {
       id: '2',
       name: 'Player2',
       hero: 'Lion',
-      team: 'radiant',
+      team: 'radiant' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg',
       level: 22,
-      kills: 5,
-      deaths: 7,
+      kills: 8,
+      deaths: 5,
       assists: 15,
-      gpm: 450,
-      xpm: 520,
       netWorth: 18000,
-      lastHits: 80,
+      lastHits: 120,
       denies: 8,
-      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Force Staff', 'Glimmer Cape', 'Observer Ward', 'Sentry Ward'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lion.png?'
+      gpm: 520,
+      xpm: 680,
+      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Force Staff', 'Glimmer Cape', 'Aether Lens']
     },
     {
       id: '3',
       name: 'Player3',
       hero: 'Witch Doctor',
-      team: 'radiant',
+      team: 'radiant' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/witch_doctor_vert.jpg',
       level: 20,
-      kills: 3,
-      deaths: 9,
+      kills: 6,
+      deaths: 7,
       assists: 18,
-      gpm: 380,
-      xpm: 450,
       netWorth: 15000,
-      lastHits: 60,
+      lastHits: 90,
       denies: 5,
-      items: ['Aghanim\'s Scepter', 'Glimmer Cape', 'Force Staff', 'Observer Ward', 'Sentry Ward', 'Dust of Appearance'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/witch_doctor.png?'
+      gpm: 480,
+      xpm: 620,
+      items: ['Aghanim\'s Scepter', 'Boots of Travel', 'Glimmer Cape', 'Force Staff', 'Aether Lens', 'Blink Dagger']
     },
     {
       id: '4',
       name: 'Player4',
       hero: 'Pudge',
-      team: 'dire',
+      team: 'dire' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
       level: 24,
-      kills: 8,
-      deaths: 5,
-      assists: 12,
-      gpm: 580,
-      xpm: 680,
+      kills: 15,
+      deaths: 4,
+      assists: 10,
       netWorth: 22000,
-      lastHits: 120,
-      denies: 12,
-      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Heart of Tarrasque', 'Pipe of Insight', 'Crimson Guard', 'Boots of Travel'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?'
+      lastHits: 200,
+      denies: 20,
+      gpm: 580,
+      xpm: 720,
+      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Heart of Tarrasque', 'Pipe of Insight', 'Crimson Guard']
     },
     {
       id: '5',
       name: 'Player5',
       hero: 'Axe',
-      team: 'dire',
+      team: 'dire' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
       level: 23,
-      kills: 6,
-      deaths: 8,
-      assists: 14,
-      gpm: 520,
-      xpm: 600,
+      kills: 10,
+      deaths: 6,
+      assists: 12,
       netWorth: 20000,
-      lastHits: 140,
-      denies: 10,
-      items: ['Blink Dagger', 'Blade Mail', 'Crimson Guard', 'Heart of Tarrasque', 'Boots of Travel', 'Observer Ward'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?'
+      lastHits: 160,
+      denies: 12,
+      gpm: 550,
+      xpm: 700,
+      items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Crimson Guard', 'Pipe of Insight', 'Heart of Tarrasque']
     },
     {
       id: '6',
       name: 'Player6',
       hero: 'Phantom Assassin',
-      team: 'dire',
+      team: 'dire' as const,
+      heroImageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg',
       level: 26,
-      kills: 15,
-      deaths: 4,
-      assists: 6,
+      kills: 18,
+      deaths: 2,
+      assists: 5,
+      netWorth: 28000,
+      lastHits: 250,
+      denies: 25,
       gpm: 720,
       xpm: 800,
-      netWorth: 28000,
-      lastHits: 220,
-      denies: 20,
-      items: ['Battle Fury', 'Desolator', 'Black King Bar', 'Butterfly', 'Boots of Travel', 'Divine Rapier'],
-      heroImageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png?'
+      items: ['Battle Fury', 'Desolator', 'Boots of Travel', 'Black King Bar', 'Monkey King Bar', 'Butterfly']
     }
   ];
 
@@ -153,10 +153,32 @@ export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> =
               <h3 className="font-medium">{player.name}</h3>
               <p className="text-sm text-muted-foreground">{player.hero}</p>
             </div>
-            <div className="text-right">
-              <div className="text-lg font-bold">Level {player.level}</div>
-              <div className="text-sm text-muted-foreground">
-                {player.kills}/{player.deaths}/{player.assists}
+            <div className="flex items-center gap-4">
+              <div className="flex flex-wrap gap-1">
+                {player.items.map((item, index) => {
+                  // Convert item name to URL format (lowercase, replace spaces with hyphens, remove apostrophes)
+                  const itemKey = item.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '');
+                  const itemImageUrl = `https://dotabuff.com/assets/items/${itemKey}.jpg`;
+                  
+                  return (
+                    <Avatar key={index} className="w-6 h-6">
+                      <AvatarImage 
+                        src={itemImageUrl} 
+                        alt={item}
+                        className="object-cover object-center"
+                      />
+                      <AvatarFallback className="text-xs">
+                        {item.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  );
+                })}
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold">Level {player.level}</div>
+                <div className="text-sm text-muted-foreground">
+                  {player.kills}/{player.deaths}/{player.assists}
+                </div>
               </div>
             </div>
           </div>
@@ -191,17 +213,6 @@ export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> =
                   {((player.kills + player.assists) / Math.max(player.deaths, 1)).toFixed(2)}
                 </span>
               </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium mb-2">Final Items</h4>
-            <div className="flex flex-wrap gap-1">
-              {player.items.map((item, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {item}
-                </Badge>
-              ))}
             </div>
           </div>
         </div>

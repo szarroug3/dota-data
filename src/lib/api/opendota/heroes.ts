@@ -12,7 +12,7 @@ import { OpenDotaHero } from '@/types/external-apis';
  */
 export async function fetchOpenDotaHeroes(force = false): Promise<OpenDotaHero[]> {
   const cacheKey = 'opendota:heroes';
-  const cacheTTL = 60 * 60 * 24 * 7; // 7 days
+  const cacheTTL = 60 * 60 * 24 * 30; // 30 days
   const mockFilename = path.join(process.cwd(), 'mock-data', 'heroes.json');
 
   const result = await request<OpenDotaHero[]>(

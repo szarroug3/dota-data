@@ -5,251 +5,198 @@
  * in the frontend application.
  */
 
-import { Match } from './team-types';
-
-// Re-export Match type for use in other files
-export type { Match };
+import type { Item, Hero } from '@/types/contexts/constants-context-value';
+import type { OpenDotaMatch } from '@/types/external-apis';
 
 // ============================================================================
-// MATCH DATA TYPES
+// MATCH DATA STRUCTURES
 // ============================================================================
 
-/**
- * Match filters interface
- */
-export interface MatchFilters {
-  dateRange: {
-    start: string | null;
-    end: string | null;
-  };
-  result: 'all' | 'win' | 'loss';
-  opponent: string;
-  heroes: string[];
-  players: string[];
-  duration: {
-    min: number | null;
-    max: number | null;
-  };
-}
-
-/**
- * Match details interface
- */
-export interface MatchDetails extends Match {
-  // Extended match data
-  radiantTeam: string;
-  direTeam: string;
-  radiantScore: number;
-  direScore: number;
-  duration: number; // in seconds
-  gameMode: string;
-  lobbyType: string;
+export interface Match {
+  // Basic match information
+  id: string;
+  date: string;
+  duration: number;
   
-  // Player details
-  radiantPlayers: MatchPlayer[];
-  direPlayers: MatchPlayer[];
+  // Team information
+  radiantTeamId: string;
+  direTeamId: string;
   
   // Draft information
-  radiantPicks: string[];
-  radiantBans: string[];
-  direPicks: string[];
-  direBans: string[];
+  draft: {
+    radiantPicks: HeroPick[];
+    direPicks: HeroPick[];
+    radiantBans: string[]; // Hero IDs
+    direBans: string[]; // Hero IDs
+  };
+  
+  // Player information
+  players: {
+    radiant: PlayerMatchData[];
+    dire: PlayerMatchData[];
+  };
+  
+  // Match statistics
+  statistics: {
+    radiantScore: number;
+    direScore: number;
+    goldAdvantage: {
+      times: number[];
+      radiantGold: number[];
+      direGold: number[];
+    };
+    experienceAdvantage: {
+      times: number[];
+      radiantExperience: number[];
+      direExperience: number[];
+    };
+  };
   
   // Match events
   events: MatchEvent[];
   
-  // Analysis data
-  analysis: MatchAnalysis;
+  // Match result
+  result: 'radiant' | 'dire';
 }
 
-/**
- * Match player interface
- */
-export interface MatchPlayer {
+
+
+export interface HeroPick {
+  hero: Hero; // Hero data (always available since we wait for heroes to load)
+  playerId: string;
+  role: PlayerRole;
+}
+
+export interface PlayerMatchData {
   playerId: string;
   playerName: string;
-  heroId: string;
-  heroName: string;
-  level: number;
-  kills: number;
-  deaths: number;
-  assists: number;
-  lastHits: number;
-  denies: number;
-  netWorth: number;
-  items: string[];
-  role: string;
-}
-
-/**
- * Match event interface
- */
-export interface MatchEvent {
-  timestamp: number;
-  type: 'kill' | 'death' | 'assist' | 'tower' | 'roshan' | 'ward' | 'item';
-  playerId?: string;
-  heroId?: string;
-  position?: { x: number; y: number };
-  details?: Record<string, string | number | boolean | null>;
-}
-
-/**
- * Match analysis interface
- */
-export interface MatchAnalysis {
-  keyMoments: MatchMoment[];
-  teamFights: TeamFight[];
-  objectives: Objective[];
-  performance: PerformanceMetrics;
-}
-
-/**
- * Match moment interface
- */
-export interface MatchMoment {
-  timestamp: number;
-  type: 'teamfight' | 'objective' | 'gank' | 'push';
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  participants: string[];
-}
-
-/**
- * Team fight interface
- */
-export interface TeamFight {
-  startTime: number;
-  endTime: number;
-  location: { x: number; y: number };
-  radiantDeaths: number;
-  direDeaths: number;
-  winner: 'radiant' | 'dire' | 'draw';
-}
-
-/**
- * Objective interface
- */
-export interface Objective {
-  type: 'tower' | 'roshan' | 'barracks' | 'ancient';
-  timestamp: number;
-  team: 'radiant' | 'dire';
-  location: { x: number; y: number };
-}
-
-/**
- * Performance metrics interface
- */
-export interface PerformanceMetrics {
-  radiantAdvantage: number[];
-  direAdvantage: number[];
-  goldGraph: { time: number; radiant: number; dire: number }[];
-  xpGraph: { time: number; radiant: number; dire: number }[];
-}
-
-/**
- * Hero stats grid interface
- */
-export interface HeroStatsGrid {
-  [heroId: string]: {
-    gamesPlayed: number;
-    wins: number;
-    winRate: number;
-    averageKDA: number;
-    averageGPM: number;
-    averageXPM: number;
+  hero: Hero; // Hero data (always available since we wait for heroes to load)
+  role: PlayerRole;
+  
+  // Performance stats
+  stats: {
+    kills: number;
+    deaths: number;
+    assists: number;
+    lastHits: number;
+    denies: number;
+    gpm: number; // Gold per minute
+    xpm: number; // Experience per minute
+    netWorth: number;
+    level: number;
+  };
+  
+  // Items
+  items: Item[];
+  
+  // Hero-specific stats
+  heroStats: {
+    damageDealt: number;
+    damageTaken: number;
+    healingDone: number;
+    stuns: number;
+    towerDamage: number;
   };
 }
+
+export interface MatchEvent {
+  timestamp: number; // When in the match this happened
+  type: EventType;
+  side: 'radiant' | 'dire' | 'neutral';
+  details: EventDetails;
+}
+
+export type EventType = 
+  | 'roshan_kill'
+  | 'aegis_pickup'
+  | 'aegis_expire'
+  | 'tower_kill'
+  | 'barracks_kill'
+  | 'team_fight'
+  | 'hero_kill'
+  | 'first_blood'
+  | 'bounty_rune'
+  | 'power_rune'
+  | 'ward_placed'
+  | 'ward_killed'
+  | 'smoke_used'
+  | 'gem_dropped'
+  | 'gem_picked_up';
+
+export interface EventDetails {
+  // For hero kills
+  killer?: string; // Player ID
+  victim?: string; // Player ID
+  assists?: string[]; // Player IDs
+  
+  // For tower/barracks kills
+  buildingType?: 'tower' | 'barracks';
+  buildingTier?: number;
+  buildingLane?: 'top' | 'mid' | 'bottom';
+  
+  // For team fights
+  participants?: string[]; // Player IDs
+  duration?: number;
+  casualties?: number;
+  
+  // For roshan
+  roshanKiller?: 'radiant' | 'dire'; // Team that killed roshan
+  aegisHolder?: string; // Player ID
+  
+  // For runes
+  runeType?: string;
+  runeLocation?: string;
+  
+  // For wards
+  wardType?: 'observer' | 'sentry';
+  wardLocation?: string;
+}
+
+export type PlayerRole = 
+  | 'carry'
+  | 'mid'
+  | 'offlane'
+  | 'support'
+  | 'hard_support'
+  | 'jungle'
+  | 'roaming'
+  | 'unknown';
 
 // ============================================================================
 // MATCH CONTEXT STATE
 // ============================================================================
 
-/**
- * Match context value interface
- */
+
+
 export interface MatchContextValue {
-  // Match data
+  // State
   matches: Match[];
-  filteredMatches: Match[];
   selectedMatchId: string | null;
-  selectedMatch: MatchDetails | null;
-  hiddenMatchIds: string[];
   
-  // Filters and state
-  filters: MatchFilters;
-  heroStatsGrid: HeroStatsGrid;
-  preferences: MatchPreferences;
-  
-  // Loading states
-  isLoadingMatches: boolean;
-  isLoadingMatchDetails: boolean;
-  isLoadingHeroStats: boolean;
-  
-  // Error states
-  matchesError: string | null;
-  matchDetailsError: string | null;
-  heroStatsError: string | null;
+  // Loading and error states
+  isLoading: boolean;
+  error: string | null;
   
   // Actions
-  setFilters: (filters: MatchFilters) => void;
   selectMatch: (matchId: string) => void;
-  hideMatch: (matchId: string) => void;
-  showMatch: (matchId: string) => void;
-  addMatches: (matches: Match[]) => void;
+  addMatch: (matchData: OpenDotaMatch) => Match;
+  updateMatch: (matchId: string, updates: Partial<Match>) => void;
+  removeMatch: (matchId: string) => void;
   refreshMatches: () => Promise<void>;
-  refreshMatchDetails: (matchId: string) => Promise<void>;
-  refreshHeroStats: () => Promise<void>;
-  clearErrors: () => void;
-  updatePreferences: (preferences: Partial<MatchPreferences>) => void;
+  clearError: () => void;
+  
+  // Utility functions
+  getMatchById: (matchId: string) => Match | undefined;
+  getMatchEvents: (matchId: string, eventTypes?: EventType[]) => MatchEvent[];
+  getPlayerPerformance: (matchId: string, playerId: string) => PlayerMatchData | undefined;
+  getTeamPerformance: (matchId: string, side: 'radiant' | 'dire') => {
+    kills: number;
+    gold: number;
+    experience: number;
+    players: PlayerMatchData[];
+  };
 }
 
-/**
- * Match context provider props
- */
 export interface MatchContextProviderProps {
   children: React.ReactNode;
-}
-
-// ============================================================================
-// MATCH DATA TYPES
-// ============================================================================
-
-/**
- * Match selection state
- */
-export interface MatchSelectionState {
-  selectedMatchId: string | null;
-  selectedMatchIds: string[];
-}
-
-/**
- * Match filtering state
- */
-export interface MatchFilteringState {
-  filters: MatchFilters;
-  hiddenMatchIds: string[];
-  sortBy: 'date' | 'result' | 'duration' | 'opponent';
-  sortDirection: 'asc' | 'desc';
-}
-
-/**
- * Match data loading state
- */
-export interface MatchDataLoadingState {
-  isLoading: boolean;
-  isRefreshing: boolean;
-  isParsing: boolean;
-  lastUpdated: string | null;
-  error: string | null;
-}
-
-/**
- * Match preferences and settings
- */
-export interface MatchPreferences {
-  defaultView: 'list' | 'grid' | 'timeline';
-  showHiddenMatches: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number; // in seconds
-  showAdvancedStats: boolean;
 } 

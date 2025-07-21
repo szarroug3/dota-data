@@ -8,7 +8,7 @@
 import { useCallback } from 'react';
 
 import { useTeamContext } from '@/contexts/team-context';
-import type { TeamContextValue, TeamData } from '@/types/contexts/team-types';
+import type { TeamContextValue, TeamData } from '@/types/contexts/team-context-value';
 import type { UseTeamDataReturn } from '@/types/hooks/use-team-data';
 
 // ============================================================================

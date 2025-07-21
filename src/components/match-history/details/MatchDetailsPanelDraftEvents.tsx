@@ -35,52 +35,52 @@ export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEvents
   const heroes: Record<string, Hero> = {
     'crystal_maiden': {
       name: 'crystal_maiden',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg',
       localizedName: 'Crystal Maiden'
     },
     'juggernaut': {
       name: 'juggernaut',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg',
       localizedName: 'Juggernaut'
     },
     'lina': {
       name: 'lina',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
       localizedName: 'Lina'
     },
     'pudge': {
       name: 'pudge',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
       localizedName: 'Pudge'
     },
     'axe': {
       name: 'axe',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
       localizedName: 'Axe'
     },
     'lion': {
       name: 'lion',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lion.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg',
       localizedName: 'Lion'
     },
     'shadow_fiend': {
       name: 'shadow_fiend',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/nevermore.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/nevermore_vert.jpg',
       localizedName: 'Shadow Fiend'
     },
     'tidehunter': {
       name: 'tidehunter',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/tidehunter.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/tidehunter_vert.jpg',
       localizedName: 'Tidehunter'
     },
     'witch_doctor': {
       name: 'witch_doctor',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/witch_doctor.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/witch_doctor_vert.jpg',
       localizedName: 'Witch Doctor'
     },
     'phantom_assassin': {
       name: 'phantom_assassin',
-      imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png?',
+      imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg',
       localizedName: 'Phantom Assassin'
     }
   };
@@ -130,7 +130,7 @@ export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEvents
     return (
       <div className="flex items-center gap-2 p-2 rounded-lg border">
         <Avatar className="w-8 h-8">
-          <AvatarImage src={hero.imageUrl} alt={hero.localizedName} />
+          <AvatarImage src={hero.imageUrl} alt={hero.localizedName} className="object-cover object-center" />
           <AvatarFallback className="text-xs">{hero.localizedName.substring(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
@@ -155,7 +155,8 @@ export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEvents
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Radiant Side */}
             <div>
-              <h3 className="font-medium mb-4 text-blue-600">Radiant</h3>
+              <h3 className="font-medium mb-4">Team Alpha</h3>
+              <div className="text-sm text-muted-foreground mb-4">Radiant</div>
               <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium mb-2">Picks</h4>
@@ -178,7 +179,8 @@ export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEvents
 
             {/* Dire Side */}
             <div>
-              <h3 className="font-medium mb-4 text-red-600">Dire</h3>
+              <h3 className="font-medium mb-4">Team Beta</h3>
+              <div className="text-sm text-muted-foreground mb-4">Dire</div>
               <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium mb-2">Picks</h4>

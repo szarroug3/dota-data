@@ -153,7 +153,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler', 'Nuker'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/crystal_maiden.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg'
   },
   {
     id: '2',
@@ -163,7 +163,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Carry', 'Pusher'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg'
   },
   {
     id: '3',
@@ -173,7 +173,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Nuker'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lina.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg'
   },
   {
     id: '4',
@@ -183,7 +183,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Disabler', 'Initiator'],
     complexity: 3,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg'
   },
   {
     id: '5',
@@ -193,7 +193,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Initiator', 'Durable'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/axe.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg'
   },
   {
     id: '6',
@@ -203,7 +203,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lion.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg'
   },
   {
     id: '7',
@@ -213,7 +213,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Carry', 'Nuker'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/nevermore.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/nevermore_vert.jpg'
   },
   {
     id: '8',
@@ -223,7 +223,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Initiator', 'Durable'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/tidehunter.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/tidehunter_vert.jpg'
   },
   {
     id: '9',
@@ -233,7 +233,7 @@ const mockHeroes: Hero[] = [
     attackType: 'ranged',
     roles: ['Support', 'Disabler'],
     complexity: 1,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/witch_doctor.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/witch_doctor_vert.jpg'
   },
   {
     id: '10',
@@ -243,7 +243,7 @@ const mockHeroes: Hero[] = [
     attackType: 'melee',
     roles: ['Carry', 'Escape'],
     complexity: 2,
-    imageUrl: 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_assassin.png?'
+    imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg'
   }
 ];
 

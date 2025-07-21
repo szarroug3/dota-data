@@ -5,7 +5,8 @@
  * determining team sides in matches, and extracting player data.
  */
 
-import type { Match, Player } from '@/types/contexts/team-types';
+import type { Match } from '@/types/contexts/match-context-value';
+import type { Player } from '@/types/contexts/player-context-value';
 import type { DotabuffMatchSummary, DotabuffTeam, OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 // ============================================================================
