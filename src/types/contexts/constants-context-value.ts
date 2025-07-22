@@ -5,8 +5,6 @@
  * in the frontend application. Includes heroes and items.
  */
 
-import type { OpenDotaItem } from '@/types/external-apis';
-
 // ============================================================================
 // HERO DATA TYPES
 // ============================================================================
@@ -60,8 +58,8 @@ export interface ConstantsContextValue {
   itemsError: string | null;
   
   // Actions
-  refreshHeroes: () => Promise<void>;
-  refreshItems: () => Promise<void>;
+  fetchHeroes: (force?: boolean) => Promise<void>;
+  fetchItems: (force?: boolean) => Promise<void>;
   clearErrors: () => void;
   
   // Utility functions

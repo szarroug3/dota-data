@@ -12,45 +12,28 @@ import type { TeamData } from '@/types/contexts/team-context-value';
 // ============================================================================
 
 /**
- * Theme configuration
- */
-export type Theme = 'light' | 'dark' | 'system';
-
-/**
  * Preferred external site for links
  */
 export type PreferredExternalSite = 'opendota' | 'dotabuff';
 
 /**
- * UI density preference
+ * Preferred matchlist view mode
  */
-export type UIDensity = 'compact' | 'comfortable' | 'spacious';
+export type PreferredMatchlistView = 'list' | 'card' | 'grid';
+
+/**
+ * Theme type
+ */
+export type Theme = 'light' | 'dark' | 'system';
 
 /**
  * Application configuration interface
  */
 export interface AppConfig {
-  // Theme and appearance
-  theme: Theme;
-  uiDensity: UIDensity;
-  
-  // External site preferences
   preferredExternalSite: PreferredExternalSite;
-  
-  // UI preferences
-  sidebarCollapsed: boolean;
+  preferredMatchlistView: PreferredMatchlistView;
+  theme: Theme;
 }
-
-/**
- * View preferences interface
- */
-export interface ViewPreferences {
-  // Match history view preferences
-  matchHistoryList: 'list' | 'card' | 'grid';
-  matchHistoryDetails: 'draft-events' | 'detailed' | 'minimal' | 'summary';
-}
-
-
 
 // ============================================================================
 // CONFIG CONTEXT STATE
@@ -62,7 +45,6 @@ export interface ViewPreferences {
 export interface ConfigContextValue {
   // Configuration data
   config: AppConfig;
-  viewPreferences: ViewPreferences;
 
   // Team data (persistent)
   teamList: TeamData[];
@@ -79,9 +61,7 @@ export interface ConfigContextValue {
 
   // Actions
   updateConfig: (updates: Partial<AppConfig>) => Promise<void>;
-  updateViewPreferences: (updates: Partial<ViewPreferences>) => Promise<void>;
   resetConfig: () => Promise<void>;
-  resetViewPreferences: () => Promise<void>;
   clearErrors: () => void;
 }
 

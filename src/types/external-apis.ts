@@ -270,7 +270,18 @@ export interface OpenDotaMatchPlayer {
     key: string;
     player_slot: number;
   }>;
-  sen_log: any[];
+  sen_log: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    x: number;
+    y: number;
+    z: number;
+    entityleft: boolean;
+    ehandle: number;
+    key: string;
+    player_slot: number;
+  }>;
   obs_left_log: Array<{
     time: number;
     type: string;
@@ -284,7 +295,19 @@ export interface OpenDotaMatchPlayer {
     key: string;
     player_slot: number;
   }>;
-  sen_left_log: any[];
+  sen_left_log: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    attackername: string;
+    x: number;
+    y: number;
+    z: number;
+    entityleft: boolean;
+    ehandle: number;
+    key: string;
+    player_slot: number;
+  }>;
   purchase_log: Array<{
     time: number;
     key: string;
@@ -293,12 +316,21 @@ export interface OpenDotaMatchPlayer {
     time: number;
     key: string;
   }>;
-  buyback_log: any[];
+  buyback_log: Array<{
+    time: number;
+    type: string;
+    slot: number;
+    player_slot: number;
+  }>;
   runes_log: Array<{
     time: number;
     key: number;
   }>;
-  connection_log: any[];
+  connection_log: Array<{
+    time: number;
+    event: string;
+    player_slot: number;
+  }>;
   lane_pos: Record<string, Record<string, number>>;
   obs: Record<string, Record<string, number>>;
   sen: Record<string, Record<string, number>>;
@@ -329,7 +361,11 @@ export interface OpenDotaMatchPlayer {
     time: number;
     key: string;
   }>;
-  neutral_item_history: any[];
+  neutral_item_history: Array<{
+    time: number;
+    item_neutral: string;
+    item_neutral_enhancement: string;
+  }>;
   // Optional fields
   party_id?: number;
   permanent_buffs?: Array<{

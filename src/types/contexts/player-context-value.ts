@@ -5,59 +5,15 @@
  * in the frontend application.
  */
 
+import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
+
 // ============================================================================
 // PLAYER DATA STRUCTURES
 // ============================================================================
 
-export interface Player {
-  // Global player information
-  accountId: number;
-  name: string;
-  rank: PlayerRank;
-  
-  // Global hero usage statistics
-  topHeroes: HeroStats[];
-  recentHeroes: HeroStats[];
-}
-
-export interface PlayerRank {
-  tier: RankTier;
-  division: RankDivision | null; // 1 | 2 | 3 | 4 | 5 (null for immortal)
-  immortalRank: number | null; // Ranking within immortal bracket (1 = top, 2 = second, etc.)
-  mmr: number;
-}
-
-export type RankTier = 
-  | 'herald'
-  | 'guardian'
-  | 'crusader'
-  | 'archon'
-  | 'legend'
-  | 'ancient'
-  | 'divine'
-  | 'immortal';
-
-export type RankDivision = 1 | 2 | 3 | 4 | 5;
-
-export interface HeroStats {
-  heroId: string;
-  heroName: string;
-  gamesPlayed: number;
-  winRate: number;
-  averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
-}
-
-export type PlayerRole = 
-  | 'carry'
-  | 'mid'
-  | 'offlane'
-  | 'support'
-  | 'hard_support'
-  | 'jungle'
-  | 'roaming'
-  | 'unknown';
+// For now, we'll store the raw OpenDotaPlayerComprehensive data
+// This will be processed later when we know what data we need
+export type Player = OpenDotaPlayerComprehensive;
 
 // ============================================================================
 // PLAYER CONTEXT STATE
@@ -65,53 +21,22 @@ export type PlayerRole =
 
 export interface PlayerContextValue {
   // State
-  players: Player[];
+  players: Map<string, Player>; // Key: playerId (account_id as string)
+  selectedPlayerId: string | null;
+  selectedPlayer: Player | null;
+  setSelectedPlayerId: (playerId: string | null) => void;
+  isLoading: boolean;
+  error: string | null;
   
-  // Loading states
-  isLoadingPlayers: boolean;
-  isLoadingPlayerData: boolean;
+  // Core operations
+  addPlayer: (playerId: string) => Promise<Player | null>;
+  refreshPlayer: (playerId: string) => Promise<Player | null>;
   
-  // Error states
-  playersError: string | null;
-  playerDataError: string | null;
-  
-  // Actions
-  addPlayer: (playerId: string) => Promise<void>;
-  removePlayer: (playerId: string) => Promise<void>;
-  refreshPlayer: (playerId: string) => Promise<void>;
-  clearErrors: () => void;
-  
-  // Player-specific functions
-  getPlayerTopHeroes: (accountId: number) => HeroStats[];
-  getPlayerRecentHeroes: (accountId: number) => HeroStats[];
-  getPlayerRank: (accountId: number) => PlayerRank | undefined;
+  // Data access
+  getPlayer: (playerId: string) => Player | undefined;
+  getPlayers: (playerIds: string[]) => Player[];
 }
 
 export interface PlayerContextProviderProps {
   children: React.ReactNode;
-}
-
-// ============================================================================
-// ADDITIONAL TYPES FOR COMPONENTS
-// ============================================================================
-
-/**
- * Player filters for filtering player lists
- */
-export interface PlayerFilters {
-  dateRange: {
-    start: Date | null;
-    end: Date | null;
-  };
-  heroes: string[];
-  roles: string[];
-  result: 'all' | 'radiant' | 'dire';
-  performance: {
-    minKDA: number | null;
-    maxKDA: number | null;
-    minGPM: number | null;
-    maxGPM: number | null;
-    minXPM: number | null;
-    maxXPM: number | null;
-  };
 } 

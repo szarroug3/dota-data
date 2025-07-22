@@ -8,104 +8,23 @@
  * Uses config context for persistence of team list and active team.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 import { useConfigContext } from '@/contexts/config-context';
-import { useConstantsContext } from '@/contexts/constants-context';
-import { useDataCoordinator } from '@/contexts/data-coordinator-context';
+import { useMatchContext } from '@/contexts/match-context';
+import { usePlayerContext } from '@/contexts/player-context';
 import { useTeamDataFetching } from '@/contexts/team-data-fetching-context';
-import type { TeamData, TeamContextValue, TeamContextProviderProps, TeamMatchParticipation } from '@/types/contexts/team-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { DotabuffLeague, DotabuffTeam, OpenDotaMatch, DotabuffMatchSummary } from '@/types/external-apis';
-
-// ============================================================================
-// DEFAULTS
-// ============================================================================
-
-
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-const processTeamData = (teamId: string, leagueId: string, teamName: string, leagueName: string, teamResult: DotabuffTeam): TeamData => {
-  // Convert API matches to TeamMatchParticipation format
-  const matches: TeamMatchParticipation[] = teamResult.matches.map(match => {
-    // For now, default to radiant side - this will be updated with detailed match data
-    const side = 'radiant' as const;
-    
-    return {
-      matchId: match.matchId,
-      side
-    };
-  });
-
-  // Calculate performance statistics
-  const totalMatches = matches.length;
-  const totalWins = teamResult.matches.filter(match => match.result === 'won').length;
-  const totalLosses = teamResult.matches.filter(match => match.result === 'lost').length;
-  const overallWinRate = totalMatches > 0 ? (totalWins / totalMatches) * 100 : 0;
-  
-  // Calculate average match duration
-  const totalDuration = teamResult.matches.reduce((sum, match) => sum + match.duration, 0);
-  const averageMatchDuration = totalMatches > 0 ? totalDuration / totalMatches : 0;
-
-  return {
-    team: {
-      id: teamId,
-      name: teamName,
-      isActive: false,
-      isLoading: false,
-      error: undefined
-    },
-    league: {
-      id: leagueId,
-      name: leagueName
-    },
-    matches,
-    players: [], // Players will be populated later
-    performance: {
-      totalMatches,
-      totalWins,
-      totalLosses,
-      overallWinRate,
-      heroUsage: {
-        picks: [],
-        bans: [],
-        picksAgainst: [],
-        bansAgainst: [],
-        picksByPlayer: {}
-      },
-      draftStats: {
-        firstPickCount: 0,
-        secondPickCount: 0,
-        firstPickWinRate: 0,
-        secondPickWinRate: 0,
-        uniqueHeroesPicked: 0,
-        uniqueHeroesBanned: 0,
-        mostPickedHero: '',
-        mostBannedHero: ''
-      },
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
-      averageMatchDuration,
-      averageKills: 0,
-      averageDeaths: 0,
-      averageGold: 0,
-      averageExperience: 0
-    }
-  };
-};
-
-const findTeamData = (teamList: TeamData[], teamId: string, leagueId: string): TeamData | undefined => {
-  return teamList.find(td => td.team.id === teamId && td.team.leagueId === leagueId);
-};
-
-// Helper function to determine if a team won based on their side and match result
-function didTeamWin(match: Match, teamSide: 'radiant' | 'dire'): boolean {
-  return match.result === teamSide;
-}
+import type { PlayerMatchData } from '@/types/contexts/match-context-value';
+import type { TeamContextProviderProps, TeamContextValue, TeamData, TeamMatchParticipation, TeamPlayer } from '@/types/contexts/team-context-value';
+import type { DotabuffMatchSummary, OpenDotaPlayerComprehensive } from '@/types/external-apis';
+import {
+  createBasicTeamData,
+  determineTeamSideFromMatch,
+  extractPlayersFromMatchSide,
+  generateTeamKey,
+  updateTeamPerformance,
+  validateActiveTeam
+} from '@/utils/team-helpers';
 
 // ============================================================================
 // CONTEXT CREATION
@@ -114,306 +33,546 @@ function didTeamWin(match: Match, teamSide: 'radiant' | 'dire'): boolean {
 const TeamContext = createContext<TeamContextValue | undefined>(undefined);
 
 // ============================================================================
-// CUSTOM HOOKS
+// HELPER FUNCTIONS
 // ============================================================================
 
-const useTeamState = () => {
+// Helper function to persist teams to config
+function persistTeamsToConfig(
+  teams: Map<string, TeamData>,
+  configContext: ReturnType<typeof useConfigContext>
+) {
+  const currentTeams = Array.from(teams.values());
+  configContext.setTeamList(currentTeams);
+}
+
+// ============================================================================
+// CUSTOM HOOKS (STATE & LOGIC)
+// ============================================================================
+
+function useTeamState() {
+  const [teams, setTeams] = useState<Map<string, TeamData>>(new Map());
+  const [activeTeam, setActiveTeam] = useState<{ teamId: string; leagueId: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   return {
-    isLoading,
-    setIsLoading,
-    error,
-    setError
+    teams, setTeams,
+    activeTeam, setActiveTeam,
+    isLoading, setIsLoading,
+    error, setError
   };
-};
-
-
-
-function useAddTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void, setIsLoading: (loading: boolean) => void, setError: (error: string | null) => void, fetchTeamData: (teamId: string, force?: boolean) => Promise<DotabuffTeam | { error: string }>, fetchLeagueData: (leagueId: string, force?: boolean) => Promise<DotabuffLeague | { error: string }>) {
-  return useCallback(async (teamId: string, leagueId: string) => {
-    if (findTeamData(teamList, teamId, leagueId)) {
-      throw new Error('Team already exists');
-    }
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newTeamData = {
-        team: { id: teamId, name: `Loading ${teamId}...`, leagueId, leagueName: `Loading ${leagueId}...`, isActive: false, isLoading: true, error: undefined },
-        league: { id: leagueId, name: `Loading ${leagueId}...` },
-        matches: [], players: [], summary: { totalMatches: 0, totalWins: 0, totalLosses: 0, overallWinRate: 0, lastMatchDate: null, averageMatchDuration: 0, totalPlayers: 0 }
-      };
-      const updatedTeamList = [...teamList, newTeamData];
-      setTeamList(updatedTeamList);
-      const [teamResult, leagueResult] = await Promise.all([
-        fetchTeamData(teamId), fetchLeagueData(leagueId)
-      ]);
-      if ('error' in teamResult) throw new Error('Failed to fetch team data');
-      if ('error' in leagueResult) throw new Error('Failed to fetch league data');
-      const finalTeamData = processTeamData(teamId, leagueId, teamResult.name, leagueResult.name, teamResult);
-      const finalTeamList = updatedTeamList.map(td => td.team.id === teamId && td.team.leagueId === leagueId ? finalTeamData : td);
-      setTeamList(finalTeamList);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add team';
-      setError(errorMessage);
-      // Use a functional update to ensure we have the latest team list
-      setTeamList((prevList: TeamData[]) => prevList.map((td: TeamData) => {
-        if (td.team.id === teamId && td.team.leagueId === leagueId) {
-          return {
-            ...td,
-            team: {
-              ...td.team,
-              isLoading: false,
-              error: errorMessage
-            }
-          };
-        }
-        return td;
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [teamList, setTeamList, fetchTeamData, fetchLeagueData, setIsLoading, setError]);
 }
 
-function useRemoveTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void, activeTeam: { teamId: string; leagueId: string } | null, setActiveTeam: (team: { teamId: string; leagueId: string } | null) => void) {
-  return useCallback(async (teamId: string, leagueId: string) => {
-    const updatedTeamList = teamList.filter(teamData => !(teamData.team.id === teamId && teamData.team.leagueId === leagueId));
-    setTeamList(updatedTeamList);
-    if (activeTeam && activeTeam.teamId === teamId && activeTeam.leagueId === leagueId) {
-      setActiveTeam(null);
-    }
-  }, [teamList, setTeamList, activeTeam, setActiveTeam]);
-}
-
-function useSetActiveTeamHandler(teamList: TeamData[], setActiveTeam: (team: { teamId: string; leagueId: string } | null) => void) {
-  return useCallback(async (teamId: string | null, leagueId?: string) => {
-    if (teamId === null) {
-      setActiveTeam(null);
-      return;
-    }
-    if (!leagueId) throw new Error('League ID is required when setting active team');
-    const teamData = findTeamData(teamList, teamId, leagueId);
-    if (!teamData) {
-      console.warn(`Team ${teamId} not found in list when setting as active. This might be normal if the team was just added.`);
-    }
-    setActiveTeam({ teamId, leagueId });
-  }, [teamList, setActiveTeam]);
-}
-
-function useRefreshTeam(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void, setIsLoading: (loading: boolean) => void, setError: (error: string | null) => void, fetchTeamData: (teamId: string, force?: boolean) => Promise<DotabuffTeam | { error: string }>, fetchLeagueData: (leagueId: string, force?: boolean) => Promise<DotabuffLeague | { error: string }>) {
-  return useCallback(async (teamId: string, leagueId: string) => {
-    if (!findTeamData(teamList, teamId, leagueId)) throw new Error('Team not found');
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Update the team to show loading state in place
-      setTeamList((prevList: TeamData[]) => prevList.map((td: TeamData) => {
-        if (td.team.id === teamId && td.team.leagueId === leagueId) {
-          return {
-            ...td,
-            team: {
-              ...td.team,
-              isLoading: true,
-              error: undefined
-            }
-          };
-        }
-        return td;
-      }));
+// Helper function to update team state with a generic updater
+function useTeamUpdater(state: ReturnType<typeof useTeamState>) {
+  return useCallback((
+    teamKey: string, 
+    updater: (team: TeamData) => TeamData
+  ) => {
+    state.setTeams(prev => {
+      const newTeams = new Map(prev);
+      const existingTeam = newTeams.get(teamKey);
       
-      const [teamResult, leagueResult] = await Promise.all([
-        fetchTeamData(teamId, true), fetchLeagueData(leagueId, true)
-      ]);
-      if ('error' in teamResult) throw new Error('Failed to fetch team data');
-      if ('error' in leagueResult) throw new Error('Failed to fetch league data');
-      const finalTeamData = processTeamData(teamId, leagueId, teamResult.name, leagueResult.name, teamResult);
-      
-      // Update the team in place
-      setTeamList((prevList: TeamData[]) => prevList.map((td: TeamData) => {
-        if (td.team.id === teamId && td.team.leagueId === leagueId) {
-          return finalTeamData;
-        }
-        return td;
-      }));
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh team';
-      setError(errorMessage);
-      
-      // Update the team to show error state in place
-      setTeamList((prevList: TeamData[]) => prevList.map((td: TeamData) => {
-        if (td.team.id === teamId && td.team.leagueId === leagueId) {
-          return {
-            ...td,
-            team: {
-              ...td.team,
-              isLoading: false,
-              error: errorMessage
-            }
-          };
-        }
-        return td;
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [teamList, setTeamList, fetchTeamData, fetchLeagueData, setIsLoading, setError]);
-}
-
-function useAddMatch(teamList: TeamData[], setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void) {
-  return useCallback((match: Match, matchSummary: DotabuffMatchSummary, matchData: OpenDotaMatch, teamId: string, leagueId: string) => {
-    // Find the team data for this team/league combination
-    const teamData = findTeamData(teamList, teamId, leagueId);
-    if (!teamData) {
-      console.warn(`Team ${teamId} not found when adding match ${match.id}`);
-      return;
-    }
-
-    // Determine which side the team played on using the OpenDota match data
-    const teamName = teamData.team.name;
-    let teamSide: 'radiant' | 'dire' = 'radiant'; // Default fallback
-    
-    if (matchData.radiant_name && matchData.dire_name) {
-      if (matchData.radiant_name === teamName) {
-        teamSide = 'radiant';
-      } else if (matchData.dire_name === teamName) {
-        teamSide = 'dire';
+      if (existingTeam) {
+        const updatedTeam = updater(existingTeam);
+        newTeams.set(teamKey, updatedTeam);
       }
-    }
+      
+      return newTeams;
+    });
+  }, [state]);
+}
 
-    // Update the team data with the new match
-    setTeamList(prevList => prevList.map(td => {
-      if (td.team.id === teamId && td.team.leagueId === leagueId) {
-        // Check if match already exists
-        const matchExists = td.matches.some(m => m.id === match.id);
-        if (matchExists) {
-          return td; // Don't add duplicate
-        }
-
-        // Create the match with the determined team side and opponent from matchSummary
-        const matchWithTeamSide = {
-          ...match,
-          teamSide,
-          opponent: matchSummary.opponentName // Use opponent name from Dotabuff data
+// Helper function to update team's matches list
+function useUpdateTeamMatches(
+  state: ReturnType<typeof useTeamState>,
+  matchContext: ReturnType<typeof useMatchContext>
+) {
+  const updateTeam = useTeamUpdater(state);
+  
+  return useCallback((key: string, matchId: string, teamSide: 'radiant' | 'dire', match: ReturnType<typeof matchContext.getMatch>) => {
+    updateTeam(key, (existingTeam) => {
+      // Check if match already exists in team's matches
+      const matchExists = existingTeam.matches.some(m => m.matchId === matchId);
+      
+      if (!matchExists && match) {
+        // Add new match to team's matches list
+        const newMatchParticipation: TeamMatchParticipation = {
+          matchId,
+          side: teamSide,
+          opponentTeamName: teamSide === 'radiant' ? match.players.dire[0]?.playerName || 'Unknown' : match.players.radiant[0]?.playerName || 'Unknown'
         };
-
-        // Determine if this team won based on their side and the match result
-        const teamWon = didTeamWin(matchWithTeamSide, teamSide);
-
+        
         return {
-          ...td,
-          matches: [...td.matches, matchWithTeamSide],
-          summary: {
-            ...td.summary,
-            totalMatches: td.matches.length + 1,
-            totalWins: td.matches.filter(m => didTeamWin(m, m.teamSide)).length + (teamWon ? 1 : 0),
-            totalLosses: td.matches.filter(m => !didTeamWin(m, m.teamSide)).length + (teamWon ? 0 : 1)
-          }
+          ...existingTeam,
+          matches: [...existingTeam.matches, newMatchParticipation]
         };
       }
-      return td;
-    }));
-  }, [teamList, setTeamList]);
+      
+      return existingTeam;
+    });
+  }, [updateTeam, matchContext]);
 }
 
-const useTeamOperations = (
-  teamList: TeamData[],
-  setTeamList: (teams: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void,
-  activeTeam: { teamId: string; leagueId: string } | null,
-  setActiveTeam: (team: { teamId: string; leagueId: string } | null) => void,
-  setIsLoading: (loading: boolean) => void,
-  setError: (error: string | null) => void,
-  fetchTeamData: (teamId: string, force?: boolean) => Promise<DotabuffTeam | { error: string }>,
-  fetchLeagueData: (leagueId: string, force?: boolean) => Promise<DotabuffLeague | { error: string }>
-) => {
-  const addTeam = useAddTeam(teamList, setTeamList, setIsLoading, setError, fetchTeamData, fetchLeagueData);
-  const removeTeam = useRemoveTeam(teamList, setTeamList, activeTeam, setActiveTeam);
-  const setActiveTeamHandler = useSetActiveTeamHandler(teamList, setActiveTeam);
-  const refreshTeam = useRefreshTeam(teamList, setTeamList, setIsLoading, setError, fetchTeamData, fetchLeagueData);
-  return { addTeam, removeTeam, setActiveTeam: setActiveTeamHandler, refreshTeam };
-};
+// Helper function to update team's players list
+function useUpdateTeamPlayers(
+  state: ReturnType<typeof useTeamState>
+) {
+  const updateTeam = useTeamUpdater(state);
+  
+  return useCallback((key: string, player: OpenDotaPlayerComprehensive) => {
+    updateTeam(key, (existingTeam) => {
+      // Check if player already exists in team's players
+      const playerExists = existingTeam.players.some(p => p.accountId === player.profile.profile.account_id);
+      
+      if (!playerExists && player) {
+        // Add new player to team's players list
+        const newTeamPlayer: TeamPlayer = {
+          accountId: player.profile.profile.account_id,
+          playerName: player.profile.profile.personaname || 'Unknown Player',
+          roles: [], // Will be populated based on match data
+          totalMatches: 0,
+          totalWins: 0,
+          totalLosses: 0,
+          winRate: 0,
+          averageKDA: 0,
+          averageGPM: 0,
+          averageXPM: 0,
+          averageLastHits: 0,
+          averageDenies: 0
+        };
+        
+        return {
+          ...existingTeam,
+          players: [...existingTeam.players, newTeamPlayer]
+        };
+      }
+      
+      return existingTeam;
+    });
+  }, [updateTeam]);
+}
 
-const useLeagueOperations = (teamList: TeamData[]) => {
-  const getTeamMatchesForLeague = useCallback((teamId: string, leagueId: string): Match[] => {
-    const teamData = findTeamData(teamList, teamId, leagueId);
-    return teamData?.matches || [];
-  }, [teamList]);
+// Helper function to fetch and process team data
+function useFetchAndProcessTeamData(
+  teamDataFetching: ReturnType<typeof useTeamDataFetching>
+) {
+  return useCallback(async (teamId: string, leagueId: string, force: boolean) => {
+    // Fetch team and league data with force parameter
+    const teamData = await teamDataFetching.fetchTeamData(teamId, force);
+    const leagueData = await teamDataFetching.fetchLeagueData(leagueId, force);
+    
+    if ('error' in teamData) {
+      throw new Error(teamData.error);
+    }
+    
+    if ('error' in leagueData) {
+      throw new Error(leagueData.error);
+    }
+    
+    // Return the raw data - processing will be done in useProcessTeamData
+    return {
+      team: teamData,
+      league: leagueData,
+      matches: teamData.matches
+    };
+  }, [teamDataFetching]);
+}
 
-  const getTeamPlayersForLeague = useCallback((teamId: string, leagueId: string): Player[] => {
-    const teamData = findTeamData(teamList, teamId, leagueId);
-    return teamData?.players || [];
-  }, [teamList]);
+// Helper function to process a single match and extract players
+async function processMatchAndExtractPlayers(
+  matchSummary: DotabuffMatchSummary,
+  teamId: string,
+  matchContext: ReturnType<typeof useMatchContext>,
+  playerContext: ReturnType<typeof usePlayerContext>
+): Promise<TeamMatchParticipation | null> {
+  try {
+    // Fetch the detailed match data
+    const match = await matchContext.addMatch(matchSummary.matchId);
+    if (!match) {
+      throw new Error(`Failed to retrieve match data for ${matchSummary.matchId}`);
+    }
+
+    // Determine the correct team side
+    const teamSide = determineTeamSideFromMatch(match, teamId);
+    
+    // Create match participation with correct side
+    const matchParticipation: TeamMatchParticipation = {
+      matchId: matchSummary.matchId,
+      side: teamSide,
+      opponentTeamName: matchSummary.opponentName
+    };
+
+    // Extract and add players from the correct side
+    const players = teamSide === 'radiant' ? match.players.radiant : match.players.dire;
+    const playerIds = players.map((player: PlayerMatchData) => player.playerId);
+    
+    for (const playerId of playerIds) {
+      await playerContext.addPlayer(playerId);
+    }
+
+    return matchParticipation;
+  } catch (err) {
+    // If we can't determine the side, skip this match
+    console.warn(`Skipping match ${matchSummary.matchId}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    return null;
+  }
+}
+
+function useProcessTeamData(
+  state: ReturnType<typeof useTeamState>,
+  fetchAndProcessTeamData: ReturnType<typeof useFetchAndProcessTeamData>,
+  matchContext: ReturnType<typeof useMatchContext>,
+  playerContext: ReturnType<typeof usePlayerContext>,
+  teamDataFetching: ReturnType<typeof useTeamDataFetching>
+) {
+  const updateTeam = useTeamUpdater(state);
+  
+  return useCallback(async (teamId: string, leagueId: string, force: boolean) => {
+    try {
+      state.setIsLoading(true);
+      state.setError(null);
+
+      // Fetch team and league data
+      const processedTeam = await fetchAndProcessTeamData(teamId, leagueId, force);
+      
+      // Also fetch the original team data to get match results
+      const originalTeamData = await teamDataFetching.fetchTeamData(teamId, force);
+      if ('error' in originalTeamData) {
+        throw new Error(originalTeamData.error);
+      }
+      
+      // Create the team data with basic info (without matches for now)
+      const teamKey = generateTeamKey(teamId, leagueId);
+      const basicTeamData: TeamData = createBasicTeamData(processedTeam);
+
+      // Add the team to state first
+      state.setTeams(prev => {
+        const newTeams = new Map(prev);
+        newTeams.set(teamKey, basicTeamData);
+        return newTeams;
+      });
+
+      // Now process each match to get the correct side and update the team data
+      const matchesWithCorrectSides: TeamMatchParticipation[] = [];
+      
+      for (const matchSummary of processedTeam.matches) {
+        const matchParticipation = await processMatchAndExtractPlayers(matchSummary, teamId, matchContext, playerContext);
+        if (matchParticipation) {
+          matchesWithCorrectSides.push(matchParticipation);
+        }
+      }
+
+      // Update the team with the matches that have correct sides
+      updateTeam(teamKey, (team) => updateTeamPerformance(team, matchesWithCorrectSides, originalTeamData));
+      
+    } catch (err) {
+      state.setError(err instanceof Error ? err.message : 'Failed to process team');
+    } finally {
+      state.setIsLoading(false);
+    }
+  }, [state, fetchAndProcessTeamData, matchContext, playerContext, teamDataFetching, updateTeam]);
+}
+
+function useTeamCoreActions(
+  state: ReturnType<typeof useTeamState>,
+  teamDataFetching: ReturnType<typeof useTeamDataFetching>,
+  matchContext: ReturnType<typeof useMatchContext>,
+  playerContext: ReturnType<typeof usePlayerContext>,
+  configContext: ReturnType<typeof useConfigContext>
+) {
+  const updateTeamMatches = useUpdateTeamMatches(state, matchContext);
+  const updateTeamPlayers = useUpdateTeamPlayers(state);
+  const fetchAndProcessTeamData = useFetchAndProcessTeamData(teamDataFetching);
+  const processTeamData = useProcessTeamData(state, fetchAndProcessTeamData, matchContext, playerContext, teamDataFetching);
+
+  // Add team (force = false)
+  const addTeam = useCallback(async (teamId: string, leagueId: string) => {
+    try {
+      await processTeamData(teamId, leagueId, false);
+      
+      // Persist teams to config context
+      persistTeamsToConfig(state.teams, configContext);
+    } catch (err) {
+      state.setError(err instanceof Error ? err.message : 'Failed to add team');
+    }
+  }, [processTeamData, state, configContext]);
+
+  // Refresh team (force = true)
+  const refreshTeam = useCallback(async (teamId: string, leagueId: string) => {
+    try {
+      await processTeamData(teamId, leagueId, true);
+      
+      // Persist teams to config context
+      persistTeamsToConfig(state.teams, configContext);
+    } catch (err) {
+      state.setError(err instanceof Error ? err.message : 'Failed to refresh team');
+    }
+  }, [processTeamData, state, configContext]);
+
+  // Remove team
+  const removeTeam = useCallback((teamId: string, leagueId: string) => {
+    const key = generateTeamKey(teamId, leagueId);
+    state.setTeams(prev => {
+      const newTeams = new Map(prev);
+      newTeams.delete(key);
+      return newTeams;
+    });
+    
+    // Clear active team if it was the removed team
+    if (state.activeTeam && state.activeTeam.teamId === teamId && state.activeTeam.leagueId === leagueId) {
+      state.setActiveTeam(null);
+      configContext.setActiveTeam(null);
+    }
+    
+    // Persist teams to config context
+    persistTeamsToConfig(state.teams, configContext);
+  }, [state, configContext]);
+
+  // Set active team
+  const setActiveTeam = useCallback(async (teamId: string | null, leagueId?: string) => {
+    if (teamId === null) {
+      state.setActiveTeam(null);
+      configContext.setActiveTeam(null);
+      return;
+    }
+    
+    if (!leagueId) {
+      throw new Error('League ID is required when setting active team');
+    }
+    
+    state.setActiveTeam({ teamId, leagueId });
+    configContext.setActiveTeam({ teamId, leagueId });
+  }, [state, configContext]);
+
+  // Add match to team
+  const addMatchToTeam = useCallback(async (matchId: string, teamSide: 'radiant' | 'dire') => {
+    const activeTeam = validateActiveTeam(state.activeTeam);
+    const key = generateTeamKey(activeTeam.teamId, activeTeam.leagueId);
+
+    // Add the match and get the processed match data directly
+    const match = await matchContext.addMatch(matchId);
+    if (!match) {
+      throw new Error('Failed to retrieve match data');
+    }
+    
+    // Extract player IDs from the appropriate side
+    const playerIds = extractPlayersFromMatchSide(match, teamSide);
+    
+    // Add each player to the player context
+    for (const playerId of playerIds) {
+      await playerContext.addPlayer(playerId);
+    }
+
+    // Update team's matches list
+    updateTeamMatches(key, matchId, teamSide, match);
+  }, [state, matchContext, playerContext, updateTeamMatches]);
+
+  // Add player to team
+  const addPlayerToTeam = useCallback(async (playerId: string) => {
+    const activeTeam = validateActiveTeam(state.activeTeam);
+    const key = generateTeamKey(activeTeam.teamId, activeTeam.leagueId);
+
+    // Add the player and get the processed player data directly
+    const player = await playerContext.addPlayer(playerId);
+    if (!player) {
+      throw new Error('Failed to retrieve player data');
+    }
+
+    // Update team's players list
+    updateTeamPlayers(key, player);
+  }, [state, playerContext, updateTeamPlayers]);
 
   return {
-    getTeamMatchesForLeague,
-    getTeamPlayersForLeague
+    addTeam,
+    refreshTeam,
+    removeTeam,
+    setActiveTeam,
+    addMatchToTeam,
+    addPlayerToTeam
   };
-};
+}
 
-const useErrorHandling = (setError: (error: string | null) => void) => {
-  const clearError = useCallback(() => {
-    setError(null);
-  }, [setError]);
+function useTeamVisibilityActions(
+  state: ReturnType<typeof useTeamState>
+) {
+  const updateTeam = useTeamUpdater(state);
+  
+  // Generic function to toggle visibility of matches or players
+  const toggleVisibility = useCallback((
+    teamId: string, 
+    leagueId: string, 
+    itemId: string, 
+    itemType: 'match' | 'player',
+    hidden: boolean
+  ) => {
+    const key = generateTeamKey(teamId, leagueId);
+    
+    updateTeam(key, (team) => {
+      if (itemType === 'match') {
+        return {
+          ...team,
+          matches: team.matches.map(match => 
+            match.matchId === itemId 
+              ? { ...match, hidden }
+              : match
+          )
+        };
+      } else {
+        return {
+          ...team,
+          players: team.players.map(player => 
+            player.accountId.toString() === itemId 
+              ? { ...player, hidden }
+              : player
+          )
+        };
+      }
+    });
+  }, [updateTeam]);
+
+  // Hide match for a specific team
+  const hideMatch = useCallback((teamId: string, leagueId: string, matchId: string) => {
+    toggleVisibility(teamId, leagueId, matchId, 'match', true);
+  }, [toggleVisibility]);
+
+  // Show match for a specific team
+  const showMatch = useCallback((teamId: string, leagueId: string, matchId: string) => {
+    toggleVisibility(teamId, leagueId, matchId, 'match', false);
+  }, [toggleVisibility]);
+
+  // Hide player for a specific team
+  const hidePlayer = useCallback((teamId: string, leagueId: string, playerId: string) => {
+    toggleVisibility(teamId, leagueId, playerId, 'player', true);
+  }, [toggleVisibility]);
+
+  // Show player for a specific team
+  const showPlayer = useCallback((teamId: string, leagueId: string, playerId: string) => {
+    toggleVisibility(teamId, leagueId, playerId, 'player', false);
+  }, [toggleVisibility]);
 
   return {
-    clearError
+    hideMatch,
+    showMatch,
+    hidePlayer,
+    showPlayer
   };
-};
+}
+
+function useTeamUtilityActions(
+  state: ReturnType<typeof useTeamState>
+) {
+  // Set teams (for hydration)
+  const setTeams = useCallback((teams: Map<string, TeamData>) => {
+    state.setTeams(teams);
+  }, [state]);
+
+  return {
+    setTeams
+  };
+}
+
+// Load teams from config context
+function useLoadTeamsFromConfig(
+  state: ReturnType<typeof useTeamState>,
+) {
+  return useCallback(async (teamList: TeamData[]) => {
+    state.setIsLoading(true);
+    state.setError(null);
+
+    try {
+      // Convert TeamData[] to Map<string, TeamData> format
+      const teamMap = new Map<string, TeamData>();
+      teamList.forEach(team => {
+        const key = generateTeamKey(team.team.id, team.league.id);
+        teamMap.set(key, team);
+      });
+      
+      // Set the teams in the team context state
+      state.setTeams(teamMap);
+    } catch (error) {
+      state.setError(error instanceof Error ? error.message : 'Failed to load teams from config');
+    } finally {
+      state.setIsLoading(false);
+    }
+  }, [state]);
+}
+
+function useTeamActions(
+  state: ReturnType<typeof useTeamState>,
+  teamDataFetching: ReturnType<typeof useTeamDataFetching>,
+  matchContext: ReturnType<typeof useMatchContext>,
+  playerContext: ReturnType<typeof usePlayerContext>,
+  configContext: ReturnType<typeof useConfigContext>
+) {
+  const coreActions = useTeamCoreActions(state, teamDataFetching, matchContext, playerContext, configContext);
+  const visibilityActions = useTeamVisibilityActions(state);
+  const utilityActions = useTeamUtilityActions(state);
+  const loadTeamsFromConfig = useLoadTeamsFromConfig(state);
+
+  return {
+    ...coreActions,
+    ...visibilityActions,
+    ...utilityActions,
+    loadTeamsFromConfig
+  };
+}
 
 // ============================================================================
 // PROVIDER IMPLEMENTATION
 // ============================================================================
 
 export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) => {
-  // State
-  const { isLoading, setIsLoading, error, setError } = useTeamState();
+  const state = useTeamState();
+  const teamDataFetching = useTeamDataFetching();
+  const matchContext = useMatchContext();
+  const playerContext = usePlayerContext();
+  const configContext = useConfigContext();
   
-  // Contexts
-  const { teamList, setTeamList, activeTeam, setActiveTeam } = useConfigContext();
-  const { fetchTeamData, fetchLeagueData } = useTeamDataFetching();
+  const actions = useTeamActions(state, teamDataFetching, matchContext, playerContext, configContext);
 
-  // Operations
-  const {
-    addTeam,
-    removeTeam,
-    setActiveTeam: setActiveTeamHandler,
-    refreshTeam
-  } = useTeamOperations(
-    teamList,
-    setTeamList,
-    activeTeam,
-    setActiveTeam,
-    setIsLoading,
-    setError,
-    fetchTeamData,
-    fetchLeagueData
-  );
-
-  const addMatch = useAddMatch(teamList, setTeamList);
-
-  const {
-    getTeamMatchesForLeague,
-    getTeamPlayersForLeague
-  } = useLeagueOperations(teamList);
-
-  const { clearError } = useErrorHandling(setError);
-
-  // Context value
   const contextValue: TeamContextValue = {
-    teamDataList: teamList,
-    activeTeam,
-    isLoading,
-    error,
-    addTeam,
-    removeTeam,
-    setActiveTeam: setActiveTeamHandler,
-    refreshTeam,
-    addMatch,
-    getTeamMatchesForLeague,
-    getTeamPlayersForLeague,
-    teamExists: (teamId: string, leagueId: string) => findTeamData(teamList, teamId, leagueId) !== undefined,
-    clearError
+    // State
+    teams: state.teams,
+    activeTeam: state.activeTeam,
+    isLoading: state.isLoading,
+    error: state.error,
+    
+    // Core operations
+    addTeam: actions.addTeam,
+    refreshTeam: actions.refreshTeam,
+    removeTeam: actions.removeTeam,
+    setActiveTeam: actions.setActiveTeam,
+    
+    // Team-specific operations
+    addMatchToTeam: actions.addMatchToTeam,
+    addPlayerToTeam: actions.addPlayerToTeam,
+    
+    // Team list management
+    setTeams: actions.setTeams,
+    loadTeamsFromConfig: actions.loadTeamsFromConfig,
+    
+    // Data access
+    getTeam: (teamId: string) => {
+      for (const [key, value] of state.teams.entries()) {
+        if (key.startsWith(`${teamId}-`)) {
+          return value;
+        }
+      }
+      return undefined;
+    },
+    getActiveTeam: () => {
+      if (!state.activeTeam) return undefined;
+      const key = generateTeamKey(state.activeTeam.teamId, state.activeTeam.leagueId);
+      return state.teams.get(key);
+    },
+    getAllTeams: () => Array.from(state.teams.values()),
+    
+    // Visibility controls
+    hideMatch: actions.hideMatch,
+    showMatch: actions.showMatch,
+    hidePlayer: actions.hidePlayer,
+    showPlayer: actions.showPlayer
   };
 
   return (
@@ -424,43 +583,13 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
 };
 
 // ============================================================================
-// HYDRATION COMPONENT
-// ============================================================================
-
-export const TeamHydrationHandler: React.FC = () => {
-  const { activeTeam } = useTeamContext();
-  const { fetchMatchesForTeam } = useDataCoordinator();
-  const { items, isLoadingItems } = useConstantsContext();
-  const prevActiveTeam = useRef<{ teamId: string; leagueId: string } | null>(null);
-
-  // On mount, hydrate matches for the active team (if any)
-  // Wait for items to be loaded before fetching matches
-  useEffect(() => {
-    if (activeTeam && 
-        !isLoadingItems && 
-        Object.keys(items).length > 0 && 
-        (!prevActiveTeam.current || 
-         prevActiveTeam.current.teamId !== activeTeam.teamId || 
-         prevActiveTeam.current.leagueId !== activeTeam.leagueId)) {
-      
-      fetchMatchesForTeam(activeTeam.teamId, activeTeam.leagueId);
-      prevActiveTeam.current = activeTeam;
-    }
-  }, [activeTeam, fetchMatchesForTeam, items, isLoadingItems]);
-
-  return null;
-};
-
-// ============================================================================
 // HOOK
 // ============================================================================
 
 export const useTeamContext = (): TeamContextValue => {
   const context = useContext(TeamContext);
-  
   if (context === undefined) {
     throw new Error('useTeamContext must be used within a TeamProvider');
   }
-  
   return context;
-}; 
+};

@@ -6,8 +6,6 @@
  */
 
 
-import type { DotabuffMatchSummary, OpenDotaMatch } from '@/types/external-apis';
-import type { Match } from '@/types/contexts/match-context-value';
 
 // ============================================================================
 // TEAM DATA STRUCTURES
@@ -172,37 +170,35 @@ export interface TeamMatchFilters {
 
 export interface TeamContextValue {
   // State
-  teamDataList: TeamData[];
+  teams: Map<string, TeamData>; // Key: [teamId]-[leagueId]
   activeTeam: { teamId: string; leagueId: string } | null;
   isLoading: boolean;
   error: string | null;
   
-  // Actions
+  // Core operations
   addTeam: (teamId: string, leagueId: string) => Promise<void>;
-  removeTeam: (teamId: string, leagueId: string) => Promise<void>;
-  setActiveTeam: (teamId: string | null, leagueId?: string) => Promise<void>;
   refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  addMatch: (match: Match, matchSummary: DotabuffMatchSummary, matchData: OpenDotaMatch, teamId: string, leagueId: string) => void;
+  removeTeam: (teamId: string, leagueId: string) => void;
+  setActiveTeam: (teamId: string, leagueId: string) => void;
   
-  // Utility functions
-  getTeamMatchesForLeague: (teamId: string, leagueId: string) => TeamMatchParticipation[];
-  getTeamPlayersForLeague: (teamId: string, leagueId: string) => TeamPlayer[];
-  teamExists: (teamId: string, leagueId: string) => boolean;
-  clearError: () => void;
+  // Team-specific operations
+  addMatchToTeam: (matchId: string, teamSide: 'radiant' | 'dire') => Promise<void>;
+  addPlayerToTeam: (playerId: string) => Promise<void>;
   
-  // Team-specific functions
-  getTeamPerformance: (teamId: string, leagueId: string) => TeamPerformance | undefined;
-  getTeamHeroUsage: (teamId: string, leagueId: string) => HeroUsageStats | undefined;
-  getTeamDraftStats: (teamId: string, leagueId: string) => DraftStats | undefined;
-  getTeamPlayerRoles: (teamId: string, leagueId: string) => TeamPlayer[];
-  getTeamRecentMatches: (teamId: string, leagueId: string, count?: number) => TeamMatchParticipation[];
+  // Team list management
+  setTeams: (teams: Map<string, TeamData>) => void;
+  loadTeamsFromConfig: (teamList: TeamData[]) => Promise<void>;
   
-  // Match filtering functions (for this team's matches)
-  getFilteredMatches: (teamId: string, leagueId: string, filters?: TeamMatchFilters) => TeamMatchParticipation[];
-  getMatchesByDateRange: (teamId: string, leagueId: string, startDate: string, endDate: string) => TeamMatchParticipation[];
-  getMatchesByResult: (teamId: string, leagueId: string, result: 'win' | 'loss') => TeamMatchParticipation[];
-  getMatchesBySide: (teamId: string, leagueId: string, side: 'radiant' | 'dire') => TeamMatchParticipation[];
-  getMatchesByPickOrder: (teamId: string, leagueId: string, pickOrder: 'first' | 'second') => TeamMatchParticipation[];
+  // Data access
+  getTeam: (teamId: string) => TeamData | undefined;
+  getActiveTeam: () => TeamData | undefined;
+  getAllTeams: () => TeamData[];
+  
+  // Visibility controls
+  hideMatch: (teamId: string, leagueId: string, matchId: string) => void;
+  showMatch: (teamId: string, leagueId: string, matchId: string) => void;
+  hidePlayer: (teamId: string, leagueId: string, playerId: string) => void;
+  showPlayer: (teamId: string, leagueId: string, playerId: string) => void;
 }
 
 export interface TeamContextProviderProps {

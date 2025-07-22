@@ -79,28 +79,31 @@ const mockOpenDotaItems: Record<string, OpenDotaItem> = {
 const TestComponent: React.FC = () => {
   const context = useConstantsContext();
   
+  // Get the first hero from the heroes record
+  const firstHero = Object.values(context.heroes)[0];
+  
   return (
     <div>
-      <div data-testid="heroes-count">{context.heroes.length}</div>
+      <div data-testid="heroes-count">{Object.keys(context.heroes).length}</div>
       <div data-testid="items-count">{Object.keys(context.items).length}</div>
       <div data-testid="is-loading-heroes">{context.isLoadingHeroes.toString()}</div>
       <div data-testid="is-loading-items">{context.isLoadingItems.toString()}</div>
       <div data-testid="heroes-error">{context.heroesError || 'none'}</div>
       <div data-testid="items-error">{context.itemsError || 'none'}</div>
-      <div data-testid="first-hero-name">{context.heroes[0]?.localizedName || 'none'}</div>
-      <div data-testid="first-item-name">{context.items['item_blink']?.dname || 'none'}</div>
-      <div data-testid="item-image-url">{context.getItemImageByTitle('item_blink') || 'none'}</div>
+      <div data-testid="first-hero-name">{firstHero?.localizedName || 'none'}</div>
+      <div data-testid="first-item-name">{context.items['item_blink']?.name || 'none'}</div>
+      <div data-testid="item-image-url">{context.getItemById('item_blink')?.imageUrl || 'none'}</div>
       
       <button 
         data-testid="refresh-heroes-btn" 
-        onClick={() => context.refreshHeroes()}
+        onClick={() => context.fetchHeroes(true)}
       >
         Refresh Heroes
       </button>
       
       <button 
         data-testid="refresh-items-btn" 
-        onClick={() => context.refreshItems()}
+        onClick={() => context.fetchItems(true)}
       >
         Refresh Items
       </button>
@@ -168,7 +171,7 @@ describe('ConstantsContext', () => {
       );
 
       await waitFor(() => {
-        expect(mockFetchHeroesData).toHaveBeenCalledWith();
+        expect(mockFetchHeroesData).toHaveBeenCalledWith(false);
       });
 
       await waitFor(() => {
@@ -185,7 +188,7 @@ describe('ConstantsContext', () => {
       );
 
       await waitFor(() => {
-        expect(mockFetchItemsData).toHaveBeenCalledWith();
+        expect(mockFetchItemsData).toHaveBeenCalledWith(false);
       });
 
       await waitFor(() => {

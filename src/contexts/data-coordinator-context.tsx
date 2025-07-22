@@ -7,17 +7,12 @@
  * Handles data synchronization, caching, and error management across contexts.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
+import { useConfigContext } from '@/contexts/config-context';
 import { useConstantsContext } from '@/contexts/constants-context';
 import { useMatchContext } from '@/contexts/match-context';
-import { useMatchDataFetching } from '@/contexts/match-data-fetching-context';
-import { usePlayerContext } from '@/contexts/player-context';
-import { usePlayerDataFetching } from '@/contexts/player-data-fetching-context';
 import { useTeamContext } from '@/contexts/team-context';
-import { useTeamDataFetching } from '@/contexts/team-data-fetching-context';
-import type { OpenDotaMatch } from '@/types/external-apis';
-
 import type {
   DataCoordinatorContextValue,
   DataCoordinatorProviderProps,
@@ -25,23 +20,7 @@ import type {
   OperationState,
   UIStatus,
   UserAction
-} from './data-coordinator-types';
-import {
-  useContextCoordination,
-  useContextSynchronization,
-  useErrorHandling,
-  useMatchAnalysisWorkflow,
-  useOperationManagement,
-  usePlayerAggregationWorkflow,
-  useTeamAdditionWorkflow
-} from './data-coordinator-workflows';
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-// Note: Data generation is handled by the appropriate contexts
-// (e.g., match context handles match data generation)
+} from '@/types/contexts/data-coordinator-types';
 
 // ============================================================================
 // CONTEXT CREATION
@@ -50,12 +29,10 @@ import {
 const DataCoordinatorContext = createContext<DataCoordinatorContextValue | undefined>(undefined);
 
 // ============================================================================
-// PROVIDER IMPLEMENTATION
+// CUSTOM HOOKS (STATE & LOGIC)
 // ============================================================================
 
-// State management hook
 function useDataCoordinatorState() {
-  const [activeTeam, setActiveTeam] = useState<{ teamId: string; leagueId: string } | null>(null);
   const [operationState, setOperationState] = useState<OperationState>({
     isInProgress: false,
     currentStep: 0,
@@ -78,273 +55,436 @@ function useDataCoordinatorState() {
   });
 
   return {
-    activeTeam, setActiveTeam,
     operationState, setOperationState,
     errorState, setErrorState
   };
 }
 
-// Main logic hook
-function useDataCoordinatorLogic() {
-  // State
-  const state = useDataCoordinatorState();
-  const operationManagement = useOperationManagement(state.setOperationState, state.setErrorState);
-  
-  // Contexts
-  const teamContext = useTeamContext();
-  const matchContext = useMatchContext();
-  const playerContext = usePlayerContext();
-  const constantsContext = useConstantsContext();
-  
-  // Data fetching contexts
-  const teamDataFetching = useTeamDataFetching();
-  const matchDataFetching = useMatchDataFetching();
-  const playerDataFetching = usePlayerDataFetching();
-  
-  // Workflows
-  const teamAdditionWorkflow = useTeamAdditionWorkflow(
-    teamContext, matchContext, playerContext,
-    teamDataFetching, matchDataFetching, playerDataFetching,
-    operationManagement
-  );
-  
-  const matchAnalysisWorkflow = useMatchAnalysisWorkflow(
-    matchContext, playerContext,
-    matchDataFetching, playerDataFetching, operationManagement
-  );
-  
-  const playerAggregationWorkflow = usePlayerAggregationWorkflow(
-    playerContext, playerDataFetching, operationManagement
-  );
-  
-  // Cross-context coordination
-  const contextSynchronization = useContextSynchronization(
-    teamContext, matchContext, playerContext, constantsContext
-  );
-  
-  // Error handling
-  const errorHandling = useErrorHandling(state.setErrorState, operationManagement);
-  
-  // Context coordination
-  const contextCoordination = useContextCoordination();
-  
-  // Actions
-  const actions = useDataCoordinatorActions(
-    state, teamContext, teamDataFetching, matchDataFetching, matchContext, playerContext
-  );
-  
-  const userActionHandler = useUserActionHandler(
-    teamAdditionWorkflow, matchAnalysisWorkflow, playerAggregationWorkflow,
-    contextSynchronization, errorHandling
-  );
-  
-  // UI integration
-  const uiIntegration = useUIIntegration(state.operationState, state.errorState, userActionHandler);
-  
+function useHydrationState() {
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(false);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+
   return {
-    // State
-    activeTeam: state.activeTeam,
-    operationState: state.operationState,
-    errorState: state.errorState,
-    
-    // Actions
-    selectTeam: actions.selectTeam,
-    addTeamWithFullData: teamAdditionWorkflow.addTeamWithFullData,
-    refreshTeamWithFullData: actions.refreshTeamWithFullData,
-    analyzeMatchesForTeam: matchAnalysisWorkflow.analyzeMatchesForTeam,
-    aggregatePlayersForTeam: playerAggregationWorkflow.aggregatePlayersForTeam,
-    fetchMatchesForTeam: actions.fetchMatchesForTeam,
-    
-    // Cross-context coordination
-    synchronizeContexts: contextSynchronization.synchronizeContexts,
-    clearAllContexts: contextSynchronization.clearAllContexts,
-    refreshAllData: contextSynchronization.refreshAllData,
-    
-    // Error handling
-    handleContextError: errorHandling.handleContextError,
-    retryOperation: errorHandling.retryOperation,
-    clearAllErrors: errorHandling.clearAllErrors,
-    
-    // UI integration
-    getUIStatus: uiIntegration.getUIStatus,
-    handleUserAction: uiIntegration.handleUserAction,
-    
-    // Context coordination
-    coordinateTeamContext: contextCoordination.coordinateTeamContext,
-    coordinateMatchContext: contextCoordination.coordinateMatchContext,
-    coordinatePlayerContext: contextCoordination.coordinatePlayerContext,
-    coordinateHeroContext: contextCoordination.coordinateHeroContext
+    hasHydrated, setHasHydrated,
+    isHydrating, setIsHydrating,
+    hydrationError, setHydrationError
   };
 }
 
-// Extracted actions logic
-function useDataCoordinatorActions(
+function useTeamAddOperation(
   state: ReturnType<typeof useDataCoordinatorState>,
-  teamContext: ReturnType<typeof useTeamContext>,
-  teamDataFetching: ReturnType<typeof useTeamDataFetching>,
-  matchDataFetching: ReturnType<typeof useMatchDataFetching>,
-  matchContext: ReturnType<typeof useMatchContext>,
-  playerContext: ReturnType<typeof usePlayerContext>
+  teamContext: ReturnType<typeof useTeamContext>
 ) {
-  const selectTeam = useCallback(async (teamId: string, leagueId: string) => {
-    state.setActiveTeam({ teamId, leagueId });
-    await teamContext.setActiveTeam(teamId, leagueId);
-  }, [state, teamContext]);
-  
-  const fetchMatchesForTeam = useCallback(async (teamId: string, leagueId: string) => {
-    // Get existing matches from the team context instead of match context
-    const existingMatches = teamContext.getTeamMatchesForLeague(teamId, leagueId);
-    const existingMatchIds = new Set(existingMatches.map(match => match.matchId));
-    
-    // Fetch team data with force=true to get fresh data
-    const teamResult = await teamDataFetching.fetchTeamData(teamId, true);
-    if ('error' in teamResult) {
-      console.warn('Failed to fetch team data for matches:', teamResult.error);
-      return;
-    }
-    
-    // Filter matches for the specific league
-    const leagueMatches = (teamResult.matches || []).filter((matchSummary: { leagueId: string }) => 
-      matchSummary.leagueId === leagueId
-    );
-    
-    // Only fetch matches that don't already exist in the team context
-    const newMatches = leagueMatches.filter(matchSummary => !existingMatchIds.has(matchSummary.matchId));
-    
-    if (newMatches.length === 0) {
-      return;
-    }
-    
-    // Initiate all match detail requests simultaneously using .then() blocks
-    const matchDetailPromises = newMatches.map(matchSummary => 
-      matchDataFetching.fetchMatchData(matchSummary.matchId)
-        .then((matchData) => {
-          if (matchData && !('error' in matchData)) {
-            // Let the match context handle the data generation and addition
-            const generatedMatch = matchContext.addMatch(matchData);
-            
-            // Let the team context handle team-specific logic with both matchSummary and generatedMatch
-            teamContext.addMatch(generatedMatch, matchSummary, matchData, teamId, leagueId);
-            
-            // Let the player context handle player-specific logic
-            playerContext.addMatch(generatedMatch);
-            
-            return matchData;
-          }
-          return null;
-        })
-        .catch((error) => {
-          console.warn(`Failed to fetch match ${matchSummary.matchId}:`, error);
-          return null;
-        })
-    );
-    
-    // Wait for all match detail requests to complete
-    await Promise.allSettled(matchDetailPromises);
-  }, [teamDataFetching, matchDataFetching, matchContext, playerContext, teamContext]);
+  return useCallback(async (teamId: string, leagueId: string) => {
+    state.setOperationState(prev => ({
+      ...prev,
+      isInProgress: true,
+      currentStep: 0,
+      totalSteps: 2,
+      operationType: 'team-addition',
+      progress: {
+        teamFetch: false,
+        matchFetch: false,
+        playerFetch: false,
+        heroFetch: false,
+        dataTransformation: false
+      }
+    }));
+    state.setErrorState(prev => ({ ...prev, hasError: false, errorMessage: null, errorContext: null }));
 
-  const refreshTeamWithFullData = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      // First refresh the team data in the team context
+      // Step 1: Add team (this will also fetch match data internally)
+      state.setOperationState(prev => ({
+        ...prev,
+        currentStep: 1,
+        progress: { ...prev.progress, teamFetch: true }
+      }));
+      await teamContext.addTeam(teamId, leagueId);
+
+      // Step 2: Process players (TODO: when we have player data from matches)
+      state.setOperationState(prev => ({
+        ...prev,
+        currentStep: 2,
+        progress: { ...prev.progress, playerFetch: true }
+      }));
+      
+      // TODO: Process players when we have player data from match processing
+      // This will be implemented when we have player data from match processing
+
+      // Set active team in team context
+      teamContext.setActiveTeam(teamId, leagueId);
+      state.setOperationState(prev => ({
+        ...prev,
+        isInProgress: false,
+        currentStep: 0,
+        totalSteps: 0,
+        operationType: null
+      }));
+
+    } catch (err) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: err instanceof Error ? err.message : 'Failed to add team',
+        errorContext: 'team-addition',
+        retryCount: 0,
+        maxRetries: 3
+      });
+      state.setOperationState(prev => ({
+        ...prev,
+        isInProgress: false,
+        currentStep: 0,
+        totalSteps: 0,
+        operationType: null
+      }));
+    }
+  }, [state, teamContext]);
+}
+
+function useTeamRefreshOperation(
+  state: ReturnType<typeof useDataCoordinatorState>,
+  teamContext: ReturnType<typeof useTeamContext>
+) {
+  return useCallback(async (teamId: string, leagueId: string) => {
+    state.setOperationState(prev => ({
+      ...prev,
+      isInProgress: true,
+      currentStep: 0,
+      totalSteps: 2,
+      operationType: 'team-addition',
+      progress: {
+        teamFetch: false,
+        matchFetch: false,
+        playerFetch: false,
+        heroFetch: false,
+        dataTransformation: false
+      }
+    }));
+    state.setErrorState(prev => ({ ...prev, hasError: false, errorMessage: null, errorContext: null }));
+
+    try {
+      // Step 1: Refresh team (this will also fetch match data internally)
+      state.setOperationState(prev => ({
+        ...prev,
+        currentStep: 1,
+        progress: { ...prev.progress, teamFetch: true }
+      }));
       await teamContext.refreshTeam(teamId, leagueId);
-    } catch (error) {
-      // Don't throw the error - handle it gracefully in the UI
-      // The team context will have already updated the team with an error state
-      console.warn('Team refresh failed, but error is handled gracefully:', error);
-      return; // Exit early if team refresh failed
+
+      // Step 2: Process players (TODO: when we have player data from matches)
+      state.setOperationState(prev => ({
+        ...prev,
+        currentStep: 2,
+        progress: { ...prev.progress, playerFetch: true }
+      }));
+      
+      // TODO: Process players when we have player data from match processing
+
+      state.setOperationState(prev => ({
+        ...prev,
+        isInProgress: false,
+        currentStep: 0,
+        totalSteps: 0,
+        operationType: null
+      }));
+
+    } catch (err) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: err instanceof Error ? err.message : 'Failed to refresh team',
+        errorContext: 'team-refresh',
+        retryCount: 0,
+        maxRetries: 3
+      });
+      state.setOperationState(prev => ({
+        ...prev,
+        isInProgress: false,
+        currentStep: 0,
+        totalSteps: 0,
+        operationType: null
+      }));
     }
-    
-    try {
-      // Then fetch and add matches for the existing team
-      await fetchMatchesForTeam(teamId, leagueId);
-    } catch (error) {
-      // Don't throw the error - handle it gracefully in the UI
-      console.warn('Match fetching failed during refresh, but error is handled gracefully:', error);
-    }
-  }, [teamContext, fetchMatchesForTeam]);
+  }, [state, teamContext]);
+}
+
+function useTeamOperations(
+  state: ReturnType<typeof useDataCoordinatorState>,
+  teamContext: ReturnType<typeof useTeamContext>
+) {
+  const addTeam = useTeamAddOperation(state, teamContext);
+  const refreshTeam = useTeamRefreshOperation(state, teamContext);
 
   return {
-    selectTeam,
-    fetchMatchesForTeam,
-    refreshTeamWithFullData
+    addTeam,
+    refreshTeam
   };
 }
 
-// Extracted user action handler
-function useUserActionHandler(
-  teamAdditionWorkflow: ReturnType<typeof useTeamAdditionWorkflow>,
-  matchAnalysisWorkflow: ReturnType<typeof useMatchAnalysisWorkflow>,
-  playerAggregationWorkflow: ReturnType<typeof usePlayerAggregationWorkflow>,
-  contextSynchronization: ReturnType<typeof useContextSynchronization>,
-  errorHandling: ReturnType<typeof useErrorHandling>
+function useMatchOperations(
+  matchContext: ReturnType<typeof useMatchContext>
 ) {
-  return useCallback(async (action: UserAction) => {
-    switch (action.type) {
-      case 'add-team':
-        await teamAdditionWorkflow.addTeamWithFullData(action.teamId, action.leagueId);
-        break;
-      case 'analyze-matches':
-        await matchAnalysisWorkflow.analyzeMatchesForTeam(action.teamId, action.leagueId);
-        break;
-      case 'aggregate-players':
-        await playerAggregationWorkflow.aggregatePlayersForTeam(action.teamId);
-        break;
-      case 'clear-all':
-        contextSynchronization.clearAllContexts();
-        break;
-      case 'retry-operation':
-        await errorHandling.retryOperation();
-        break;
-    }
-  }, [teamAdditionWorkflow, matchAnalysisWorkflow, playerAggregationWorkflow, contextSynchronization, errorHandling]);
+  // Refresh match
+  const refreshMatch = useCallback(async (matchId: string) => {
+    await matchContext.refreshMatch(matchId);
+  }, [matchContext]);
+
+  // Parse match
+  const parseMatch = useCallback(async (matchId: string) => {
+    await matchContext.parseMatch(matchId);
+  }, [matchContext]);
+
+  return {
+    refreshMatch,
+    parseMatch
+  };
 }
 
-// UI integration hook
-function useUIIntegration(
-  operationState: OperationState,
-  errorState: ErrorState,
-  handleUserAction: (action: UserAction) => Promise<void>
+function useActiveTeamOperations(
+  state: ReturnType<typeof useDataCoordinatorState>,
+  teamContext: ReturnType<typeof useTeamContext>
+) {
+  // Add match to active team
+  const addMatchToActiveTeam = useCallback(async (matchId: string, teamSide: 'radiant' | 'dire') => {
+    if (!teamContext.activeTeam) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: 'No active team selected',
+        errorContext: 'active-team-operation',
+        retryCount: 0,
+        maxRetries: 3
+      });
+      return;
+    }
+
+    try {
+      // Delegate to team context to handle the business logic
+      await teamContext.addMatchToTeam(matchId, teamSide);
+      // Clear any previous errors
+      state.setErrorState(prev => ({ ...prev, hasError: false, errorMessage: null, errorContext: null }));
+    } catch (err) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: err instanceof Error ? err.message : 'Failed to add match to team',
+        errorContext: 'active-team-operation',
+        retryCount: 0,
+        maxRetries: 3
+      });
+    }
+  }, [teamContext, state]);
+
+  // Add player to active team
+  const addPlayerToActiveTeam = useCallback(async (playerId: string) => {
+    if (!teamContext.activeTeam) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: 'No active team selected',
+        errorContext: 'active-team-operation',
+        retryCount: 0,
+        maxRetries: 3
+      });
+      return;
+    }
+
+    try {
+      // Delegate to team context to handle the business logic
+      await teamContext.addPlayerToTeam(playerId);
+      // Clear any previous errors
+      state.setErrorState(prev => ({ ...prev, hasError: false, errorMessage: null, errorContext: null }));
+    } catch (err) {
+      state.setErrorState({
+        hasError: true,
+        errorMessage: err instanceof Error ? err.message : 'Failed to add player to team',
+        errorContext: 'active-team-operation',
+        retryCount: 0,
+        maxRetries: 3
+      });
+    }
+  }, [teamContext, state]);
+
+  return {
+    addMatchToActiveTeam,
+    addPlayerToActiveTeam
+  };
+}
+
+function useVisibilityOperations(
+  teamContext: ReturnType<typeof useTeamContext>
+) {
+  // Hide/show match for team
+  const hideMatch = useCallback((teamId: string, leagueId: string, matchId: string) => {
+    teamContext.hideMatch(teamId, leagueId, matchId);
+  }, [teamContext]);
+
+  const showMatch = useCallback((teamId: string, leagueId: string, matchId: string) => {
+    teamContext.showMatch(teamId, leagueId, matchId);
+  }, [teamContext]);
+
+  // Hide/show player for team
+  const hidePlayer = useCallback((teamId: string, leagueId: string, playerId: string) => {
+    teamContext.hidePlayer(teamId, leagueId, playerId);
+  }, [teamContext]);
+
+  const showPlayer = useCallback((teamId: string, leagueId: string, playerId: string) => {
+    teamContext.showPlayer(teamId, leagueId, playerId);
+  }, [teamContext]);
+
+  return {
+    hideMatch,
+    showMatch,
+    hidePlayer,
+    showPlayer
+  };
+}
+
+function useUtilityOperations(
+  state: ReturnType<typeof useDataCoordinatorState>,
+  addTeam: ReturnType<typeof useTeamOperations>['addTeam']
 ) {
   const getUIStatus = useCallback((): UIStatus => {
     return {
-      isLoading: operationState.isInProgress,
-      operationInProgress: operationState.isInProgress,
-      currentOperation: operationState.operationType,
-      progress: operationState.totalSteps > 0 
-        ? Math.round((operationState.currentStep / operationState.totalSteps) * 100)
+      isLoading: state.operationState.isInProgress,
+      operationInProgress: state.operationState.isInProgress,
+      currentOperation: state.operationState.operationType,
+      progress: state.operationState.totalSteps > 0 
+        ? (state.operationState.currentStep / state.operationState.totalSteps) * 100 
         : 0,
-      error: errorState.errorMessage,
-      canRetry: errorState.hasError && errorState.retryCount < errorState.maxRetries
+      error: state.errorState.errorMessage,
+      canRetry: state.errorState.hasError && state.errorState.retryCount < state.errorState.maxRetries
     };
-  }, [operationState, errorState]);
+  }, [state.operationState, state.errorState]);
 
-  const handleUserActionWrapper = useCallback(async (action: UserAction) => {
-    try {
-      await handleUserAction(action);
-    } catch (error) {
-      console.error('Failed to handle user action:', error);
+  const handleUserAction = useCallback(async (action: UserAction) => {
+    switch (action.type) {
+      case 'add-team':
+        await addTeam(action.teamId, action.leagueId);
+        break;
+      default:
+        console.warn('Unknown user action:', action);
     }
-  }, [handleUserAction]);
+  }, [addTeam]);
 
   return {
     getUIStatus,
-    handleUserAction: handleUserActionWrapper
+    handleUserAction
+  };
+}
+
+function useHydration(
+  hydrationState: ReturnType<typeof useHydrationState>,
+  configContext: ReturnType<typeof useConfigContext>,
+  constantsContext: ReturnType<typeof useConstantsContext>,
+  teamContext: ReturnType<typeof useTeamContext>
+) {
+  return useCallback(async () => {
+    // Prevent multiple runs
+    if (hydrationState.hasHydrated || hydrationState.isHydrating) return;
+    
+    hydrationState.setIsHydrating(true);
+    hydrationState.setHydrationError(null);
+
+    try {
+      // Step 1: Fetch heroes and items in parallel (immediate, independent)
+      await Promise.all([
+        constantsContext.fetchHeroes(),
+        constantsContext.fetchItems()
+      ]);
+
+      // Step 2: Load team summaries from localStorage (if any teams exist)
+      const { teamList } = configContext;
+      if (teamList && teamList.length > 0) {
+        // Delegate to team context to handle loading teams from config
+        await teamContext.loadTeamsFromConfig(teamList);
+      }
+
+      // Step 3: Hydrate full team data if active team exists
+      // This will naturally wait for both config (activeTeam) and constants (heroes/items)
+      const { activeTeam } = configContext;
+      if (activeTeam) {
+        await teamContext.addTeam(activeTeam.teamId, activeTeam.leagueId);
+      }
+
+      hydrationState.setHasHydrated(true);
+    } catch (error) {
+      hydrationState.setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
+    } finally {
+      hydrationState.setIsHydrating(false);
+    }
+  }, [hydrationState, configContext, constantsContext, teamContext]);
+}
+
+function useDataCoordinatorActions(
+  state: ReturnType<typeof useDataCoordinatorState>,
+  teamContext: ReturnType<typeof useTeamContext>,
+  matchContext: ReturnType<typeof useMatchContext>
+) {
+  const teamOperations = useTeamOperations(state, teamContext);
+  const matchOperations = useMatchOperations(matchContext);
+  const activeTeamOperations = useActiveTeamOperations(state, teamContext);
+  const visibilityOperations = useVisibilityOperations(teamContext);
+  const utilityOperations = useUtilityOperations(state, teamOperations.addTeam);
+
+  return {
+    ...teamOperations,
+    ...matchOperations,
+    ...activeTeamOperations,
+    ...visibilityOperations,
+    ...utilityOperations
   };
 }
 
 // ============================================================================
-// PROVIDER COMPONENT
-// ============================================================================
-
-// ============================================================================
-// PROVIDER COMPONENT
+// PROVIDER IMPLEMENTATION
 // ============================================================================
 
 export const DataCoordinatorProvider: React.FC<DataCoordinatorProviderProps> = ({ children }) => {
-  const logic = useDataCoordinatorLogic();
-  
+  const state = useDataCoordinatorState();
+  const hydrationState = useHydrationState();
+  const teamContext = useTeamContext();
+  const matchContext = useMatchContext();
+  const configContext = useConfigContext();
+  const constantsContext = useConstantsContext();
+
+  const actions = useDataCoordinatorActions(state, teamContext, matchContext);
+  const hydrate = useHydration(hydrationState, configContext, constantsContext, teamContext);
+
+  // Trigger hydration once on mount
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  const contextValue: DataCoordinatorContextValue = {
+    // State
+    operationState: state.operationState,
+    errorState: state.errorState,
+    
+    // Hydration state
+    hasHydrated: hydrationState.hasHydrated,
+    isHydrating: hydrationState.isHydrating,
+    hydrationError: hydrationState.hydrationError,
+    
+    // Core actions
+    addTeam: actions.addTeam,
+    refreshTeam: actions.refreshTeam,
+    refreshMatch: actions.refreshMatch,
+    parseMatch: actions.parseMatch,
+    
+    // Active team operations
+    addMatchToActiveTeam: actions.addMatchToActiveTeam,
+    addPlayerToActiveTeam: actions.addPlayerToActiveTeam,
+    
+    // Visibility controls
+    hideMatch: actions.hideMatch,
+    showMatch: actions.showMatch,
+    hidePlayer: actions.hidePlayer,
+    showPlayer: actions.showPlayer,
+    
+    // UI integration
+    getUIStatus: actions.getUIStatus,
+    handleUserAction: actions.handleUserAction
+  };
+
   return (
-    <DataCoordinatorContext.Provider value={logic}>
+    <DataCoordinatorContext.Provider value={contextValue}>
       {children}
     </DataCoordinatorContext.Provider>
   );
@@ -356,10 +496,8 @@ export const DataCoordinatorProvider: React.FC<DataCoordinatorProviderProps> = (
 
 export const useDataCoordinator = (): DataCoordinatorContextValue => {
   const context = useContext(DataCoordinatorContext);
-  
   if (context === undefined) {
     throw new Error('useDataCoordinator must be used within a DataCoordinatorProvider');
   }
-  
   return context;
 }; 

@@ -5,16 +5,18 @@
  *
  * Centralized theme management that integrates with next-themes.
  * Provides a single source of truth for theme state across the entire application.
+ * Uses config context for localStorage persistence.
  */
 
 import { useTheme } from 'next-themes';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
+import { useConfigContext } from '@/contexts/config-context';
+import type { Theme } from '@/types/contexts/config-context-value';
+
 // ============================================================================
 // TYPES
 // ============================================================================
-
-export type Theme = 'light' | 'dark' | 'system';
 
 export interface ThemeContextValue {
   // Theme state
@@ -48,6 +50,7 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
   const { theme, setTheme, resolvedTheme, systemTheme } = useTheme();
   const [isThemeLoading, setIsThemeLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const configContext = useConfigContext();
 
   // Handle loading state
   useEffect(() => {
@@ -56,6 +59,20 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
     }
   }, [resolvedTheme]);
 
+  // Enhanced setTheme with transition state and config persistence
+  const handleSetTheme = useCallback((newTheme: Theme) => {
+    setIsTransitioning(true);
+    setTheme(newTheme);
+    
+    // Update config context with the new theme
+    configContext.updateConfig({ theme: newTheme });
+    
+    // Reset transition state after a brief delay
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+  }, [setTheme, configContext]);
+
   // Toggle between light and dark themes
   const toggleTheme = useCallback(() => {
     setIsTransitioning(true);
@@ -63,29 +80,13 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
     if (theme === 'system') {
       // If system theme is active, switch to the opposite of current resolved theme
       const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-      setTheme(newTheme);
+      handleSetTheme(newTheme);
     } else {
       // If specific theme is active, switch to the opposite
       const newTheme = theme === 'dark' ? 'light' : 'dark';
-      setTheme(newTheme);
+      handleSetTheme(newTheme);
     }
-    
-    // Reset transition state after a brief delay
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 300);
-  }, [theme, resolvedTheme, setTheme]);
-
-  // Enhanced setTheme with transition state
-  const handleSetTheme = useCallback((newTheme: Theme) => {
-    setIsTransitioning(true);
-    setTheme(newTheme);
-    
-    // Reset transition state after a brief delay
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 300);
-  }, [setTheme]);
+  }, [theme, resolvedTheme, handleSetTheme]);
 
   // Get the current resolved theme (what's actually being displayed)
   const getResolvedTheme = (): 'light' | 'dark' | null => {

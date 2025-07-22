@@ -1,292 +1,370 @@
 /**
  * Player Context Tests
- *
- * Tests for the player context provider, including state management,
- * data fetching, error handling, and action dispatching.
+ * 
+ * Tests for the player context functionality including player operations,
+ * data processing, and state management.
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { act } from 'react-dom/test-utils';
 
 import { PlayerProvider, usePlayerContext } from '@/contexts/player-context';
-import { PlayerDataFetchingProvider } from '@/contexts/player-data-fetching-context';
-import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
-// ============================================================================
-// MOCK DATA
-// ============================================================================
-
-const mockPlayerData: OpenDotaPlayerComprehensive = {
+// Mock the data fetching context
+const mockFetchPlayerData = jest.fn().mockResolvedValue({
   profile: {
-    profile: {
-      account_id: 123456,
-      personaname: 'TestPlayer',
-      name: 'TestPlayer',
-      plus: false,
-      cheese: 0,
-      steamid: '76561198012345678',
-      avatar: 'https://example.com/avatar.jpg',
-      avatarmedium: 'https://example.com/avatar_medium.jpg',
-      avatarfull: 'https://example.com/avatar_full.jpg',
-      profileurl: 'https://steamcommunity.com/id/testplayer',
-      last_login: '2024-01-01T00:00:00Z',
-      loccountrycode: 'US',
-      status: null,
-      fh_unavailable: false,
-      is_contributor: false,
-      is_subscriber: false
-    },
-    rank_tier: 50,
-    leaderboard_rank: 0
+    account_id: 123456789,
+    personaname: 'Test Player',
+    avatarfull: 'https://example.com/avatar.jpg',
+    loccountrycode: 'US',
+    last_login: '2024-01-01T00:00:00.000Z'
   },
-  counts: {
-    leaver_status: {},
-    game_mode: {},
-    lobby_type: {},
-    lane_role: {},
-    region: {},
-    patch: {}
-  },
-  heroes: [],
-  rankings: [],
-  ratings: [],
-  recentMatches: [],
-  totals: {
-    np: 0,
-    fantasy: 0,
-    cosmetic: 0,
-    all_time: 0,
-    ranked: 0,
-    turbo: 0,
-    matched: 0
-  },
-  wl: {
-    win: 100,
-    lose: 50
-  },
-  wardMap: {
-    obs: {},
-    sen: {}
-  }
-};
-
-// ============================================================================
-// MOCK PROVIDER
-// ============================================================================
-
-// Remove MockPlayerDataFetchingProvider and context mock
-
-// Mock global.fetch to return mockPlayerData
-beforeAll(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve(mockPlayerData)
-    }) as any
-  );
-});
-
-afterAll(() => {
-  if (typeof (global.fetch as jest.Mock).mockRestore === 'function') {
-    (global.fetch as jest.Mock).mockRestore();
+  competitive_rank: 5000,
+  rank_tier: 70,
+  leaderboard_rank: 100,
+  solo_competitive_rank: 4800,
+  mmr_estimate: {
+    estimate: 5000,
+    stdDev: 200,
+    n: 100
   }
 });
 
-// ============================================================================
-// TEST COMPONENTS
-// ============================================================================
+jest.mock('@/contexts/player-data-fetching-context', () => ({
+  usePlayerDataFetching: () => ({
+    fetchPlayerData: mockFetchPlayerData
+  })
+}));
 
-const StateDisplay: React.FC = () => {
+// Test component to access context
+const TestComponent: React.FC = () => {
   const {
     players,
-    filteredPlayers,
     selectedPlayerId,
-    selectedPlayer,
-    filters,
-    isLoadingPlayers,
-    isLoadingPlayerData,
-    playersError,
-    playerDataError
-  } = usePlayerContext();
-
-  return (
-    <div>
-      <div data-testid="players-count">{players.length}</div>
-      <div data-testid="filtered-players-count">{filteredPlayers.length}</div>
-      <div data-testid="selected-player-id">{selectedPlayerId || 'none'}</div>
-      <div data-testid="selected-player-exists">{selectedPlayer ? 'yes' : 'no'}</div>
-      <div data-testid="filters-result">{filters.result}</div>
-      <div data-testid="filters-heroes-count">{filters.heroes.length}</div>
-      <div data-testid="filters-roles-count">{filters.roles.length}</div>
-      <div data-testid="loading-players">{isLoadingPlayers ? 'true' : 'false'}</div>
-      <div data-testid="loading-player-data">{isLoadingPlayerData ? 'true' : 'false'}</div>
-      <div data-testid="players-error">{playersError || 'none'}</div>
-      <div data-testid="player-data-error">{playerDataError || 'none'}</div>
-    </div>
-  );
-};
-
-const ActionButtons: React.FC = () => {
-  const {
-    setSelectedPlayer,
+    isLoading,
+    error,
     addPlayer,
-    removePlayer,
     refreshPlayer,
-    setFilters,
-    filters
+    setSelectedPlayerId,
   } = usePlayerContext();
 
   return (
     <div>
-      <button onClick={() => setSelectedPlayer('p3')} data-testid="set-selected-player">
-        Set Selected Player
-      </button>
-      <button onClick={() => addPlayer('p3')} data-testid="add-player">
+      <div data-testid="players-count">{players.size}</div>
+      <div data-testid="selected-player-id">{selectedPlayerId || 'none'}</div>
+      <div data-testid="is-loading">{isLoading.toString()}</div>
+      <div data-testid="error">{error || 'none'}</div>
+      
+      <button 
+        onClick={() => addPlayer('123456789')}
+        data-testid="add-player-btn"
+      >
         Add Player
       </button>
-      <button onClick={() => removePlayer('p3')} data-testid="remove-player">
-        Remove Player
-      </button>
-      <button onClick={() => refreshPlayer('p3')} data-testid="refresh-player">
+      
+      <button 
+        onClick={() => refreshPlayer('123456789')}
+        data-testid="refresh-player-btn"
+      >
         Refresh Player
       </button>
-      <button onClick={() => setFilters({ ...filters, result: 'win' })} data-testid="set-filters">
-        Set Filters
+      
+      <button 
+        onClick={() => setSelectedPlayerId('123456789')}
+        data-testid="set-selected-player-btn"
+      >
+        Set Selected Player
+      </button>
+      
+      <button 
+        onClick={() => setSelectedPlayerId(null)}
+        data-testid="clear-selected-player-btn"
+      >
+        Clear Selected Player
       </button>
     </div>
   );
 };
 
-const TestComponent: React.FC = () => (
-  <div>
-    <StateDisplay />
-    <ActionButtons />
-  </div>
+// Wrapper component
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <PlayerProvider>
+    {children}
+  </PlayerProvider>
 );
 
-const renderWithProvider = (component: React.ReactElement) => {
-  return render(
-    <PlayerDataFetchingProvider>
-      <PlayerProvider>{component}</PlayerProvider>
-    </PlayerDataFetchingProvider>
-  );
-};
-
-// ============================================================================
-// TEST HELPERS
-// ============================================================================
-
-const waitForInitialLoad = async () => {
-  await waitFor(() => {
-    expect(screen.getByTestId('players-count')).toHaveTextContent('0');
-  });
-};
-
-const clickButton = (testId: string) => {
-  act(() => {
-    screen.getByTestId(testId).click();
-  });
-};
-
-const expectInitialState = () => {
-  expect(screen.getByTestId('filtered-players-count')).toHaveTextContent('0');
-  expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
-  expect(screen.getByTestId('selected-player-exists')).toHaveTextContent('no');
-  expect(screen.getByTestId('filters-result')).toHaveTextContent('all');
-  expect(screen.getByTestId('filters-heroes-count')).toHaveTextContent('0');
-  expect(screen.getByTestId('filters-roles-count')).toHaveTextContent('0');
-  expect(screen.getByTestId('loading-players')).toHaveTextContent('false');
-  expect(screen.getByTestId('loading-player-data')).toHaveTextContent('false');
-  expect(screen.getByTestId('players-error')).toHaveTextContent('none');
-  expect(screen.getByTestId('player-data-error')).toHaveTextContent('none');
-};
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-describe('PlayerProvider', () => {
+describe('PlayerContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('Initial State', () => {
-    it('should render without crashing', () => {
-      renderWithProvider(<TestComponent />);
-      expect(screen.getByTestId('players-count')).toBeInTheDocument();
-    });
-
-    it('should provide initial state', async () => {
-      renderWithProvider(<TestComponent />);
-      
-      // Initial state should show loading or have loaded data
-      const loadingState = screen.getByTestId('loading-players').textContent;
-      expect(['true', 'false']).toContain(loadingState);
-      
-      if (loadingState === 'true') {
-        // Wait for data to load
-        await waitFor(() => {
-          expect(screen.getByTestId('loading-players')).toHaveTextContent('false');
-        });
-      }
+    it('should initialize with empty state', () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
 
       expect(screen.getByTestId('players-count')).toHaveTextContent('0');
-      expectInitialState();
+      expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+      expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
+      expect(screen.getByTestId('error')).toHaveTextContent('none');
     });
   });
 
-  describe('Player Actions', () => {
-    it('should set selected player', async () => {
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-      
-      clickButton('set-selected-player');
-      
+  describe('addPlayer', () => {
+    it('should add a player successfully', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
       await waitFor(() => {
-        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('p3');
+        expect(mockFetchPlayerData).toHaveBeenCalledWith('123456789', false);
       });
     });
 
-    it('should add and remove players', async () => {
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
+    it('should handle errors when adding a player', async () => {
+      mockFetchPlayerData.mockRejectedValueOnce(new Error('Failed to fetch player'));
       
-      clickButton('add-player');
-      await waitFor(() => {
-        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
       });
-      // Wait for the player to be added before removing
-      await new Promise(resolve => setTimeout(resolve, 50));
-      clickButton('remove-player');
+
       await waitFor(() => {
-        expect(screen.getByTestId('players-count')).toHaveTextContent('0');
+        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
       });
     });
 
-    it('should refresh player data', async () => {
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-      
-      clickButton('add-player');
-      await waitFor(() => {
-        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+    it('should return existing player if not forced', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // Add player first time
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
       });
-      // Wait for the player to be added before refreshing
-      await new Promise(resolve => setTimeout(resolve, 50));
-      clickButton('refresh-player');
+
+      await waitFor(() => {
+        expect(mockFetchPlayerData).toHaveBeenCalledTimes(1);
+      });
+
+      // Add same player again (should not fetch)
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(mockFetchPlayerData).toHaveBeenCalledTimes(1); // Should not be called again
+      });
+    });
+  });
+
+  describe('refreshPlayer', () => {
+    it('should refresh a player successfully', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const refreshPlayerButton = screen.getByTestId('refresh-player-btn');
+      await act(async () => {
+        await userEvent.click(refreshPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(mockFetchPlayerData).toHaveBeenCalledWith('123456789', true);
+      });
+    });
+
+    it('should force refresh even if player exists', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // Add player first
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(mockFetchPlayerData).toHaveBeenCalledTimes(1);
+      });
+
+      // Refresh player (should fetch again)
+      const refreshPlayerButton = screen.getByTestId('refresh-player-btn');
+      await act(async () => {
+        await userEvent.click(refreshPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(mockFetchPlayerData).toHaveBeenCalledTimes(2); // Should be called again
+      });
+    });
+  });
+
+  describe('setSelectedPlayerId', () => {
+    it('should set the selected player ID', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const setSelectedPlayerButton = screen.getByTestId('set-selected-player-btn');
+      await act(async () => {
+        await userEvent.click(setSelectedPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('123456789');
+      });
+    });
+
+    it('should clear the selected player ID', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // First set a selected player
+      const setSelectedPlayerButton = screen.getByTestId('set-selected-player-btn');
+      await act(async () => {
+        await userEvent.click(setSelectedPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('123456789');
+      });
+
+      // Then clear it
+      const clearSelectedPlayerButton = screen.getByTestId('clear-selected-player-btn');
+      await act(async () => {
+        await userEvent.click(clearSelectedPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+      });
+    });
+  });
+
+  describe('Data Access', () => {
+    it('should get a player by ID', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // Add a player first
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
       await waitFor(() => {
         expect(screen.getByTestId('players-count')).toHaveTextContent('1');
       });
     });
 
-    it('should set filters', async () => {
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-      
-      clickButton('set-filters');
-      
+    it('should get all players', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // Add a player first
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
       await waitFor(() => {
-        expect(screen.getByTestId('filters-result')).toHaveTextContent('win');
+        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle network errors gracefully', async () => {
+      mockFetchPlayerData.mockRejectedValueOnce(new Error('Network error'));
+      
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
+      });
+    });
+
+    it('should clear errors when operations succeed', async () => {
+      // First cause an error
+      mockFetchPlayerData.mockRejectedValueOnce(new Error('Network error'));
+      
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      const addPlayerButton = screen.getByTestId('add-player-btn');
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
+      });
+
+      // Then succeed
+      mockFetchPlayerData.mockResolvedValueOnce({
+        profile: {
+          account_id: 123456789,
+          personaname: 'Test Player'
+        }
+      });
+
+      await act(async () => {
+        await userEvent.click(addPlayerButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('none');
       });
     });
   });

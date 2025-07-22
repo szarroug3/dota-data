@@ -11,13 +11,13 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 import { useConstantsDataFetching } from '@/contexts/constants-data-fetching-context';
 import { formatItemImageUrl } from '@/lib/utils/item-image-url';
-import type { 
-  ConstantsContextValue, 
-  ConstantsContextProviderProps, 
+import type {
+  ConstantsContextProviderProps,
+  ConstantsContextValue,
   Hero,
   Item
 } from '@/types/contexts/constants-context-value';
-import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
+import type { OpenDotaHero } from '@/types/external-apis';
 
 // ============================================================================
 // HELPERS
@@ -69,12 +69,12 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
   const [itemsError, setItemsError] = useState<string | null>(null);
   
   // Actions
-  const refreshHeroes = useCallback(async () => {
+  const fetchHeroes = useCallback(async (force = false) => {
     try {
       setIsLoadingHeroes(true);
       setHeroesError(null);
       
-      const result = await fetchHeroesData();
+      const result = await fetchHeroesData(force);
       
       if ('error' in result) {
         setHeroesError(result.error);
@@ -91,37 +91,37 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
       
       setHeroes(heroesById);
     } catch (error) {
-      setHeroesError(error instanceof Error ? error.message : 'Failed to refresh heroes');
+      setHeroesError(error instanceof Error ? error.message : 'Failed to fetch heroes');
     } finally {
       setIsLoadingHeroes(false);
     }
   }, [fetchHeroesData]);
   
-  const refreshItems = useCallback(async () => {
+  const fetchItems = useCallback(async (force = false) => {
     try {
       setIsLoadingItems(true);
       setItemsError(null);
       
-      const result = await fetchItemsData();
+      const result = await fetchItemsData(force);
       
       if ('error' in result) {
         setItemsError(result.error as string);
         return;
       }
       
-      // Convert from name-based mapping to ID-based mapping with simplified items
+      // Convert items to our format
       const itemsById: Record<string, Item> = {};
-      Object.values(result).forEach(item => {
-        itemsById[item.id.toString()] = {
-          id: item.id.toString(),
-          name: item.dname,
-          imageUrl: formatItemImageUrl(item.img)
+      Object.entries(result).forEach(([itemId, itemData]) => {
+        itemsById[itemId] = {
+          id: itemId,
+          name: itemData.dname,
+          imageUrl: formatItemImageUrl(itemId)
         };
       });
       
       setItems(itemsById);
     } catch (error) {
-      setItemsError(error instanceof Error ? error.message : 'Failed to refresh items');
+      setItemsError(error instanceof Error ? error.message : 'Failed to fetch items');
     } finally {
       setIsLoadingItems(false);
     }
@@ -136,9 +136,9 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
   
   // Initial data loading
   useEffect(() => {
-    refreshHeroes();
-    refreshItems();
-  }, [refreshHeroes, refreshItems]);
+    fetchHeroes();
+    fetchItems();
+  }, [fetchHeroes, fetchItems]);
   
   const contextValue: ConstantsContextValue = {
     // Hero data
@@ -148,8 +148,8 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     isLoadingItems,
     heroesError,
     itemsError,
-    refreshHeroes,
-    refreshItems,
+    fetchHeroes,
+    fetchItems,
     clearErrors,
     getItemById: useCallback((itemId: string) => items[itemId], [items]),
     getHeroById: useCallback((heroId: string) => heroes[heroId], [heroes])

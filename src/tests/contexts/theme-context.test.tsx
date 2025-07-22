@@ -9,6 +9,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
+import { ConfigProvider } from '@/contexts/config-context';
 import { ThemeContextProvider, useThemeContext } from '@/contexts/theme-context';
 
 // Mock next-themes
@@ -42,11 +43,13 @@ const TestComponent: React.FC = () => {
 
 // Wrapper component for testing
 const TestWrapper: React.FC = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <ThemeContextProvider>
-      <TestComponent />
-    </ThemeContextProvider>
-  </ThemeProvider>
+  <ConfigProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeContextProvider>
+        <TestComponent />
+      </ThemeContextProvider>
+    </ThemeProvider>
+  </ConfigProvider>
 );
 
 describe('ThemeContext', () => {

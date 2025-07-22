@@ -65,6 +65,8 @@ module.exports = {
         '<rootDir>/src/tests/components/**/*.test.tsx',
         '<rootDir>/src/tests/hooks/**/*.test.ts',
         '<rootDir>/src/tests/hooks/**/*.test.tsx',
+        '<rootDir>/src/tests/utils/**/*.test.ts',
+        '<rootDir>/src/tests/utils/**/*.test.tsx',
         '<rootDir>/src/tests/app/**/*.test.ts',
         '<rootDir>/src/tests/app/**/*.test.tsx'
       ],

@@ -5,8 +5,7 @@
  * in the frontend application.
  */
 
-import type { Item, Hero } from '@/types/contexts/constants-context-value';
-import type { OpenDotaMatch } from '@/types/external-apis';
+import type { Hero, Item } from '@/types/contexts/constants-context-value';
 
 // ============================================================================
 // MATCH DATA STRUCTURES
@@ -92,9 +91,7 @@ export interface PlayerMatchData {
   // Hero-specific stats
   heroStats: {
     damageDealt: number;
-    damageTaken: number;
     healingDone: number;
-    stuns: number;
     towerDamage: number;
   };
 }
@@ -170,31 +167,20 @@ export type PlayerRole =
 
 export interface MatchContextValue {
   // State
-  matches: Match[];
+  matches: Map<string, Match>; // Key: matchId
   selectedMatchId: string | null;
-  
-  // Loading and error states
+  setSelectedMatchId: (matchId: string | null) => void;
   isLoading: boolean;
   error: string | null;
   
-  // Actions
-  selectMatch: (matchId: string) => void;
-  addMatch: (matchData: OpenDotaMatch) => Match;
-  updateMatch: (matchId: string, updates: Partial<Match>) => void;
-  removeMatch: (matchId: string) => void;
-  refreshMatches: () => Promise<void>;
-  clearError: () => void;
+  // Core operations
+  addMatch: (matchId: string) => Promise<Match | null>;
+  refreshMatch: (matchId: string) => Promise<Match | null>;
+  parseMatch: (matchId: string) => Promise<void>;
   
-  // Utility functions
-  getMatchById: (matchId: string) => Match | undefined;
-  getMatchEvents: (matchId: string, eventTypes?: EventType[]) => MatchEvent[];
-  getPlayerPerformance: (matchId: string, playerId: string) => PlayerMatchData | undefined;
-  getTeamPerformance: (matchId: string, side: 'radiant' | 'dire') => {
-    kills: number;
-    gold: number;
-    experience: number;
-    players: PlayerMatchData[];
-  };
+  // Data access
+  getMatch: (matchId: string) => Match | undefined;
+  getMatches: (matchIds: string[]) => Match[];
 }
 
 export interface MatchContextProviderProps {

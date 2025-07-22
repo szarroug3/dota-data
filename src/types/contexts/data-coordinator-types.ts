@@ -41,43 +41,37 @@ export interface UIStatus {
 export type UserAction =
   | { type: 'add-team'; teamId: string; leagueId: string }
   | { type: 'analyze-matches'; teamId: string; leagueId: string }
-  | { type: 'aggregate-players'; teamId: string; leagueId: string }
-  | { type: 'clear-all' }
-  | { type: 'retry-operation' };
+  | { type: 'aggregate-players'; teamId: string; leagueId: string };
 
 export interface DataCoordinatorContextValue {
   // State
-  activeTeam: { teamId: string; leagueId: string } | null;
   operationState: OperationState;
   errorState: ErrorState;
   
-  // Actions
-  selectTeam: (teamId: string, leagueId: string) => Promise<void>;
-  addTeamWithFullData: (teamId: string, leagueId: string) => Promise<void>;
-  refreshTeamWithFullData: (teamId: string, leagueId: string) => Promise<void>;
-  analyzeMatchesForTeam: (teamId: string, leagueId: string) => Promise<void>;
-  aggregatePlayersForTeam: (teamId: string) => Promise<void>;
-  fetchMatchesForTeam: (teamId: string, leagueId: string) => Promise<void>;
+  // Hydration state
+  hasHydrated: boolean;
+  isHydrating: boolean;
+  hydrationError: string | null;
   
-  // Cross-context coordination
-  synchronizeContexts: () => Promise<void>;
-  clearAllContexts: () => void;
-  refreshAllData: () => Promise<void>;
+  // Core actions
+  addTeam: (teamId: string, leagueId: string) => Promise<void>;
+  refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
+  refreshMatch: (matchId: string) => Promise<void>;
+  parseMatch: (matchId: string) => Promise<void>;
   
-  // Error handling
-  handleContextError: (error: Error, context: string) => void;
-  retryOperation: () => Promise<void>;
-  clearAllErrors: () => void;
+  // Active team operations
+  addMatchToActiveTeam: (matchId: string, teamSide: 'radiant' | 'dire') => Promise<void>;
+  addPlayerToActiveTeam: (playerId: string) => Promise<void>;
+  
+  // Visibility controls
+  hideMatch: (teamId: string, leagueId: string, matchId: string) => void;
+  showMatch: (teamId: string, leagueId: string, matchId: string) => void;
+  hidePlayer: (teamId: string, leagueId: string, playerId: string) => void;
+  showPlayer: (teamId: string, leagueId: string, playerId: string) => void;
   
   // UI integration
   getUIStatus: () => UIStatus;
   handleUserAction: (action: UserAction) => Promise<void>;
-  
-  // Context coordination
-  coordinateTeamContext: () => void;
-  coordinateMatchContext: () => void;
-  coordinatePlayerContext: () => void;
-  coordinateHeroContext: () => void;
 }
 
 export interface DataCoordinatorProviderProps {
