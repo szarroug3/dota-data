@@ -4,15 +4,16 @@ import React, { Suspense } from 'react';
 
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
-import { useHeroData } from '@/hooks/use-hero-data';
-import { useTeamData } from '@/hooks/use-team-data';
+import { useConfigContext } from '@/contexts/config-context';
+import { useConstantsContext } from '@/contexts/constants-context';
+import { useTeamContext } from '@/contexts/team-context';
 import { useDraftSuggestions } from '@/hooks/useDraftSuggestions';
-import type { Team } from '@/types/contexts/team-types';
 
 import { DraftControlsSection } from './DraftControlsSection';
 import { DraftStateSection } from './DraftStateSection';
 import { HeroSuggestionsSection } from './HeroSuggestionsSection';
 import { MetaStatsSection } from './MetaStatsSection';
+
 
 const EmptyStateContent: React.FC<{ type: 'no-teams' | 'no-selection' }> = ({ type }) => {
   if (type === 'no-teams') {
@@ -97,10 +98,11 @@ function DraftContent({ activeTeam }: DraftContentProps) {
 }
 
 export const DraftSuggestionsPage: React.FC = () => {
-  const { teams, activeTeamId, isLoadingTeams } = useTeamData();
-  const { heroesError, isLoadingHeroes } = useHeroData();
+  const { teams, isLoadingTeams } = useTeamContext();
+  const { activeTeam } = useConfigContext();
+  const { heroesError, isLoadingHeroes } = useConstantsContext();
 
-  const activeTeam = teams.find(t => t.id === activeTeamId) ?? null;
+  const activeTeamData = activeTeam ? teams.get(`${activeTeam.teamId}-${activeTeam.leagueId}`) : null;
 
   const renderContent = () => {
     if (isLoadingTeams || isLoadingHeroes) {

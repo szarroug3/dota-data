@@ -7,15 +7,16 @@ import React from 'react';
 
 import { MatchHistoryPage } from '@/components/match-history/MatchHistoryPage';
 import { ConfigProvider } from '@/contexts/config-context';
-import { DataCoordinatorProvider } from '@/contexts/data-coordinator-context';
-import { HeroProvider } from '@/contexts/hero-context';
-import { HeroDataFetchingProvider } from '@/contexts/hero-data-fetching-context';
 import { MatchProvider } from '@/contexts/match-context';
 import { MatchDataFetchingProvider } from '@/contexts/match-data-fetching-context';
 import { PlayerProvider } from '@/contexts/player-context';
 import { PlayerDataFetchingProvider } from '@/contexts/player-data-fetching-context';
 import { TeamProvider } from '@/contexts/team-context';
 import { TeamDataFetchingProvider } from '@/contexts/team-data-fetching-context';
+
+import { DataCoordinatorProvider } from '@/contexts/data-coordinator-context';
+import { HeroProvider } from '@/contexts/hero-context';
+import { HeroDataFetchingProvider } from '@/contexts/hero-data-fetching-context';
 
 // Mock the match history components
 jest.mock('@/components/match-history/list/MatchListView', () => ({

@@ -3,8 +3,6 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import type { Match } from '@/types/contexts/match-context-value';
 
 interface MatchDetailsPanelDetailedProps {
@@ -242,7 +240,7 @@ export const MatchDetailsPanelDetailed: React.FC<MatchDetailsPanelDetailedProps>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {heroes.map((hero, index) => (
+            {heroes.map((hero) => (
               <div key={hero.name} className="border rounded-lg p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-10 h-10">

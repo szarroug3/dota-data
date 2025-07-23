@@ -1,10 +1,7 @@
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import type { Match } from '@/types/contexts/match-context-value';
 
 interface MatchDetailsPanelPlayersProps {
@@ -29,7 +26,7 @@ interface Player {
   heroImageUrl: string;
 }
 
-export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ match }) => {
+export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ _match }) => {
   // Mock player data - in real implementation this would come from the match data
   const players = [
     {

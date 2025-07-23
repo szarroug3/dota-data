@@ -8,7 +8,7 @@
  * Separates data fetching concerns from data management.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 
 import type { ApiErrorResponse } from '@/types/api';
 import type { OpenDotaMatch } from '@/types/external-apis';
@@ -17,21 +17,21 @@ import type { OpenDotaMatch } from '@/types/external-apis';
 // TYPES
 // ============================================================================
 
-interface MatchDataFetchingContextValue {
+export interface MatchDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
-  fetchMatchData: (matchId: string, force?: boolean) => Promise<OpenDotaMatch | { error: string }>;
+  fetchMatchData: (matchId: number, force?: boolean) => Promise<OpenDotaMatch | { error: string }>;
   
   // Cache management (for explicit control)
-  clearMatchCache: (matchId?: string) => void;
+  clearMatchCache: (matchId?: number) => void;
   clearAllCache: () => void;
   
   // Error management
-  clearMatchError: (matchId: string) => void;
+  clearMatchError: (matchId: number) => void;
   clearAllErrors: () => void;
   
   // Status queries (for debugging/monitoring)
-  isMatchCached: (matchId: string) => boolean;
-  getMatchError: (matchId: string) => string | null;
+  isMatchCached: (matchId: number) => boolean;
+  getMatchError: (matchId: number) => string | null;
 }
 
 interface MatchDataFetchingProviderProps {
@@ -49,8 +49,8 @@ const MatchDataFetchingContext = createContext<MatchDataFetchingContextValue | u
 // ============================================================================
 
 const useMatchDataState = () => {
-  const [matchCache, setMatchCache] = useState<Map<string, OpenDotaMatch>>(new Map());
-  const [matchErrors, setMatchErrors] = useState<Map<string, string>>(new Map());
+  const [matchCache, setMatchCache] = useState<Map<number, OpenDotaMatch>>(new Map());
+  const [matchErrors, setMatchErrors] = useState<Map<number, string>>(new Map());
 
   return {
     matchCache,
@@ -61,10 +61,10 @@ const useMatchDataState = () => {
 };
 
 const useCacheManagement = (
-  matchCache: Map<string, OpenDotaMatch>,
-  setMatchCache: React.Dispatch<React.SetStateAction<Map<string, OpenDotaMatch>>>
+  matchCache: Map<number, OpenDotaMatch>,
+  setMatchCache: React.Dispatch<React.SetStateAction<Map<number, OpenDotaMatch>>>
 ) => {
-  const clearMatchCache = useCallback((matchId?: string) => {
+  const clearMatchCache = useCallback((matchId?: number) => {
     if (matchId) {
       setMatchCache(prev => {
         const newCache = new Map(prev);
@@ -80,7 +80,7 @@ const useCacheManagement = (
     setMatchCache(new Map());
   }, [setMatchCache]);
 
-  const isMatchCached = useCallback((matchId: string) => {
+  const isMatchCached = useCallback((matchId: number) => {
     return matchCache.has(matchId);
   }, [matchCache]);
 
@@ -92,10 +92,10 @@ const useCacheManagement = (
 };
 
 const useErrorManagement = (
-  matchErrors: Map<string, string>,
-  setMatchErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  matchErrors: Map<number, string>,
+  setMatchErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const clearMatchError = useCallback((matchId: string) => {
+  const clearMatchError = useCallback((matchId: number) => {
     setMatchErrors(prev => {
       const newErrors = new Map(prev);
       newErrors.delete(matchId);
@@ -107,7 +107,7 @@ const useErrorManagement = (
     setMatchErrors(new Map());
   }, [setMatchErrors]);
 
-  const getMatchError = useCallback((matchId: string) => {
+  const getMatchError = useCallback((matchId: number) => {
     return matchErrors.get(matchId) || null;
   }, [matchErrors]);
 
@@ -119,15 +119,21 @@ const useErrorManagement = (
 };
 
 const useMatchApiFetching = (
-  matchCache: Map<string, OpenDotaMatch>,
-  setMatchCache: React.Dispatch<React.SetStateAction<Map<string, OpenDotaMatch>>>,
-  setMatchErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  matchCache: Map<number, OpenDotaMatch>,
+  setMatchCache: React.Dispatch<React.SetStateAction<Map<number, OpenDotaMatch>>>,
+  setMatchErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const handleMatchError = useCallback((matchId: string, errorMsg: string) => {
+  // Use refs to access current cache values without causing function recreation
+  const matchCacheRef = useRef<Map<number, OpenDotaMatch>>(new Map());
+  
+  // Update ref when cache changes
+  matchCacheRef.current = matchCache;
+
+  const handleMatchError = useCallback((matchId: number, errorMsg: string) => {
     setMatchErrors(prev => new Map(prev).set(matchId, errorMsg));
   }, [setMatchErrors]);
 
-  const handleMatchSuccess = useCallback((matchId: string, match: OpenDotaMatch) => {
+  const handleMatchSuccess = useCallback((matchId: number, match: OpenDotaMatch) => {
     setMatchCache(prevCache => new Map(prevCache).set(matchId, match));
     setMatchErrors(prev => {
       const newErrors = new Map(prev);
@@ -136,7 +142,7 @@ const useMatchApiFetching = (
     });
   }, [setMatchCache, setMatchErrors]);
 
-  const processMatchResponse = useCallback(async (response: Response, matchId: string): Promise<OpenDotaMatch | { error: string }> => {
+  const processMatchResponse = useCallback(async (response: Response, matchId: number): Promise<OpenDotaMatch | { error: string }> => {
     if (!response.ok) {
       let errorMsg = 'Failed to fetch match data';
       
@@ -147,35 +153,46 @@ const useMatchApiFetching = (
         errorMsg = response.statusText || errorMsg;
       }
       
+      console.error(`Match API: Error response for match ${matchId}:`, errorMsg);
       handleMatchError(matchId, errorMsg);
       return { error: errorMsg };
     }
 
-    const match = await response.json() as OpenDotaMatch;
-    handleMatchSuccess(matchId, match);
-    return match;
+    try {
+      const responseText = await response.text();
+      const match = JSON.parse(responseText) as OpenDotaMatch;
+      
+      handleMatchSuccess(matchId, match);
+      return match;
+    } catch (parseError) {
+      const errorMsg = `Failed to parse match data for ${matchId}: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`;
+      console.error(`Match API: Parse error for match ${matchId}:`, parseError);
+      handleMatchError(matchId, errorMsg);
+      return { error: errorMsg };
+    }
   }, [handleMatchError, handleMatchSuccess]);
 
-  const fetchMatchData = useCallback(async (matchId: string, force = false): Promise<OpenDotaMatch | { error: string }> => {
+  const fetchMatchData = useCallback(async (matchId: number, force = false): Promise<OpenDotaMatch | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && matchCache.has(matchId)) {
-      const cachedMatch = matchCache.get(matchId);
+    if (!force && matchCacheRef.current.has(matchId)) {
+      const cachedMatch = matchCacheRef.current.get(matchId);
       if (cachedMatch) {
         return cachedMatch;
       }
     }
 
     try {
-      const url = force ? `/api/matches/${matchId}?force=true` : `/api/matches/${matchId}`;
+      const url = force ? `/api/matches/${matchId.toString()}?force=true` : `/api/matches/${matchId.toString()}`;
       const response = await fetch(url);
+      
       return await processMatchResponse(response, matchId);
     } catch (error) {
       const errorMsg = 'Failed to fetch match data';
-      console.error('Error fetching match data:', error);
+      console.error(`Match API: Network error for match ${matchId}:`, error);
       handleMatchError(matchId, errorMsg);
       return { error: errorMsg };
     }
-  }, [matchCache, processMatchResponse, handleMatchError]);
+  }, [processMatchResponse, handleMatchError]);
 
   return { fetchMatchData };
 };

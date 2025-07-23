@@ -1,10 +1,11 @@
-import { X } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getValidationAriaAttributes, validateTeamForm } from '@/utils/validation';
 
 interface EditTeamModalProps {
   isOpen: boolean;
@@ -26,9 +27,18 @@ const getButtonState = (
   currentTeamId: string,
   currentLeagueId: string,
   teamExists: (teamId: string, leagueId: string) => boolean,
-  isSubmitting: boolean
+  isSubmitting: boolean,
+  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } }
 ): ButtonState => {
-  // State 1: One of the fields is not filled out
+  // State 1: Validation errors
+  if (!validation.isValid) {
+    return {
+      text: 'Fix Validation Errors',
+      disabled: true
+    };
+  }
+
+  // State 2: One of the fields is not filled out
   if (!newTeamId.trim() || !newLeagueId.trim()) {
     return {
       text: 'Save Changes',
@@ -36,7 +46,7 @@ const getButtonState = (
     };
   }
 
-  // State 2: Team is filled out with a different already existing team data
+  // State 3: Team is filled out with a different already existing team data
   if (newTeamId !== currentTeamId || newLeagueId !== currentLeagueId) {
     if (teamExists(newTeamId.trim(), newLeagueId.trim())) {
       return {
@@ -46,7 +56,7 @@ const getButtonState = (
     }
   }
 
-  // State 3: Valid information
+  // State 4: Valid information
   return {
     text: isSubmitting ? 'Saving...' : 'Save Changes',
     disabled: isSubmitting
@@ -73,13 +83,67 @@ const ModalHeader: React.FC<{ onCancel: () => void }> = ({ onCancel }) => (
   </CardHeader>
 );
 
+interface FormFieldInputProps {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  isValid: boolean;
+}
+
+const FormFieldInput: React.FC<FormFieldInputProps> = ({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  error,
+  isValid
+}) => {
+  const hasError = Boolean(error);
+  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label} *</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          required
+          className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
+          {...ariaAttributes}
+        />
+        {hasError && (
+          <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-destructive" />
+        )}
+      </div>
+      {hasError ? (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {id === 'teamId' ? 'Find this in Dotabuff team URLs' : 'Find this in Dotabuff league URLs'}
+        </p>
+      )}
+    </div>
+  );
+};
+
 const ModalForm: React.FC<{
   newTeamId: string;
   newLeagueId: string;
   setNewTeamId: (value: string) => void;
   setNewLeagueId: (value: string) => void;
   error?: string;
-}> = ({ newTeamId, newLeagueId, setNewTeamId, setNewLeagueId, error }) => (
+  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
+}> = ({ newTeamId, newLeagueId, setNewTeamId, setNewLeagueId, error, validation }) => (
   <div className="space-y-4">
     {error && (
       <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
@@ -88,29 +152,24 @@ const ModalForm: React.FC<{
     )}
     
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="teamId">Team ID *</Label>
-        <Input
-          id="teamId"
-          type="text"
-          value={newTeamId}
-          onChange={(e) => setNewTeamId(e.target.value)}
-          placeholder="Enter team ID"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="leagueId">League ID *</Label>
-        <Input
-          id="leagueId"
-          type="text"
-          value={newLeagueId}
-          onChange={(e) => setNewLeagueId(e.target.value)}
-          placeholder="Enter league ID"
-          required
-        />
-      </div>
+      <FormFieldInput
+        id="teamId"
+        label="Team ID"
+        placeholder="e.g., 9517508"
+        value={newTeamId}
+        onChange={setNewTeamId}
+        error={validation.errors.teamId}
+        isValid={!validation.errors.teamId}
+      />
+      <FormFieldInput
+        id="leagueId"
+        label="League ID"
+        placeholder="e.g., 16435"
+        value={newLeagueId}
+        onChange={setNewLeagueId}
+        error={validation.errors.leagueId}
+        isValid={!validation.errors.leagueId}
+      />
     </div>
   </div>
 );
@@ -120,18 +179,19 @@ const ModalActions: React.FC<{
   onSave: () => void;
   buttonState: ButtonState;
 }> = ({ onCancel, onSave, buttonState }) => (
-  <div className="flex gap-3">
+  <div className="flex gap-4 justify-end">
     <Button
+      type="button"
       variant="outline"
       onClick={onCancel}
-      className="flex-1"
+      disabled={buttonState.disabled}
     >
       Cancel
     </Button>
     <Button
+      type="button"
       onClick={onSave}
       disabled={buttonState.disabled}
-      className="flex-1"
     >
       {buttonState.text}
     </Button>
@@ -149,26 +209,46 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
   const [newTeamId, setNewTeamId] = useState(currentTeamId);
   const [newLeagueId, setNewLeagueId] = useState(currentLeagueId);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | undefined>();
+  const [error, setError] = useState<string>();
 
-  // Update form state when currentTeamId or currentLeagueId changes
+  // Validation state
+  const [validation, setValidation] = useState(() => validateTeamForm(newTeamId, newLeagueId));
+
+  // Update validation when values change
   useEffect(() => {
-    setNewTeamId(currentTeamId);
-    setNewLeagueId(currentLeagueId);
-    setError(undefined);
-  }, [currentTeamId, currentLeagueId]);
+    setValidation(validateTeamForm(newTeamId, newLeagueId));
+  }, [newTeamId, newLeagueId]);
 
-  const buttonState = getButtonState(newTeamId, newLeagueId, currentTeamId, currentLeagueId, teamExists, isSubmitting);
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setNewTeamId(currentTeamId);
+      setNewLeagueId(currentLeagueId);
+      setError(undefined);
+      setIsSubmitting(false);
+    }
+  }, [isOpen, currentTeamId, currentLeagueId]);
+
+  const buttonState = getButtonState(
+    newTeamId,
+    newLeagueId,
+    currentTeamId,
+    currentLeagueId,
+    teamExists,
+    isSubmitting,
+    validation
+  );
 
   const handleSave = async () => {
+    if (buttonState.disabled) return;
+
     try {
       setIsSubmitting(true);
       setError(undefined);
-      await onSave(currentTeamId, currentLeagueId, newTeamId.trim(), newLeagueId.trim());
+      await onSave(currentTeamId, currentLeagueId, newTeamId, newLeagueId);
       onClose();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update team';
-      setError(errorMessage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save team');
     } finally {
       setIsSubmitting(false);
     }
@@ -184,22 +264,17 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
-      onClick={handleCancel}
-    >
-      <Card 
-        className="w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4">
         <ModalHeader onCancel={handleCancel} />
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <ModalForm
             newTeamId={newTeamId}
             newLeagueId={newLeagueId}
             setNewTeamId={setNewTeamId}
             setNewLeagueId={setNewLeagueId}
             error={error}
+            validation={validation}
           />
           <ModalActions
             onCancel={handleCancel}

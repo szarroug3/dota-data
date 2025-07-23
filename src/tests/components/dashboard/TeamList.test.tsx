@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 
 import { TeamList } from '@/components/dashboard/TeamList';
+
 import type { TeamData } from '@/types/contexts/team-types';
 
 describe('TeamList', () => {

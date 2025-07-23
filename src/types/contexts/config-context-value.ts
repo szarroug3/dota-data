@@ -46,11 +46,11 @@ export interface ConfigContextValue {
   // Configuration data
   config: AppConfig;
 
-  // Team data (persistent)
-  teamList: TeamData[];
-  setTeamList: (teamList: TeamData[] | ((prev: TeamData[]) => TeamData[])) => void;
-  activeTeam: { teamId: string; leagueId: string } | null;
-  setActiveTeam: (activeTeam: { teamId: string; leagueId: string } | null) => void;
+  // Team data (persistent) - now stored as Map for consistency
+  getTeams: () => Map<string, TeamData>;
+  setTeams: (teams: Map<string, TeamData>) => void;
+  activeTeam: { teamId: number; leagueId: number } | null;
+  setActiveTeam: (activeTeam: { teamId: number; leagueId: number } | null) => void;
 
   // Loading states
   isLoading: boolean;

@@ -1,0 +1,390 @@
+Navigated to http://localhost:3000/dashboard
+Reloaded
+GET
+http://localhost:3000/dashboard
+[HTTP/1.1 500 Internal Server Error 1993ms]
+
+** dataslayer: injecting Launch monitors ** dashboard:2:9
+GET
+http://localhost:3000/favicon.ico
+[HTTP/1.1 404 Not Found 0ms]
+
+ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+
+The above error occurred in the <DashboardPage> component. It was handled by the <ErrorBoundary> error boundary. Stack: 
+    DashboardPageRoute rsc://react/Server/webpack-internal:///(rsc)/./src/app/dashboard/page.tsx?7:23
+<anonymous code>:1:145535
+ErrorBoundary caught an error: ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+Object { componentStack: "\nDashboardPage@webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:28:18\nDashboardPageRoute [Server]@unknown:0:0\nDashboardPageRoute [Server]@unknown:0:0\nInnerLayoutRouter@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/layout-router.js:244:49\nRedirectErrorBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:75:9\nRedirectBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:83:24\nHTTPAccessFallbackBoundary@webpack-internal:///(app-pages-browser)/./node_mod…" }
+ Stack: 
+    error webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/globals/intercept-console-error.js:50
+    componentDidCatch webpack-internal:///(app-pages-browser)/./src/components/layout/ErrorBoundary.tsx:18
+    AppLayout webpack-internal:///(app-pages-browser)/./src/components/layout/AppLayout.tsx:18
+    AppContent webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:119
+    ClientRoot webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:149
+    RootLayout rsc://react/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?8:60
+<anonymous code>:1:145535
+Hydration: useEffect running (mount #1, render #2) useAppHydration.ts:48:21
+Hydration: Component stack trace: react-stack-bottom-frame@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23055:20
+runWithFiberInDEV@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848:13
+commitHookEffectListMount@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11978:29 useAppHydration.ts:49:21
+Hydration: hydrate function created useAppHydration.ts:53:29
+Hydration: hasHydratedRef.current = false useAppHydration.ts:54:29
+Hydration: isHydrating = false useAppHydration.ts:55:29
+Hydration: hydrate function called useAppHydration.ts:61:29
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] done in 31ms report-hmr-latency.js:14:13
+Navigated to http://localhost:3000/dashboard
+Error fetching heroes data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+Error fetching items data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+Navigated to http://localhost:3000/dashboard
+Error fetching items data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+Error fetching heroes data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+Failed to fetch RSC payload for http://localhost:3000/dashboard. Falling back to browser navigation. TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+GET
+http://localhost:3000/dashboard
+[HTTP/1.1 500 Internal Server Error 217ms]
+
+Error fetching team data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+Error fetching league data: TypeError: NetworkError when attempting to fetch resource. <anonymous code>:1:145535
+ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14526
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+
+The above error occurred in the <DashboardPage> component. It was handled by the <ErrorBoundary> error boundary. Stack: 
+    DashboardPageRoute rsc://react/Server/webpack-internal:///(rsc)/./src/app/dashboard/page.tsx?7:23
+<anonymous code>:1:145535
+ErrorBoundary caught an error: ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14526
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+Object { componentStack: "\nDashboardPage@webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:28:18\nDashboardPageRoute [Server]@unknown:0:0\nDashboardPageRoute [Server]@unknown:0:0\nInnerLayoutRouter@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/layout-router.js:244:49\nRedirectErrorBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:75:9\nRedirectBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:83:24\nHTTPAccessFallbackBoundary@webpack-internal:///(app-pages-browser)/./node_mod…" }
+ Stack: 
+    error webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/globals/intercept-console-error.js:50
+    componentDidCatch webpack-internal:///(app-pages-browser)/./src/components/layout/ErrorBoundary.tsx:18
+    AppLayout webpack-internal:///(app-pages-browser)/./src/components/layout/AppLayout.tsx:18
+    AppContent webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:119
+    ClientRoot webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:149
+    RootLayout rsc://react/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?8:60
+<anonymous code>:1:145535
+Source map error: Error: request failed with status 404
+Stack in the worker:networkRequest@resource://devtools/client/shared/source-map-loader/utils/network-request.js:43:9
+
+Resource URL: http://localhost:3000/%3Canonymous%20code%3E
+Source Map URL: installHook.js.map
+** dataslayer: injecting Launch monitors ** dashboard:2:9
+GET
+http://localhost:3000/favicon.ico
+[HTTP/1.1 404 Not Found 0ms]
+
+ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+
+The above error occurred in the <DashboardPage> component. It was handled by the <ErrorBoundary> error boundary. Stack: 
+    DashboardPageRoute rsc://react/Server/webpack-internal:///(rsc)/./src/app/dashboard/page.tsx?7:23
+<anonymous code>:1:145535
+ErrorBoundary caught an error: ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+Object { componentStack: "\nDashboardPage@webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:28:18\nDashboardPageRoute [Server]@unknown:0:0\nDashboardPageRoute [Server]@unknown:0:0\nInnerLayoutRouter@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/layout-router.js:244:49\nRedirectErrorBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:75:9\nRedirectBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:83:24\nHTTPAccessFallbackBoundary@webpack-internal:///(app-pages-browser)/./node_mod…" }
+ Stack: 
+    error webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/globals/intercept-console-error.js:50
+    componentDidCatch webpack-internal:///(app-pages-browser)/./src/components/layout/ErrorBoundary.tsx:18
+    AppLayout webpack-internal:///(app-pages-browser)/./src/components/layout/AppLayout.tsx:18
+    AppContent webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:119
+    ClientRoot webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:149
+    RootLayout rsc://react/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?8:60
+<anonymous code>:1:145535
+Hydration: useEffect running (mount #1, render #2) useAppHydration.ts:48:21
+Hydration: Component stack trace: react-stack-bottom-frame@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23055:20
+runWithFiberInDEV@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848:13
+commitHookEffectListMount@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11978:29 useAppHydration.ts:49:21
+Hydration: hydrate function created useAppHydration.ts:53:29
+Hydration: hasHydratedRef.current = false useAppHydration.ts:54:29
+Hydration: isHydrating = false useAppHydration.ts:55:29
+Hydration: hydrate function called useAppHydration.ts:61:29
+Source map error: Error: request failed with status 404
+Stack in the worker:networkRequest@resource://devtools/client/shared/source-map-loader/utils/network-request.js:43:9
+
+Resource URL: http://localhost:3000/%3Canonymous%20code%3E
+Source Map URL: installHook.js.map
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] done in 60ms report-hmr-latency.js:14:13
+[Fast Refresh] done in 223ms report-hmr-latency.js:14:13
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] done in 108ms report-hmr-latency.js:14:13
+[Fast Refresh] rebuilding hot-reloader-client.js:197:29
+[Fast Refresh] done in 128ms report-hmr-latency.js:14:13
+XHRGET
+http://localhost:3000/api/players/892251436
+[HTTP/1.1 500 Internal Server Error 54ms]
+
+XHRGET
+http://localhost:3000/api/players/892251436
+[HTTP/1.1 500 Internal Server Error 35ms]
+
+XHRGET
+http://localhost:3000/api/players/892251436
+[HTTP/1.1 500 Internal Server Error 30ms]
+
+XHRGET
+http://localhost:3000/api/players/892251436
+[HTTP/1.1 500 Internal Server Error 33ms]
+
+ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+
+The above error occurred in the <DashboardPage> component. It was handled by the <ErrorBoundary> error boundary. Stack: 
+    DashboardPageRoute rsc://react/Server/webpack-internal:///(rsc)/./src/app/dashboard/page.tsx?7:23
+<anonymous code>:1:145535
+ErrorBoundary caught an error: ReferenceError: isHydrating is not defined
+    DashboardPage webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:91
+    frame webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:22974
+    renderWithHooks webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6667
+    updateFunctionComponent webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8931
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10505
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:848
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15258
+    workLoopSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15078
+    renderRootSync webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14569
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16350
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:45
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:223
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:21362
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25145
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:11
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:62
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/app-next-dev.js:10
+    NextJS 7
+ 
+Object { componentStack: "\nDashboardPage@webpack-internal:///(app-pages-browser)/./src/components/dashboard/DashboardPage.tsx:28:18\nDashboardPageRoute [Server]@unknown:0:0\nDashboardPageRoute [Server]@unknown:0:0\nInnerLayoutRouter@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/layout-router.js:244:49\nRedirectErrorBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:75:9\nRedirectBoundary@webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/redirect-boundary.js:83:24\nHTTPAccessFallbackBoundary@webpack-internal:///(app-pages-browser)/./node_mod…" }
+ Stack: 
+    error webpack-internal:///(app-pages-browser)/./node_modules/.pnpm/next@15.3.4_@babel+core@7.28.0_@playwright+test@1.54.1_react-dom@19.1.0_react@19.1.0__react@19.1.0/node_modules/next/dist/client/components/globals/intercept-console-error.js:50
+    componentDidCatch webpack-internal:///(app-pages-browser)/./src/components/layout/ErrorBoundary.tsx:18
+    AppLayout webpack-internal:///(app-pages-browser)/./src/components/layout/AppLayout.tsx:18
+    AppContent webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:119
+    ClientRoot webpack-internal:///(app-pages-browser)/./src/app/ClientRoot.tsx:149
+    RootLayout rsc://react/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?8:60
+<anonymous code>:1:145535

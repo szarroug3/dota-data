@@ -3,11 +3,12 @@ import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
 import { ConfigProvider } from '@/contexts/config-context';
-import { HeroProvider } from '@/contexts/hero-context';
 import { MatchProvider } from '@/contexts/match-context';
 import { PlayerProvider } from '@/contexts/player-context';
 import { TeamProvider } from '@/contexts/team-context';
 import { ThemeContextProvider } from '@/contexts/theme-context';
+
+import { HeroProvider } from '@/contexts/hero-context';
 
 // Mock window.matchMedia for next-themes
 Object.defineProperty(window, 'matchMedia', {

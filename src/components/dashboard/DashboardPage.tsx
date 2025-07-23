@@ -2,15 +2,12 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useDataCoordinator } from '@/contexts/data-coordinator-context';
 import { useTeamContext } from '@/contexts/team-context';
-import { useMatchData } from '@/hooks/use-match-data';
-import { usePlayerData } from '@/hooks/use-player-data';
-import { useTeamData } from '@/hooks/use-team-data';
 
 import { AddTeamForm } from './AddTeamForm';
 import { EditTeamModal } from './EditTeamModal';
 import { TeamList } from './TeamList';
+import { TeamsListSkeleton } from './TeamsListSkeleton';
 
 // ============================================================================
 // Main Dashboard Component
@@ -19,7 +16,6 @@ export const DashboardPage: React.FC = () => {
   const form = useTeamForm();
   const modal = useEditTeamModal();
   const actions = useDashboardActions();
-  const teamData = useTeamData();
   const teamContext = useTeamContext();
 
   // Handle form submission
@@ -39,10 +35,9 @@ export const DashboardPage: React.FC = () => {
 
   // Check if team already exists
   const checkTeamExists = useCallback(() => {
-    return teamData.teams.some(team => 
-      team.id === form.teamId && team.leagueId === form.leagueId
-    );
-  }, [teamData.teams, form.teamId, form.leagueId]);
+    const teamKey = `${form.teamId}-${form.leagueId}`;
+    return teamContext.teams.has(teamKey);
+  }, [teamContext.teams, form.teamId, form.leagueId]);
 
   // Handle edit team
   const handleEditTeam = useCallback((teamId: string, leagueId: string) => {
@@ -63,6 +58,36 @@ export const DashboardPage: React.FC = () => {
     }
   }, [actions, modal]);
 
+  // Show skeleton while teams are loading
+  if (teamContext.isLoading) {
+    const teamsCount = teamContext.teams.size || 1; // Show at least 1 skeleton
+    return (
+      <>
+        <AddTeamForm
+          teamId={form.teamId}
+          leagueId={form.leagueId}
+          onTeamIdChange={form.setTeamId}
+          onLeagueIdChange={form.setLeagueId}
+          onAddTeam={handleSubmit}
+          teamExists={checkTeamExists}
+          isSubmitting={form.isSubmitting}
+          onReset={form.reset}
+        />
+
+        <TeamsListSkeleton teamsCount={teamsCount} />
+
+        <EditTeamModal
+          isOpen={modal.isEditModalOpen}
+          onClose={modal.close}
+          currentTeamId={modal.editingTeamId}
+          currentLeagueId={modal.editingLeagueId}
+          onSave={handleEditTeamSave}
+          teamExists={checkTeamExists}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <AddTeamForm
@@ -77,11 +102,11 @@ export const DashboardPage: React.FC = () => {
       />
 
       <TeamList
-        teamDataList={teamContext.teamDataList}
+        teamDataList={Array.from(teamContext.teams.values())}
         activeTeam={teamContext.activeTeam}
         onRefreshTeam={actions.handleRefreshTeam}
-        onRemoveTeam={teamContext.removeTeam}
-        onSetActiveTeam={teamContext.setActiveTeam}
+        onRemoveTeam={actions.handleRemoveTeam}
+        onSetActiveTeam={actions.handleSetActiveTeam}
         onEditTeam={handleEditTeam}
       />
 
@@ -154,65 +179,56 @@ function useEditTeamModal() {
 // Internal: Dashboard Actions Hook
 // ============================================================================
 function useDashboardActions() {
-  const teamData = useTeamData();
-  const matchData = useMatchData();
-  const playerData = usePlayerData();
-  const { addTeamWithFullData, refreshTeamWithFullData } = useDataCoordinator();
+  const teamContext = useTeamContext();
 
   const handleAddTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      // Use the data coordinator to add team with full data (including matches)
-      await addTeamWithFullData(teamId, leagueId);
+      // Use team context directly to add team
+      await teamContext.addTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to add team:', error);
       // Don't re-throw the error - let the team be added with error state
       // The team context will handle displaying the error in the UI
     }
-  }, [addTeamWithFullData]);
+  }, [teamContext]);
 
-  const handleRemoveTeam = useCallback(async (teamId: string, _leagueId: string) => {
+  const handleRemoveTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      await teamData.removeTeam(teamId);
+      // Use team context for removal
+      teamContext.removeTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to remove team:', error);
       throw error;
     }
-  }, [teamData]);
+  }, [teamContext]);
 
   const handleRefreshTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      await refreshTeamWithFullData(teamId, leagueId);
+      await teamContext.refreshTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to refresh team:', error);
       // Don't re-throw the error - let the team be refreshed with error state
     }
-  }, [refreshTeamWithFullData]);
+  }, [teamContext]);
 
-  const handleSetActiveTeam = useCallback(async (teamId: string, _leagueId: string) => {
+  const handleSetActiveTeam = useCallback(async (teamId: string, leagueId: string) => {
     try {
-      await teamData.setActiveTeam(teamId);
+      teamContext.setActiveTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to set active team:', error);
       throw error;
     }
-  }, [teamData]);
+  }, [teamContext]);
 
   const handleEditTeam = useCallback(async (currentTeamId: string, currentLeagueId: string, newTeamId: string, newLeagueId: string) => {
     try {
-      // Remove the old team and add the new one with full data
-      await teamData.removeTeam(currentTeamId);
-      await addTeamWithFullData(newTeamId, newLeagueId);
+      // Use team context to edit team in place
+      await teamContext.editTeam(currentTeamId, currentLeagueId, newTeamId, newLeagueId);
     } catch (error) {
       console.error('Failed to edit team:', error);
       // Don't re-throw the error - handle it gracefully in the UI
     }
-  }, [teamData, addTeamWithFullData]);
-
-  const handleClearErrors = useCallback(() => {
-    teamData.clearErrors();
-    matchData.clearErrors();
-    playerData.clearErrors();
-  }, [teamData, matchData, playerData]);
+  }, [teamContext]);
 
   return {
     handleAddTeam,
@@ -220,6 +236,5 @@ function useDashboardActions() {
     handleRefreshTeam,
     handleSetActiveTeam,
     handleEditTeam,
-    handleClearErrors
   };
 } 

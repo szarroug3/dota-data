@@ -28,7 +28,7 @@ const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
 const STORAGE_KEYS = {
   CONFIG: 'dota-scout-assistant-config',
-  TEAM_LIST: 'dota-scout-assistant-team-list',
+  TEAMS: 'dota-scout-assistant-teams',
   ACTIVE_TEAM: 'dota-scout-assistant-active-team'
 } as const;
 
@@ -62,6 +62,39 @@ function saveToStorage<T>(key: string, value: T): void {
   } catch (error) {
     console.warn(`Failed to save ${key} to localStorage:`, error);
     throw error; // Re-throw to allow error handling in the component
+  }
+}
+
+// Helper function to load teams Map from localStorage
+function loadTeamsFromStorage(): Map<string, TeamData> {
+  if (typeof window === 'undefined') {
+    return new Map();
+  }
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.TEAMS);
+    if (stored) {
+      const teamsData = JSON.parse(stored) as { [key: string]: TeamData };
+      return new Map(Object.entries(teamsData));
+    }
+  } catch (error) {
+    console.warn(`Failed to load teams from localStorage:`, error);
+  }
+  return new Map();
+}
+
+// Helper function to save teams Map to localStorage
+function saveTeamsToStorage(teams: Map<string, TeamData>): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
+  try {
+    const teamsObject = Object.fromEntries(teams);
+    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teamsObject));
+  } catch (error) {
+    console.warn(`Failed to save teams to localStorage:`, error);
+    throw error;
   }
 }
 
@@ -138,31 +171,29 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Team list and active team state (persistent) - initialize with defaults, load from localStorage in useEffect
-  const [teamList, setTeamListState] = useState<TeamData[]>([]);
-  const [activeTeam, setActiveTeamState] = useState<{ teamId: string; leagueId: string } | null>(null);
+  // Active team state (persistent) - initialize with defaults, load from localStorage in useEffect
+  const [activeTeam, setActiveTeamState] = useState<{ teamId: number; leagueId: number } | null>(null);
 
-  // Load team data from localStorage after mount
+  // Load active team from localStorage after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedTeamList = loadFromStorage<TeamData[]>(STORAGE_KEYS.TEAM_LIST, []);
-      const storedActiveTeam = loadFromStorage<{ teamId: string; leagueId: string } | null>(STORAGE_KEYS.ACTIVE_TEAM, null);
-      setTeamListState(storedTeamList);
+      const storedActiveTeam = loadFromStorage<{ teamId: number; leagueId: number } | null>(STORAGE_KEYS.ACTIVE_TEAM, null);
       setActiveTeamState(storedActiveTeam);
     }
   }, []);
 
-  // Sync teamList to localStorage
-  const setTeamList = useCallback((update: TeamData[] | ((prev: TeamData[]) => TeamData[])) => {
-    setTeamListState(prev => {
-      const newTeamList = typeof update === 'function' ? update(prev) : update;
-      saveToStorage(STORAGE_KEYS.TEAM_LIST, newTeamList);
-      return newTeamList;
-    });
+  // Get teams directly from localStorage
+  const getTeams = useCallback((): Map<string, TeamData> => {
+    return loadTeamsFromStorage();
+  }, []);
+
+  // Sync teams to localStorage
+  const setTeams = useCallback((teams: Map<string, TeamData>) => {
+    saveTeamsToStorage(teams);
   }, []);
 
   // Sync activeTeam to localStorage
-  const setActiveTeam = useCallback((newActiveTeam: { teamId: string; leagueId: string } | null) => {
+  const setActiveTeam = useCallback((newActiveTeam: { teamId: number; leagueId: number } | null) => {
     setActiveTeamState(newActiveTeam);
     saveToStorage(STORAGE_KEYS.ACTIVE_TEAM, newActiveTeam);
   }, []);
@@ -176,8 +207,8 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
 
   const contextValue: ConfigContextValue = {
     config,
-    teamList,
-    setTeamList,
+    getTeams,
+    setTeams,
     activeTeam,
     setActiveTeam,
     isLoading,

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { TeamCard } from '@/components/dashboard/TeamCard';
+
 import type { TeamData } from '@/types/contexts/team-types';
 
 const mockTeamData: TeamData = {
@@ -331,9 +332,9 @@ describe('TeamCard', () => {
   it('should handle team with missing league name', () => {
     const teamWithoutLeagueName = {
       ...mockTeamData,
-      team: {
-        ...mockTeamData.team,
-        leagueName: undefined
+      league: {
+        ...mockTeamData.league,
+        name: undefined
       }
     };
 

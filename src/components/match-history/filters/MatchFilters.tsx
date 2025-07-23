@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useConstantsContext } from '@/contexts/constants-context';
-import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
+
+import type { Hero } from '@/types/contexts/hero-context-value';
 
 export interface MatchFilters {
   dateRange: 'all' | '7days' | '30days' | 'custom';
@@ -175,36 +176,7 @@ function PickOrderFilter({ value, onChange }: { value: MatchFilters['pickOrder']
 function HeroesPlayedFilter({ value, onChange, matches }: { value: string[]; onChange: (v: string[]) => void; matches: Match[] }) {
   const { heroes } = useConstantsContext();
   
-  // Mock heroes for testing - will be replaced with real hero data later
-  const mockHeroes: Hero[] = [
-    { id: '1', localizedName: 'Anti-Mage', name: 'antimage', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape', 'nuker'], complexity: 2, imageUrl: '' },
-    { id: '2', localizedName: 'Axe', name: 'axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'durable', 'disabler', 'jungler'], complexity: 1, imageUrl: '' },
-    { id: '3', localizedName: 'Bane', name: 'bane', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler', 'nuker', 'durable'], complexity: 2, imageUrl: '' },
-    { id: '4', localizedName: 'Bloodseeker', name: 'bloodseeker', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'nuker', 'disabler', 'jungler'], complexity: 1, imageUrl: '' },
-    { id: '5', localizedName: 'Crystal Maiden', name: 'crystal_maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler', 'nuker'], complexity: 1, imageUrl: '' },
-    { id: '6', localizedName: 'Drow Ranger', name: 'drow_ranger', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'disabler', 'ranged'], complexity: 1, imageUrl: '' },
-    { id: '7', localizedName: 'Earthshaker', name: 'earthshaker', primaryAttribute: 'strength', attackType: 'melee', roles: ['support', 'disabler', 'initiator', 'nuker'], complexity: 2, imageUrl: '' },
-    { id: '8', localizedName: 'Juggernaut', name: 'juggernaut', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape', 'pusher'], complexity: 1, imageUrl: '' },
-    { id: '9', localizedName: 'Mirana', name: 'mirana', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'support', 'escape', 'nuker', 'disabler'], complexity: 2, imageUrl: '' },
-    { id: '10', localizedName: 'Morphling', name: 'morphling', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'escape', 'durable', 'nuker'], complexity: 3, imageUrl: '' },
-    { id: '11', localizedName: 'Shadow Fiend', name: 'nevermore', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'nuker'], complexity: 2, imageUrl: '' },
-    { id: '12', localizedName: 'Phantom Lancer', name: 'phantom_lancer', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape', 'pusher', 'nuker'], complexity: 2, imageUrl: '' },
-    { id: '13', localizedName: 'Puck', name: 'puck', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['initiator', 'disabler', 'escape', 'nuker'], complexity: 3, imageUrl: '' },
-    { id: '14', localizedName: 'Pudge', name: 'pudge', primaryAttribute: 'strength', attackType: 'melee', roles: ['disabler', 'initiator', 'durable', 'nuker'], complexity: 1, imageUrl: '' },
-    { id: '15', localizedName: 'Razor', name: 'razor', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'durable', 'nuker', 'pusher'], complexity: 1, imageUrl: '' },
-    { id: '16', localizedName: 'Sand King', name: 'sand_king', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'disabler', 'support', 'escape', 'nuker'], complexity: 2, imageUrl: '' },
-    { id: '17', localizedName: 'Storm Spirit', name: 'storm_spirit', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['carry', 'escape', 'nuker', 'initiator', 'disabler'], complexity: 3, imageUrl: '' },
-    { id: '18', localizedName: 'Sven', name: 'sven', primaryAttribute: 'strength', attackType: 'melee', roles: ['carry', 'disabler', 'initiator', 'durable'], complexity: 1, imageUrl: '' },
-    { id: '19', localizedName: 'Tiny', name: 'tiny', primaryAttribute: 'strength', attackType: 'melee', roles: ['carry', 'nuker', 'pusher', 'initiator', 'durable'], complexity: 2, imageUrl: '' },
-    { id: '20', localizedName: 'Vengeful Spirit', name: 'vengefulspirit', primaryAttribute: 'agility', attackType: 'ranged', roles: ['support', 'initiator', 'disabler', 'nuker'], complexity: 1, imageUrl: '' },
-    { id: '21', localizedName: 'Windranger', name: 'windrunner', primaryAttribute: 'agility', attackType: 'ranged', roles: ['carry', 'support', 'escape', 'nuker', 'disabler'], complexity: 2, imageUrl: '' },
-    { id: '22', localizedName: 'Zeus', name: 'zuus', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['nuker', 'carry'], complexity: 1, imageUrl: '' },
-    { id: '23', localizedName: 'Kunkka', name: 'kunkka', primaryAttribute: 'strength', attackType: 'melee', roles: ['carry', 'support', 'disabler', 'initiator', 'durable'], complexity: 2, imageUrl: '' },
-    { id: '24', localizedName: 'Lina', name: 'lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'carry', 'nuker', 'disabler'], complexity: 2, imageUrl: '' },
-    { id: '25', localizedName: 'Lich', name: 'lich', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'nuker'], complexity: 1, imageUrl: '' }
-  ];
-  
-  // Use mock heroes for now, fallback to context heroes if available
+  // Use context heroes
   const availableHeroes = Object.values(heroes);
   
   // Get all hero IDs played in the matches

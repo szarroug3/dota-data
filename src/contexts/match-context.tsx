@@ -12,10 +12,9 @@ import React, { createContext, useCallback, useContext, useState } from 'react';
 
 import { useConstantsContext } from '@/contexts/constants-context';
 import { useMatchDataFetching } from '@/contexts/match-data-fetching-context';
+import { useMatchOperations } from '@/hooks/use-match-operations';
 import type { Hero, Item } from '@/types/contexts/constants-context-value';
 import type {
-  EventType,
-  HeroPick,
   Match,
   MatchContextProviderProps,
   MatchContextValue,
@@ -24,6 +23,18 @@ import type {
   PlayerRole
 } from '@/types/contexts/match-context-value';
 import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
+
+// ============================================================================
+// ANALYSIS TYPES
+// ============================================================================
+
+interface PlayerAnalysisResult {
+  player: OpenDotaMatchPlayer;
+  supportScore: number;
+  farmScore: number;
+  killScore: number;
+  totalScore: number;
+}
 
 // ============================================================================
 // CONTEXT CREATION
@@ -36,16 +47,17 @@ const MatchContext = createContext<MatchContextValue | undefined>(undefined);
 // ============================================================================
 
 function useMatchState() {
-  const [matches, setMatches] = useState<Map<string, Match>>(new Map());
-  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [matches, setMatches] = useState<Map<number, Match>>(new Map());
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   return {
-    matches, setMatches,
-    selectedMatchId, setSelectedMatchId,
-    isLoading, setIsLoading,
-    error, setError
+    matches,
+    setMatches,
+    selectedMatchId,
+    setSelectedMatchId,
+    isLoading,
+    setIsLoading
   };
 }
 
@@ -72,11 +84,11 @@ function useMatchProcessing() {
     const direRoleMap = detectTeamRoles(direPlayers);
 
     return {
-      id: matchData.match_id.toString(),
+      id: matchData.match_id,
       date: new Date(matchData.start_time * 1000).toISOString(),
       duration: matchData.duration,
-      radiantTeamId: matchData.radiant_team_id?.toString() || '0',
-      direTeamId: matchData.dire_team_id?.toString() || '0',
+      radiantTeamId: matchData.radiant_team_id || 0,
+      direTeamId: matchData.dire_team_id || 0,
       draft: {
         radiantPicks,
         direPicks,
@@ -87,113 +99,19 @@ function useMatchProcessing() {
         radiant: radiantPlayers.map(player => convertPlayer(player, radiantRoleMap, items, heroes)),
         dire: direPlayers.map(player => convertPlayer(player, direRoleMap, items, heroes))
       },
+      events,
       statistics: {
         radiantScore: matchData.radiant_score || 0,
         direScore: matchData.dire_score || 0,
         goldAdvantage,
         experienceAdvantage
       },
-      events,
       result: matchData.radiant_win ? 'radiant' : 'dire'
     };
   }, [heroes, items]);
 
   return {
     processMatchData
-  };
-}
-
-function useMatchActions(
-  state: ReturnType<typeof useMatchState>,
-  processing: ReturnType<typeof useMatchProcessing>,
-  matchDataFetching: ReturnType<typeof useMatchDataFetching>
-) {
-  // Consolidated match operation with force parameter
-  const processMatch = useCallback(async (matchId: string, force = false): Promise<Match | null> => {
-    // Check if match already exists (skip if exists and not forcing)
-    if (!force && state.matches.has(matchId)) {
-      return state.matches.get(matchId) || null;
-    }
-    
-    state.setIsLoading(true);
-    state.setError(null);
-    
-    try {
-      // Fetch match data with force parameter
-      const matchData = await matchDataFetching.fetchMatchData(matchId, force);
-      
-      if ('error' in matchData) {
-        throw new Error(matchData.error);
-      }
-      
-      // Process match data
-      const processedMatch = processing.processMatchData(matchData);
-      
-      // Add/update to state
-      state.setMatches(prev => new Map(prev).set(matchId, processedMatch));
-      
-      return processedMatch;
-      
-    } catch (err) {
-      state.setError(err instanceof Error ? err.message : 'Failed to process match');
-      return null;
-    } finally {
-      state.setIsLoading(false);
-    }
-  }, [state, processing, matchDataFetching]);
-
-  // Add match (force = false)
-  const addMatch = useCallback(async (matchId: string): Promise<Match | null> => {
-    return await processMatch(matchId, false);
-  }, [processMatch]);
-
-  // Refresh match (force = true)
-  const refreshMatch = useCallback(async (matchId: string): Promise<Match | null> => {
-    return await processMatch(matchId, true);
-  }, [processMatch]);
-
-  // Parse match
-  const parseMatch = useCallback(async (matchId: string) => {
-    state.setIsLoading(true);
-    state.setError(null);
-    
-    try {
-      // Parse match data - for now, just refresh the match
-      const matchData = await matchDataFetching.fetchMatchData(matchId, true);
-      
-      if ('error' in matchData) {
-        throw new Error(matchData.error);
-      }
-      
-      // Process match data
-      const processedMatch = processing.processMatchData(matchData);
-      
-      // Update state
-      state.setMatches(prev => new Map([...prev].map(m => m[0] === matchId ? [processedMatch.id, processedMatch] : m)));
-      
-    } catch (err) {
-      state.setError(err instanceof Error ? err.message : 'Failed to parse match');
-    } finally {
-      state.setIsLoading(false);
-    }
-  }, [state, processing, matchDataFetching]);
-
-  // Select match
-  const selectMatch = useCallback((matchId: string) => {
-    state.setSelectedMatchId(matchId);
-  }, [state]);
-
-  // Clear error
-  const clearError = useCallback(() => {
-    state.setError(null);
-  }, [state]);
-
-  return {
-    addMatch,
-    refreshMatch,
-    parseMatch,
-    selectMatch,
-    clearError
   };
 }
 
@@ -224,7 +142,7 @@ function calculateSupportScore(player: OpenDotaMatchPlayer): number {
   return (player.observer_uses || 0) + (player.sentry_uses || 0) * 2;
 }
 
-function analyzePlayer(player: OpenDotaMatchPlayer) {
+function analyzePlayer(player: OpenDotaMatchPlayer): PlayerAnalysisResult {
   const supportScore = calculateSupportScore(player);
   const farmScore = (player.gold_per_min || 0) + (player.xp_per_min || 0);
   const killScore = (player.kills || 0) + (player.assists || 0) * 0.5;
@@ -238,8 +156,8 @@ function analyzePlayer(player: OpenDotaMatchPlayer) {
   };
 }
 
-function groupPlayersByLaneRole(playerAnalysis: ReturnType<typeof analyzePlayer>[]) {
-  const playersByLaneRole: Record<number, ReturnType<typeof analyzePlayer>[]> = {};
+function groupPlayersByLaneRole(playerAnalysis: PlayerAnalysisResult[]) {
+  const playersByLaneRole: Record<number, PlayerAnalysisResult[]> = {};
   
   playerAnalysis.forEach(analysis => {
     const laneRole = analysis.player.lane_role || 0;
@@ -252,7 +170,7 @@ function groupPlayersByLaneRole(playerAnalysis: ReturnType<typeof analyzePlayer>
   return playersByLaneRole;
 }
 
-function assignMidRoles(playersByLaneRole: Record<number, ReturnType<typeof analyzePlayer>[]>, roleMap: Record<string, PlayerRole>) {
+function assignMidRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
   const midPlayers = playersByLaneRole[2] || [];
   if (midPlayers.length > 0) {
     const bestMid = midPlayers.reduce((best, current) => 
@@ -262,7 +180,7 @@ function assignMidRoles(playersByLaneRole: Record<number, ReturnType<typeof anal
   }
 }
 
-function assignSafeLaneRoles(playersByLaneRole: Record<number, ReturnType<typeof analyzePlayer>[]>, roleMap: Record<string, PlayerRole>) {
+function assignSafeLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
   const safeLanePlayers = playersByLaneRole[1] || [];
   if (safeLanePlayers.length > 0) {
     const bestCarry = safeLanePlayers.reduce((best, current) => 
@@ -278,7 +196,7 @@ function assignSafeLaneRoles(playersByLaneRole: Record<number, ReturnType<typeof
   }
 }
 
-function assignOffLaneRoles(playersByLaneRole: Record<number, ReturnType<typeof analyzePlayer>[]>, roleMap: Record<string, PlayerRole>) {
+function assignOffLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
   const offLanePlayers = playersByLaneRole[3] || [];
   if (offLanePlayers.length > 0) {
     const bestOffLane = offLanePlayers.reduce((best, current) => 
@@ -294,7 +212,7 @@ function assignOffLaneRoles(playersByLaneRole: Record<number, ReturnType<typeof 
   }
 }
 
-function assignRemainingRoles(playerAnalysis: ReturnType<typeof analyzePlayer>[], roleMap: Record<string, PlayerRole>) {
+function assignRemainingRoles(playerAnalysis: PlayerAnalysisResult[], roleMap: Record<string, PlayerRole>) {
   const unassigned = playerAnalysis.filter(analysis => 
     !roleMap[analysis.player.account_id.toString()]
   );
@@ -386,18 +304,26 @@ function createHeroStats(player: OpenDotaMatchPlayer): PlayerMatchData['heroStat
 function convertPlayer(player: OpenDotaMatchPlayer, roleMap: Record<string, PlayerRole>, items: Record<string, Item>, heroes: Record<string, Hero>): PlayerMatchData {
   const hero = heroes[player.hero_id.toString()];
   
-  if (!hero) {
-    throw new Error(`Hero not found for ID: ${player.hero_id}`);
-  }
+  // Create fallback hero if not found
+  const fallbackHero: Hero = {
+    id: player.hero_id.toString(),
+    name: `Unknown Hero ${player.hero_id}`,
+    localizedName: `Unknown Hero ${player.hero_id}`,
+    primaryAttribute: 'agility',
+    attackType: 'melee',
+    roles: [],
+    imageUrl: ''
+  };
   
+  const playerHero = hero || fallbackHero;
   const playerItems = getPlayerItems(player, items);
   const stats = createPlayerStats(player);
   const heroStats = createHeroStats(player);
   
   return {
-    playerId: player.account_id.toString(),
+    accountId: player.account_id,
     playerName: player.personaname || `Player ${player.account_id}`,
-    hero,
+    hero: playerHero,
     role: roleMap[player.account_id.toString()] || 'unknown',
     items: playerItems,
     stats,
@@ -406,8 +332,8 @@ function convertPlayer(player: OpenDotaMatchPlayer, roleMap: Record<string, Play
 }
 
 function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string, Hero>) {
-  const radiantPicks: HeroPick[] = [];
-  const direPicks: HeroPick[] = [];
+  const radiantPicks: PlayerMatchData[] = [];
+  const direPicks: PlayerMatchData[] = [];
   const radiantBans: string[] = [];
   const direBans: string[] = [];
   
@@ -417,10 +343,14 @@ function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string, Hero>
       if (!hero) return;
       
       if (pickBan.is_pick) {
-        const heroPick: HeroPick = {
+        const heroPick: PlayerMatchData = {
+          accountId: 0, // Will be filled when we have player-hero mapping
+          playerName: '', // Will be determined from player slot
           hero,
-          playerId: '', // Will be filled when we have player-hero mapping
-          role: 'unknown' // Will be determined from player slot
+          role: 'unknown', // Will be determined from player slot
+          items: [],
+          stats: { kills: 0, deaths: 0, assists: 0, lastHits: 0, denies: 0, gpm: 0, xpm: 0, netWorth: 0, level: 1 },
+          heroStats: { damageDealt: 0, healingDone: 0, towerDamage: 0 }
         };
         
         if (pickBan.team === 0) {
@@ -454,7 +384,7 @@ function getSideFromPlayerSlot(playerSlot?: number): 'radiant' | 'dire' {
 function createFirstBloodEvent(objective: { time: number; player_slot?: number }): MatchEvent {
   return {
     timestamp: objective.time,
-    type: 'first_blood' as EventType,
+    type: 'first_blood',
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
       killer: objective.player_slot?.toString() || ''
@@ -465,7 +395,7 @@ function createFirstBloodEvent(objective: { time: number; player_slot?: number }
 function createRoshanKillEvent(objective: { time: number; player_slot?: number }): MatchEvent {
   return {
     timestamp: objective.time,
-    type: 'roshan_kill' as EventType,
+    type: 'roshan_kill',
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
       roshanKiller: getSideFromPlayerSlot(objective.player_slot)
@@ -476,7 +406,7 @@ function createRoshanKillEvent(objective: { time: number; player_slot?: number }
 function createAegisPickupEvent(objective: { time: number; player_slot?: number }): MatchEvent {
   return {
     timestamp: objective.time,
-    type: 'aegis_pickup' as EventType,
+    type: 'aegis_pickup',
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
       aegisHolder: objective.player_slot?.toString() || ''
@@ -552,7 +482,7 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
   const processing = useMatchProcessing();
   const matchDataFetching = useMatchDataFetching();
   
-  const actions = useMatchActions(state, processing, matchDataFetching);
+  const actions = useMatchOperations(state, processing, matchDataFetching);
 
   const contextValue: MatchContextValue = {
     // State
@@ -560,16 +490,16 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     selectedMatchId: state.selectedMatchId,
     setSelectedMatchId: state.setSelectedMatchId,
     isLoading: state.isLoading,
-    error: state.error,
     
     // Core operations
     addMatch: actions.addMatch,
     refreshMatch: actions.refreshMatch,
     parseMatch: actions.parseMatch,
+    removeMatch: actions.removeMatch,
     
     // Data access
-    getMatch: (matchId: string) => state.matches.get(matchId),
-    getMatches: (matchIds: string[]) => matchIds.map(id => state.matches.get(id)).filter((match): match is Match => match !== undefined)
+    getMatch: (matchId: number) => state.matches.get(matchId),
+    getMatches: (matchIds: number[]) => matchIds.map(id => state.matches.get(id)).filter((match): match is Match => match !== undefined)
   };
 
   return (

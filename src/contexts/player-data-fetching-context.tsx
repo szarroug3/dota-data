@@ -8,7 +8,7 @@
  * Separates data fetching concerns from data management.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 
 import type { ApiErrorResponse } from '@/types/api';
 import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
@@ -17,21 +17,21 @@ import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 // TYPES
 // ============================================================================
 
-interface PlayerDataFetchingContextValue {
+export interface PlayerDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
-  fetchPlayerData: (playerId: string, force?: boolean) => Promise<OpenDotaPlayerComprehensive | { error: string }>;
+  fetchPlayerData: (playerId: number, force?: boolean) => Promise<OpenDotaPlayerComprehensive | { error: string }>;
   
   // Cache management (for explicit control)
-  clearPlayerCache: (playerId?: string) => void;
+  clearPlayerCache: (playerId?: number) => void;
   clearAllCache: () => void;
   
   // Error management
-  clearPlayerError: (playerId: string) => void;
+  clearPlayerError: (playerId: number) => void;
   clearAllErrors: () => void;
   
   // Status queries (for debugging/monitoring)
-  isPlayerCached: (playerId: string) => boolean;
-  getPlayerError: (playerId: string) => string | null;
+  isPlayerCached: (playerId: number) => boolean;
+  getPlayerError: (playerId: number) => string | null;
 }
 
 interface PlayerDataFetchingProviderProps {
@@ -49,8 +49,8 @@ const PlayerDataFetchingContext = createContext<PlayerDataFetchingContextValue |
 // ============================================================================
 
 const usePlayerDataState = () => {
-  const [playerCache, setPlayerCache] = useState<Map<string, OpenDotaPlayerComprehensive>>(new Map());
-  const [playerErrors, setPlayerErrors] = useState<Map<string, string>>(new Map());
+  const [playerCache, setPlayerCache] = useState<Map<number, OpenDotaPlayerComprehensive>>(new Map());
+  const [playerErrors, setPlayerErrors] = useState<Map<number, string>>(new Map());
 
   return {
     playerCache,
@@ -61,10 +61,10 @@ const usePlayerDataState = () => {
 };
 
 const useCacheManagement = (
-  playerCache: Map<string, OpenDotaPlayerComprehensive>,
-  setPlayerCache: React.Dispatch<React.SetStateAction<Map<string, OpenDotaPlayerComprehensive>>>
+  playerCache: Map<number, OpenDotaPlayerComprehensive>,
+  setPlayerCache: React.Dispatch<React.SetStateAction<Map<number, OpenDotaPlayerComprehensive>>>
 ) => {
-  const clearPlayerCache = useCallback((playerId?: string) => {
+  const clearPlayerCache = useCallback((playerId?: number) => {
     if (playerId) {
       setPlayerCache(prev => {
         const newCache = new Map(prev);
@@ -80,7 +80,7 @@ const useCacheManagement = (
     setPlayerCache(new Map());
   }, [setPlayerCache]);
 
-  const isPlayerCached = useCallback((playerId: string) => {
+  const isPlayerCached = useCallback((playerId: number) => {
     return playerCache.has(playerId);
   }, [playerCache]);
 
@@ -92,10 +92,10 @@ const useCacheManagement = (
 };
 
 const useErrorManagement = (
-  playerErrors: Map<string, string>,
-  setPlayerErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  playerErrors: Map<number, string>,
+  setPlayerErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const clearPlayerError = useCallback((playerId: string) => {
+  const clearPlayerError = useCallback((playerId: number) => {
     setPlayerErrors(prev => {
       const newErrors = new Map(prev);
       newErrors.delete(playerId);
@@ -107,7 +107,7 @@ const useErrorManagement = (
     setPlayerErrors(new Map());
   }, [setPlayerErrors]);
 
-  const getPlayerError = useCallback((playerId: string) => {
+  const getPlayerError = useCallback((playerId: number) => {
     return playerErrors.get(playerId) || null;
   }, [playerErrors]);
 
@@ -119,15 +119,19 @@ const useErrorManagement = (
 };
 
 const usePlayerApiFetching = (
-  playerCache: Map<string, OpenDotaPlayerComprehensive>,
-  setPlayerCache: React.Dispatch<React.SetStateAction<Map<string, OpenDotaPlayerComprehensive>>>,
-  setPlayerErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  playerCache: Map<number, OpenDotaPlayerComprehensive>,
+  setPlayerCache: React.Dispatch<React.SetStateAction<Map<number, OpenDotaPlayerComprehensive>>>,
+  setPlayerErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const handlePlayerError = useCallback((playerId: string, errorMsg: string) => {
+  // Use ref to store the current cache to avoid dependency issues
+  const cacheRef = useRef<Map<number, OpenDotaPlayerComprehensive>>(playerCache);
+  cacheRef.current = playerCache; // Keep ref in sync with state
+
+  const handlePlayerError = useCallback((playerId: number, errorMsg: string) => {
     setPlayerErrors(prev => new Map(prev).set(playerId, errorMsg));
   }, [setPlayerErrors]);
 
-  const handlePlayerSuccess = useCallback((playerId: string, player: OpenDotaPlayerComprehensive) => {
+  const handlePlayerSuccess = useCallback((playerId: number, player: OpenDotaPlayerComprehensive) => {
     setPlayerCache(prevCache => new Map(prevCache).set(playerId, player));
     setPlayerErrors(prev => {
       const newErrors = new Map(prev);
@@ -136,7 +140,7 @@ const usePlayerApiFetching = (
     });
   }, [setPlayerCache, setPlayerErrors]);
 
-  const processPlayerResponse = useCallback(async (response: Response, playerId: string): Promise<OpenDotaPlayerComprehensive | { error: string }> => {
+  const processPlayerResponse = useCallback(async (response: Response, playerId: number): Promise<OpenDotaPlayerComprehensive | { error: string }> => {
     if (!response.ok) {
       let errorMsg = 'Failed to fetch player data';
       
@@ -156,17 +160,17 @@ const usePlayerApiFetching = (
     return player;
   }, [handlePlayerError, handlePlayerSuccess]);
 
-  const fetchPlayerData = useCallback(async (playerId: string, force = false): Promise<OpenDotaPlayerComprehensive | { error: string }> => {
+  const fetchPlayerData = useCallback(async (playerId: number, force = false): Promise<OpenDotaPlayerComprehensive | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && playerCache.has(playerId)) {
-      const cachedPlayer = playerCache.get(playerId);
+    if (!force && cacheRef.current.has(playerId)) {
+      const cachedPlayer = cacheRef.current.get(playerId);
       if (cachedPlayer) {
         return cachedPlayer;
       }
     }
 
     try {
-      const url = force ? `/api/players/${playerId}?force=true` : `/api/players/${playerId}`;
+      const url = force ? `/api/players/${playerId.toString()}?force=true` : `/api/players/${playerId.toString()}`;
       const response = await fetch(url);
       return await processPlayerResponse(response, playerId);
     } catch (error) {
@@ -175,7 +179,7 @@ const usePlayerApiFetching = (
       handlePlayerError(playerId, errorMsg);
       return { error: errorMsg };
     }
-  }, [playerCache, processPlayerResponse, handlePlayerError]);
+  }, [processPlayerResponse, handlePlayerError]);
 
   return { fetchPlayerData };
 };

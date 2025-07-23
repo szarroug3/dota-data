@@ -5,6 +5,8 @@
  * league-specific filtering, and player aggregation.
  */
 
+import { render, screen } from '@testing-library/react';
+
 import { ConfigProvider } from '@/contexts/config-context';
 import { ConstantsProvider } from '@/contexts/constants-context';
 import { ConstantsDataFetchingProvider } from '@/contexts/constants-data-fetching-context';
@@ -29,9 +31,27 @@ describe('TeamContext', () => {
 
   describe('Basic Functionality', () => {
     it('should have basic team context functionality', () => {
-      // Test that the team context exports are available
-      expect(TeamProvider).toBeDefined();
-      expect(useTeamContext).toBeDefined();
+      render(
+        <TeamProvider>
+          <div>Test Content</div>
+        </TeamProvider>
+      );
+      
+      expect(screen.getByText('Test Content')).toBeInTheDocument();
+    });
+
+    it('should have clearSelectedTeamId function', () => {
+      const TestComponent = () => {
+        const { clearSelectedTeamId } = useTeamContext();
+        expect(typeof clearSelectedTeamId).toBe('function');
+        return <div>Test</div>;
+      };
+
+      render(
+        <TeamProvider>
+          <TestComponent />
+        </TeamProvider>
+      );
     });
   });
 }); 

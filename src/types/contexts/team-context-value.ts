@@ -5,27 +5,30 @@
  * in the frontend application.
  */
 
-
+import type { Match } from '@/types/contexts/match-context-value';
+import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
 // ============================================================================
 // TEAM DATA STRUCTURES
 // ============================================================================
 
 export interface TeamData {
-  // Basic team information
+  // Team information
   team: {
-    id: string;
+    id: number;
     name: string;
     isActive: boolean;
     isLoading: boolean;
-    error?: string;
   };
   
   // League information
   league: {
-    id: string;
+    id: number;
     name: string;
   };
+  
+  // Timestamps
+  timeAdded: string;
   
   // Match participation
   matches: TeamMatchParticipation[];
@@ -35,12 +38,17 @@ export interface TeamData {
   
   // Performance statistics
   performance: TeamPerformance;
+  
+  // Error handling
+  error?: string;
+  
+  // Loading state
+  isLoading?: boolean;
 }
 
 export interface TeamMatchParticipation {
-  matchId: string;
-  side: 'radiant' | 'dire';
-  opponentTeamName: string;
+  matchId: number;
+  side: 'radiant' | 'dire' | null;
 }
 
 export interface TeamPlayer {
@@ -171,36 +179,98 @@ export interface TeamMatchFilters {
 export interface TeamContextValue {
   // State
   teams: Map<string, TeamData>; // Key: [teamId]-[leagueId]
-  activeTeam: { teamId: string; leagueId: string } | null;
-  isLoading: boolean;
-  error: string | null;
+  selectedTeamId: { teamId: number; leagueId: number } | null;
+  setSelectedTeamId: (teamId: number, leagueId: number) => void;
+  clearSelectedTeamId: () => void;
   
   // Core operations
-  addTeam: (teamId: string, leagueId: string) => Promise<void>;
-  refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  removeTeam: (teamId: string, leagueId: string) => void;
-  setActiveTeam: (teamId: string, leagueId: string) => void;
+  addTeam: (teamId: number, leagueId: number) => Promise<void>;
+  refreshTeam: (teamId: number, leagueId: number) => Promise<void>;
+  refreshTeamSummary: (teamId: number, leagueId: number) => Promise<void>;
+  refreshAllTeamSummaries: () => Promise<void>;
+  removeTeam: (teamId: number, leagueId: number) => void;
+  editTeam: (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number) => Promise<void>;
   
   // Team-specific operations
-  addMatchToTeam: (matchId: string, teamSide: 'radiant' | 'dire') => Promise<void>;
-  addPlayerToTeam: (playerId: string) => Promise<void>;
+  addMatchToTeam: (matchId: number, teamSide: 'radiant' | 'dire') => Promise<void>;
+  addPlayerToTeam: (playerId: number) => Promise<void>;
   
   // Team list management
   setTeams: (teams: Map<string, TeamData>) => void;
-  loadTeamsFromConfig: (teamList: TeamData[]) => Promise<void>;
+  loadTeamsFromConfig: (teams: Map<string, TeamData>) => Promise<void>;
   
   // Data access
-  getTeam: (teamId: string) => TeamData | undefined;
-  getActiveTeam: () => TeamData | undefined;
+  getTeam: (teamId: number, leagueId: number) => TeamData | undefined;
+  getSelectedTeam: () => TeamData | undefined;
   getAllTeams: () => TeamData[];
-  
-  // Visibility controls
-  hideMatch: (teamId: string, leagueId: string, matchId: string) => void;
-  showMatch: (teamId: string, leagueId: string, matchId: string) => void;
-  hidePlayer: (teamId: string, leagueId: string, playerId: string) => void;
-  showPlayer: (teamId: string, leagueId: string, playerId: string) => void;
 }
 
 export interface TeamContextProviderProps {
   children: React.ReactNode;
+}
+
+// ============================================================================
+// HOOK RETURN TYPES
+// ============================================================================
+
+export interface TeamState {
+  teams: Map<string, TeamData>;
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
+  selectedTeamId: { teamId: number; leagueId: number } | null;
+  setSelectedTeamId: (team: { teamId: number; leagueId: number } | null) => void;
+}
+
+export interface TeamUpdater {
+  (teamKey: string, updater: (team: TeamData) => TeamData): void;
+}
+
+export interface UpdateTeamMatches {
+  (key: string, matchId: number, teamSide: 'radiant' | 'dire', match: Match | undefined): void;
+}
+
+export interface UpdateTeamPlayers {
+  (key: string, player: OpenDotaPlayerComprehensive): void;
+}
+
+export interface TeamCoreActions {
+  setSelectedTeamId: (teamId: number, leagueId: number) => void;
+  clearSelectedTeamId: () => void;
+  getTeam: (teamId: number, leagueId: number) => TeamData | undefined;
+  getSelectedTeam: () => TeamData | undefined;
+  getAllTeams: () => TeamData[];
+  addMatchToTeam: (matchId: number, teamSide: 'radiant' | 'dire') => Promise<void>;
+  addPlayerToTeam: (playerId: number) => Promise<void>;
+}
+
+export interface LoadTeamsFromConfig {
+  (teams: Map<string, TeamData>): Promise<void>;
+}
+
+export interface TeamActions {
+  // State
+  teams: Map<string, TeamData>;
+  selectedTeamId: { teamId: number; leagueId: number } | null;
+  
+  // Core operations
+  addTeam: (teamId: number, leagueId: number) => Promise<void>;
+  refreshTeam: (teamId: number, leagueId: number) => Promise<void>;
+  refreshTeamSummary: (teamId: number, leagueId: number) => Promise<void>;
+  refreshAllTeamSummaries: () => Promise<void>;
+  removeTeam: (teamId: number, leagueId: number) => void;
+  editTeam: (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number) => Promise<void>;
+  
+  // Team-specific operations
+  addMatchToTeam: (matchId: number, teamSide: 'radiant' | 'dire') => Promise<void>;
+  addPlayerToTeam: (playerId: number) => Promise<void>;
+  
+  // Team list management
+  setTeams: (teams: Map<string, TeamData>) => void;
+  loadTeamsFromConfig: (teams: Map<string, TeamData>) => Promise<void>;
+  
+  // Data access
+  setSelectedTeamId: (teamId: number, leagueId: number) => void;
+  clearSelectedTeamId: () => void;
+  getTeam: (teamId: number, leagueId: number) => TeamData | undefined;
+  getSelectedTeam: () => TeamData | undefined;
+  getAllTeams: () => TeamData[];
 }

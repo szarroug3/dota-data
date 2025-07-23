@@ -100,66 +100,66 @@ const TestComponent = () => {
   } = useTeamDataFetching();
   
   const handleFetchTeam = async () => {
-    const result = await fetchTeamData('123');
+    const result = await fetchTeamData(123);
     return result;
   };
   
   const handleFetchLeague = async () => {
-    const result = await fetchLeagueData('456');
+    const result = await fetchLeagueData(456);
     return result;
   };
   
   const handleFetchTeamForce = async () => {
-    const result = await fetchTeamData('123', true);
+    const result = await fetchTeamData(123, true);
     return result;
   };
   
   const handleFetchLeagueForce = async () => {
-    const result = await fetchLeagueData('456', true);
+    const result = await fetchLeagueData(456, true);
     return result;
   };
   
   const handleFetchBoth = async () => {
-    const teamResult = await fetchTeamData('123');
-    const leagueResult = await fetchLeagueData('456');
+    const teamResult = await fetchTeamData(123);
+    const leagueResult = await fetchLeagueData(456);
     return { team: teamResult, league: leagueResult };
   };
   
   const handleForceFetchBoth = async () => {
-    const teamResult = await fetchTeamData('123', true);
-    const leagueResult = await fetchLeagueData('456', true);
+    const teamResult = await fetchTeamData(123, true);
+    const leagueResult = await fetchLeagueData(456, true);
     return { team: teamResult, league: leagueResult };
   };
   
   const handleFetchTeamError = async () => {
-    const result = await fetchTeamData('999');
+    const result = await fetchTeamData(999);
     return result;
   };
   
   const handleFetchLeagueError = async () => {
-    const result = await fetchLeagueData('999');
+    const result = await fetchLeagueData(999);
     return result;
   };
   
   const handleFetchBothErrors = async () => {
-    const teamResult = await fetchTeamData('999');
-    const leagueResult = await fetchLeagueData('999');
+    const teamResult = await fetchTeamData(999);
+    const leagueResult = await fetchLeagueData(999);
     return { team: teamResult, league: leagueResult };
   };
   
   const handleFetchServerError = async () => {
-    const teamResult = await fetchTeamData('500');
-    const leagueResult = await fetchLeagueData('500');
+    const teamResult = await fetchTeamData(500);
+    const leagueResult = await fetchLeagueData(500);
     return { team: teamResult, league: leagueResult };
   };
   
   return (
     <div>
-      <div data-testid="team-error">{getTeamError('123') || getTeamError('999') || getTeamError('500') || 'no-error'}</div>
-      <div data-testid="league-error">{getLeagueError('456') || getLeagueError('999') || getLeagueError('500') || 'no-error'}</div>
-      <div data-testid="team-cached">{isTeamCached('123').toString()}</div>
-      <div data-testid="league-cached">{isLeagueCached('456').toString()}</div>
-      <div data-testid="both-cached">{(isTeamCached('123') && isLeagueCached('456')).toString()}</div>
+      <div data-testid="team-error">{getTeamError(123) || getTeamError(999) || getTeamError(500) || 'no-error'}</div>
+      <div data-testid="league-error">{getLeagueError(456) || getLeagueError(999) || getLeagueError(500) || 'no-error'}</div>
+      <div data-testid="team-cached">{isTeamCached(123).toString()}</div>
+      <div data-testid="league-cached">{isLeagueCached(456).toString()}</div>
+      <div data-testid="both-cached">{(isTeamCached(123) && isLeagueCached(456)).toString()}</div>
       <button data-testid="fetch-team" onClick={handleFetchTeam}>Fetch Team</button>
       <button data-testid="fetch-league" onClick={handleFetchLeague}>Fetch League</button>
       <button data-testid="fetch-team-force" onClick={handleFetchTeamForce}>Force Fetch Team</button>
@@ -170,11 +170,11 @@ const TestComponent = () => {
       <button data-testid="fetch-league-error" onClick={handleFetchLeagueError}>Fetch League Error</button>
       <button data-testid="fetch-both-errors" onClick={handleFetchBothErrors}>Fetch Both Errors</button>
       <button data-testid="fetch-server-error" onClick={handleFetchServerError}>Fetch Server Error</button>
-      <button data-testid="clear-team-cache" onClick={() => clearTeamCache('123')}>Clear Team Cache</button>
-      <button data-testid="clear-league-cache" onClick={() => clearLeagueCache('456')}>Clear League Cache</button>
+      <button data-testid="clear-team-cache" onClick={() => clearTeamCache(123)}>Clear Team Cache</button>
+      <button data-testid="clear-league-cache" onClick={() => clearLeagueCache(456)}>Clear League Cache</button>
       <button data-testid="clear-all-cache" onClick={clearAllCache}>Clear All Cache</button>
-      <button data-testid="clear-team-error" onClick={() => clearTeamError('999')}>Clear Team Error</button>
-      <button data-testid="clear-league-error" onClick={() => clearLeagueError('999')}>Clear League Error</button>
+      <button data-testid="clear-team-error" onClick={() => clearTeamError(999)}>Clear Team Error</button>
+      <button data-testid="clear-league-error" onClick={() => clearLeagueError(999)}>Clear League Error</button>
       <button data-testid="clear-all-errors" onClick={clearAllErrors}>Clear All Errors</button>
     </div>
   );

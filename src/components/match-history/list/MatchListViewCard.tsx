@@ -4,12 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConfigContext } from '@/contexts/config-context';
-import type { Hero } from '@/types/contexts/hero-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 
 import { ExternalSiteButton } from '../common/ExternalSiteButton';
 import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
+
+import type { Hero } from '@/types/contexts/hero-context-value';
 
 // Helper functions for date and duration formatting
 const formatDuration = (seconds: number): string => {

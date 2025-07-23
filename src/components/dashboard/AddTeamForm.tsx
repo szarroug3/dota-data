@@ -1,10 +1,13 @@
-import React from 'react';
+import { AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormField, FormRow } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getValidationAriaAttributes, validateTeamForm } from '@/utils/validation';
 
 interface AddTeamFormProps {
   teamId: string;
@@ -25,6 +28,8 @@ interface FormFieldInputProps {
   onChange: (value: string) => void;
   disabled: boolean;
   helpText: string;
+  error?: string;
+  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -34,28 +39,47 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   value,
   onChange,
   disabled,
-  helpText
-}) => (
-  <FormField>
-    <Label htmlFor={id} className="text-sm font-medium">
-      {label} *
-    </Label>
-    <Input
-      type="text"
-      id={id}
-      name={id}
-      placeholder={placeholder}
-      required
-      disabled={disabled}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className="w-full"
-    />
-    <p className="text-xs text-muted-foreground">
-      {helpText}
-    </p>
-  </FormField>
-);
+  helpText,
+  error,
+  isValid
+}) => {
+  const hasError = Boolean(error);
+  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+
+  return (
+    <FormField>
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label} *
+      </Label>
+      <div className="relative">
+        <Input
+          type="text"
+          id={id}
+          name={id}
+          placeholder={placeholder}
+          required
+          disabled={disabled}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
+          {...ariaAttributes}
+        />
+        {hasError && (
+          <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-destructive" />
+        )}
+      </div>
+      {hasError ? (
+        <p className="text-xs text-destructive mt-1" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {helpText}
+        </p>
+      )}
+    </FormField>
+  );
+};
 
 interface FormActionsProps {
   isDisabled: boolean;
@@ -100,7 +124,15 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
   isSubmitting = false,
   onReset
 }) => {
-  const isDisabled = !teamId.trim() || !leagueId.trim() || teamExists(teamId, leagueId) || isSubmitting;
+  // Validation state
+  const [validation, setValidation] = useState(() => validateTeamForm(teamId, leagueId));
+
+  // Update validation when values change
+  useEffect(() => {
+    setValidation(validateTeamForm(teamId, leagueId));
+  }, [teamId, leagueId]);
+
+  const isDisabled = !validation.isValid || teamExists(teamId, leagueId) || isSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,6 +170,8 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               onChange={onTeamIdChange}
               disabled={isSubmitting}
               helpText="Find this in Dotabuff team URLs"
+              error={validation.errors.teamId}
+              isValid={!validation.errors.teamId}
             />
             <FormFieldInput
               id="league-id"
@@ -147,6 +181,8 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               onChange={onLeagueIdChange}
               disabled={isSubmitting}
               helpText="Find this in Dotabuff league URLs"
+              error={validation.errors.leagueId}
+              isValid={!validation.errors.leagueId}
             />
           </FormRow>
           <FormActions

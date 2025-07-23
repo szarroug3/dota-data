@@ -4,7 +4,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { TeamData } from '@/types/contexts/team-types';
+import type { TeamData } from '@/types/contexts/team-context-value';
 
 interface TeamCardProps {
   teamData: TeamData;
@@ -31,11 +31,11 @@ const TeamInformation: React.FC<TeamInformationProps> = ({
   hasError
 }) => {
   const getTeamStats = () => {
-    if (hasError || !teamData.summary) {
+    if (hasError || !teamData.performance) {
       return null;
     }
     
-    const { totalMatches, overallWinRate } = teamData.summary;
+    const { totalMatches, overallWinRate } = teamData.performance;
     return { totalMatches, overallWinRate };
   };
 
@@ -106,17 +106,17 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
 }) => {
   const handleRefreshTeam = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await onRefreshTeam(teamData.team.id, teamData.team.leagueId);
+    await onRefreshTeam(teamData.team.id, teamData.league.id);
   };
 
   const handleEditTeam = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onEditTeam(teamData.team.id, teamData.team.leagueId);
+    onEditTeam(teamData.team.id, teamData.league.id);
   };
 
   const handleRemoveTeam = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await onRemoveTeam(teamData.team.id, teamData.team.leagueId);
+    await onRemoveTeam(teamData.team.id, teamData.league.id);
   };
 
   return (
@@ -128,7 +128,7 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
         title="Refresh team data"
         onClick={handleRefreshTeam}
         disabled={isLoading}
-        aria-label={`Refresh data for ${teamData.team.name || teamData.team.leagueName}`}
+        aria-label={`Refresh data for ${teamData.team.name || teamData.league.name}`}
         className="h-8 w-8"
       >
         <RefreshCw className="h-4 w-4" />
@@ -154,7 +154,7 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
         title="Delete team"
         onClick={handleRemoveTeam}
         disabled={isLoading}
-        aria-label={`Delete team ${teamData.team.name || teamData.team.leagueName}`}
+        aria-label={`Delete team ${teamData.team.name || teamData.league.name}`}
         className="h-8 w-8 text-destructive hover:text-destructive"
       >
         <Trash2 className="h-4 w-4" />
@@ -172,12 +172,12 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   onEditTeam
 }) => {
   const handleSelectTeam = () => {
-    onSetActiveTeam(teamData.team.id, teamData.team.leagueId);
+    onSetActiveTeam(teamData.team.id, teamData.league.id);
   };
 
   const isLoading = teamData.team.isLoading;
   const teamName = teamData.team.name || `Loading ${teamData.team.id}...`;
-  const leagueName = teamData.team.leagueName || `Loading ${teamData.team.leagueId}...`;
+  const leagueName = teamData.league.name || `Loading ${teamData.league.id}...`;
   const hasError = Boolean(teamData.team.error);
 
   const getAriaLabel = () => {

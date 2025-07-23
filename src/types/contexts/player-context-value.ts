@@ -13,7 +13,10 @@ import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
 // For now, we'll store the raw OpenDotaPlayerComprehensive data
 // This will be processed later when we know what data we need
-export type Player = OpenDotaPlayerComprehensive;
+export type Player = OpenDotaPlayerComprehensive & {
+  error?: string;
+  isLoading?: boolean;
+};
 
 // ============================================================================
 // PLAYER CONTEXT STATE
@@ -21,22 +24,55 @@ export type Player = OpenDotaPlayerComprehensive;
 
 export interface PlayerContextValue {
   // State
-  players: Map<string, Player>; // Key: playerId (account_id as string)
-  selectedPlayerId: string | null;
-  selectedPlayer: Player | null;
-  setSelectedPlayerId: (playerId: string | null) => void;
+  players: Map<number, Player>; // Key: playerId (account_id as number)
+  selectedPlayerId: number | null;
+  setSelectedPlayerId: (playerId: number | null) => void;
   isLoading: boolean;
-  error: string | null;
   
   // Core operations
-  addPlayer: (playerId: string) => Promise<Player | null>;
-  refreshPlayer: (playerId: string) => Promise<Player | null>;
+  addPlayer: (playerId: number) => Promise<Player | null>;
+  refreshPlayer: (playerId: number) => Promise<Player | null>;
+  removePlayer: (playerId: number) => void;
   
   // Data access
-  getPlayer: (playerId: string) => Player | undefined;
-  getPlayers: (playerIds: string[]) => Player[];
+  getPlayer: (playerId: number) => Player | undefined;
+  getPlayers: (playerIds: number[]) => Player[];
 }
 
 export interface PlayerContextProviderProps {
   children: React.ReactNode;
+}
+
+// ============================================================================
+// HOOK RETURN TYPES
+// ============================================================================
+
+export interface PlayerState {
+  players: Map<number, Player>;
+  setPlayers: React.Dispatch<React.SetStateAction<Map<number, Player>>>;
+  selectedPlayerId: number | null;
+  setSelectedPlayerId: (playerId: number | null) => void;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export interface PlayerProcessing {
+  processPlayerData: (playerData: OpenDotaPlayerComprehensive) => OpenDotaPlayerComprehensive;
+}
+
+export interface PlayerActions {
+  // State
+  players: Map<number, Player>;
+  selectedPlayerId: number | null;
+  isLoading: boolean;
+  
+  // Core operations
+  addPlayer: (playerId: number) => Promise<Player | null>;
+  refreshPlayer: (playerId: number) => Promise<Player | null>;
+  removePlayer: (playerId: number) => void;
+  
+  // Data access
+  setSelectedPlayerId: (playerId: number | null) => void;
+  getPlayer: (playerId: number) => Player | undefined;
+  getPlayers: (playerIds: number[]) => Player[];
 } 

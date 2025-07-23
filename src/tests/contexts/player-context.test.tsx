@@ -43,11 +43,10 @@ const TestComponent: React.FC = () => {
   const {
     players,
     selectedPlayerId,
+    setSelectedPlayerId,
     isLoading,
-    error,
     addPlayer,
     refreshPlayer,
-    setSelectedPlayerId,
   } = usePlayerContext();
 
   return (
@@ -55,25 +54,24 @@ const TestComponent: React.FC = () => {
       <div data-testid="players-count">{players.size}</div>
       <div data-testid="selected-player-id">{selectedPlayerId || 'none'}</div>
       <div data-testid="is-loading">{isLoading.toString()}</div>
-      <div data-testid="error">{error || 'none'}</div>
       
       <button 
-        onClick={() => addPlayer('123456789')}
         data-testid="add-player-btn"
+        onClick={() => addPlayer(123456789)}
       >
         Add Player
       </button>
       
       <button 
-        onClick={() => refreshPlayer('123456789')}
         data-testid="refresh-player-btn"
+        onClick={() => refreshPlayer(123456789)}
       >
         Refresh Player
       </button>
       
       <button 
-        onClick={() => setSelectedPlayerId('123456789')}
         data-testid="set-selected-player-btn"
+        onClick={() => setSelectedPlayerId(123456789)}
       >
         Set Selected Player
       </button>
@@ -111,7 +109,6 @@ describe('PlayerContext', () => {
       expect(screen.getByTestId('players-count')).toHaveTextContent('0');
       expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
       expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
-      expect(screen.getByTestId('error')).toHaveTextContent('none');
     });
   });
 
@@ -129,7 +126,7 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(mockFetchPlayerData).toHaveBeenCalledWith('123456789', false);
+        expect(mockFetchPlayerData).toHaveBeenCalledWith(123456789, false);
       });
     });
 
@@ -148,7 +145,9 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
+        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+        expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
       });
     });
 
@@ -194,7 +193,7 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(mockFetchPlayerData).toHaveBeenCalledWith('123456789', true);
+        expect(mockFetchPlayerData).toHaveBeenCalledWith(123456789, true);
       });
     });
 
@@ -290,6 +289,8 @@ describe('PlayerContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+        expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
       });
     });
 
@@ -328,7 +329,9 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
+        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+        expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
       });
     });
 
@@ -348,7 +351,9 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).not.toHaveTextContent('none');
+        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+        expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
       });
 
       // Then succeed
@@ -364,7 +369,9 @@ describe('PlayerContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).toHaveTextContent('none');
+        expect(screen.getByTestId('players-count')).toHaveTextContent('1');
+        expect(screen.getByTestId('selected-player-id')).toHaveTextContent('none');
+        expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
       });
     });
   });

@@ -8,7 +8,7 @@
  * Separates data fetching concerns from data management.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 
 import type { ApiErrorResponse } from '@/types/api';
 import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
@@ -17,26 +17,26 @@ import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
 // TYPES
 // ============================================================================
 
-interface TeamDataFetchingContextValue {
+export interface TeamDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
-  fetchTeamData: (teamId: string, force?: boolean) => Promise<DotabuffTeam | { error: string }>;
-  fetchLeagueData: (leagueId: string, force?: boolean) => Promise<DotabuffLeague | { error: string }>;
+  fetchTeamData: (teamId: number, force?: boolean) => Promise<DotabuffTeam | { error: string }>;
+  fetchLeagueData: (leagueId: number, force?: boolean) => Promise<DotabuffLeague | { error: string }>;
   
   // Cache management (for explicit control)
-  clearTeamCache: (teamId?: string) => void;
-  clearLeagueCache: (leagueId?: string) => void;
+  clearTeamCache: (teamId?: number) => void;
+  clearLeagueCache: (leagueId?: number) => void;
   clearAllCache: () => void;
   
   // Error management
-  clearTeamError: (teamId: string) => void;
-  clearLeagueError: (leagueId: string) => void;
+  clearTeamError: (teamId: number) => void;
+  clearLeagueError: (leagueId: number) => void;
   clearAllErrors: () => void;
   
   // Status queries (for debugging/monitoring)
-  isTeamCached: (teamId: string) => boolean;
-  isLeagueCached: (leagueId: string) => boolean;
-  getTeamError: (teamId: string) => string | null;
-  getLeagueError: (leagueId: string) => string | null;
+  isTeamCached: (teamId: number) => boolean;
+  isLeagueCached: (leagueId: number) => boolean;
+  getTeamError: (teamId: number) => string | null;
+  getLeagueError: (leagueId: number) => string | null;
 }
 
 interface TeamDataFetchingProviderProps {
@@ -54,10 +54,10 @@ const TeamDataFetchingContext = createContext<TeamDataFetchingContextValue | und
 // ============================================================================
 
 const useTeamDataState = () => {
-  const [teamCache, setTeamCache] = useState<Map<string, DotabuffTeam>>(new Map());
-  const [leagueCache, setLeagueCache] = useState<Map<string, DotabuffLeague>>(new Map());
-  const [teamErrors, setTeamErrors] = useState<Map<string, string>>(new Map());
-  const [leagueErrors, setLeagueErrors] = useState<Map<string, string>>(new Map());
+  const [teamCache, setTeamCache] = useState<Map<number, DotabuffTeam>>(new Map());
+  const [leagueCache, setLeagueCache] = useState<Map<number, DotabuffLeague>>(new Map());
+  const [teamErrors, setTeamErrors] = useState<Map<number, string>>(new Map());
+  const [leagueErrors, setLeagueErrors] = useState<Map<number, string>>(new Map());
 
   return {
     teamCache,
@@ -72,12 +72,12 @@ const useTeamDataState = () => {
 };
 
 const useCacheManagement = (
-  teamCache: Map<string, DotabuffTeam>,
-  leagueCache: Map<string, DotabuffLeague>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffTeam>>>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffLeague>>>
+  teamCache: Map<number, DotabuffTeam>,
+  leagueCache: Map<number, DotabuffLeague>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>
 ) => {
-  const clearTeamCache = useCallback((teamId?: string) => {
+  const clearTeamCache = useCallback((teamId?: number) => {
     if (teamId) {
       setTeamCache(prev => {
         const newCache = new Map(prev);
@@ -89,7 +89,7 @@ const useCacheManagement = (
     }
   }, [setTeamCache]);
 
-  const clearLeagueCache = useCallback((leagueId?: string) => {
+  const clearLeagueCache = useCallback((leagueId?: number) => {
     if (leagueId) {
       setLeagueCache(prev => {
         const newCache = new Map(prev);
@@ -106,11 +106,11 @@ const useCacheManagement = (
     setLeagueCache(new Map());
   }, [setTeamCache, setLeagueCache]);
 
-  const isTeamCached = useCallback((teamId: string) => {
+  const isTeamCached = useCallback((teamId: number) => {
     return teamCache.has(teamId);
   }, [teamCache]);
 
-  const isLeagueCached = useCallback((leagueId: string) => {
+  const isLeagueCached = useCallback((leagueId: number) => {
     return leagueCache.has(leagueId);
   }, [leagueCache]);
 
@@ -124,12 +124,12 @@ const useCacheManagement = (
 };
 
 const useErrorManagement = (
-  teamErrors: Map<string, string>,
-  leagueErrors: Map<string, string>,
-  setTeamErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>,
-  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  teamErrors: Map<number, string>,
+  leagueErrors: Map<number, string>,
+  setTeamErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
+  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const clearTeamError = useCallback((teamId: string) => {
+  const clearTeamError = useCallback((teamId: number) => {
     setTeamErrors(prev => {
       const newErrors = new Map(prev);
       newErrors.delete(teamId);
@@ -137,7 +137,7 @@ const useErrorManagement = (
     });
   }, [setTeamErrors]);
 
-  const clearLeagueError = useCallback((leagueId: string) => {
+  const clearLeagueError = useCallback((leagueId: number) => {
     setLeagueErrors(prev => {
       const newErrors = new Map(prev);
       newErrors.delete(leagueId);
@@ -150,11 +150,11 @@ const useErrorManagement = (
     setLeagueErrors(new Map());
   }, [setTeamErrors, setLeagueErrors]);
 
-  const getTeamError = useCallback((teamId: string) => {
+  const getTeamError = useCallback((teamId: number) => {
     return teamErrors.get(teamId) || null;
   }, [teamErrors]);
 
-  const getLeagueError = useCallback((leagueId: string) => {
+  const getLeagueError = useCallback((leagueId: number) => {
     return leagueErrors.get(leagueId) || null;
   }, [leagueErrors]);
 
@@ -168,15 +168,21 @@ const useErrorManagement = (
 };
 
 const useTeamApiFetching = (
-  teamCache: Map<string, DotabuffTeam>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffTeam>>>,
-  setTeamErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  teamCache: Map<number, DotabuffTeam>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
+  setTeamErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const handleTeamError = useCallback((teamId: string, errorMsg: string) => {
+  // Use refs to access current cache values without causing function recreation
+  const teamCacheRef = useRef<Map<number, DotabuffTeam>>(new Map());
+  
+  // Update ref when cache changes
+  teamCacheRef.current = teamCache;
+
+  const handleTeamError = useCallback((teamId: number, errorMsg: string) => {
     setTeamErrors(prev => new Map(prev).set(teamId, errorMsg));
   }, [setTeamErrors]);
 
-  const handleTeamSuccess = useCallback((teamId: string, team: DotabuffTeam) => {
+  const handleTeamSuccess = useCallback((teamId: number, team: DotabuffTeam) => {
     setTeamCache(prevCache => new Map(prevCache).set(teamId, team));
     setTeamErrors(prev => {
       const newErrors = new Map(prev);
@@ -185,7 +191,7 @@ const useTeamApiFetching = (
     });
   }, [setTeamCache, setTeamErrors]);
 
-  const processTeamResponse = useCallback(async (response: Response, teamId: string): Promise<DotabuffTeam | { error: string }> => {
+  const processTeamResponse = useCallback(async (response: Response, teamId: number): Promise<DotabuffTeam | { error: string }> => {
     if (!response.ok) {
       let errorMsg = 'Failed to fetch team data';
       
@@ -205,17 +211,17 @@ const useTeamApiFetching = (
     return team;
   }, [handleTeamError, handleTeamSuccess]);
 
-  const fetchTeamData = useCallback(async (teamId: string, force = false): Promise<DotabuffTeam | { error: string }> => {
+  const fetchTeamData = useCallback(async (teamId: number, force = false): Promise<DotabuffTeam | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && teamCache.has(teamId)) {
-      const cachedTeam = teamCache.get(teamId);
+    if (!force && teamCacheRef.current.has(teamId)) {
+      const cachedTeam = teamCacheRef.current.get(teamId);
       if (cachedTeam) {
         return cachedTeam;
       }
     }
 
     try {
-      const url = force ? `/api/teams/${teamId}?force=true` : `/api/teams/${teamId}`;
+      const url = force ? `/api/teams/${teamId.toString()}?force=true` : `/api/teams/${teamId.toString()}`;
       const response = await fetch(url);
       return await processTeamResponse(response, teamId);
     } catch (error) {
@@ -224,21 +230,27 @@ const useTeamApiFetching = (
       handleTeamError(teamId, errorMsg);
       return { error: errorMsg };
     }
-  }, [teamCache, processTeamResponse, handleTeamError]);
+  }, [processTeamResponse, handleTeamError]);
 
   return { fetchTeamData };
 };
 
 const useLeagueApiFetching = (
-  leagueCache: Map<string, DotabuffLeague>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffLeague>>>,
-  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  leagueCache: Map<number, DotabuffLeague>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>,
+  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
-  const handleLeagueError = useCallback((leagueId: string, errorMsg: string) => {
+  // Use refs to access current cache values without causing function recreation
+  const leagueCacheRef = useRef<Map<number, DotabuffLeague>>(new Map());
+  
+  // Update ref when cache changes
+  leagueCacheRef.current = leagueCache;
+
+  const handleLeagueError = useCallback((leagueId: number, errorMsg: string) => {
     setLeagueErrors(prev => new Map(prev).set(leagueId, errorMsg));
   }, [setLeagueErrors]);
 
-  const handleLeagueSuccess = useCallback((leagueId: string, league: DotabuffLeague) => {
+  const handleLeagueSuccess = useCallback((leagueId: number, league: DotabuffLeague) => {
     setLeagueCache(prevCache => new Map(prevCache).set(leagueId, league));
     setLeagueErrors(prev => {
       const newErrors = new Map(prev);
@@ -247,7 +259,7 @@ const useLeagueApiFetching = (
     });
   }, [setLeagueCache, setLeagueErrors]);
 
-  const processLeagueResponse = useCallback(async (response: Response, leagueId: string): Promise<DotabuffLeague | { error: string }> => {
+  const processLeagueResponse = useCallback(async (response: Response, leagueId: number): Promise<DotabuffLeague | { error: string }> => {
     if (!response.ok) {
       let errorMsg = 'Failed to fetch league data';
       
@@ -267,17 +279,17 @@ const useLeagueApiFetching = (
     return league;
   }, [handleLeagueError, handleLeagueSuccess]);
 
-  const fetchLeagueData = useCallback(async (leagueId: string, force = false): Promise<DotabuffLeague | { error: string }> => {
+  const fetchLeagueData = useCallback(async (leagueId: number, force = false): Promise<DotabuffLeague | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && leagueCache.has(leagueId)) {
-      const cachedLeague = leagueCache.get(leagueId);
+    if (!force && leagueCacheRef.current.has(leagueId)) {
+      const cachedLeague = leagueCacheRef.current.get(leagueId);
       if (cachedLeague) {
         return cachedLeague;
       }
     }
 
     try {
-      const url = force ? `/api/leagues/${leagueId}?force=true` : `/api/leagues/${leagueId}`;
+      const url = force ? `/api/leagues/${leagueId.toString()}?force=true` : `/api/leagues/${leagueId.toString()}`;
       const response = await fetch(url);
       return await processLeagueResponse(response, leagueId);
     } catch (error) {
@@ -286,18 +298,18 @@ const useLeagueApiFetching = (
       handleLeagueError(leagueId, errorMsg);
       return { error: errorMsg };
     }
-  }, [leagueCache, processLeagueResponse, handleLeagueError]);
+  }, [processLeagueResponse, handleLeagueError]);
 
   return { fetchLeagueData };
 };
 
 const useApiFetching = (
-  teamCache: Map<string, DotabuffTeam>,
-  leagueCache: Map<string, DotabuffLeague>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffTeam>>>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<string, DotabuffLeague>>>,
-  setTeamErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>,
-  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<string, string>>>
+  teamCache: Map<number, DotabuffTeam>,
+  leagueCache: Map<number, DotabuffLeague>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>,
+  setTeamErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
+  setLeagueErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>
 ) => {
   const { fetchTeamData } = useTeamApiFetching(teamCache, setTeamCache, setTeamErrors);
   const { fetchLeagueData } = useLeagueApiFetching(leagueCache, setLeagueCache, setLeagueErrors);

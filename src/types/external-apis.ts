@@ -531,7 +531,7 @@ export interface DotabuffTeam {
  * Dotabuff Match Summary
  */
 export interface DotabuffMatchSummary {
-  matchId: string;
+  matchId: number;
   result: 'won' | 'lost';
   duration: number;
   opponentName: string;

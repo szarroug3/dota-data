@@ -6,6 +6,7 @@
  */
 
 import type { Hero, Item } from '@/types/contexts/constants-context-value';
+import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 // ============================================================================
 // MATCH DATA STRUCTURES
@@ -13,13 +14,13 @@ import type { Hero, Item } from '@/types/contexts/constants-context-value';
 
 export interface Match {
   // Basic match information
-  id: string;
+  id: number;
   date: string;
   duration: number;
   
   // Team information
-  radiantTeamId: string;
-  direTeamId: string;
+  radiantTeamId: number;
+  direTeamId: number;
   
   // Draft information
   draft: {
@@ -56,18 +57,24 @@ export interface Match {
   
   // Match result
   result: 'radiant' | 'dire';
+  
+  // Error handling
+  error?: string;
+  
+  // Loading state
+  isLoading?: boolean;
 }
 
 
 
 export interface HeroPick {
   hero: Hero; // Hero data (always available since we wait for heroes to load)
-  playerId: string;
+  accountId: number;
   role: PlayerRole;
 }
 
 export interface PlayerMatchData {
-  playerId: string;
+  accountId: number;
   playerName: string;
   hero: Hero; // Hero data (always available since we wait for heroes to load)
   role: PlayerRole;
@@ -167,22 +174,93 @@ export type PlayerRole =
 
 export interface MatchContextValue {
   // State
-  matches: Map<string, Match>; // Key: matchId
-  selectedMatchId: string | null;
-  setSelectedMatchId: (matchId: string | null) => void;
+  matches: Map<number, Match>; // Key: matchId
+  selectedMatchId: number | null;
+  setSelectedMatchId: (matchId: number | null) => void;
   isLoading: boolean;
-  error: string | null;
   
   // Core operations
-  addMatch: (matchId: string) => Promise<Match | null>;
-  refreshMatch: (matchId: string) => Promise<Match | null>;
-  parseMatch: (matchId: string) => Promise<void>;
+  addMatch: (matchId: number) => Promise<Match | null>;
+  refreshMatch: (matchId: number) => Promise<Match | null>;
+  parseMatch: (matchId: number) => Promise<void>;
+  removeMatch: (matchId: number) => void;
   
   // Data access
-  getMatch: (matchId: string) => Match | undefined;
-  getMatches: (matchIds: string[]) => Match[];
+  getMatch: (matchId: number) => Match | undefined;
+  getMatches: (matchIds: number[]) => Match[];
 }
 
 export interface MatchContextProviderProps {
   children: React.ReactNode;
+}
+
+// ============================================================================
+// HOOK RETURN TYPES
+// ============================================================================
+
+export interface MatchState {
+  matches: Map<number, Match>;
+  setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
+  selectedMatchId: number | null;
+  setSelectedMatchId: (matchId: number | null) => void;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export interface MatchProcessing {
+  processMatchData: (matchData: OpenDotaMatch) => Match;
+}
+
+export interface MatchActions {
+  // State
+  matches: Map<number, Match>;
+  selectedMatchId: number | null;
+  isLoading: boolean;
+  
+  // Core operations
+  addMatch: (matchId: number) => Promise<Match | null>;
+  refreshMatch: (matchId: number) => Promise<Match | null>;
+  parseMatch: (matchId: number) => Promise<void>;
+  removeMatch: (matchId: number) => void;
+  
+  // Data access
+  setSelectedMatchId: (matchId: number | null) => void;
+  getMatch: (matchId: number) => Match | undefined;
+  getMatches: (matchIds: number[]) => Match[];
+}
+
+// ============================================================================
+// ANALYSIS TYPES
+// ============================================================================
+
+export interface PlayerAnalysis {
+  accountId: number;
+  playerName: string;
+  heroId: number;
+  heroName: string;
+  role: PlayerRole;
+  lane: number;
+  farmPriority: number;
+  supportScore: number;
+  kda: number;
+  gpm: number;
+  xpm: number;
+  lastHits: number;
+  denies: number;
+  netWorth: number;
+  level: number;
+  items: Item[];
+  heroStats: {
+    damageDealt: number;
+    healingDone: number;
+    towerDamage: number;
+  };
+}
+
+export interface PlayerAnalysisResult {
+  player: OpenDotaMatchPlayer;
+  supportScore: number;
+  farmScore: number;
+  killScore: number;
+  totalScore: number;
 } 

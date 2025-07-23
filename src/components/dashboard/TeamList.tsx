@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { TeamData } from '@/types/contexts/team-types';
+import type { TeamData } from '@/types/contexts/team-context-value';
 
 import { TeamCard } from './TeamCard';
 
@@ -22,6 +22,8 @@ export const TeamList: React.FC<TeamListProps> = ({
   onSetActiveTeam,
   onEditTeam
 }) => {
+  // Teams are already sorted by most recent first from getAllTeams
+
   if (teamDataList.length === 0) {
     return (
       <Card>
@@ -55,9 +57,9 @@ export const TeamList: React.FC<TeamListProps> = ({
         <div>
           {teamDataList.map((teamData) => (
             <TeamCard
-              key={`${teamData.team.id}-${teamData.team.leagueId}`}
+              key={`${teamData.team.id}-${teamData.league.id}`}
               teamData={teamData}
-              isActive={activeTeam?.teamId === teamData.team.id && activeTeam?.leagueId === teamData.team.leagueId}
+              isActive={activeTeam?.teamId === teamData.team.id && activeTeam?.leagueId === teamData.league.id}
               onRemoveTeam={onRemoveTeam}
               onRefreshTeam={onRefreshTeam}
               onSetActiveTeam={onSetActiveTeam}

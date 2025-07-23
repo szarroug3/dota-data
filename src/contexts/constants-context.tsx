@@ -7,7 +7,7 @@
  * Uses constants data fetching context for data retrieval.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { useConstantsDataFetching } from '@/contexts/constants-data-fetching-context';
 import { formatItemImageUrl } from '@/lib/utils/item-image-url';
@@ -134,13 +134,10 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     setItemsError(null);
   }, []);
   
-  // Initial data loading
-  useEffect(() => {
-    fetchHeroes();
-    fetchItems();
-  }, [fetchHeroes, fetchItems]);
+  const getItemById = useCallback((itemId: string) => items[itemId], [items]);
+  const getHeroById = useCallback((heroId: string) => heroes[heroId], [heroes]);
   
-  const contextValue: ConstantsContextValue = {
+  const contextValue: ConstantsContextValue = useMemo(() => ({
     // Hero data
     heroes,
     items,
@@ -151,9 +148,21 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     fetchHeroes,
     fetchItems,
     clearErrors,
-    getItemById: useCallback((itemId: string) => items[itemId], [items]),
-    getHeroById: useCallback((heroId: string) => heroes[heroId], [heroes])
-  };
+    getItemById,
+    getHeroById
+  }), [
+    heroes,
+    items,
+    isLoadingHeroes,
+    isLoadingItems,
+    heroesError,
+    itemsError,
+    fetchHeroes,
+    fetchItems,
+    clearErrors,
+    getItemById,
+    getHeroById
+  ]);
   
   return (
     <ConstantsContext.Provider value={contextValue}>

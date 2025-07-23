@@ -30,7 +30,7 @@ interface Hero {
   localizedName: string;
 }
 
-export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEventsProps> = ({ match }) => {
+export const MatchDetailsPanelDraftEvents: React.FC<MatchDetailsPanelDraftEventsProps> = ({ _match }) => {
   // Mock hero data - in real implementation this would come from the match data
   const heroes: Record<string, Hero> = {
     'crystal_maiden': {

@@ -8,7 +8,7 @@
  * Separates data fetching concerns from data management.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import type { ApiErrorResponse } from '@/types/api';
 import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
@@ -147,6 +147,14 @@ const useConstantsApiFetching = (
   setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
   setItemsError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
+  // Use refs to access current cache values without causing function recreation
+  const heroesCacheRef = useRef<OpenDotaHero[] | null>(null);
+  const itemsCacheRef = useRef<Record<string, OpenDotaItem> | null>(null);
+  
+  // Update refs when cache changes
+  heroesCacheRef.current = heroesCache;
+  itemsCacheRef.current = itemsCache;
+
   const handleHeroesError = useCallback((errorMsg: string) => {
     setHeroesError(errorMsg);
   }, [setHeroesError]);
@@ -207,8 +215,8 @@ const useConstantsApiFetching = (
 
   const fetchHeroesData = useCallback(async (force = false): Promise<OpenDotaHero[] | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && heroesCache !== null) {
-      return heroesCache;
+    if (!force && heroesCacheRef.current !== null) {
+      return heroesCacheRef.current;
     }
 
     try {
@@ -221,12 +229,12 @@ const useConstantsApiFetching = (
       handleHeroesError(errorMsg);
       return { error: errorMsg };
     }
-  }, [heroesCache, processHeroesResponse, handleHeroesError]);
+  }, [processHeroesResponse, handleHeroesError]);
 
   const fetchItemsData = useCallback(async (force = false): Promise<Record<string, OpenDotaItem> | { error: string }> => {
     // Check cache first (unless force=true)
-    if (!force && itemsCache !== null) {
-      return itemsCache;
+    if (!force && itemsCacheRef.current !== null) {
+      return itemsCacheRef.current;
     }
 
     try {
@@ -239,7 +247,7 @@ const useConstantsApiFetching = (
       handleItemsError(errorMsg);
       return { error: errorMsg };
     }
-  }, [itemsCache, processItemsResponse, handleItemsError]);
+  }, [processItemsResponse, handleItemsError]);
 
   return { fetchHeroesData, fetchItemsData };
 };
@@ -288,7 +296,7 @@ export const ConstantsDataFetchingProvider: React.FC<ConstantsDataFetchingProvid
     setItemsError
   );
 
-  const contextValue: ConstantsDataFetchingContextValue = {
+  const contextValue: ConstantsDataFetchingContextValue = useMemo(() => ({
     // Core data fetching
     fetchHeroesData,
     fetchItemsData,
@@ -308,7 +316,24 @@ export const ConstantsDataFetchingProvider: React.FC<ConstantsDataFetchingProvid
     isItemsCached: () => isItemsCached(itemsCache),
     getHeroesError: () => getHeroesError(heroesError),
     getItemsError: () => getItemsError(itemsError)
-  };
+  }), [
+    fetchHeroesData,
+    fetchItemsData,
+    clearHeroesCache,
+    clearItemsCache,
+    clearAllCache,
+    clearHeroesError,
+    clearItemsError,
+    clearAllErrors,
+    isHeroesCached,
+    isItemsCached,
+    heroesCache,
+    itemsCache,
+    heroesError,
+    itemsError,
+    getHeroesError,
+    getItemsError
+  ]);
 
   return (
     <ConstantsDataFetchingContext.Provider value={contextValue}>

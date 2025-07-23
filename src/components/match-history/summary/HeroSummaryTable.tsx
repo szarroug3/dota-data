@@ -1,16 +1,16 @@
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useConstantsContext } from '@/contexts/constants-context';
 import { cn } from '@/lib/utils';
 import type { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
-import { useConstantsContext } from '@/contexts/constants-context';
 
 interface HeroSummary {
   heroId: string;

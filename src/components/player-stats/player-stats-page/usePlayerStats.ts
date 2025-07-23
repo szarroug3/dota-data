@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { usePlayerData } from '@/hooks/use-player-data';
-import { useTeamData } from '@/hooks/use-team-data';
-import type { Player } from '@/types/contexts/team-types';
+import { usePlayerContext } from '@/contexts/player-context';
+import { useTeamContext } from '@/contexts/team-context';
+import type { Player } from '@/types/contexts/player-context-value';
 
 export interface PlayerStats {
   playerId: string;
@@ -98,16 +98,16 @@ const sortPlayers = (
 };
 
 export function usePlayerStats() {
-  const { teams, activeTeamId } = useTeamData();
-  const { players, isLoadingPlayers, playersError } = usePlayerData();
+  const { teams, activeTeam } = useTeamContext();
+  const { players, isLoading, error: playersError } = usePlayerContext();
   const [viewType, setViewType] = useState<'overview' | 'detailed'>('overview');
   const [sortBy, setSortBy] = useState<'winRate' | 'kda' | 'gpm' | 'matches'>('winRate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const activeTeam = teams?.find(team => team.id === activeTeamId) || null;
+  const activeTeamId = activeTeam ? `${activeTeam.teamId}-${activeTeam.leagueId}` : null;
 
   const playerStats: PlayerStats[] = useMemo(() => {
-    return generatePlayerStats(players, activeTeamId || '');
+    return generatePlayerStats(Array.from(players.values()), activeTeamId || '');
   }, [players, activeTeamId]);
 
   const sortedPlayers = useMemo(() => {
@@ -128,11 +128,11 @@ export function usePlayerStats() {
   }, []);
 
   return {
-    teams,
+    teams: Array.from(teams.values()),
     activeTeamId,
     activeTeam,
-    players,
-    isLoadingPlayers,
+    players: Array.from(players.values()),
+    isLoadingPlayers: isLoading,
     playersError,
     viewType,
     setViewType,
