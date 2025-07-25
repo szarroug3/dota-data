@@ -3,19 +3,21 @@ import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { MatchListView, MatchListViewMode } from './MatchListView';
 
 interface MatchesListProps {
   matches: Match[];
-  onHideMatch: (matchId: string) => void;
-  onRefreshMatch: (matchId: string) => void;
+  onHideMatch: (matchId: number) => void;
+  onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
   setViewMode: (mode: MatchListViewMode) => void;
-  selectedMatchId?: string | null;
-  onSelectMatch?: (matchId: string) => void;
+  selectedMatchId?: number | null;
+  onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
+  teamMatches?: Record<number, TeamMatchParticipation>;
 }
 
 interface MatchListLayoutButtonsProps {
@@ -63,7 +65,8 @@ const MatchesList: React.FC<MatchesListProps> = ({
   selectedMatchId,
   onSelectMatch,
   hiddenMatchesCount = 0,
-  onShowHiddenMatches
+  onShowHiddenMatches,
+  teamMatches
 }) => {
   return (
     <div className="bg-card dark:bg-card rounded-lg shadow-md flex flex-col max-h-[calc(100vh-14rem)]">
@@ -102,6 +105,7 @@ const MatchesList: React.FC<MatchesListProps> = ({
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
         viewMode={viewMode}
+        teamMatches={teamMatches}
       />
     </div>
   </div>

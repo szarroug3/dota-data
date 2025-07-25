@@ -6,7 +6,7 @@
  */
 
 import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 import {
   determineTeamSideFromMatch,
   extractPlayersFromMatchSide,
@@ -355,7 +355,7 @@ describe('Team Helpers', () => {
   describe('updateTeamPerformance', () => {
     it('should update team performance with matches', () => {
       const baseTeam: TeamData = {
-        team: { id: 12345, name: 'Test Team', isActive: false, isLoading: false },
+        team: { id: 12345, name: 'Test Team' },
         league: { id: 67890, name: 'Test League' },
         timeAdded: new Date().toISOString(),
         matches: [],
@@ -377,11 +377,11 @@ describe('Team Helpers', () => {
         }
       };
 
-      const matchesWithCorrectSides = [
-        { matchId: 123, side: 'radiant' as const },
-        { matchId: 456, side: 'dire' as const },
-        { matchId: 789, side: 'radiant' as const }
-      ];
+      const matchesWithCorrectSides: Record<number, TeamMatchParticipation> = {
+        1: { matchId: 1, side: 'radiant', pickOrder: 'first' },
+        2: { matchId: 2, side: 'dire', pickOrder: 'second' },
+        3: { matchId: 3, side: 'radiant', pickOrder: 'first' }
+      };
 
       const originalTeamData = {
         matches: [
@@ -402,7 +402,7 @@ describe('Team Helpers', () => {
 
     it('should handle empty matches array', () => {
       const baseTeam: TeamData = {
-        team: { id: 12345, name: 'Test Team', isActive: false, isLoading: false },
+        team: { id: 12345, name: 'Test Team' },
         league: { id: 67890, name: 'Test League' },
         timeAdded: new Date().toISOString(),
         matches: [],

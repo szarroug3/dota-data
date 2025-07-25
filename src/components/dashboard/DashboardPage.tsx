@@ -7,10 +7,34 @@ import { useTeamContext } from '@/contexts/team-context';
 import { AddTeamForm } from './AddTeamForm';
 import { EditTeamModal } from './EditTeamModal';
 import { TeamList } from './TeamList';
-import { TeamsListSkeleton } from './TeamsListSkeleton';
 
 // ============================================================================
-// Main Dashboard Component
+// CONVERSION HELPERS
+// ============================================================================
+
+/**
+ * Safely convert string IDs to numbers with validation
+ */
+function convertToNumber(value: string, fieldName: string): number {
+  const num = parseInt(value, 10);
+  if (isNaN(num) || num <= 0) {
+    throw new Error(`Invalid ${fieldName}: must be a positive number`);
+  }
+  return num;
+}
+
+/**
+ * Convert team and league IDs from strings to numbers
+ */
+function convertTeamIds(teamId: string, leagueId: string): { teamId: number; leagueId: number } {
+  return {
+    teamId: convertToNumber(teamId, 'team ID'),
+    leagueId: convertToNumber(leagueId, 'league ID')
+  };
+}
+
+// ============================================================================
+// MAIN COMPONENT
 // ============================================================================
 export const DashboardPage: React.FC = () => {
   const form = useTeamForm();
@@ -22,12 +46,11 @@ export const DashboardPage: React.FC = () => {
   const handleSubmit = useCallback(async (newTeamId: string, newLeagueId: string) => {
     try {
       form.setIsSubmitting(true);
-      await actions.handleAddTeam(newTeamId, newLeagueId);
+      const { teamId, leagueId } = convertTeamIds(newTeamId, newLeagueId);
+      await actions.handleAddTeam(teamId, leagueId);
       form.reset();
     } catch (error) {
       console.error('Failed to add team:', error);
-      // The error will be displayed in the team card if it's a team-specific error
-      // For now, we just log it to avoid the stack trace in the console
     } finally {
       form.setIsSubmitting(false);
     }
@@ -40,53 +63,27 @@ export const DashboardPage: React.FC = () => {
   }, [teamContext.teams, form.teamId, form.leagueId]);
 
   // Handle edit team
-  const handleEditTeam = useCallback((teamId: string, leagueId: string) => {
-    modal.open(teamId, leagueId);
+  const handleEditTeam = useCallback((teamId: number, leagueId: number) => {
+    modal.open(teamId.toString(), leagueId.toString());
   }, [modal]);
 
   // Handle edit team save
   const handleEditTeamSave = useCallback(async (newTeamId: string, newLeagueId: string) => {
     try {
-      await actions.handleEditTeam(modal.editingTeamId, modal.editingLeagueId, newTeamId, newLeagueId);
+      const { teamId: newTeamIdNum, leagueId: newLeagueIdNum } = convertTeamIds(newTeamId, newLeagueId);
+      const { teamId: currentTeamId, leagueId: currentLeagueId } = convertTeamIds(modal.editingTeamId, modal.editingLeagueId);
+      await actions.handleEditTeam(currentTeamId, currentLeagueId, newTeamIdNum, newLeagueIdNum);
       modal.close();
     } catch (error) {
       console.error('Failed to save edited team:', error);
-      // The error will be displayed in the team card if it's a team-specific error
-      // For now, we just log it to avoid the stack trace in the console
-    } finally {
-      // No need to set isSubmitting here, as it's handled by the action
     }
   }, [actions, modal]);
 
-  // Show skeleton while teams are loading
-  if (teamContext.isLoading) {
-    const teamsCount = teamContext.teams.size || 1; // Show at least 1 skeleton
-    return (
-      <>
-        <AddTeamForm
-          teamId={form.teamId}
-          leagueId={form.leagueId}
-          onTeamIdChange={form.setTeamId}
-          onLeagueIdChange={form.setLeagueId}
-          onAddTeam={handleSubmit}
-          teamExists={checkTeamExists}
-          isSubmitting={form.isSubmitting}
-          onReset={form.reset}
-        />
-
-        <TeamsListSkeleton teamsCount={teamsCount} />
-
-        <EditTeamModal
-          isOpen={modal.isEditModalOpen}
-          onClose={modal.close}
-          currentTeamId={modal.editingTeamId}
-          currentLeagueId={modal.editingLeagueId}
-          onSave={handleEditTeamSave}
-          teamExists={checkTeamExists}
-        />
-      </>
-    );
-  }
+  // Convert selectedTeamId to the format expected by TeamList
+  const activeTeam = teamContext.selectedTeamId ? {
+    teamId: teamContext.selectedTeamId.teamId,
+    leagueId: teamContext.selectedTeamId.leagueId
+  } : null;
 
   return (
     <>
@@ -103,7 +100,7 @@ export const DashboardPage: React.FC = () => {
 
       <TeamList
         teamDataList={Array.from(teamContext.teams.values())}
-        activeTeam={teamContext.activeTeam}
+        activeTeam={activeTeam}
         onRefreshTeam={actions.handleRefreshTeam}
         onRemoveTeam={actions.handleRemoveTeam}
         onSetActiveTeam={actions.handleSetActiveTeam}
@@ -181,18 +178,16 @@ function useEditTeamModal() {
 function useDashboardActions() {
   const teamContext = useTeamContext();
 
-  const handleAddTeam = useCallback(async (teamId: string, leagueId: string) => {
+  const handleAddTeam = useCallback(async (teamId: number, leagueId: number) => {
     try {
       // Use team context directly to add team
       await teamContext.addTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to add team:', error);
-      // Don't re-throw the error - let the team be added with error state
-      // The team context will handle displaying the error in the UI
     }
   }, [teamContext]);
 
-  const handleRemoveTeam = useCallback(async (teamId: string, leagueId: string) => {
+  const handleRemoveTeam = useCallback(async (teamId: number, leagueId: number) => {
     try {
       // Use team context for removal
       teamContext.removeTeam(teamId, leagueId);
@@ -202,31 +197,29 @@ function useDashboardActions() {
     }
   }, [teamContext]);
 
-  const handleRefreshTeam = useCallback(async (teamId: string, leagueId: string) => {
+  const handleRefreshTeam = useCallback(async (teamId: number, leagueId: number) => {
     try {
       await teamContext.refreshTeam(teamId, leagueId);
     } catch (error) {
       console.error('Failed to refresh team:', error);
-      // Don't re-throw the error - let the team be refreshed with error state
     }
   }, [teamContext]);
 
-  const handleSetActiveTeam = useCallback(async (teamId: string, leagueId: string) => {
+  const handleSetActiveTeam = useCallback(async (teamId: number, leagueId: number) => {
     try {
-      teamContext.setActiveTeam(teamId, leagueId);
+      teamContext.setSelectedTeamId(teamId, leagueId);
     } catch (error) {
       console.error('Failed to set active team:', error);
       throw error;
     }
   }, [teamContext]);
 
-  const handleEditTeam = useCallback(async (currentTeamId: string, currentLeagueId: string, newTeamId: string, newLeagueId: string) => {
+  const handleEditTeam = useCallback(async (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number) => {
     try {
       // Use team context to edit team in place
       await teamContext.editTeam(currentTeamId, currentLeagueId, newTeamId, newLeagueId);
     } catch (error) {
       console.error('Failed to edit team:', error);
-      // Don't re-throw the error - handle it gracefully in the UI
     }
   }, [teamContext]);
 

@@ -3,15 +3,18 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { HideButton } from '../common/HideButton';
 
 interface MatchListViewGridProps {
   matches: Match[];
-  selectedMatchId: string | null;
-  onSelectMatch: (matchId: string) => void;
-  onHideMatch: (matchId: string) => void;
+  selectedMatchId: number | null;
+  onSelectMatch: (matchId: number) => void;
+  onHideMatch: (matchId: number) => void;
   className?: string;
+  activeTeamSide?: 'radiant' | 'dire';
+  teamMatches?: Record<number, TeamMatchParticipation>;
 }
 
 function formatDuration(seconds: number): string {
@@ -26,6 +29,8 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
   onSelectMatch,
   onHideMatch,
   className = '',
+  activeTeamSide,
+  teamMatches,
 }) => {
   if (matches.length === 0) {
     return (
@@ -40,70 +45,56 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
 
   return (
     <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${className}`}>
-      {matches.map((match) => (
-        <Card
-          key={match.id}
-          className={`cursor-pointer transition-all hover:shadow-md ${
-            selectedMatchId === match.id ? 'ring-2 ring-primary' : ''
-          }`}
-        >
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-1">
+      {matches.map((match) => {
+        // Get opponent name from team data
+        const opponentName = teamMatches?.[match.id]?.opponentName || `Match ${match.id}`;
+        
+        // Determine if active team won
+        const teamWon = activeTeamSide ? match.result === activeTeamSide : false;
+        
+        return (
+          <Card
+            key={match.id}
+            className={`cursor-pointer transition-all hover:shadow-md ${
+              selectedMatchId === match.id ? 'ring-2 ring-primary' : ''
+            }`}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div 
+                  className="font-medium text-sm truncate cursor-pointer flex-1"
+                  onClick={() => onSelectMatch(match.id)}
+                >
+                  {opponentName}
+                </div>
+                <HideButton
+                  onClick={() => onHideMatch(match.id)}
+                  ariaLabel={`Hide match`}
+                  className="ml-1"
+                />
+              </div>
               <div 
-                className="font-medium text-sm truncate cursor-pointer flex-1"
+                className="flex items-center gap-1 mb-1 cursor-pointer"
                 onClick={() => onSelectMatch(match.id)}
               >
-                {match.opponent}
+                <Badge
+                  variant={teamWon ? 'success' : 'default'}
+                  className="text-xs"
+                >
+                  {teamWon ? 'Victory' : 'Defeat'}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {activeTeamSide === 'radiant' ? 'Radiant' : 'Dire'}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{formatDuration(match.duration)}</span>
               </div>
-              <HideButton
-                onClick={() => onHideMatch(match.id)}
-                ariaLabel={`Hide match vs ${match.opponent}`}
-                className="ml-1"
-              />
-            </div>
-            <div 
-              className="flex items-center gap-1 mb-1 cursor-pointer"
-              onClick={() => onSelectMatch(match.id)}
-            >
-              <Badge
-                variant={match.result === 'win' ? 'success' : 'default'}
-                className="text-xs"
-              >
-                {match.result === 'win' ? 'Victory' : 'Defeat'}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="text-xs"
-              >
-                {match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}
-              </Badge>
-              <span className="text-xs text-muted-foreground">{formatDuration(match.duration)}</span>
-            </div>
-            <div 
-              className="flex flex-wrap gap-1 cursor-pointer"
-              onClick={() => onSelectMatch(match.id)}
-            >
-              {match.heroes.slice(0, 2).map((hero, idx) => (
-                <Badge
-                  key={idx}
-                  variant="secondary"
-                  className="text-xs"
-                >
-                  {hero}
-                </Badge>
-              ))}
-              {match.heroes.length > 2 && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs"
-                >
-                  +{match.heroes.length - 2}
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }; 

@@ -102,7 +102,7 @@ export const DraftSuggestionsPage: React.FC = () => {
   const { activeTeam } = useConfigContext();
   const { heroesError, isLoadingHeroes } = useConstantsContext();
 
-  const activeTeamData = activeTeam ? teams.get(`${activeTeam.teamId}-${activeTeam.leagueId}`) : null;
+  // const activeTeamData = activeTeam ? teams.get(`${activeTeam.teamId}-${activeTeam.leagueId}`) : null;
 
   const renderContent = () => {
     if (isLoadingTeams || isLoadingHeroes) {

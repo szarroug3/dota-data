@@ -8,3 +8,14 @@ export function formatItemImageUrl(itemImagePath: string): string {
   const baseUrl = "https://cdn.cloudflare.steamstatic.com";
   return baseUrl + itemImagePath;
 }
+
+/**
+ * Formats the full hero URL from OpenDota API response
+ * 
+ * @param heroName The hero's name from the OpenDota API response
+ * @returns The complete URL for the hero image
+ */
+export function formatHeroImageUrl(heroName: string): string {
+  const hero = heroName.replace('npc_dota_hero_', '');
+  return `https://dota2protracker.com/static/heroes/${hero}_vert.jpg`;
+}

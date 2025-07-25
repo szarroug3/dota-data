@@ -27,18 +27,9 @@ const getButtonState = (
   currentTeamId: string,
   currentLeagueId: string,
   teamExists: (teamId: string, leagueId: string) => boolean,
-  isSubmitting: boolean,
-  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } }
+  isSubmitting: boolean
 ): ButtonState => {
-  // State 1: Validation errors
-  if (!validation.isValid) {
-    return {
-      text: 'Fix Validation Errors',
-      disabled: true
-    };
-  }
-
-  // State 2: One of the fields is not filled out
+  // State 1: One of the fields is not filled out
   if (!newTeamId.trim() || !newLeagueId.trim()) {
     return {
       text: 'Save Changes',
@@ -46,7 +37,7 @@ const getButtonState = (
     };
   }
 
-  // State 3: Team is filled out with a different already existing team data
+  // State 2: Team is filled out with a different already existing team data
   if (newTeamId !== currentTeamId || newLeagueId !== currentLeagueId) {
     if (teamExists(newTeamId.trim(), newLeagueId.trim())) {
       return {
@@ -56,7 +47,7 @@ const getButtonState = (
     }
   }
 
-  // State 4: Valid information
+  // State 3: Valid information (allow submission even with validation errors)
   return {
     text: isSubmitting ? 'Saving...' : 'Save Changes',
     disabled: isSubmitting
@@ -235,8 +226,7 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
     currentTeamId,
     currentLeagueId,
     teamExists,
-    isSubmitting,
-    validation
+    isSubmitting
   );
 
   const handleSave = async () => {
@@ -261,6 +251,10 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
     onClose();
   };
 
+  // Only show errors for fields that have been touched (have content)
+  const shouldShowTeamError = newTeamId.trim().length > 0 ? validation.errors.teamId : undefined;
+  const shouldShowLeagueError = newLeagueId.trim().length > 0 ? validation.errors.leagueId : undefined;
+
   if (!isOpen) return null;
 
   return (
@@ -274,7 +268,13 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
             setNewTeamId={setNewTeamId}
             setNewLeagueId={setNewLeagueId}
             error={error}
-            validation={validation}
+            validation={{
+              ...validation,
+              errors: {
+                teamId: shouldShowTeamError,
+                leagueId: shouldShowLeagueError
+              }
+            }}
           />
           <ModalActions
             onCancel={handleCancel}

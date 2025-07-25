@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { MatchListViewCard } from './MatchListViewCard';
 import { MatchListViewGrid } from './MatchListViewGrid';
@@ -10,12 +11,13 @@ export type MatchListViewMode = 'list' | 'card' | 'grid';
 
 interface MatchListViewProps {
   matches: Match[];
-  selectedMatchId: string | null;
-  onSelectMatch: (matchId: string) => void;
-  onHideMatch: (matchId: string) => void;
-  onRefreshMatch: (matchId: string) => void;
+  selectedMatchId: number | null;
+  onSelectMatch: (matchId: number) => void;
+  onHideMatch: (matchId: number) => void;
+  onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
   className?: string;
+  teamMatches?: Record<number, TeamMatchParticipation>;
 }
 
 export const MatchListView: React.FC<MatchListViewProps> = ({
@@ -26,6 +28,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   onRefreshMatch,
   viewMode,
   className = '',
+  teamMatches,
 }) => {
   if (viewMode === 'list') {
     return (
@@ -36,6 +39,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
         className={className}
+        teamMatches={teamMatches}
       />
     );
   }
@@ -48,6 +52,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
         className={className}
+        teamMatches={teamMatches}
       />
     );
   }
@@ -59,6 +64,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         className={className}
+        teamMatches={teamMatches}
       />
     );
   }

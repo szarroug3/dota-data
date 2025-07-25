@@ -10,7 +10,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import { useConstantsDataFetching } from '@/contexts/constants-data-fetching-context';
-import { formatItemImageUrl } from '@/lib/utils/item-image-url';
+import { formatHeroImageUrl, formatItemImageUrl } from '@/lib/utils/image-url';
 import type {
   ConstantsContextProviderProps,
   ConstantsContextValue,
@@ -31,7 +31,7 @@ const convertOpenDotaHeroToHero = (openDotaHero: OpenDotaHero): Hero => {
   
   // Convert attack type string to proper type
   const attackType = openDotaHero.attack_type as 'melee' | 'ranged';
-  
+
   return {
     id: openDotaHero.id.toString(),
     name: openDotaHero.name,
@@ -39,7 +39,7 @@ const convertOpenDotaHeroToHero = (openDotaHero: OpenDotaHero): Hero => {
     primaryAttribute,
     attackType,
     roles: openDotaHero.roles,
-    imageUrl: `https://dota2protracker.com/static/heroes/${openDotaHero.name}_vert.jpg`
+    imageUrl: formatHeroImageUrl(openDotaHero.name)
   };
 };
 
@@ -88,7 +88,6 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
       convertedHeroes.forEach(hero => {
         heroesById[hero.id] = hero;
       });
-      
       setHeroes(heroesById);
     } catch (error) {
       setHeroesError(error instanceof Error ? error.message : 'Failed to fetch heroes');

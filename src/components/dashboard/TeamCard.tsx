@@ -9,10 +9,10 @@ import type { TeamData } from '@/types/contexts/team-context-value';
 interface TeamCardProps {
   teamData: TeamData;
   isActive: boolean;
-  onRemoveTeam: (teamId: string, leagueId: string) => Promise<void>;
-  onRefreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  onSetActiveTeam: (teamId: string, leagueId: string) => void;
-  onEditTeam: (teamId: string, leagueId: string) => void;
+  onRemoveTeam: (teamId: number, leagueId: number) => Promise<void>;
+  onRefreshTeam: (teamId: number, leagueId: number) => Promise<void>;
+  onSetActiveTeam: (teamId: number, leagueId: number) => void;
+  onEditTeam: (teamId: number, leagueId: number) => void;
 }
 
 interface TeamInformationProps {
@@ -60,7 +60,7 @@ const TeamInformation: React.FC<TeamInformationProps> = ({
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {/* Loading indicator */}
-          {teamData.team.isLoading && (
+          {teamData.isLoading && (
             <Badge variant="secondary" className="text-xs">
               Loading...
             </Badge>
@@ -81,7 +81,7 @@ const TeamInformation: React.FC<TeamInformationProps> = ({
         )}
         {hasError && (
           <p className="text-xs text-destructive">
-            {teamData.team.error}
+            {teamData.error}
           </p>
         )}
       </div>
@@ -91,9 +91,9 @@ const TeamInformation: React.FC<TeamInformationProps> = ({
 
 interface TeamCardActionsProps {
   teamData: TeamData;
-  onRefreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  onEditTeam: (teamId: string, leagueId: string) => void;
-  onRemoveTeam: (teamId: string, leagueId: string) => Promise<void>;
+  onRefreshTeam: (teamId: number, leagueId: number) => Promise<void>;
+  onEditTeam: (teamId: number, leagueId: number) => void;
+  onRemoveTeam: (teamId: number, leagueId: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -175,10 +175,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     onSetActiveTeam(teamData.team.id, teamData.league.id);
   };
 
-  const isLoading = teamData.team.isLoading;
+  const isLoading = teamData.isLoading;
   const teamName = teamData.team.name || `Loading ${teamData.team.id}...`;
   const leagueName = teamData.league.name || `Loading ${teamData.league.id}...`;
-  const hasError = Boolean(teamData.team.error);
+  const hasError = Boolean(teamData.error);
 
   const getAriaLabel = () => {
     if (hasError) {

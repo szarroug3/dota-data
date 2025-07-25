@@ -157,7 +157,6 @@ export function useMatchOperations(
 
     // Check if there's already an ongoing operation for this match
     if (hasOngoingMatchOperation(matchId)) {
-      console.warn(`Operation already in progress for match ${matchId}`);
       return state.matches.get(matchId) || null;
     }
 
@@ -208,7 +207,6 @@ export function useMatchOperations(
   const parseMatch = useCallback(async (matchId: number) => {
     // Check if there's already an ongoing operation for this match
     if (hasOngoingMatchOperation(matchId)) {
-      console.warn(`Parse operation already in progress for match ${matchId}`);
       return;
     }
 

@@ -11,8 +11,8 @@ describe('EditTeamModal', () => {
   const defaultProps = {
     isOpen: true,
     onClose: mockOnClose,
-    currentTeamId: 'team1',
-    currentLeagueId: 'league1',
+    currentTeamId: '12345',
+    currentLeagueId: '67890',
     onSave: mockOnSave,
     teamExists: mockTeamExists,
   };
@@ -44,8 +44,8 @@ describe('EditTeamModal', () => {
     const teamIdInput = screen.getByLabelText('Team ID *') as HTMLInputElement;
     const leagueIdInput = screen.getByLabelText('League ID *') as HTMLInputElement;
     
-    expect(teamIdInput.value).toBe('team1');
-    expect(leagueIdInput.value).toBe('league1');
+    expect(teamIdInput.value).toBe('12345');
+    expect(leagueIdInput.value).toBe('67890');
   });
 
   it('should call onSave with correct parameters when save is clicked', async () => {

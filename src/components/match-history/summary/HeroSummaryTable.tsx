@@ -1,9 +1,8 @@
-import { ChevronUp, ChevronDown } from 'lucide-react';
-import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -33,16 +32,16 @@ type SortDirection = 'asc' | 'desc';
 
 // Mock hero data for demonstration
 const mockHeroes: Hero[] = [
-  { id: '1', name: 'crystal_maiden', localizedName: 'Crystal Maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], complexity: 1, imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg' },
-  { id: '2', name: 'juggernaut', localizedName: 'Juggernaut', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Pusher'], complexity: 2, imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg' },
-  { id: '3', name: 'lina', localizedName: 'Lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Nuker'], complexity: 2, imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg' },
-  { id: '4', name: 'pudge', localizedName: 'Pudge', primaryAttribute: 'strength', attackType: 'melee', roles: ['Disabler', 'Initiator'], complexity: 2, imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg' },
-  { id: '5', name: 'lion', localizedName: 'Lion', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], complexity: 1, imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg' },
-  { id: '6', name: 'phantom_assassin', localizedName: 'Phantom Assassin', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Escape'], complexity: 1, imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg' },
-  { id: '7', name: 'earthshaker', localizedName: 'Earthshaker', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Disabler'], complexity: 2, imageUrl: 'https://dota2protracker.com/static/heroes/earthshaker_vert.jpg' },
-  { id: '8', name: 'windranger', localizedName: 'Windranger', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Support'], complexity: 2, imageUrl: 'https://dota2protracker.com/static/heroes/windranger_vert.jpg' },
-  { id: '9', name: 'axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Durable'], complexity: 1, imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg' },
-  { id: '10', name: 'nevermore', localizedName: 'Shadow Fiend', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Nuker'], complexity: 3, imageUrl: 'https://dota2protracker.com/static/heroes/nevermore_vert.jpg' },
+  { id: '1', name: 'crystal_maiden', localizedName: 'Crystal Maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg' },
+  { id: '2', name: 'juggernaut', localizedName: 'Juggernaut', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Pusher'], imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg' },
+  { id: '3', name: 'lina', localizedName: 'Lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Nuker'], imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg' },
+  { id: '4', name: 'pudge', localizedName: 'Pudge', primaryAttribute: 'strength', attackType: 'melee', roles: ['Disabler', 'Initiator'], imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg' },
+  { id: '5', name: 'lion', localizedName: 'Lion', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg' },
+  { id: '6', name: 'phantom_assassin', localizedName: 'Phantom Assassin', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Escape'], imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg' },
+  { id: '7', name: 'earthshaker', localizedName: 'Earthshaker', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/earthshaker_vert.jpg' },
+  { id: '8', name: 'windranger', localizedName: 'Windranger', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Support'], imageUrl: 'https://dota2protracker.com/static/heroes/windranger_vert.jpg' },
+  { id: '9', name: 'axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Durable'], imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg' },
+  { id: '10', name: 'nevermore', localizedName: 'Shadow Fiend', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Nuker'], imageUrl: 'https://dota2protracker.com/static/hero' },
 ];
 
 function aggregateHeroes(matches: Match[], isActiveTeam: boolean, heroes: Hero[]): HeroSummary[] {
@@ -147,19 +146,19 @@ function HeroSummarySection({
     );
   }
 
-  const SortButton = ({ field, label }: { field: SortField; label: string }) => (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-auto p-1 text-xs inline-flex items-center gap-1"
-      onClick={() => onSortChange?.(field)}
-    >
-      {label}
-      {sortField === field && (
-        sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-      )}
-    </Button>
-  );
+  // const SortButton = ({ field, label }: { field: SortField; label: string }) => (
+  //   <Button
+  //     variant="ghost"
+  //     size="sm"
+  //     className="h-auto p-1 text-xs inline-flex items-center gap-1"
+  //     onClick={() => onSortChange?.(field)}
+  //   >
+  //     {label}
+  //     {sortField === field && (
+  //       sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+  //     )}
+  //   </Button>
+  // );
 
   return (
     <Card>

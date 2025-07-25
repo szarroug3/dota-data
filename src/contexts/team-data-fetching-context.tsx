@@ -206,7 +206,8 @@ const useTeamApiFetching = (
       return { error: errorMsg };
     }
 
-    const team = await response.json() as DotabuffTeam;
+    const rawTeam = await response.json();
+    const team = rawTeam as DotabuffTeam;
     handleTeamSuccess(teamId, team);
     return team;
   }, [handleTeamError, handleTeamSuccess]);

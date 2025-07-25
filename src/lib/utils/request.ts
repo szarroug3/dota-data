@@ -18,11 +18,8 @@ async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boo
   return await cache.get<T>(cacheKey);
 }
 
-async function getFromMock(mockFilename: string, service: keyof typeof mockServices): Promise<string | null> {
-  if (mockServices[service]) {
-    return await fs.readFile(mockFilename, 'utf-8');
-  }
-  return null;
+async function getFromMock(mockFilename: string): Promise<string> {
+  return await fs.readFile(mockFilename, 'utf-8');
 }
 
 async function getFromAPI(requestFn: () => Promise<string>, mockFilename: string): Promise<string> {
@@ -64,8 +61,10 @@ export async function request<T>(
     return cachedData;
   }
 
-  let data = await getFromMock(mockFilename, service);
-  if (!data) {
+  let data: string | null = null;
+  if (mockServices[service]) {
+    data = await getFromMock(mockFilename);
+  } else {
     data = await getFromAPI(requestFn, mockFilename);
   }
   return await processData(data, processingFn, cache, cacheKey, cacheTTL);

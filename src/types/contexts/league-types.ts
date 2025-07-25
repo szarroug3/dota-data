@@ -34,8 +34,14 @@ export interface Player {
 export interface Match {
   id: string;
   leagueId: string;
-  radiantTeamId: string;
-  direTeamId: string;
+  radiant: {
+    id: number;
+    name?: string;
+  }
+  dire: {
+    id: number;
+    name?: string;
+  }
   startTime: number;
   duration: number;
   radiantWin: boolean;

@@ -5,7 +5,7 @@ import type { Match } from '@/types/contexts/match-context-value';
 
 interface HiddenMatchesModalProps {
   hiddenMatches: Match[];
-  onUnhide: (matchId: string) => void;
+  onUnhide: (matchId: number) => void;
   onClose: () => void;
 }
 
@@ -42,7 +42,7 @@ export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({ hiddenMa
             {hiddenMatches.map(match => (
               <li key={match.id} className="flex items-center justify-between py-3">
                 <div>
-                  <div className="font-medium">vs {match.opponent}</div>
+                  <div className="font-medium">Match {match.id}</div>
                   <div className="text-sm text-muted-foreground">{new Date(match.date).toLocaleDateString()} • {Math.floor(match.duration / 60)}m {match.duration % 60}s</div>
                 </div>
                 <button

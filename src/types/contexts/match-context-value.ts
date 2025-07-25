@@ -19,8 +19,14 @@ export interface Match {
   duration: number;
   
   // Team information
-  radiantTeamId: number;
-  direTeamId: number;
+  radiant: {
+    id?: number;
+    name?: string;
+  };
+  dire: {
+    id?: number;
+    name?: string;
+  };
   
   // Draft information
   draft: {
@@ -57,6 +63,12 @@ export interface Match {
   
   // Match result
   result: 'radiant' | 'dire';
+  
+  // Pick order information
+  pickOrder?: {
+    radiant: 'first' | 'second' | null;
+    dire: 'first' | 'second' | null;
+  };
   
   // Error handling
   error?: string;

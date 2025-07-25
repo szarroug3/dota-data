@@ -63,7 +63,6 @@ global.process.env.UPSTASH_REDIS_REST_TOKEN = 'dummy-token';
 global.process.env.MOCK_DATA = 'true';
 global.process.env.USE_MOCK_OPENDOTA = 'true';
 global.process.env.USE_MOCK_DOTABUFF = 'true';
-global.process.env.MOCK_RATE_LIMIT = '1000';
 
 // Mock all Redis/cache/queue/rate-limit backend modules globally
 // These are only needed for backend tests, not frontend tests

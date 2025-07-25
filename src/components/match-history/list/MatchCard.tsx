@@ -11,6 +11,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Match } from '@/types/contexts/match-context-value';
+import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // ============================================================================
 // TYPES
@@ -21,6 +22,7 @@ interface MatchCardProps {
   isSelected: boolean;
   onSelect: () => void;
   activeTeamSide?: 'radiant' | 'dire'; // Which side the active team played on
+  teamMatch?: TeamMatchParticipation;
 }
 
 // ============================================================================
@@ -91,13 +93,15 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   match,
   isSelected,
   onSelect,
-  activeTeamSide
+  activeTeamSide,
+  teamMatch
 }) => {
   const isLoading = match.isLoading || false;
   const hasError = Boolean(match.error);
   const matchName = getMatchDisplayName(match);
   const playerCount = getPlayerCount(match);
   const heroCount = getHeroCount(match);
+  const opponentName = teamMatch?.opponentName;
 
   return (
     <Card 
@@ -109,7 +113,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">
-            {matchName}
+            vs {opponentName}
           </CardTitle>
           <div className="flex items-center gap-2">
             {isLoading && (

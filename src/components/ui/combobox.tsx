@@ -35,6 +35,84 @@ interface MultiSelectComboboxProps {
   className?: string
 }
 
+function ClearButton({ onClick }: { onClick: () => void }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex-shrink-0 cursor-pointer"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick()
+      }}
+    >
+      <XIcon className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+    </div>
+  )
+}
+
+function SingleSelectionBadge({ option, onRemove }: { option: ComboboxOption; onRemove: () => void }) {
+  return (
+    <Badge
+      variant="secondary"
+      className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]"
+    >
+      <span className="truncate flex-1 min-w-0">{option.label}</span>
+      <ClearButton onClick={onRemove} />
+    </Badge>
+  )
+}
+
+function MultipleSelectionDisplay({ count, onClear }: { count: number; onClear: () => void }) {
+  return (
+    <Badge
+      variant="secondary"
+      className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]"
+    >
+      <span className="truncate flex-1 min-w-0">{count} selected</span>
+      <ClearButton onClick={onClear} />
+    </Badge>
+  )
+}
+
+function renderTriggerContent(
+  selectedOptions: ComboboxOption[],
+  placeholder: string,
+  onValueChange: (value: string[]) => void,
+  handleRemove: (valueToRemove: string) => void
+) {
+  if (selectedOptions.length === 0) {
+    return <span className="text-muted-foreground">{placeholder}</span>
+  }
+  
+  if (selectedOptions.length === 1) {
+    return (
+      <SingleSelectionBadge
+        option={selectedOptions[0]}
+        onRemove={() => handleRemove(selectedOptions[0].value)}
+      />
+    )
+  }
+  
+  return (
+    <MultipleSelectionDisplay
+      count={selectedOptions.length}
+      onClear={() => onValueChange([])}
+    />
+  )
+}
+
 export function MultiSelectCombobox({
   options,
   value,
@@ -69,36 +147,7 @@ export function MultiSelectCombobox({
           className={cn("w-full justify-between", className)}
         >
           <div className="flex flex-wrap gap-1 flex-1 min-w-0">
-            {selectedOptions.length === 0 ? (
-              <span className="text-muted-foreground">{placeholder}</span>
-            ) : selectedOptions.length === 1 ? (
-              <Badge
-                variant="secondary"
-                className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]"
-              >
-                <span className="truncate flex-1 min-w-0">{selectedOptions[0].label}</span>
-                <button
-                  type="button"
-                  className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex-shrink-0"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleRemove(selectedOptions[0].value)
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
-                  onClick={() => handleRemove(selectedOptions[0].value)}
-                >
-                  <XIcon className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                </button>
-              </Badge>
-            ) : (
-              <span className="text-sm">
-                {selectedOptions.length} selected
-              </span>
-            )}
+            {renderTriggerContent(selectedOptions, placeholder, onValueChange, handleRemove)}
           </div>
           <ChevronsUpDownIcon className="h-4 w-4 shrink-0 opacity-50 ml-2" />
         </Button>

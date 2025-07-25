@@ -19,7 +19,6 @@ export interface EnvironmentConfig {
   USE_MOCK_D2PT: boolean;
   USE_MOCK_DB: boolean;
   WRITE_REAL_DATA_TO_MOCK: boolean;
-  MOCK_RATE_LIMIT: number;
   
   // Logging Configuration
   DEBUG_LOGGING: boolean;
@@ -85,7 +84,6 @@ function getMockConfig() {
     USE_MOCK_D2PT: process.env.USE_MOCK_D2PT === 'true',
     USE_MOCK_DB: process.env.USE_MOCK_DB === 'true',
     WRITE_REAL_DATA_TO_MOCK: process.env.WRITE_REAL_DATA_TO_MOCK === 'true',
-    MOCK_RATE_LIMIT: process.env.MOCK_RATE_LIMIT && process.env.MOCK_RATE_LIMIT !== '' ? Number(process.env.MOCK_RATE_LIMIT) : 60,
   };
 }
 
@@ -203,7 +201,6 @@ function validateEnvironment(config: EnvironmentConfig): void {
 
   // Numbers
   [
-    ['MOCK_RATE_LIMIT', config.MOCK_RATE_LIMIT],
     ['OPENDOTA_API_TIMEOUT', config.OPENDOTA_API_TIMEOUT],
     ['TEST_TIMEOUT', config.TEST_TIMEOUT],
     ['RATE_LIMIT_OPENDOTA', config.RATE_LIMIT_OPENDOTA],
@@ -293,11 +290,6 @@ function docsMockConfig() {
 - **Type**: boolean
 - **Default**: false
 - **Description**: Write real API responses to mock data files
-
-### MOCK_RATE_LIMIT
-- **Type**: number
-- **Default**: 60
-- **Description**: Rate limit for mock API calls (requests per minute)
 `;
 }
 function docsLoggingConfig() {
@@ -521,7 +513,6 @@ export const getEnv = {
   USE_MOCK_D2PT: () => envConfig.USE_MOCK_D2PT,
   USE_MOCK_DB: () => envConfig.USE_MOCK_DB,
   WRITE_REAL_DATA_TO_MOCK: () => envConfig.WRITE_REAL_DATA_TO_MOCK,
-  MOCK_RATE_LIMIT: () => envConfig.MOCK_RATE_LIMIT,
   DEBUG_LOGGING: () => envConfig.DEBUG_LOGGING,
   LOG_LEVEL: () => envConfig.LOG_LEVEL,
   LOG_FILE_PATH: () => envConfig.LOG_FILE_PATH,

@@ -92,8 +92,14 @@ export function createInitialMatchData(matchId: number): Match {
     id: matchId,
     date: new Date().toISOString(),
     duration: 0,
-    radiantTeamId: 0,
-    direTeamId: 0,
+    radiant: {
+      id: 0,
+      name: undefined
+    },
+    dire: {
+      id: 0,
+      name: undefined
+    },
     draft: { radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] },
     players: { radiant: [], dire: [] },
     statistics: {

@@ -7,11 +7,11 @@ import { TeamCard } from './TeamCard';
 
 interface TeamListProps {
   teamDataList: TeamData[];
-  activeTeam: { teamId: string; leagueId: string } | null;
-  onRemoveTeam: (teamId: string, leagueId: string) => Promise<void>;
-  onRefreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-  onSetActiveTeam: (teamId: string, leagueId: string) => void;
-  onEditTeam: (teamId: string, leagueId: string) => void;
+  activeTeam: { teamId: number; leagueId: number } | null;
+  onRemoveTeam: (teamId: number, leagueId: number) => Promise<void>;
+  onRefreshTeam: (teamId: number, leagueId: number) => Promise<void>;
+  onSetActiveTeam: (teamId: number, leagueId: number) => void;
+  onEditTeam: (teamId: number, leagueId: number) => void;
 }
 
 export const TeamList: React.FC<TeamListProps> = ({ 

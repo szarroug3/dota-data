@@ -6,6 +6,7 @@ import { ConstantsDataFetchingProvider } from '@/contexts/constants-data-fetchin
 import { MatchProvider } from '@/contexts/match-context';
 import { PlayerProvider } from '@/contexts/player-context';
 import { TeamProvider } from '@/contexts/team-context';
+
 import { useTeamData } from '@/hooks/use-team-data';
 
 // Mock the data fetching contexts

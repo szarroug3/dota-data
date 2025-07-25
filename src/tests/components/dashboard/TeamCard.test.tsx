@@ -6,27 +6,45 @@ import type { TeamData } from '@/types/contexts/team-types';
 
 const mockTeamData: TeamData = {
   team: {
-    id: 'team-liquid',
+    id: 12345,
     name: 'Team Liquid',
-    leagueId: 'esl-pro-league',
-    leagueName: 'ESL Pro League',
-    isActive: true,
-    isLoading: false,
   },
   league: {
-    id: 'esl-pro-league',
+    id: 67890,
     name: 'ESL Pro League',
   },
+  timeAdded: '2024-01-01T00:00:00Z',
   matches: [],
   players: [],
-  summary: {
+  performance: {
     totalMatches: 5,
     totalWins: 3,
     totalLosses: 2,
     overallWinRate: 60,
-    lastMatchDate: '2024-01-01T00:00:00Z',
+    heroUsage: {
+      picks: [],
+      bans: [],
+      picksAgainst: [],
+      bansAgainst: [],
+      picksByPlayer: {}
+    },
+    draftStats: {
+      firstPickCount: 0,
+      secondPickCount: 0,
+      firstPickWinRate: 0,
+      secondPickWinRate: 0,
+      uniqueHeroesPicked: 0,
+      uniqueHeroesBanned: 0,
+      mostPickedHero: '',
+      mostBannedHero: ''
+    },
+    currentWinStreak: 0,
+    currentLoseStreak: 0,
     averageMatchDuration: 1800,
-    totalPlayers: 5,
+    averageKills: 0,
+    averageDeaths: 0,
+    averageGold: 0,
+    averageExperience: 0
   }
 };
 
@@ -149,7 +167,7 @@ describe('TeamCard', () => {
     const card = screen.getByRole('button', { name: 'Select team Team Liquid' });
     fireEvent.click(card);
     
-    expect(mockOnSetActiveTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
+    expect(mockOnSetActiveTeam).toHaveBeenCalledWith(12345, 67890);
   });
 
   it('should call onRefreshTeam when refresh button is clicked', () => {
@@ -228,18 +246,15 @@ describe('TeamCard', () => {
     
     // onSetActiveTeam should not be called when action buttons are clicked
     expect(mockOnSetActiveTeam).not.toHaveBeenCalled();
-    expect(mockOnRefreshTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
-    expect(mockOnEditTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
-    expect(mockOnRemoveTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
+    expect(mockOnRefreshTeam).toHaveBeenCalledWith(12345, 67890);
+    expect(mockOnEditTeam).toHaveBeenCalledWith(12345, 67890);
+    expect(mockOnRemoveTeam).toHaveBeenCalledWith(12345, 67890);
   });
 
   it('should handle team with error', () => {
     const teamWithError = {
       ...mockTeamData,
-      team: {
-        ...mockTeamData.team,
-        error: 'Failed to load team data'
-      }
+      error: 'Failed to load team data'
     };
 
     render(
@@ -260,10 +275,7 @@ describe('TeamCard', () => {
   it('should not allow selecting team with error', () => {
     const teamWithError = {
       ...mockTeamData,
-      team: {
-        ...mockTeamData.team,
-        error: 'Failed to load team data'
-      }
+      error: 'Failed to load team data'
     };
 
     render(
@@ -286,10 +298,7 @@ describe('TeamCard', () => {
   it('should show loading indicator when team is loading', () => {
     const loadingTeam = {
       ...mockTeamData,
-      team: {
-        ...mockTeamData.team,
-        isLoading: true
-      }
+      isLoading: true
     };
 
     render(
@@ -326,7 +335,7 @@ describe('TeamCard', () => {
       />
     );
     
-    expect(screen.getByText('Loading team-liquid...')).toBeInTheDocument();
+    expect(screen.getByText('Loading 12345...')).toBeInTheDocument();
   });
 
   it('should handle team with missing league name', () => {
@@ -410,10 +419,7 @@ describe('TeamCard', () => {
   it('should not display team stats when team has error', () => {
     const teamWithError = {
       ...mockTeamData,
-      team: {
-        ...mockTeamData.team,
-        error: 'Failed to load team data'
-      }
+      error: 'Failed to load team data'
     };
 
     render(

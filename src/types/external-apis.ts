@@ -522,9 +522,9 @@ export interface OpenDotaLeague {
  * Dotabuff Team response
  */
 export interface DotabuffTeam {
-  name: string;
   id: string;
-  matches: DotabuffMatchSummary[];
+  name: string;
+  matches: Record<number, DotabuffMatchSummary>;
 }
 
 /**
@@ -582,16 +582,6 @@ export interface ExternalApiError extends Error {
  * External API service enumeration
  */
 export type ExternalApiService = 'opendota' | 'dotabuff';
-
-/**
- * External API configuration union
- */
-
-
-/**
- * External API response union
- */
-
 
 export interface OpenDotaItem {
   id: number;

@@ -10,9 +10,6 @@ import { useTeamContext } from '@/contexts/team-context';
 export function useAppHydration() {
   const [isHydrating, setIsHydrating] = useState(false);
   const [hydrationError, setHydrationError] = useState<string | null>(null);
-  const [teamsListHydrated, setTeamsListHydrated] = useState(false);
-  const [constantsHydrated, setConstantsHydrated] = useState(false);
-  const [activeTeamHydrated, setActiveTeamHydrated] = useState(false);
   const hasHydratedRef = useRef(false);
 
   const configContext = useConfigContext();
@@ -50,55 +47,18 @@ export function useAppHydration() {
           contextsRef.current.constantsContext.fetchHeroes(),
           contextsRef.current.constantsContext.fetchItems()
         ]);
-        setConstantsHydrated(true);
 
         // Step 2: Load teams from config
         const teams = contextsRef.current.configContext.getTeams();
         if (teams && teams.size > 0) {
           // Delegate to team context to handle loading teams from config
           await contextsRef.current.teamContext.loadTeamsFromConfig(teams);
-          setTeamsListHydrated(true);
 
-          // Get active team info before refreshing summaries
-          const { activeTeam } = contextsRef.current.configContext;
-          const activeTeamKey = activeTeam ? `${activeTeam.teamId}-${activeTeam.leagueId}` : null;
-
-          // Refresh all team summaries in the background, but skip the active team
-          // since it will be handled separately to avoid duplicate calls
-          const allTeams = Array.from(teams.values());
-          const teamsToRefresh = allTeams.filter(team => {
-            const teamKey = `${team.team.id}-${team.league.id}`;
-            return teamKey !== activeTeamKey;
+          // Refresh all team summaries in background
+          // This will handle summary data for non-active teams and full data for active team
+          contextsRef.current.teamContext.refreshAllTeamSummaries().catch(error => {
+            console.warn('Background team refresh failed:', error);
           });
-
-          // Refresh non-active teams in background
-          if (teamsToRefresh.length > 0) {
-            const refreshPromises = teamsToRefresh.map(team =>
-              contextsRef.current.teamContext.refreshTeamSummary(team.team.id, team.league.id)
-            );
-            Promise.all(refreshPromises).catch(error => {
-              console.warn('Background team summary refresh failed:', error);
-            });
-          }
-        } else {
-          setTeamsListHydrated(true);
-        }
-
-        // Step 3: Handle active team separately to avoid duplicate calls
-        const { activeTeam } = contextsRef.current.configContext;
-        if (activeTeam) {
-          const teamKey = `${activeTeam.teamId}-${activeTeam.leagueId}`;
-          const existingTeam = contextsRef.current.teamContext.teams.get(teamKey);
-
-          if (!existingTeam) {
-            // Add the team with full data processing (includes matches and players)
-            await contextsRef.current.teamContext.addTeam(activeTeam.teamId, activeTeam.leagueId);
-          } else {
-            await contextsRef.current.teamContext.refreshTeam(activeTeam.teamId, activeTeam.leagueId);
-          }
-          setActiveTeamHydrated(true);
-        } else {
-          setActiveTeamHydrated(true);
         }
 
         hasHydratedRef.current = true;
@@ -115,9 +75,6 @@ export function useAppHydration() {
 
   return {
     isHydrating,
-    teamsListHydrated,
-    constantsHydrated,
-    activeTeamHydrated,
     hydrationError
   };
 } 

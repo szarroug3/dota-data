@@ -51,28 +51,24 @@ describe('Environment Configuration', () => {
     });
 
     it('should parse numeric environment variables correctly', () => {
-      (process.env as any).MOCK_RATE_LIMIT = '120';
       (process.env as any).OPENDOTA_API_TIMEOUT = '5000';
       (process.env as any).DOTABUFF_REQUEST_DELAY = '2000';
       
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
       
-      expect(freshEnv.MOCK_RATE_LIMIT).toBe(120);
       expect(freshEnv.OPENDOTA_API_TIMEOUT).toBe(5000);
       expect(freshEnv.DOTABUFF_REQUEST_DELAY).toBe(2000);
     });
 
     it('should use default values when environment variables are not set', () => {
       // Clear specific env vars
-      delete (process.env as any).MOCK_RATE_LIMIT;
       delete (process.env as any).OPENDOTA_API_BASE_URL;
       delete (process.env as any).DOTABUFF_BASE_URL;
       
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
       
-      expect(freshEnv.MOCK_RATE_LIMIT).toBe(60);
       expect(freshEnv.OPENDOTA_API_BASE_URL).toBe('https://api.opendota.com/api');
       expect(freshEnv.DOTABUFF_BASE_URL).toBe('https://www.dotabuff.com');
     });
@@ -116,16 +112,6 @@ describe('Environment Configuration', () => {
       }).toThrow('Invalid LOG_LEVEL: invalid. Must be one of: debug, info, warn, error');
     });
 
-    it('should throw error for negative MOCK_RATE_LIMIT', () => {
-      (process.env as any).NODE_ENV = 'development';
-      (process.env as any).MOCK_RATE_LIMIT = '-1';
-      
-      expect(() => {
-        jest.resetModules();
-        require('../../../lib/config/environment');
-      }).toThrow('MOCK_RATE_LIMIT must be greater than 0');
-    });
-
     it('should throw error for invalid URLs', () => {
       (process.env as any).NODE_ENV = 'development';
       (process.env as any).OPENDOTA_API_BASE_URL = 'not-a-url';
@@ -139,7 +125,6 @@ describe('Environment Configuration', () => {
     it('should not validate in test environment', () => {
       (process.env as any).NODE_ENV = 'test';
       (process.env as any).LOG_LEVEL = 'invalid';
-      (process.env as any).MOCK_RATE_LIMIT = '-1';
       
       expect(() => {
         jest.resetModules();
@@ -154,7 +139,6 @@ describe('Environment Configuration', () => {
       const { getEnv } = require('../../../lib/config/environment');
       expect(typeof getEnv.NODE_ENV()).toBe('string');
       expect(typeof getEnv.USE_MOCK_API()).toBe('boolean');
-      expect(typeof getEnv.MOCK_RATE_LIMIT()).toBe('number');
       expect(typeof getEnv.OPENDOTA_API_BASE_URL()).toBe('string');
     });
 
@@ -163,7 +147,6 @@ describe('Environment Configuration', () => {
       const { env, getEnv } = require('../../../lib/config/environment');
       expect(getEnv.NODE_ENV()).toBe(env.NODE_ENV);
       expect(getEnv.USE_MOCK_API()).toBe(env.USE_MOCK_API);
-      expect(getEnv.MOCK_RATE_LIMIT()).toBe(env.MOCK_RATE_LIMIT);
       expect(getEnv.OPENDOTA_API_BASE_URL()).toBe(env.OPENDOTA_API_BASE_URL);
     });
   });
@@ -235,7 +218,6 @@ describe('Environment Configuration', () => {
       expect(env).toHaveProperty('USE_MOCK_D2PT');
       expect(env).toHaveProperty('USE_MOCK_DB');
       expect(env).toHaveProperty('WRITE_REAL_DATA_TO_MOCK');
-      expect(env).toHaveProperty('MOCK_RATE_LIMIT');
       expect(env).toHaveProperty('DEBUG_LOGGING');
       expect(env).toHaveProperty('LOG_LEVEL');
       expect(env).toHaveProperty('LOG_FILE_PATH');

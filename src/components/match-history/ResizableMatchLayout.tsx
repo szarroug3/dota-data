@@ -4,6 +4,7 @@ import React from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { Match } from '@/types/contexts/match-context-value';
+import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import type { MatchDetailsPanelMode } from './details/MatchDetailsPanel';
 import { MatchDetailsPanel } from './details/MatchDetailsPanel';
@@ -17,17 +18,19 @@ interface ResizableMatchLayoutProps {
   filters: MatchFiltersType;
   onFiltersChange: (filters: MatchFiltersType) => void;
   activeTeamMatches: Match[];
+  teamMatches: Record<number, TeamMatchParticipation>;
   
   // Match list
   visibleMatches: Match[];
-  onHideMatch: (matchId: string) => void;
-  onRefreshMatch: (matchId: string) => void;
+  onHideMatch: (matchId: number) => void;
+  onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
   setViewMode: (mode: MatchListViewMode) => void;
-  selectedMatchId?: string | null;
-  onSelectMatch?: (matchId: string) => void;
+  selectedMatchId?: number | null;
+  onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
+  activeTeamSide?: 'radiant' | 'dire';
   
   // Match details
   selectedMatch: Match | null;
@@ -39,6 +42,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   filters,
   onFiltersChange,
   activeTeamMatches,
+  teamMatches,
   visibleMatches,
   onHideMatch,
   onRefreshMatch,
@@ -48,6 +52,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   onSelectMatch,
   hiddenMatchesCount = 0,
   onShowHiddenMatches,
+  activeTeamSide,
   selectedMatch,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
@@ -60,6 +65,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
           filters={filters}
           onFiltersChange={onFiltersChange}
           matches={activeTeamMatches}
+          teamMatches={teamMatches}
         />
       </div>
       
@@ -79,6 +85,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
                 onSelectMatch={onSelectMatch}
                 hiddenMatchesCount={hiddenMatchesCount}
                 onShowHiddenMatches={onShowHiddenMatches}
+                teamMatches={teamMatches}
               />
             </div>
           </ResizablePanel>

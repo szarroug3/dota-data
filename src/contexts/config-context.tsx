@@ -15,6 +15,7 @@ import type {
   ConfigContextValue,
 } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
+import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage';
 
 // ============================================================================
 // CONTEXT CREATION
@@ -39,15 +40,13 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
     return defaultValue;
   }
   
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) {
-      return JSON.parse(stored) as T;
-    }
-  } catch (error) {
-    console.warn(`Failed to load ${key} from localStorage:`, error);
+  // Check if localStorage is available
+  if (!isLocalStorageAvailable()) {
+    return defaultValue;
   }
-  return defaultValue;
+  
+  const stored = getParsedData<T>(key);
+  return stored ?? defaultValue;
 }
 
 // Helper function to save data to localStorage
@@ -57,11 +56,14 @@ function saveToStorage<T>(key: string, value: T): void {
     return;
   }
   
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.warn(`Failed to save ${key} to localStorage:`, error);
-    throw error; // Re-throw to allow error handling in the component
+  // Check if localStorage is available
+  if (!isLocalStorageAvailable()) {
+    return;
+  }
+  
+  const success = setData(key, value);
+  if (!success) {
+    console.warn(`Failed to save ${key} to localStorage`);
   }
 }
 
@@ -71,14 +73,14 @@ function loadTeamsFromStorage(): Map<string, TeamData> {
     return new Map();
   }
   
-  try {
-    const stored = localStorage.getItem(STORAGE_KEYS.TEAMS);
-    if (stored) {
-      const teamsData = JSON.parse(stored) as { [key: string]: TeamData };
-      return new Map(Object.entries(teamsData));
-    }
-  } catch (error) {
-    console.warn(`Failed to load teams from localStorage:`, error);
+  // Check if localStorage is available
+  if (!isLocalStorageAvailable()) {
+    return new Map();
+  }
+  
+  const teamsData = getParsedData<{ [key: string]: TeamData }>(STORAGE_KEYS.TEAMS);
+  if (teamsData) {
+    return new Map(Object.entries(teamsData));
   }
   return new Map();
 }
@@ -89,12 +91,16 @@ function saveTeamsToStorage(teams: Map<string, TeamData>): void {
     return;
   }
   
-  try {
-    const teamsObject = Object.fromEntries(teams);
-    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teamsObject));
-  } catch (error) {
-    console.warn(`Failed to save teams to localStorage:`, error);
-    throw error;
+  // Check if localStorage is available
+  if (!isLocalStorageAvailable()) {
+    return;
+  }
+  
+  const teamsObject = Object.fromEntries(teams);
+  
+  const success = setData(STORAGE_KEYS.TEAMS, teamsObject);
+  if (!success) {
+    console.warn('Failed to save teams to localStorage');
   }
 }
 

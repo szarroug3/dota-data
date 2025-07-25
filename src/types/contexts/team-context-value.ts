@@ -6,7 +6,7 @@
  */
 
 import type { Match } from '@/types/contexts/match-context-value';
-import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
+import type { DotabuffMatchSummary, OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
 // ============================================================================
 // TEAM DATA STRUCTURES
@@ -17,8 +17,6 @@ export interface TeamData {
   team: {
     id: number;
     name: string;
-    isActive: boolean;
-    isLoading: boolean;
   };
   
   // League information
@@ -31,7 +29,7 @@ export interface TeamData {
   timeAdded: string;
   
   // Match participation
-  matches: TeamMatchParticipation[];
+  matches: Record<number, TeamMatchParticipation>;
   
   // Player information
   players: TeamPlayer[];
@@ -46,9 +44,9 @@ export interface TeamData {
   isLoading?: boolean;
 }
 
-export interface TeamMatchParticipation {
-  matchId: number;
+export interface TeamMatchParticipation extends DotabuffMatchSummary {
   side: 'radiant' | 'dire' | null;
+  pickOrder: 'first' | 'second' | null;
 }
 
 export interface TeamPlayer {
@@ -184,7 +182,7 @@ export interface TeamContextValue {
   clearSelectedTeamId: () => void;
   
   // Core operations
-  addTeam: (teamId: number, leagueId: number) => Promise<void>;
+  addTeam: (teamId: number, leagueId: number, force?: boolean) => Promise<void>;
   refreshTeam: (teamId: number, leagueId: number) => Promise<void>;
   refreshTeamSummary: (teamId: number, leagueId: number) => Promise<void>;
   refreshAllTeamSummaries: () => Promise<void>;
@@ -216,6 +214,7 @@ export interface TeamContextProviderProps {
 export interface TeamState {
   teams: Map<string, TeamData>;
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
+  setTeamsForLoading: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
   selectedTeamId: { teamId: number; leagueId: number } | null;
   setSelectedTeamId: (team: { teamId: number; leagueId: number } | null) => void;
 }
@@ -252,7 +251,7 @@ export interface TeamActions {
   selectedTeamId: { teamId: number; leagueId: number } | null;
   
   // Core operations
-  addTeam: (teamId: number, leagueId: number) => Promise<void>;
+  addTeam: (teamId: number, leagueId: number, force?: boolean) => Promise<void>;
   refreshTeam: (teamId: number, leagueId: number) => Promise<void>;
   refreshTeamSummary: (teamId: number, leagueId: number) => Promise<void>;
   refreshAllTeamSummaries: () => Promise<void>;

@@ -132,10 +132,12 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     setValidation(validateTeamForm(teamId, leagueId));
   }, [teamId, leagueId]);
 
-  const isDisabled = !validation.isValid || teamExists(teamId, leagueId) || isSubmitting;
+  // Only disable if team already exists or is submitting
+  const isDisabled = teamExists(teamId, leagueId) || isSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!isDisabled) {
       const currentTeamId = teamId;
       const currentLeagueId = leagueId;
@@ -150,6 +152,10 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     if (teamExists(teamId, leagueId)) return 'Team Already Imported';
     return 'Add Team';
   };
+
+  // Only show errors for fields that have been touched (have content)
+  const shouldShowTeamError = teamId.trim().length > 0 ? validation.errors.teamId : undefined;
+  const shouldShowLeagueError = leagueId.trim().length > 0 ? validation.errors.leagueId : undefined;
 
   return (
     <Card>
@@ -170,7 +176,7 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               onChange={onTeamIdChange}
               disabled={isSubmitting}
               helpText="Find this in Dotabuff team URLs"
-              error={validation.errors.teamId}
+              error={shouldShowTeamError}
               isValid={!validation.errors.teamId}
             />
             <FormFieldInput
@@ -181,7 +187,7 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               onChange={onLeagueIdChange}
               disabled={isSubmitting}
               helpText="Find this in Dotabuff league URLs"
-              error={validation.errors.leagueId}
+              error={shouldShowLeagueError}
               isValid={!validation.errors.leagueId}
             />
           </FormRow>

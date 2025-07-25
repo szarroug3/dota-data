@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 
 interface ExternalSiteButtonProps {
-  matchId: string;
+  matchId: number;
   preferredSite: PreferredExternalSite;
   className?: string;
   size?: 'sm' | 'default';

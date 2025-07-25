@@ -50,7 +50,6 @@ nano .env.local
 | `USE_MOCK_STRATZ` | boolean | `true` | Mock Stratz API calls |
 | `USE_MOCK_D2PT` | boolean | `true` | Mock Dota2ProTracker API calls |
 | `WRITE_REAL_DATA_TO_MOCK` | boolean | `false` | Save real API responses to mock files |
-| `MOCK_RATE_LIMIT` | number | `60` | Mock rate limit (requests per minute) |
 
 ## Logging Configuration
 

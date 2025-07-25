@@ -6,12 +6,12 @@ import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
 import { useMatchContext } from '@/contexts/match-context';
 import { useTeamContext } from '@/contexts/team-context';
+import { useMatchFilters } from '@/hooks/use-match-filters';
 import useViewMode from '@/hooks/useViewMode';
 import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { EmptyState } from './common/EmptyState';
-import { ErrorState } from './common/ErrorState';
 import { type MatchDetailsPanelMode } from './details/MatchDetailsPanel';
 import { type MatchFilters as MatchFiltersType } from './filters/MatchFilters';
 import { HiddenMatchesModal } from './list/HiddenMatchesModal';
@@ -20,12 +20,83 @@ import { ResizableMatchLayout } from './ResizableMatchLayout';
 import { HeroSummaryTable } from './summary/HeroSummaryTable';
 
 // ============================================================================
-// TYPES
-// ============================================================================
-
-// ============================================================================
 // CUSTOM HOOKS
 // ============================================================================
+
+function useMatchData() {
+  const { getSelectedTeam } = useTeamContext();
+  const { getMatch } = useMatchContext();
+
+  // Get matches for active team from team context and match context
+  const activeTeamMatches = useMemo(() => {
+    const selectedTeam = getSelectedTeam();
+    if (!selectedTeam) return [];
+    
+    // Get match IDs from team data
+    const matchIds = Object.keys(selectedTeam.matches).map(Number);
+    
+    // Retrieve full match data for each ID using getMatch
+    return matchIds
+      .map((id: number) => getMatch(id))
+      .filter((match): match is Match => match !== undefined);
+  }, [getSelectedTeam, getMatch]);
+
+  return {
+    activeTeamMatches
+  };
+}
+
+function useMatchSelection() {
+  const { selectedMatchId, getMatch, setSelectedMatchId } = useMatchContext();
+
+  // Get selected match from context
+  const selectedMatch = useMemo(() => {
+    return selectedMatchId ? getMatch(selectedMatchId) || null : null;
+  }, [selectedMatchId, getMatch]);
+
+  const selectMatch = (matchId: number) => {
+    setSelectedMatchId(matchId);
+  };
+
+  return {
+    selectedMatch,
+    selectMatch
+  };
+}
+
+function useHiddenMatches(filteredMatches: Match[]) {
+  const [hiddenMatches, setHiddenMatches] = useState<Match[]>([]);
+  const [showHiddenModal, setShowHiddenModal] = useState(false);
+
+  // Hide a match (remove from visible, add to hidden)
+  const handleHideMatch = useCallback((id: number) => {
+    setHiddenMatches(prev => {
+      const matchToHide = filteredMatches.find((m: Match) => m.id === id);
+      if (!matchToHide) return prev;
+      return [...prev, matchToHide];
+    });
+  }, [filteredMatches]);
+
+  // Unhide a match (remove from hidden, add back to visible)
+  const handleUnhideMatch = useCallback((id: number) => {
+    setHiddenMatches(prev => prev.filter((m: Match) => m.id !== id));
+  }, []);
+
+  // Filter out hidden matches from the visible list
+  const visibleMatches = useMemo(() => {
+    const hiddenIds = new Set(hiddenMatches.map((m: Match) => m.id));
+    return filteredMatches.filter((m: Match) => !hiddenIds.has(m.id));
+  }, [filteredMatches, hiddenMatches]);
+
+  return {
+    hiddenMatches,
+    showHiddenModal,
+    setShowHiddenModal,
+    handleHideMatch,
+    handleUnhideMatch,
+    visibleMatches
+  };
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -41,30 +112,80 @@ function getMatchHistoryEmptyState(teamDataList: TeamData[], activeTeam: { teamI
   return null;
 }
 
-function getMatchHistoryLoadingState(isCoordinatorLoading: boolean, isLoading: boolean) {
-  if (isCoordinatorLoading || isLoading) {
-    return <LoadingSkeleton type="text" lines={8} />;
-  }
-  return null;
+// Helper function to render the main content area
+function renderMainContent(
+  filters: MatchFiltersType,
+  setFilters: (filters: MatchFiltersType) => void,
+  activeTeamMatches: Match[],
+  teamMatches: Record<number, TeamMatchParticipation>,
+  visibleMatches: Match[],
+  handleHideMatch: (id: number) => void,
+  handleRefreshMatch: (id: number) => void,
+  viewMode: MatchListViewMode,
+  setViewMode: (mode: MatchListViewMode) => void,
+  selectedMatch: Match | null,
+  selectMatch: (matchId: number) => void,
+  hiddenMatches: Match[],
+  setShowHiddenModal: (show: boolean) => void,
+  matchDetailsViewMode: MatchDetailsPanelMode,
+  setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
+  activeTeamSide: 'radiant' | 'dire' | undefined
+) {
+  return (
+    <div className="h-full">
+      <ResizableMatchLayout
+        filters={filters}
+        onFiltersChange={setFilters}
+        activeTeamMatches={activeTeamMatches}
+        teamMatches={teamMatches}
+        visibleMatches={visibleMatches}
+        onHideMatch={handleHideMatch}
+        onRefreshMatch={handleRefreshMatch}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        selectedMatchId={selectedMatch?.id || null}
+        onSelectMatch={selectMatch}
+        hiddenMatchesCount={hiddenMatches.length}
+        onShowHiddenMatches={() => setShowHiddenModal(true)}
+        selectedMatch={selectedMatch}
+        matchDetailsViewMode={matchDetailsViewMode}
+        setMatchDetailsViewMode={setMatchDetailsViewMode}
+        activeTeamSide={activeTeamSide}
+      />
+    </div>
+  );
 }
 
-function getMatchHistoryErrorState(coordinatorError: string | null, matchesError: string | null) {
-  if (coordinatorError) {
-    return <ErrorState error={coordinatorError} onRetry={() => {}} />;
-  }
-  if (matchesError) {
-    return <ErrorState error={matchesError} onRetry={() => window.location.reload()} />;
-  }
-  return null;
+// Helper function to render the hero summary table
+function renderHeroSummaryTable(visibleMatches: Match[]) {
+  return (
+    <div className="p-4">
+      <HeroSummaryTable matches={visibleMatches} />
+    </div>
+  );
+}
+
+// Helper function to render the hidden matches modal
+function renderHiddenMatchesModal(
+  showHiddenModal: boolean,
+  hiddenMatches: Match[],
+  handleUnhideMatch: (id: number) => void,
+  setShowHiddenModal: (show: boolean) => void
+) {
+  if (!showHiddenModal) return null;
+  
+  return (
+    <HiddenMatchesModal
+      hiddenMatches={hiddenMatches}
+      onUnhide={handleUnhideMatch}
+      onClose={() => setShowHiddenModal(false)}
+    />
+  );
 }
 
 const renderMatchHistoryContent = (
   teamDataList: TeamData[],
   activeTeam: { teamId: string; leagueId: string } | null,
-  isCoordinatorLoading: boolean,
-  coordinatorError: string | null,
-  isLoading: boolean,
-  matchesError: string | null,
   hiddenMatches: Match[],
   showHiddenModal: boolean,
   setShowHiddenModal: (show: boolean) => void,
@@ -72,72 +193,90 @@ const renderMatchHistoryContent = (
   setFilters: (filters: MatchFiltersType) => void,
   visibleMatches: Match[],
   activeTeamMatches: Match[],
-  handleHideMatch: (id: string) => void,
-  handleUnhideMatch: (id: string) => void,
+  teamMatches: Record<number, TeamMatchParticipation>,
+  handleHideMatch: (id: number) => void,
+  handleUnhideMatch: (id: number) => void,
   viewMode: MatchListViewMode,
   setViewMode: (mode: MatchListViewMode) => void,
   selectedMatch: Match | null,
-  selectMatch: (matchId: string) => void,
+  selectMatch: (matchId: number) => void,
   matchDetailsViewMode: MatchDetailsPanelMode,
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
-  handleRefreshMatch: (id: string) => void
+  handleRefreshMatch: (id: number) => void,
+  activeTeamSide: 'radiant' | 'dire' | undefined
 ) => {
   const emptyState = getMatchHistoryEmptyState(teamDataList, activeTeam);
   if (emptyState) return emptyState;
-  const loadingState = getMatchHistoryLoadingState(isCoordinatorLoading, isLoading);
-  if (loadingState) return loadingState;
-  const errorState = getMatchHistoryErrorState(coordinatorError, matchesError);
-  if (errorState) return errorState;
 
   return (
     <>
-      <div className="h-full">
-        <ResizableMatchLayout
-          filters={filters}
-          onFiltersChange={setFilters}
-          activeTeamMatches={activeTeamMatches}
-          visibleMatches={visibleMatches}
-          onHideMatch={handleHideMatch}
-          onRefreshMatch={handleRefreshMatch}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          selectedMatchId={selectedMatch?.id || null}
-          onSelectMatch={selectMatch}
-          hiddenMatchesCount={hiddenMatches.length}
-          onShowHiddenMatches={() => setShowHiddenModal(true)}
-          selectedMatch={selectedMatch}
-          matchDetailsViewMode={matchDetailsViewMode}
-          setMatchDetailsViewMode={setMatchDetailsViewMode}
-        />
-      </div>
+      {renderMainContent(
+        filters,
+        setFilters,
+        activeTeamMatches,
+        teamMatches,
+        visibleMatches,
+        handleHideMatch,
+        handleRefreshMatch,
+        viewMode,
+        setViewMode,
+        selectedMatch,
+        selectMatch,
+        hiddenMatches,
+        setShowHiddenModal,
+        matchDetailsViewMode,
+        setMatchDetailsViewMode,
+        activeTeamSide
+      )}
       
-      {/* Hero Summary Table - Bottom of page */}
-      <div className="p-4">
-        <HeroSummaryTable matches={visibleMatches} />
-      </div>
+      {renderHeroSummaryTable(visibleMatches)}
       
-      {showHiddenModal && (
-        <HiddenMatchesModal
-          hiddenMatches={hiddenMatches}
-          onUnhide={handleUnhideMatch}
-          onClose={() => setShowHiddenModal(false)}
-        />
+      {renderHiddenMatchesModal(
+        showHiddenModal,
+        hiddenMatches,
+        handleUnhideMatch,
+        setShowHiddenModal
       )}
     </>
   );
 };
+
+// Helper function to determine activeTeamSide from team data
+function determineActiveTeamSide(
+  teamMatches: Record<number, TeamMatchParticipation>,
+  getSelectedTeam: () => TeamData | undefined,
+  activeTeamMatches: Match[]
+): 'radiant' | 'dire' | undefined {
+  
+  const matchEntries = Object.entries(teamMatches);
+  if (matchEntries.length > 0) {
+    const [, firstMatch] = matchEntries[0];
+    
+    // If we have side information, use it
+    if (firstMatch.side) {
+      return firstMatch.side;
+    }
+    
+    // Fallback: try to determine side from match data
+    const selectedTeam = getSelectedTeam();
+    if (selectedTeam && activeTeamMatches.length > 0) {
+      const firstActiveMatch = activeTeamMatches[0];
+      if (firstActiveMatch.radiant.id === selectedTeam.team.id) {
+        return 'radiant';
+      } else if (firstActiveMatch.dire.id === selectedTeam.team.id) {
+        return 'dire';
+      }
+    }
+  }
+}
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 export const MatchHistoryPage: React.FC = () => {
-  const { activeTeam, getAllTeams } = useTeamContext();
-  const { 
-    isLoading, 
-    error: matchesError,
-    setSelectedMatchId
-  } = useMatchContext();
+  const { getSelectedTeam, getAllTeams } = useTeamContext();
+  const { refreshMatch } = useMatchContext();
 
   // Local state for filters (using MatchFiltersType)
   const [filters, setFilters] = useState<MatchFiltersType>({
@@ -150,12 +289,10 @@ export const MatchHistoryPage: React.FC = () => {
     opponent: [],
     teamSide: 'all',
     pickOrder: 'all',
-    heroesPlayed: []
+    heroesPlayed: [],
+    matchDuration: 'all',
+    playerPerformance: []
   });
-
-  // Local state for hidden matches and modal
-  const [hiddenMatches, setHiddenMatches] = useState<Match[]>([]);
-  const [showHiddenModal, setShowHiddenModal] = useState(false);
 
   // View mode with localStorage persistence (from hook)
   const { viewMode, setViewMode } = useViewMode();
@@ -163,57 +300,59 @@ export const MatchHistoryPage: React.FC = () => {
   // State for match details view mode
   const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft-events');
 
-  // Refresh a match (stub for now)
-  const handleRefreshMatch = (_id: string) => {
-    // TODO: Implement actual refresh logic
-  };
+  // Get matches for active team from team context and match context
+  const { activeTeamMatches } = useMatchData();
 
-  // Get matches for active team from team context
-  const activeTeamMatches = useMemo(() => {
-    if (!activeTeam) return [];
-    // For now, return empty array - this needs to be implemented based on actual team data structure
-    return [];
-  }, [activeTeam]);
+  // Get team matches from the selected team
+  const teamMatches = useMemo(() => {
+    const selectedTeam = getSelectedTeam();
+    return selectedTeam?.matches || {};
+  }, [getSelectedTeam]);
 
-  // Apply filters - for now, return all matches since filterMatches was removed
-  const filteredMatches = useMemo(() => {
-    return activeTeamMatches;
-  }, [activeTeamMatches]);
+  // Determine activeTeamSide from the first match in teamMatches
+  const activeTeamSide = useMemo(() => {
+    return determineActiveTeamSide(teamMatches, getSelectedTeam, activeTeamMatches);
+  }, [teamMatches, getSelectedTeam, activeTeamMatches]);
+
+  // Apply filters using the new hook
+  const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters);
 
   // Hide a match (remove from visible, add to hidden)
-  const handleHideMatch = useCallback((id: string) => {
-    setHiddenMatches(prev => {
-      const matchToHide = filteredMatches.find(m => m.id === id);
-      if (!matchToHide) return prev;
-      return [...prev, matchToHide];
-    });
-  }, [filteredMatches]);
-
-  // Unhide a match (remove from hidden, add back to visible)
-  const handleUnhideMatch = useCallback((id: string) => {
-    setHiddenMatches(prev => prev.filter(m => m.id !== id));
-  }, []);
-
-  // Filter out hidden matches from the visible list
-  const visibleMatches = useMemo(() => {
-    const hiddenIds = new Set(hiddenMatches.map(m => m.id));
-    return filteredMatches.filter(m => !hiddenIds.has(m.id));
-  }, [filteredMatches, hiddenMatches]);
+  const { 
+    hiddenMatches, 
+    showHiddenModal, 
+    setShowHiddenModal, 
+    handleHideMatch, 
+    handleUnhideMatch, 
+    visibleMatches 
+  } = useHiddenMatches(filteredMatches);
 
   // Convert teams map to array for compatibility
   const teamDataList = useMemo(() => {
     return getAllTeams();
   }, [getAllTeams]);
 
-  // Mock coordinator state for now
-  const isCoordinatorLoading = false;
-  const coordinatorError = null;
+  // Get selected match from context
+  const { selectedMatch, selectMatch } = useMatchSelection();
 
-  // Mock selected match for now
-  const selectedMatch = null;
-  const selectMatch = (matchId: string) => {
-    setSelectedMatchId(matchId);
-  };
+  // Convert selectedTeamId to the expected format for the render function
+  const activeTeam = useMemo(() => {
+    const selectedTeam = getSelectedTeam();
+    if (!selectedTeam) return null;
+    return {
+      teamId: selectedTeam.team.id.toString(),
+      leagueId: selectedTeam.league.id.toString()
+    };
+  }, [getSelectedTeam]);
+
+  // Refresh a match using the match context
+  const handleRefreshMatch = useCallback(async (matchId: number) => {
+    try {
+      await refreshMatch(matchId);
+    } catch (error) {
+      console.error(`Failed to refresh match ${matchId}:`, error);
+    }
+  }, [refreshMatch]);
 
   return (
     <ErrorBoundary>
@@ -224,10 +363,6 @@ export const MatchHistoryPage: React.FC = () => {
               {renderMatchHistoryContent(
                 teamDataList,
                 activeTeam,
-                isCoordinatorLoading,
-                coordinatorError,
-                isLoading,
-                matchesError,
                 hiddenMatches,
                 showHiddenModal,
                 setShowHiddenModal,
@@ -235,6 +370,7 @@ export const MatchHistoryPage: React.FC = () => {
                 setFilters,
                 visibleMatches,
                 activeTeamMatches,
+                teamMatches,
                 handleHideMatch,
                 handleUnhideMatch,
                 viewMode,
@@ -243,7 +379,8 @@ export const MatchHistoryPage: React.FC = () => {
                 selectMatch,
                 matchDetailsViewMode,
                 setMatchDetailsViewMode,
-                handleRefreshMatch
+                handleRefreshMatch,
+                activeTeamSide
               )}
             </Suspense>
           </div>

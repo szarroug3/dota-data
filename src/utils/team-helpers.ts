@@ -27,15 +27,13 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
     team: {
       id: teamId,
       name: `Loading ${teamId}`,
-      isActive: false,
-      isLoading: true
     },
     league: {
       id: leagueId,
       name: `Loading ${leagueId}`
     },
     timeAdded: new Date().toISOString(),
-    matches: [],
+    matches: {},
     players: [],
     performance: {
       totalMatches: 0,
@@ -79,9 +77,9 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
  * Determine team side from match data
  */
 export function determineTeamSideFromMatch(match: Match, teamId: number): 'radiant' | 'dire' {
-  if (match.radiantTeamId === teamId) {
+  if (match.radiant.id === teamId) {
     return 'radiant';
-  } else if (match.direTeamId === teamId) {
+  } else if (match.dire.id === teamId) {
     return 'dire';
   }
   
@@ -209,7 +207,7 @@ export function setTeamLoading(
  */
 export function updateTeamPerformance(
   team: TeamData,
-  matchesWithCorrectSides: Array<{ matchId: number; side: 'radiant' | 'dire' | null }>,
+  matchesWithCorrectSides: Record<number, TeamMatchParticipation>,
   originalTeamData: { matches: Array<{ matchId: number; result: string }> }
 ): TeamData {
   return {
@@ -217,13 +215,13 @@ export function updateTeamPerformance(
     matches: matchesWithCorrectSides,
     performance: {
       ...team.performance,
-      totalMatches: matchesWithCorrectSides.length,
-      totalWins: matchesWithCorrectSides.filter(match => {
+      totalMatches: Object.keys(matchesWithCorrectSides).length,
+      totalWins: Object.values(matchesWithCorrectSides).filter(match => {
         // We need to determine win/loss from the original match summary data
         const originalMatch = originalTeamData.matches.find(m => m.matchId === match.matchId);
         return originalMatch?.result === 'won';
       }).length,
-      totalLosses: matchesWithCorrectSides.filter(match => {
+      totalLosses: Object.values(matchesWithCorrectSides).filter(match => {
         const originalMatch = originalTeamData.matches.find(m => m.matchId === match.matchId);
         return originalMatch?.result === 'lost';
       }).length
@@ -257,6 +255,85 @@ export function createTeamUpdater(
 }
 
 /**
+ * Create new team data for editing operation
+ */
+function createNewTeamDataForEdit(
+  newTeamId: number,
+  newLeagueId: number,
+  existingTeam: TeamData | undefined
+): TeamData {
+  const newTeamData = createInitialTeamData(newTeamId, newLeagueId);
+  
+  // If editing an existing team, preserve the timeAdded
+  if (existingTeam) {
+    newTeamData.timeAdded = existingTeam.timeAdded;
+  }
+  
+  return newTeamData;
+}
+
+/**
+ * Persist team edit changes immediately
+ */
+function persistTeamEditImmediately(
+  currentKey: string,
+  newKey: string,
+  newTeamData: TeamData,
+  state: {
+    teams: Map<string, TeamData>;
+  },
+  configContext: { setTeams: (teams: Map<string, TeamData>) => void }
+): void {
+  try {
+    const currentTeams = new Map(state.teams);
+    currentTeams.delete(currentKey);
+    currentTeams.set(newKey, newTeamData);
+    configContext.setTeams(currentTeams);
+  } catch (error) {
+    console.warn('Failed to persist team edit immediately:', error);
+  }
+}
+
+/**
+ * Update state with team edit changes
+ */
+function updateStateWithTeamEdit(
+  currentKey: string,
+  newKey: string,
+  newTeamData: TeamData,
+  state: {
+    setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
+  }
+): void {
+  state.setTeams(prev => {
+    const newTeams = new Map(prev);
+    newTeams.delete(currentKey);
+    newTeams.set(newKey, newTeamData);
+    return newTeams;
+  });
+}
+
+/**
+ * Persist updated team data after fetching
+ */
+function persistUpdatedTeamData(
+  newKey: string,
+  updatedTeamData: TeamData,
+  state: {
+    teams: Map<string, TeamData>;
+  },
+  configContext: { setTeams: (teams: Map<string, TeamData>) => void }
+): void {
+  try {
+    const currentTeams = new Map(state.teams);
+    currentTeams.set(newKey, updatedTeamData);
+    configContext.setTeams(currentTeams);
+  } catch (error) {
+    console.warn('Failed to update team persistence after edit:', error);
+  }
+}
+
+/**
  * Helper function to edit team data (change team ID and league ID)
  */
 export async function editTeamData(
@@ -276,52 +353,13 @@ export async function editTeamData(
   const newKey = generateTeamKey(newTeamId, newLeagueId);
   
   // Create new team data
-  const newTeamData = createInitialTeamData(newTeamId, newLeagueId);
+  const newTeamData = createNewTeamDataForEdit(newTeamId, newLeagueId, existingTeam);
   
-  // If editing an existing team, preserve the timeAdded and remove the old team
-  if (existingTeam) {
-    newTeamData.timeAdded = existingTeam.timeAdded;
-    
-    // PERSIST IMMEDIATELY: Remove old team and add new team with loading state
-    try {
-      const currentTeams = new Map(state.teams);
-      currentTeams.delete(currentKey);
-      currentTeams.set(newKey, newTeamData);
-      configContext.setTeams(currentTeams);
-    } catch (error) {
-      console.warn('Failed to persist team edit immediately:', error);
-      // Continue with the operation even if persistence fails
-    }
-    
-    // Update state immediately (remove old, add new with loading state)
-    state.setTeams(prev => {
-      const newTeams = new Map(prev);
-      newTeams.delete(currentKey);
-      newTeams.set(newKey, newTeamData);
-      return newTeams;
-    });
-  } else {
-    // If team doesn't exist, just add it as a new team
-    // This shouldn't happen in normal UI flow, but handle gracefully
-    
-    // PERSIST IMMEDIATELY: Add new team to localStorage right away
-    try {
-      const currentTeams = new Map(state.teams);
-      currentTeams.set(newKey, newTeamData);
-      configContext.setTeams(currentTeams);
-    } catch (error) {
-      console.warn('Failed to persist new team immediately:', error);
-      // Continue with the operation even if persistence fails
-    }
-    
-    state.setTeams(prev => {
-      const newTeams = new Map(prev);
-      newTeams.set(newKey, newTeamData);
-      return newTeams;
-    });
-  }
+  // Persist and update state immediately
+  persistTeamEditImmediately(currentKey, newKey, newTeamData, state, configContext);
+  updateStateWithTeamEdit(currentKey, newKey, newTeamData, state);
   
-  // Fetch team and league data (use existing team data if available, otherwise use new team data)
+  // Fetch team and league data
   const teamDataToFetch = existingTeam || newTeamData;
   const updatedTeamData = await fetchTeamAndLeagueData(teamDataToFetch, false);
   
@@ -332,15 +370,8 @@ export async function editTeamData(
     return newTeams;
   });
   
-  // UPDATE PERSISTENCE: Update localStorage with fetched data
-  try {
-    const currentTeams = new Map(state.teams);
-    currentTeams.set(newKey, updatedTeamData);
-    configContext.setTeams(currentTeams);
-  } catch (error) {
-    console.warn('Failed to update team persistence after edit:', error);
-    // Continue even if persistence update fails
-  }
+  // Persist updated data
+  persistUpdatedTeamData(newKey, updatedTeamData, state, configContext);
 }
 
 /**
@@ -353,7 +384,7 @@ export function cleanupUnusedData(
   playerContext: { removePlayer: (playerId: number) => void }
 ) {
   // Get all match IDs from the removed team
-  const matchIdsToCheck = teamToRemove.matches.map(match => match.matchId);
+  const matchIdsToCheck = Object.keys(teamToRemove.matches).map(Number);
   
   // Get all player IDs from the removed team
   const playerIdsToCheck = teamToRemove.players.map(player => player.accountId);
@@ -364,8 +395,8 @@ export function cleanupUnusedData(
   
   remainingTeams.forEach(team => {
     // Collect match IDs used by other teams
-    team.matches.forEach(match => {
-      usedMatchIds.add(match.matchId);
+    Object.keys(team.matches).forEach(matchId => {
+      usedMatchIds.add(Number(matchId));
     });
     
     // Collect player IDs used by other teams
@@ -390,6 +421,55 @@ export function cleanupUnusedData(
 } 
 
 /**
+ * Add team to state and return updated teams map
+ */
+function addTeamToState(
+  teamId: number,
+  leagueId: number,
+  processedTeam: TeamData,
+  state: {
+    setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
+  }
+): Map<string, TeamData> {
+  const teamKey = generateTeamKey(teamId, leagueId);
+  let updatedTeams: Map<string, TeamData>;
+  
+  state.setTeams(prev => {
+    const newTeams = new Map(prev);
+    newTeams.set(teamKey, processedTeam);
+    updatedTeams = newTeams;
+    return newTeams;
+  });
+  
+  return updatedTeams!;
+}
+
+/**
+ * Process matches to get correct sides
+ */
+async function processMatchesForTeam(
+  originalTeamData: { matches: Array<{ matchId: number; result: string }> },
+  teamId: number,
+  processMatchAndExtractPlayers: (matchId: number, teamId: number, matchContext: MatchContextValue, playerContext: PlayerContextValue) => Promise<TeamMatchParticipation | null>,
+  matchContext: MatchContextValue,
+  playerContext: PlayerContextValue
+): Promise<Record<number, TeamMatchParticipation>> {
+  const matchesWithCorrectSides: Record<number, TeamMatchParticipation> = {};
+
+  // Check if team data has matches and is not an error
+  if (originalTeamData.matches?.length > 0) {
+    for (const matchSummary of originalTeamData.matches) {
+      const matchParticipation = await processMatchAndExtractPlayers(matchSummary.matchId, teamId, matchContext, playerContext);
+      if (matchParticipation) {
+        matchesWithCorrectSides[matchSummary.matchId] = matchParticipation;
+      }
+    }
+  }
+
+  return matchesWithCorrectSides;
+}
+
+/**
  * Helper function to process team data and update state
  */
 export async function processTeamDataWithState(
@@ -406,36 +486,25 @@ export async function processTeamDataWithState(
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue
 ): Promise<Map<string, TeamData>> {
-  const teamKey = generateTeamKey(teamId, leagueId);
-
   // Add the team to state first
-  let updatedTeams: Map<string, TeamData>;
-  state.setTeams(prev => {
-    const newTeams = new Map(prev);
-    newTeams.set(teamKey, processedTeam);
-    updatedTeams = newTeams;
-    return newTeams;
-  });
+  const updatedTeams = addTeamToState(teamId, leagueId, processedTeam, state);
 
   // Process each match to get the correct side and update the team data
-  const matchesWithCorrectSides: Array<{ matchId: number; side: 'radiant' | 'dire' | null }> = [];
-
-  // Check if team data has matches and is not an error
-  if (originalTeamData.matches?.length > 0) {
-    for (const matchSummary of originalTeamData.matches) {
-      const matchParticipation = await processMatchAndExtractPlayers(matchSummary.matchId, teamId, matchContext, playerContext);
-      if (matchParticipation) {
-        matchesWithCorrectSides.push(matchParticipation);
-      }
-    }
-  }
+  const matchesWithCorrectSides = await processMatchesForTeam(
+    originalTeamData,
+    teamId,
+    processMatchAndExtractPlayers,
+    matchContext,
+    playerContext
+  );
 
   // Update the team with the matches that have correct sides
+  const teamKey = generateTeamKey(teamId, leagueId);
   updateTeam(teamKey, (team) => updateTeamPerformance(team, matchesWithCorrectSides, originalTeamData));
   
   // Set loading to false after processing is complete
   state.setIsLoading(false);
   
   // Return the updated teams Map
-  return updatedTeams!;
+  return updatedTeams;
 } 

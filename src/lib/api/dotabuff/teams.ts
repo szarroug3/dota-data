@@ -130,7 +130,7 @@ function parseMatchRow($: cheerio.CheerioAPI, row: cheerio.Cheerio<Element>): Do
   const startTime = extractStartTime($(tds[1])) || 0;
 
   return {
-    matchId,
+    matchId: parseInt(matchId, 10),
     result,
     duration,
     opponentName,
@@ -153,12 +153,12 @@ function parseDotabuffTeamHtml(html: string, teamId: string): DotabuffTeam {
     throw new Error('Could not parse team name from Dotabuff HTML');
   }
 
-  const matches: DotabuffMatchSummary[] = [];
+  const matches: Record<number, DotabuffMatchSummary> = {};
 
   $('table.table.recent-esports-matches tbody tr').each((_, el) => {
     const match = parseMatchRow($, $(el));
     if (match) {
-      matches.push(match);
+      matches[match.matchId] = match;
     }
   });
 
