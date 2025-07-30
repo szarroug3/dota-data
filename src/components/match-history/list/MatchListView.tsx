@@ -27,7 +27,6 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   onHideMatch,
   onRefreshMatch,
   viewMode,
-  className = '',
   teamMatches,
 }) => {
   if (viewMode === 'list') {
@@ -38,7 +37,6 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        className={className}
         teamMatches={teamMatches}
       />
     );
@@ -51,7 +49,6 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        className={className}
         teamMatches={teamMatches}
       />
     );
@@ -63,13 +60,12 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         selectedMatchId={selectedMatchId}
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
-        className={className}
         teamMatches={teamMatches}
       />
     );
   }
   return (
-    <div className={`flex items-center justify-center p-8 text-muted-foreground ${className}`}>
+    <div className={`flex items-center justify-center p-8 text-muted-foreground`}>
       <div className="text-center">
         <div className="text-lg font-medium mb-2">This view mode is not yet implemented.</div>
         <div className="text-sm">Try switching to list, card, or grid view.</div>

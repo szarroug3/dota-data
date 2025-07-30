@@ -128,8 +128,7 @@ function renderMainContent(
   hiddenMatches: Match[],
   setShowHiddenModal: (show: boolean) => void,
   matchDetailsViewMode: MatchDetailsPanelMode,
-  setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
-  activeTeamSide: 'radiant' | 'dire' | undefined
+  setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void
 ) {
   return (
     <div className="h-full">
@@ -150,7 +149,6 @@ function renderMainContent(
         selectedMatch={selectedMatch}
         matchDetailsViewMode={matchDetailsViewMode}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
-        activeTeamSide={activeTeamSide}
       />
     </div>
   );
@@ -202,8 +200,7 @@ const renderMatchHistoryContent = (
   selectMatch: (matchId: number) => void,
   matchDetailsViewMode: MatchDetailsPanelMode,
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void,
-  handleRefreshMatch: (id: number) => void,
-  activeTeamSide: 'radiant' | 'dire' | undefined
+  handleRefreshMatch: (id: number) => void
 ) => {
   const emptyState = getMatchHistoryEmptyState(teamDataList, activeTeam);
   if (emptyState) return emptyState;
@@ -225,8 +222,7 @@ const renderMatchHistoryContent = (
         hiddenMatches,
         setShowHiddenModal,
         matchDetailsViewMode,
-        setMatchDetailsViewMode,
-        activeTeamSide
+        setMatchDetailsViewMode
       )}
       
       {renderHeroSummaryTable(visibleMatches)}
@@ -240,35 +236,6 @@ const renderMatchHistoryContent = (
     </>
   );
 };
-
-// Helper function to determine activeTeamSide from team data
-function determineActiveTeamSide(
-  teamMatches: Record<number, TeamMatchParticipation>,
-  getSelectedTeam: () => TeamData | undefined,
-  activeTeamMatches: Match[]
-): 'radiant' | 'dire' | undefined {
-  
-  const matchEntries = Object.entries(teamMatches);
-  if (matchEntries.length > 0) {
-    const [, firstMatch] = matchEntries[0];
-    
-    // If we have side information, use it
-    if (firstMatch.side) {
-      return firstMatch.side;
-    }
-    
-    // Fallback: try to determine side from match data
-    const selectedTeam = getSelectedTeam();
-    if (selectedTeam && activeTeamMatches.length > 0) {
-      const firstActiveMatch = activeTeamMatches[0];
-      if (firstActiveMatch.radiant.id === selectedTeam.team.id) {
-        return 'radiant';
-      } else if (firstActiveMatch.dire.id === selectedTeam.team.id) {
-        return 'dire';
-      }
-    }
-  }
-}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -298,7 +265,7 @@ export const MatchHistoryPage: React.FC = () => {
   const { viewMode, setViewMode } = useViewMode();
 
   // State for match details view mode
-  const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft-events');
+  const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft');
 
   // Get matches for active team from team context and match context
   const { activeTeamMatches } = useMatchData();
@@ -308,11 +275,6 @@ export const MatchHistoryPage: React.FC = () => {
     const selectedTeam = getSelectedTeam();
     return selectedTeam?.matches || {};
   }, [getSelectedTeam]);
-
-  // Determine activeTeamSide from the first match in teamMatches
-  const activeTeamSide = useMemo(() => {
-    return determineActiveTeamSide(teamMatches, getSelectedTeam, activeTeamMatches);
-  }, [teamMatches, getSelectedTeam, activeTeamMatches]);
 
   // Apply filters using the new hook
   const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters);
@@ -379,8 +341,7 @@ export const MatchHistoryPage: React.FC = () => {
                 selectMatch,
                 matchDetailsViewMode,
                 setMatchDetailsViewMode,
-                handleRefreshMatch,
-                activeTeamSide
+                handleRefreshMatch
               )}
             </Suspense>
           </div>

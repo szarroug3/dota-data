@@ -2,6 +2,7 @@ import { Eye, LayoutGrid, List, SquareStack } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
@@ -29,31 +30,34 @@ const MatchListLayoutButtons: React.FC<MatchListLayoutButtonsProps> = ({
   viewMode, 
   setViewMode,
 }) => (
-  <div className="@[160px]:flex hidden">
-    <button
-      type="button"
-      className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-      aria-label="List view"
+  <div className="@[180px]:flex hidden gap-2">
+    <Button
+      variant={viewMode === 'list' ? 'default' : 'outline'}
+      size="sm"
+      className={`flex items-center gap-2`}
       onClick={() => setViewMode('list')}
     >
       <List className="w-5 h-5" />
-    </button>
-    <button
-      type="button"
-      className={`p-2 rounded-md ${viewMode === 'card' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-      aria-label="Card view"
+      <span className="@[420px]:block hidden">List</span>
+    </Button>
+    <Button
+      variant={viewMode === 'card' ? 'default' : 'outline'}
+      size="sm"
+      className={`flex items-center gap-2`}
       onClick={() => setViewMode('card')}
     >
       <SquareStack className="w-5 h-5" />
-    </button>
-    <button
-      type="button"
-      className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'}`}
-      aria-label="Grid view"
+      <span className="@[420px]:block hidden">Card</span>
+    </Button>
+    <Button
+      variant={viewMode === 'grid' ? 'default' : 'outline'}
+      size="sm"
+      className={`flex items-center gap-2`}
       onClick={() => setViewMode('grid')}
     >
       <LayoutGrid className="w-5 h-5" />
-    </button>
+      <span className="@[420px]:block hidden">Grid</span>
+    </Button>
   </div>
 )
 const MatchesList: React.FC<MatchesListProps> = ({ 
@@ -69,47 +73,51 @@ const MatchesList: React.FC<MatchesListProps> = ({
   teamMatches
 }) => {
   return (
-    <div className="bg-card dark:bg-card rounded-lg shadow-md flex flex-col max-h-[calc(100vh-14rem)]">
-    <div className="p-6 flex items-center justify-between flex-shrink-0 min-w-0">
-      <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
-        <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
-          Match History
-        </h3>
-        <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
-          {matches.length} matches found
-        </p>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {hiddenMatchesCount > 0 && onShowHiddenMatches && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowHiddenMatches}
-            className="flex items-center gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            <span>{hiddenMatchesCount}</span>
-          </Button>
-        )}
-        <MatchListLayoutButtons
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-        />
-      </div>
-    </div>
-    <div className="flex-1 overflow-y-auto min-h-0 px-4 py-2">
-      <MatchListView
-        matches={matches}
-        selectedMatchId={selectedMatchId || null}
-        onSelectMatch={onSelectMatch || (() => {})}
-        onHideMatch={onHideMatch}
-        onRefreshMatch={onRefreshMatch}
-        viewMode={viewMode}
-        teamMatches={teamMatches}
-      />
-    </div>
-  </div>
-);
+    <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
+      <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
+        <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
+          <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
+            Match History
+          </h3>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
+            {matches.length} matches found
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="@[200px]:flex hidden">
+            {hiddenMatchesCount > 0 && onShowHiddenMatches && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowHiddenMatches}
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                <span>{hiddenMatchesCount}</span>
+              </Button>
+            )}
+          </div>
+          <MatchListLayoutButtons
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto min-h-0 px-0 py-0 @[35px]:block hidden">
+        <div className="px-4 py-2">
+          <MatchListView
+            matches={matches}
+            selectedMatchId={selectedMatchId || null}
+            onSelectMatch={onSelectMatch || (() => {})}
+            onHideMatch={onHideMatch}
+            onRefreshMatch={onRefreshMatch}
+            viewMode={viewMode}
+            teamMatches={teamMatches}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default MatchesList;

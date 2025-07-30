@@ -30,7 +30,6 @@ interface ResizableMatchLayoutProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
-  activeTeamSide?: 'radiant' | 'dire';
   
   // Match details
   selectedMatch: Match | null;
@@ -52,7 +51,6 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   onSelectMatch,
   hiddenMatchesCount = 0,
   onShowHiddenMatches,
-  activeTeamSide,
   selectedMatch,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
@@ -99,6 +97,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
               {selectedMatch ? (
                 <MatchDetailsPanel
                   match={selectedMatch}
+                  teamMatch={teamMatches[selectedMatch.id]}
                   viewMode={matchDetailsViewMode}
                   onViewModeChange={setMatchDetailsViewMode}
                 />

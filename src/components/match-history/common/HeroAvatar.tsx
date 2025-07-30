@@ -13,7 +13,7 @@ export const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize }) => {
   
   const getFallbackText = () => {
     const name = hero?.localizedName || hero?.name || '';
-    if (!name) return 'UN';
+    if (!name) return '?';
     const words = name.split(/\s+/);
     if (words.length === 1) {
       return words[0].substring(0, 2).toUpperCase();

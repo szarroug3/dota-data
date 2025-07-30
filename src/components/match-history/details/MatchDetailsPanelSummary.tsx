@@ -1,251 +1,185 @@
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface MatchDetailsPanelSummaryProps {
-  match: Match;
+  match?: Match;
+  teamMatch?: TeamMatchParticipation;
   className?: string;
 }
 
-// Mock hero data for testing
+// Mock hero data - in real implementation this would come from the match data
 const heroes = [
   {
     name: 'Crystal Maiden',
-    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg',
-    level: 25,
-    kills: 8,
-    deaths: 3,
-    assists: 12
+    imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg'
   },
   {
     name: 'Juggernaut',
-    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg',
-    level: 26,
-    kills: 15,
-    deaths: 2,
-    assists: 5
+    imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg'
   },
   {
     name: 'Lina',
-    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
-    level: 24,
-    kills: 12,
-    deaths: 4,
-    assists: 8
+    imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg'
   },
   {
     name: 'Pudge',
-    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
-    level: 23,
-    kills: 10,
-    deaths: 6,
-    assists: 10
+    imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg'
   },
   {
     name: 'Axe',
-    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
-    level: 22,
-    kills: 6,
-    deaths: 8,
-    assists: 15
+    imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg'
   }
 ];
 
-const formatDuration = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+// Mock performance data
+const mockPerformance = {
+  kda: { kills: 12, deaths: 3, assists: 8 },
+  netWorth: 25000,
+  heroDamage: 18500,
+  towerDamage: 3200,
+  healing: 2800,
+  cs: 180,
+  denies: 12
 };
 
-const formatKDA = (kills: number, deaths: number, assists: number): string => {
-  return `${kills}/${deaths}/${assists}`;
-};
+// Extracted component for Hero Lineup
+const HeroLineup = () => (
+  <div className="border rounded-lg p-4">
+    <div className="pb-3">
+      <h3 className="text-lg font-semibold">Hero Lineup</h3>
+    </div>
+    <div className="flex items-center gap-2">
+      {heroes.map((hero, index) => (
+        <Avatar key={index} className="w-12 h-12 border-2 border-background">
+          <AvatarImage 
+            src={hero.imageUrl} 
+            alt={hero.name}
+            className="object-cover"
+          />
+          <AvatarFallback className="text-xs">
+            {hero.name.substring(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ))}
+    </div>
+  </div>
+);
 
-export const MatchDetailsPanelSummary: React.FC<MatchDetailsPanelSummaryProps> = ({
-  match,
-  className = ''
-}) => {
-  // Mock performance data
-  const mockPerformance = {
-    kda: { kills: 12, deaths: 3, assists: 8 },
-    netWorth: 25000,
-    heroDamage: 18500,
-    towerDamage: 3200,
-    healing: 2800,
-    cs: 180,
-    denies: 12
-  };
+// Extracted component for Key Performance Metrics
+const KeyPerformanceMetrics = () => (
+  <div className="border rounded-lg p-4">
+    <div className="pb-3">
+      <h3 className="text-lg font-semibold">Key Performance Metrics</h3>
+    </div>
+    <div className="space-y-4">
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>KDA</span>
+          <span className="font-mono">{mockPerformance.kda.kills}/{mockPerformance.kda.deaths}/{mockPerformance.kda.assists}</span>
+        </div>
+        <Progress value={75} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Net Worth</span>
+          <span className="font-mono">{mockPerformance.netWorth.toLocaleString()}</span>
+        </div>
+        <Progress value={85} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Hero Damage</span>
+          <span className="font-mono">{mockPerformance.heroDamage.toLocaleString()}</span>
+        </div>
+        <Progress value={70} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Tower Damage</span>
+          <span className="font-mono">{mockPerformance.towerDamage.toLocaleString()}</span>
+        </div>
+        <Progress value={60} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Healing</span>
+          <span className="font-mono">{mockPerformance.healing.toLocaleString()}</span>
+        </div>
+        <Progress value={45} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Last Hits</span>
+          <span className="font-mono">{mockPerformance.cs}</span>
+        </div>
+        <Progress value={80} className="h-2" />
+      </div>
+      
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span>Denies</span>
+          <span className="font-mono">{mockPerformance.denies}</span>
+        </div>
+        <Progress value={65} className="h-2" />
+      </div>
+    </div>
+  </div>
+);
 
-  const isWin = match.result === 'win';
-  const duration = formatDuration(match.duration);
+// Extracted component for Match Statistics
+const MatchStatistics = () => (
+  <div className="border rounded-lg p-4">
+    <div className="pb-3">
+      <h3 className="text-lg font-semibold">Match Statistics</h3>
+    </div>
+    <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <span>Total Kills</span>
+          <span className="font-mono">45</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Total Deaths</span>
+          <span className="font-mono">32</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Total Assists</span>
+          <span className="font-mono">78</span>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <span>Average GPM</span>
+          <span className="font-mono">580</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Average XPM</span>
+          <span className="font-mono">650</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Total Net Worth</span>
+          <span className="font-mono">125K</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
+export const MatchDetailsPanelSummary: React.FC<MatchDetailsPanelSummaryProps> = () => {
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Match Header */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Badge 
-                variant={isWin ? 'success' : 'destructive'}
-                className="text-sm font-medium"
-              >
-                {isWin ? 'Victory' : 'Defeat'}
-              </Badge>
-              <Badge variant="outline" className="text-sm">
-                {match.teamSide === 'radiant' ? 'Radiant' : 'Dire'}
-              </Badge>
-              <Badge variant="secondary" className="text-sm">
-                {match.pickOrder === 'first' ? 'First Pick' : 'Second Pick'}
-              </Badge>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-muted-foreground">
-                {duration}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Match #{match.id}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Opponent:</span>
-              <span className="text-sm">{match.opponent}</span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {new Date(match.date).toLocaleDateString()}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Hero Lineup */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Hero Lineup</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            {heroes.map((hero, index) => (
-              <Avatar key={index} className="w-12 h-12 border-2 border-background">
-                <AvatarImage 
-                  src={hero.imageUrl} 
-                  alt={hero.name}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-xs">
-                  {hero.name.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Key Performance Metrics */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Performance Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* KDA */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">KDA Ratio</span>
-            <span className="text-sm font-mono">
-              {formatKDA(mockPerformance.kda.kills, mockPerformance.kda.deaths, mockPerformance.kda.assists)}
-            </span>
-          </div>
-
-          {/* Net Worth */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Net Worth</span>
-              <span className="text-sm font-mono">
-                {mockPerformance.netWorth.toLocaleString()}
-              </span>
-            </div>
-            <Progress value={75} className="h-2" />
-          </div>
-
-          {/* Damage Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Hero Damage</span>
-                <span className="text-sm font-mono">
-                  {mockPerformance.heroDamage.toLocaleString()}
-                </span>
-              </div>
-              <Progress value={65} className="h-2" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Tower Damage</span>
-                <span className="text-sm font-mono">
-                  {mockPerformance.towerDamage.toLocaleString()}
-                </span>
-              </div>
-              <Progress value={45} className="h-2" />
-            </div>
-          </div>
-
-          {/* Additional Stats */}
-          <div className="grid grid-cols-3 gap-4 pt-2">
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary">
-                {mockPerformance.healing.toLocaleString()}
-              </div>
-              <div className="text-xs text-muted-foreground">Healing</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary">
-                {mockPerformance.cs}
-              </div>
-              <div className="text-xs text-muted-foreground">CS</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-primary">
-                {mockPerformance.denies}
-              </div>
-              <div className="text-xs text-muted-foreground">Denies</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Match Timeline Preview */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Key Events</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-green-600">First Blood</span>
-              <span className="font-mono">02:15</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-blue-600">Roshan Kill</span>
-              <span className="font-mono">18:32</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-orange-600">Aegis Expired</span>
-              <span className="font-mono">23:45</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-red-600">Ancient Destroyed</span>
-              <span className="font-mono">{duration}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      <HeroLineup />
+      <KeyPerformanceMetrics />
+      <MatchStatistics />
     </div>
   );
 }; 

@@ -376,15 +376,40 @@ function createAegisPickupEvent(objective: { time: number; player_slot?: number 
 }
 
 function parseBuildingInfo(buildingKey: string): { buildingType: 'tower' | 'barracks'; buildingTier: number; buildingLane: 'top' | 'mid' | 'bottom' } {
-  const parts = buildingKey.split('_');
-  const buildingType = parts[0] as 'tower' | 'barracks';
-  const buildingTier = parseInt(parts[1]) || 1;
-  const buildingLane = parts[2] as 'top' | 'mid' | 'bottom';
+  // Handle different building key formats
+  if (buildingKey.includes('tower')) {
+    const parts = buildingKey.split('_');
+    const tier = parseInt(parts[parts.length - 2]) || 1;
+    const buildingLane = parts[parts.length - 1] as 'top' | 'mid' | 'bottom';
+    
+    return {
+      buildingType: 'tower',
+      buildingTier: tier,
+      buildingLane
+    };
+  } else if (buildingKey.includes('rax')) {
+    const parts = buildingKey.split('_');
+    const tier = 1; // Barracks are always tier 1
+    const buildingLane = parts[parts.length - 1] as 'top' | 'mid' | 'bottom';
+    
+    return {
+      buildingType: 'barracks',
+      buildingTier: tier,
+      buildingLane
+    };
+  } else if (buildingKey.includes('fort')) {
+    return {
+      buildingType: 'tower',
+      buildingTier: 4, // Ancient towers
+      buildingLane: 'mid'
+    };
+  }
   
+  // Default fallback
   return {
-    buildingType,
-    buildingTier,
-    buildingLane
+    buildingType: 'tower',
+    buildingTier: 1,
+    buildingLane: 'mid'
   };
 }
 
@@ -392,11 +417,12 @@ function createBuildingKillEvent(objective: { time: number; player_slot?: number
   if (!objective.key) return null;
   
   const buildingInfo = parseBuildingInfo(objective.key);
+  const side = getSideFromPlayerSlot(objective.player_slot);
   
   return {
     timestamp: objective.time,
-    type: buildingInfo.buildingType === 'tower' ? 'tower_kill' : 'barracks_kill',
-    side: getSideFromPlayerSlot(objective.player_slot),
+    type: buildingInfo.buildingType === 'barracks' ? 'barracks_kill' : 'tower_kill',
+    side,
     details: {
       buildingType: buildingInfo.buildingType,
       buildingTier: buildingInfo.buildingTier,
@@ -412,15 +438,18 @@ export function generateEvents(matchData: OpenDotaMatch): MatchEvent[] {
   
   matchData.objectives.forEach(objective => {
     switch (objective.type) {
-      case 'first_blood':
+      case 'CHAT_MESSAGE_FIRSTBLOOD':
         events.push(createFirstBloodEvent(objective));
         break;
-      case 'roshan_kill':
+        
+      case 'CHAT_MESSAGE_ROSHAN_KILL':
         events.push(createRoshanKillEvent(objective));
         break;
-      case 'aegis_pickup':
+        
+      case 'CHAT_MESSAGE_AEGIS':
         events.push(createAegisPickupEvent(objective));
         break;
+        
       case 'building_kill': {
         const buildingEvent = createBuildingKillEvent(objective);
         if (buildingEvent) {
@@ -428,10 +457,151 @@ export function generateEvents(matchData: OpenDotaMatch): MatchEvent[] {
         }
         break;
       }
+        
+      case 'CHAT_MESSAGE_COURIER_LOST':
+        // Skip courier lost events for now as they're less significant
+        break;
+        
+      default:
+        // Skip unknown event types
+        break;
     }
   });
   
   return events.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+// ============================================================================
+// DRAFT AND EVENTS PROCESSING FOR COMPONENTS
+// ============================================================================
+
+export interface DraftPhase {
+  phase: 'ban' | 'pick';
+  team: 'radiant' | 'dire';
+  hero: string;
+  time: number;
+}
+
+export interface GameEvent {
+  type: 'roshan' | 'aegis' | 'teamfight' | 'tower' | 'barracks' | 'first_blood';
+  time: number;
+  description: string;
+  team?: 'radiant' | 'dire';
+}
+
+export interface TeamFightStats {
+  radiant: { total: number; wins: number; losses: number };
+  dire: { total: number; wins: number; losses: number };
+}
+
+function calculateWinsForTeam(fights: MatchEvent[], matchResult: 'radiant' | 'dire'): number {
+  return fights.filter(fight => fight.side === matchResult).length;
+}
+
+function calculateLossesForTeam(fights: MatchEvent[], matchResult: 'radiant' | 'dire'): number {
+  const opposingSide = matchResult === 'radiant' ? 'dire' : 'radiant';
+  return fights.filter(fight => fight.side === opposingSide).length;
+}
+
+export function processDraftData(match: Match, originalMatchData?: OpenDotaMatch): DraftPhase[] {
+  const phases: DraftPhase[] = [];
+  
+  // If we have access to the original OpenDota data, use it to preserve the exact order
+  if (originalMatchData?.picks_bans) {
+    originalMatchData.picks_bans.forEach((pickBan, index) => {
+      const order = index + 1; // Use the original index from OpenDota
+      
+      if (pickBan.is_pick) {
+        phases.push({
+          phase: 'pick',
+          team: pickBan.team === 0 ? 'radiant' : 'dire',
+          hero: pickBan.hero_id.toString(),
+          time: order
+        });
+      } else {
+        phases.push({
+          phase: 'ban',
+          team: pickBan.team === 0 ? 'radiant' : 'dire',
+          hero: pickBan.hero_id.toString(),
+          time: order
+        });
+      }
+    });
+    
+    return phases.sort((a, b) => a.time - b.time);
+  }
+
+  return [];
+}
+
+export function processGameEvents(match: Match): GameEvent[] {
+  return match.events.map(event => ({
+    type: mapEventType(event.type),
+    time: event.timestamp,
+    description: generateEventDescription(event),
+    team: event.side === 'neutral' ? undefined : event.side
+  }));
+}
+
+function mapEventType(eventType: string): GameEvent['type'] {
+  switch (eventType) {
+    case 'CHAT_MESSAGE_ROSHAN_KILL':
+      return 'roshan';
+    case 'CHAT_MESSAGE_AEGIS':
+      return 'aegis';
+    case 'CHAT_MESSAGE_FIRSTBLOOD':
+      return 'first_blood';
+    case 'building_kill':
+      // Check if it's a barracks or tower based on the key
+      return 'tower'; // Default to tower, will be refined in createBuildingKillEvent
+    default:
+      return 'teamfight';
+  }
+}
+
+function getTeamName(side: 'radiant' | 'dire' | 'neutral'): string {
+  return side === 'radiant' ? 'Radiant' : 'Dire';
+}
+
+function generateEventDescription(event: MatchEvent): string {
+  const teamName = getTeamName(event.side);
+  
+  switch (event.type) {
+    case 'roshan_kill':
+      return `${teamName} killed Roshan`;
+    case 'aegis_pickup':
+      return `Aegis picked up by ${event.details.aegisHolder || 'unknown player'}`;
+    case 'team_fight':
+      return `Team fight at ${event.timestamp}s - ${teamName} victory`;
+    case 'tower_kill':
+      return `${teamName} destroyed ${event.details.buildingType || 'tower'}`;
+    case 'barracks_kill':
+      return `${teamName} destroyed barracks`;
+    case 'first_blood':
+      return `${teamName} got first blood`;
+    default:
+      return `Event at ${event.timestamp}s`;
+  }
+}
+
+export function calculateTeamFightStats(match: Match): TeamFightStats {
+  const teamFightEvents = match.events.filter(e => e.type === 'team_fight');
+  
+  const radiantFights = teamFightEvents.filter(e => e.side === 'radiant');
+  const direFights = teamFightEvents.filter(e => e.side === 'dire');
+  
+  return {
+    radiant: {
+      total: radiantFights.length,
+      wins: calculateWinsForTeam(radiantFights, match.result),
+      losses: calculateLossesForTeam(radiantFights, match.result)
+    },
+    dire: {
+      total: direFights.length,
+      wins: calculateWinsForTeam(direFights, match.result),
+      losses: calculateLossesForTeam(direFights, match.result)
+    }
+  };
 }
 
 // ============================================================================
@@ -463,7 +633,8 @@ export function processMatchData(
   const radiantRoleMap = detectTeamRoles(radiantPlayers);
   const direRoleMap = detectTeamRoles(direPlayers);
 
-  return {
+  // Create the base match object
+  const match: Match = {
     id: matchData.match_id,
     date: new Date(matchData.start_time * 1000).toISOString(),
     duration: matchData.duration,
@@ -494,5 +665,17 @@ export function processMatchData(
     },
     result: matchData.radiant_win ? 'radiant' : 'dire',
     pickOrder
+  };
+
+  // Process additional data for components
+  const processedDraft = processDraftData(match, matchData);
+  const processedEvents = processGameEvents(match);
+  const teamFightStats = calculateTeamFightStats(match);
+
+  return {
+    ...match,
+    processedDraft,
+    processedEvents,
+    teamFightStats
   };
 } 

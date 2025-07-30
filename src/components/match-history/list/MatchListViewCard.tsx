@@ -184,16 +184,16 @@ const MatchCard: React.FC<MatchCardProps> = ({
       }`}
       onClick={() => onSelectMatch(match.id)}
     >
-      <CardContent className="p-4 flex flex-col justify-center min-h-[100px]">
+      <CardContent className="p-4 h-[140px] relative">
         {/* Top row: Opponent name (centered) - hidden below 150px */}
-        <div className="text-center mb-3 @[100px]:block hidden">
+        <div className="absolute top-4 left-0 right-0 text-center @[100px]:block hidden h-5 flex items-center justify-center">
           <h3 className="font-medium text-sm truncate">
             {opponentName}
           </h3>
         </div>
 
         {/* Middle row: Hero badges (centered) */}
-        <div className="flex justify-center mb-3">
+        <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 flex justify-center h-8 flex items-center justify-center">
           <HeroAvatars 
             heroes={matchHeroes} 
             avatarSize={{ width: 'w-8', height: 'h-8' }}
@@ -201,7 +201,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         </div>
 
         {/* Bottom row: Action buttons (centered) - hidden below 200px */}
-        <div className="w-full flex justify-center items-center gap-1 @[200px]:flex hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1 @[200px]:flex hidden h-8" onClick={(e) => e.stopPropagation()}>
           <ExternalSiteButton
             matchId={match.id}
             preferredSite={config.preferredExternalSite}
@@ -227,7 +227,6 @@ export const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   onSelectMatch,
   onHideMatch,
   onRefreshMatch,
-  className = '',
   teamMatches
 }) => {
   const { containerRef, columns } = useResponsiveGrid();
@@ -244,25 +243,27 @@ export const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   }
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`grid gap-4 ${className}`} 
-      style={{ 
-        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-        '--columns': columns.toString()
-      } as React.CSSProperties}
-    >
-      {matches.map((match) => (
-        <MatchCard
-          key={match.id}
-          match={match}
-          selectedMatchId={selectedMatchId}
-          onSelectMatch={onSelectMatch}
-          onHideMatch={onHideMatch}
-          onRefreshMatch={onRefreshMatch}
-          teamMatch={teamMatches?.[match.id]}
-        />
-      ))}
-    </div>
+    <>
+      <div 
+        ref={containerRef} 
+        className={`grid gap-4`} 
+        style={{ 
+          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          '--columns': columns.toString()
+        } as React.CSSProperties}
+      >
+        {matches.map((match) => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            selectedMatchId={selectedMatchId}
+            onSelectMatch={onSelectMatch}
+            onHideMatch={onHideMatch}
+            onRefreshMatch={onRefreshMatch}
+            teamMatch={teamMatches?.[match.id]}
+          />
+        ))}
+      </div>
+    </>
   );
 }; 

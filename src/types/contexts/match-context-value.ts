@@ -9,6 +9,29 @@ import type { Hero, Item } from '@/types/contexts/constants-context-value';
 import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 // ============================================================================
+// PROCESSED DATA TYPES
+// ============================================================================
+
+export interface DraftPhase {
+  phase: 'ban' | 'pick';
+  team: 'radiant' | 'dire';
+  hero: string;
+  time: number;
+}
+
+export interface GameEvent {
+  type: 'roshan' | 'aegis' | 'teamfight' | 'tower' | 'barracks' | 'first_blood';
+  time: number;
+  description: string;
+  team?: 'radiant' | 'dire';
+}
+
+export interface TeamFightStats {
+  radiant: { total: number; wins: number; losses: number };
+  dire: { total: number; wins: number; losses: number };
+}
+
+// ============================================================================
 // MATCH DATA STRUCTURES
 // ============================================================================
 
@@ -69,6 +92,11 @@ export interface Match {
     radiant: 'first' | 'second' | null;
     dire: 'first' | 'second' | null;
   };
+  
+  // Processed data for components
+  processedDraft?: DraftPhase[];
+  processedEvents?: GameEvent[];
+  teamFightStats?: TeamFightStats;
   
   // Error handling
   error?: string;
