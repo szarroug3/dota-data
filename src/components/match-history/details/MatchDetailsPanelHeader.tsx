@@ -70,7 +70,7 @@ export const MatchDetailsPanelHeader: React.FC<MatchDetailsPanelHeaderProps> = (
   return (
     <div className={`flex items-center justify-between gap-2 min-w-0 ${className}`}>
       <div className="min-w-0 flex-1 overflow-hidden">
-        <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[280px]:flex hidden">Match Details</h2>
+        <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[280px]:block hidden">Match Details</h2>
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0 min-h-[2rem]">

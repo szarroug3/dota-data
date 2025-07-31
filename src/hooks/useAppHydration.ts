@@ -48,7 +48,25 @@ export function useAppHydration() {
           contextsRef.current.constantsContext.fetchItems()
         ]);
 
-        // Step 2: Load teams from config
+        // Step 2: Wait for constants to be available in context state
+        // React state updates are asynchronous, so we need to wait for the context to reflect the fetched data
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+        while (
+          attempts < maxAttempts && 
+          (Object.keys(contextsRef.current.constantsContext.heroes).length === 0 ||
+           Object.keys(contextsRef.current.constantsContext.items).length === 0)
+        ) {
+          console.log('Waiting for constants to be available...');
+          await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
+          attempts++;
+        }
+
+        if (attempts >= maxAttempts) {
+          console.warn('Constants not available after waiting, proceeding anyway');
+        }
+
+        // Step 3: Load teams from config
         const teams = contextsRef.current.configContext.getTeams();
         if (teams && teams.size > 0) {
           // Delegate to team context to handle loading teams from config

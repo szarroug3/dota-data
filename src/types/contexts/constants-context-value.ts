@@ -30,7 +30,7 @@ export interface Hero {
  * Item interface
  */
 export interface Item {
-  id: string;
+  id: number;
   name: string;
   imageUrl: string;
 }
@@ -47,7 +47,7 @@ export interface ConstantsContextValue {
   heroes: Record<string, Hero>; // Key is hero ID as string
   
   // Item data - mapped by item ID for easier lookup
-  items: Record<string, Item>; // Key is item ID as string
+  items: Record<number, Item>; // Key is item ID as number
   
   // Loading states
   isLoadingHeroes: boolean;
@@ -63,7 +63,7 @@ export interface ConstantsContextValue {
   clearErrors: () => void;
   
   // Utility functions
-  getItemById: (itemId: string) => Item | undefined;
+  getItemById: (itemId: number) => Item | undefined;
   getHeroById: (heroId: string) => Hero | undefined;
 }
 

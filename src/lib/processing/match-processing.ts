@@ -159,16 +159,27 @@ export function detectTeamRoles(teamPlayers: OpenDotaMatchPlayer[]): Record<stri
 // PLAYER DATA CONVERSION
 // ============================================================================
 
-function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<string, Item>): Item[] {
+function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>): Item[] {
   const itemIds = [
     player.item_0, player.item_1, player.item_2, 
     player.item_3, player.item_4, player.item_5
   ];
   
-  return itemIds
+  console.log('Player item IDs:', itemIds);
+  console.log('Available items:', Object.keys(items));
+  console.log('Sample available items:', Object.entries(items).slice(0, 5));
+  
+  const result = itemIds
     .filter(itemId => itemId !== 0)
-    .map(itemId => items[itemId.toString()])
+    .map(itemId => {
+      const item = items[itemId];
+      console.log(`Looking for item ${itemId}:`, item);
+      return item;
+    })
     .filter(Boolean);
+    
+  console.log('Processed items:', result);
+  return result;
 }
 
 function getBasicStats(player: OpenDotaMatchPlayer) {

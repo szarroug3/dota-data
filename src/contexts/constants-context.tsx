@@ -101,25 +101,35 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
       setIsLoadingItems(true);
       setItemsError(null);
       
+      console.log('Fetching items...');
       const result = await fetchItemsData(force);
       
       if ('error' in result) {
+        console.error('Error fetching items:', result.error);
         setItemsError(result.error as string);
         return;
       }
       
-      // Convert items to our format
-      const itemsById: Record<string, Item> = {};
-      Object.entries(result).forEach(([itemId, itemData]) => {
-        itemsById[itemId] = {
-          id: itemId,
+      console.log('Items fetched successfully:', Object.keys(result).length, 'items');
+      
+      // Convert items to our format, keyed by numeric ID for match data lookup
+      const items: Record<number, Item> = {};
+      
+      Object.entries(result).forEach(([itemName, itemData]) => {
+        const item: Item = {
+          id: itemData.id, // Use numeric ID as the item ID
           name: itemData.dname,
-          imageUrl: formatItemImageUrl(itemId)
+          imageUrl: formatItemImageUrl(itemData.img) // Use the actual image path from API
         };
+        
+        // Store by numeric ID for match data lookup
+        items[itemData.id] = item;
       });
       
-      setItems(itemsById);
+      console.log('Items converted and set:', Object.keys(items).length, 'items');
+      setItems(items);
     } catch (error) {
+      console.error('Exception fetching items:', error);
       setItemsError(error instanceof Error ? error.message : 'Failed to fetch items');
     } finally {
       setIsLoadingItems(false);
@@ -133,7 +143,7 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     setItemsError(null);
   }, []);
   
-  const getItemById = useCallback((itemId: string) => items[itemId], [items]);
+  const getItemById = useCallback((itemId: number) => items[itemId], [items]);
   const getHeroById = useCallback((heroId: string) => heroes[heroId], [heroes]);
   
   const contextValue: ConstantsContextValue = useMemo(() => ({

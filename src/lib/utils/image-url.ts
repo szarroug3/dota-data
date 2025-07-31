@@ -5,8 +5,7 @@
  * @returns The complete URL for the item image
  */
 export function formatItemImageUrl(itemImagePath: string): string {
-  const baseUrl = "https://cdn.cloudflare.steamstatic.com";
-  return baseUrl + itemImagePath.replace(/[^a-zA-Z0-9/._?=-]/g, '');
+  return `https://cdn.cloudflare.steamstatic.com${itemImagePath}`;
 }
 
 /**
