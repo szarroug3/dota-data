@@ -56,9 +56,9 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   setMatchDetailsViewMode,
 }) => {
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col gap-6">
       {/* Filters - Always at the top */}
-      <div className="flex-shrink-0 p-4 pb-2">
+      <div className="flex-shrink-0 pb-2">
         <MatchFilters
           filters={filters}
           onFiltersChange={onFiltersChange}
@@ -68,11 +68,11 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       </div>
       
       {/* Resizable Panels */}
-      <div className="flex-1 min-h-0">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
+      <div className="flex-1">
+        <ResizablePanelGroup direction="horizontal" className="h-fit">
           {/* Match List Panel */}
           <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
-            <div className="h-full p-4 pt-2 @container" style={{ containerType: 'inline-size' }}>
+            <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>
               <MatchesList
                 matches={visibleMatches}
                 onHideMatch={onHideMatch}
@@ -89,11 +89,11 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
           </ResizablePanel>
           
           {/* Resizable Handle */}
-          <ResizableHandle withHandle />
+          <ResizableHandle withHandle className="after:w-4" />
           
           {/* Match Details Panel */}
           <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
-            <div className="h-full p-4 pt-2">
+            <div className="h-fit pt-2 pl-3">
               {selectedMatch ? (
                 <MatchDetailsPanel
                   match={selectedMatch}
@@ -102,7 +102,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
                   onViewModeChange={setMatchDetailsViewMode}
                 />
               ) : (
-                <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground h-full">
+                <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
                   <div className="text-center">
                     <div className="text-lg font-medium mb-2">No Match Selected</div>
                     <div className="text-sm">Select a match from the list to view details</div>

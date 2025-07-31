@@ -18,8 +18,7 @@ export interface MatchFilters {
   teamSide: 'all' | 'radiant' | 'dire';
   pickOrder: 'all' | 'first' | 'second';
   heroesPlayed: string[];
-  matchDuration: 'all' | 'short' | 'medium' | 'long';
-  playerPerformance: string[];
+  highPerformersOnly: boolean;
 }
 
 export interface FilterStats {
@@ -32,8 +31,7 @@ export interface FilterStats {
     pickOrder: number;
     heroesPlayed: number;
     opponent: number;
-    matchDuration: number;
-    playerPerformance: number;
+    highPerformersOnly: number;
   };
 }
 
@@ -124,30 +122,13 @@ function applyOpponentFilter(teamMatch: TeamMatchParticipation | undefined, filt
   return filters.opponent.some(opponentNameFilter => opponentNameFilter === opponentName);
 }
 
-function applyMatchDurationFilter(teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
-  if (filters.matchDuration === 'all' || !teamMatch?.duration) return true;
-  
-  const durationMinutes = teamMatch.duration / 60;
-  
-  switch (filters.matchDuration) {
-    case 'short':
-      return durationMinutes < 30;
-    case 'medium':
-      return durationMinutes >= 30 && durationMinutes <= 45;
-    case 'long':
-      return durationMinutes > 45;
-    default:
-      return true;
-  }
-}
-
-function applyPlayerPerformanceFilter(match: Match, teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
-  if (filters.playerPerformance.length === 0 || !teamMatch?.side) return true;
+function applyHighPerformersFilter(match: Match, teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
+  if (!filters.highPerformersOnly || !teamMatch?.side) return true;
   
   const teamPlayers = match.players[teamMatch.side] || [];
   if (teamPlayers.length === 0) return true;
   
-  // Calculate team averages for performance metrics
+  // Calculate team performance metrics
   const totalKDA = teamPlayers.reduce((sum, player) => {
     const kda = player.stats.deaths > 0 ? (player.stats.kills + player.stats.assists) / player.stats.deaths : player.stats.kills + player.stats.assists;
     return sum + kda;
@@ -155,36 +136,27 @@ function applyPlayerPerformanceFilter(match: Match, teamMatch: TeamMatchParticip
   
   const totalGPM = teamPlayers.reduce((sum, player) => sum + player.stats.gpm, 0);
   const totalXPM = teamPlayers.reduce((sum, player) => sum + player.stats.xpm, 0);
-  const totalLastHits = teamPlayers.reduce((sum, player) => sum + player.stats.lastHits, 0);
   
   const avgKDA = totalKDA / teamPlayers.length;
   const avgGPM = totalGPM / teamPlayers.length;
   const avgXPM = totalXPM / teamPlayers.length;
-  const avgLastHits = totalLastHits / teamPlayers.length;
   
-  // Performance thresholds (these could be made configurable)
-  const thresholds = {
-    'high-kda': 3.0,
-    'high-gpm': 500,
-    'high-xpm': 600,
-    'high-last-hits': 200
+  // High performer thresholds (5+ games equivalent, 60%+ win rate equivalent)
+  // For individual matches, we'll use high performance metrics
+  const highPerformerThresholds = {
+    kda: 3.5,
+    gpm: 550,
+    xpm: 650
   };
   
-  // Check if ALL selected performance criteria are met
-  return filters.playerPerformance.every(performance => {
-    switch (performance) {
-      case 'high-kda':
-        return avgKDA >= thresholds['high-kda'];
-      case 'high-gpm':
-        return avgGPM >= thresholds['high-gpm'];
-      case 'high-xpm':
-        return avgXPM >= thresholds['high-xpm'];
-      case 'high-last-hits':
-        return avgLastHits >= thresholds['high-last-hits'];
-      default:
-        return true;
-    }
-  });
+  // Check if team performed at high level (meeting multiple criteria)
+  const highKDA = avgKDA >= highPerformerThresholds.kda;
+  const highGPM = avgGPM >= highPerformerThresholds.gpm;
+  const highXPM = avgXPM >= highPerformerThresholds.xpm;
+  
+  // Team must meet at least 2 out of 3 high performance criteria
+  const highPerformanceCount = [highKDA, highGPM, highXPM].filter(Boolean).length;
+  return highPerformanceCount >= 2;
 }
 
 // ============================================================================
@@ -205,8 +177,7 @@ function applyAllFilters(
     applyPickOrderFilter(teamMatch, filters) &&
     applyHeroesFilter(match, teamMatch, filters) &&
     applyOpponentFilter(teamMatch, filters) &&
-    applyMatchDurationFilter(teamMatch, filters) &&
-    applyPlayerPerformanceFilter(match, teamMatch, filters)
+    applyHighPerformersFilter(match, teamMatch, filters)
   );
 }
 
@@ -245,13 +216,9 @@ function getFilterStats(
       const teamMatch = teamMatches[match.id];
       return applyOpponentFilter(teamMatch, filters);
     }).length,
-    matchDuration: matches.filter(match => {
+    highPerformersOnly: matches.filter(match => {
       const teamMatch = teamMatches[match.id];
-      return applyMatchDurationFilter(teamMatch, filters);
-    }).length,
-    playerPerformance: matches.filter(match => {
-      const teamMatch = teamMatches[match.id];
-      return applyPlayerPerformanceFilter(match, teamMatch, filters);
+      return applyHighPerformersFilter(match, teamMatch, filters);
     }).length,
   };
   

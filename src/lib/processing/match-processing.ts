@@ -8,11 +8,12 @@
 
 import type { Hero, Item } from '@/types/contexts/constants-context-value';
 import type {
+  HeroPick,
   Match,
   MatchEvent,
-  PlayerMatchData,
-  PlayerRole
+  PlayerMatchData
 } from '@/types/contexts/match-context-value';
+import type { PlayerRole } from '@/types/contexts/team-context-value';
 import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 // ============================================================================
@@ -82,7 +83,7 @@ function assignMidRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]
   const midPlayers = playersByLaneRole[2] || [];
   if (midPlayers.length > 0) {
     // Always assign the first mid player as mid
-    roleMap[midPlayers[0].player.account_id.toString()] = 'mid';
+    roleMap[midPlayers[0].player.account_id.toString()] = 'Mid';
   }
 }
 
@@ -95,16 +96,11 @@ function assignSafeLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisRes
   
   if (safeLanePlayers.length === 1) {
     // 1 player = carry
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'carry';
+    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Carry';
   } else if (safeLanePlayers.length === 2) {
     // 2 players = lower support score = carry, higher support score = hard support
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'carry';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'hard_support';
-  } else if (safeLanePlayers.length === 3) {
-    // 3 players = lowest support score = carry, highest support score = hard support, middle support score = support
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'carry';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'support';
-    roleMap[sortedPlayers[2].player.account_id.toString()] = 'hard_support';
+    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Carry';
+    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Hard Support';
   }
 }
 
@@ -117,16 +113,16 @@ function assignOffLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResu
   
   if (offLanePlayers.length === 1) {
     // 1 player = offlane
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'offlane';
+    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
   } else if (offLanePlayers.length === 2) {
     // 2 players = lower support score = offlane, higher support score = hard support
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'offlane';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'support';
+    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
+    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Support';
   } else if (offLanePlayers.length === 3) {
     // 3 players = lowest support score = offlane, highest support score = hard support, middle support score = support
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'offlane';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'support';
-    roleMap[sortedPlayers[2].player.account_id.toString()] = 'hard_support';
+    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
+    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Support';
+    roleMap[sortedPlayers[2].player.account_id.toString()] = 'Hard Support';
   }
 }
 
@@ -137,7 +133,7 @@ function assignRemainingRoles(playerAnalysis: PlayerAnalysisResult[], roleMap: R
   
   unassigned.forEach(analysis => {
     if (analysis.player.is_roaming) {
-      roleMap[analysis.player.account_id.toString()] = 'roaming';
+      roleMap[analysis.player.account_id.toString()] = 'Roaming';
     }
   });
 }
@@ -287,8 +283,8 @@ export function determinePickOrder(matchData: OpenDotaMatch): {
 // ============================================================================
 
 export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string, Hero>) {
-  const radiantPicks: PlayerMatchData[] = [];
-  const direPicks: PlayerMatchData[] = [];
+  const radiantPicks: HeroPick[] = [];
+  const direPicks: HeroPick[] = [];
   const radiantBans: string[] = [];
   const direBans: string[] = [];
   
@@ -298,13 +294,10 @@ export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string
       if (!hero) return;
       
       if (pickBan.is_pick) {
-        const heroPick: PlayerMatchData = {
+        const heroPick: HeroPick = {
           accountId: 0, // Will be filled when we have player-hero mapping
-          playerName: '', // Will be determined from player slot
-          hero,
-          items: [],
-          stats: { kills: 0, deaths: 0, assists: 0, lastHits: 0, denies: 0, gpm: 0, xpm: 0, netWorth: 0, level: 1 },
-          heroStats: { damageDealt: 0, healingDone: 0, towerDamage: 0 }
+          hero
+          // role will be assigned later when we have player data
         };
         
         if (pickBan.team === 0) {
@@ -629,6 +622,39 @@ export function processMatchData(
   // Detect roles for each team
   const radiantRoleMap = detectTeamRoles(radiantPlayers);
   const direRoleMap = detectTeamRoles(direPlayers);
+
+  // Update draft picks with correct roles
+  radiantPicks.forEach(pick => {
+    const player = radiantPlayers.find(p => p.hero_id.toString() === pick.hero.id);
+    if (player) {
+      const role = radiantRoleMap[player.account_id.toString()];
+      if (role) {
+        pick.role = role;
+      } else {
+        // Remove role if we don't have valid data
+        delete pick.role;
+      }
+    } else {
+      // Remove role if we can't find the player
+      delete pick.role;
+    }
+  });
+
+  direPicks.forEach(pick => {
+    const player = direPlayers.find(p => p.hero_id.toString() === pick.hero.id);
+    if (player) {
+      const role = direRoleMap[player.account_id.toString()];
+      if (role) {
+        pick.role = role;
+      } else {
+        // Remove role if we don't have valid data
+        delete pick.role;
+      }
+    } else {
+      // Remove role if we can't find the player
+      delete pick.role;
+    }
+  });
 
   // Create the base match object
   const match: Match = {

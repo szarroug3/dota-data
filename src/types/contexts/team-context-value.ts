@@ -152,14 +152,13 @@ export interface HeroUsageByPlayer {
 }
 
 export type PlayerRole = 
-  | 'carry'
-  | 'mid'
-  | 'offlane'
-  | 'support'
-  | 'hard_support'
-  | 'jungle'
-  | 'roaming'
-  | 'unknown';
+  | 'Carry'
+  | 'Mid'
+  | 'Offlane'
+  | 'Support'
+  | 'Hard Support'
+  | 'Jungle'
+  | 'Roaming'
 
 // ============================================================================
 // TEAM CONTEXT STATE

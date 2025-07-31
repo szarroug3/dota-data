@@ -1,8 +1,9 @@
+import { Crown } from 'lucide-react';
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
-import type { Match } from '@/types/contexts/match-context-value';
+import type { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface MatchDetailsPanelPlayersProps {
@@ -16,6 +17,7 @@ interface Player {
   name: string;
   hero: string;
   team: 'radiant' | 'dire';
+  role?: string;
   level: number;
   kills: number;
   deaths: number;
@@ -29,111 +31,50 @@ interface Player {
   heroImageUrl: string;
 }
 
-// Mock player data - in real implementation this would come from the match data
-const mockPlayers: Player[] = [
-  {
-    id: '1',
-    name: 'Player1',
-    hero: 'Lina',
-    team: 'radiant' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg',
-    level: 25,
-    kills: 12,
-    deaths: 3,
-    assists: 8,
-    netWorth: 25000,
-    lastHits: 180,
-    denies: 15,
-    gpm: 650,
-    xpm: 750,
-    items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Eul\'s Scepter', 'Force Staff', 'Aether Lens']
-  },
-  {
-    id: '2',
-    name: 'Player2',
-    hero: 'Lion',
-    team: 'radiant' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg',
-    level: 22,
-    kills: 8,
-    deaths: 5,
-    assists: 15,
-    netWorth: 18000,
-    lastHits: 120,
-    denies: 8,
-    gpm: 520,
-    xpm: 680,
-    items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Force Staff', 'Glimmer Cape', 'Aether Lens']
-  },
-  {
-    id: '3',
-    name: 'Player3',
-    hero: 'Witch Doctor',
-    team: 'radiant' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/witch_doctor_vert.jpg',
-    level: 20,
-    kills: 6,
-    deaths: 7,
-    assists: 18,
-    netWorth: 15000,
-    lastHits: 90,
-    denies: 5,
-    gpm: 480,
-    xpm: 620,
-    items: ['Aghanim\'s Scepter', 'Boots of Travel', 'Glimmer Cape', 'Force Staff', 'Aether Lens', 'Blink Dagger']
-  },
-  {
-    id: '4',
-    name: 'Player4',
-    hero: 'Pudge',
-    team: 'dire' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg',
-    level: 24,
-    kills: 15,
-    deaths: 4,
-    assists: 10,
-    netWorth: 22000,
-    lastHits: 200,
-    denies: 20,
-    gpm: 580,
-    xpm: 720,
-    items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Heart of Tarrasque', 'Pipe of Insight', 'Crimson Guard']
-  },
-  {
-    id: '5',
-    name: 'Player5',
-    hero: 'Axe',
-    team: 'dire' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg',
-    level: 23,
-    kills: 10,
-    deaths: 6,
-    assists: 12,
-    netWorth: 20000,
-    lastHits: 160,
-    denies: 12,
-    gpm: 550,
-    xpm: 700,
-    items: ['Blink Dagger', 'Aghanim\'s Scepter', 'Boots of Travel', 'Crimson Guard', 'Pipe of Insight', 'Heart of Tarrasque']
-  },
-  {
-    id: '6',
-    name: 'Player6',
-    hero: 'Phantom Assassin',
-    team: 'dire' as const,
-    heroImageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg',
-    level: 26,
-    kills: 18,
-    deaths: 2,
-    assists: 5,
-    netWorth: 28000,
-    lastHits: 250,
-    denies: 25,
-    gpm: 720,
-    xpm: 800,
-    items: ['Battle Fury', 'Desolator', 'Boots of Travel', 'Black King Bar', 'Monkey King Bar', 'Butterfly']
+// Helper function to get team display names
+function getTeamDisplayNames(match?: Match): { radiantName: string; direName: string } {
+  if (!match) {
+    return { radiantName: 'Radiant', direName: 'Dire' };
   }
-];
+  
+  return {
+    radiantName: match.radiant.name || 'Radiant',
+    direName: match.dire.name || 'Dire'
+  };
+}
+
+// Convert PlayerMatchData to Player interface
+function convertPlayerMatchData(player: PlayerMatchData, team: 'radiant' | 'dire'): Player {
+  console.log('SAMREEN', player)
+  return {
+    id: player.accountId.toString(),
+    name: player.playerName,
+    hero: player.hero.localizedName,
+    team,
+    role: player.role,
+    heroImageUrl: player.hero.imageUrl,
+    level: player.stats.level,
+    kills: player.stats.kills,
+    deaths: player.stats.deaths,
+    assists: player.stats.assists,
+    netWorth: player.stats.netWorth,
+    lastHits: player.stats.lastHits,
+    denies: player.stats.denies,
+    gpm: player.stats.gpm,
+    xpm: player.stats.xpm,
+    items: player.items.map(item => item.name)
+  };
+}
+
+// Get all players from match data
+function getPlayersFromMatch(match?: Match): Player[] {
+  if (!match) return [];
+  
+  const radiantPlayers = match.players.radiant.map(player => convertPlayerMatchData(player, 'radiant'));
+  const direPlayers = match.players.dire.map(player => convertPlayerMatchData(player, 'dire'));
+  
+  return [...radiantPlayers, ...direPlayers];
+}
 
 // Extracted component for Player Card
 const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
@@ -147,8 +88,11 @@ const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
       <div className="flex-1 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-medium">{player.name}</h3>
+            <div className="font-medium">{player.name}</div>
             <p className="text-sm text-muted-foreground">{player.hero}</p>
+            {player.role && (
+              <p className="text-xs text-muted-foreground capitalize">{player.role}</p>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex flex-wrap gap-1">
@@ -218,9 +162,14 @@ const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
 );
 
 // Extracted component for Team Statistics
-const TeamStatistics = () => {
-  const radiantPlayers = mockPlayers.filter(p => p.team === 'radiant');
-  const direPlayers = mockPlayers.filter(p => p.team === 'dire');
+const TeamStatistics: React.FC<{ 
+  players: Player[]; 
+  radiantName: string; 
+  direName: string;
+  matchResult: 'radiant' | 'dire';
+}> = ({ players, radiantName, direName, matchResult }) => {
+  const radiantPlayers = players.filter(p => p.team === 'radiant');
+  const direPlayers = players.filter(p => p.team === 'dire');
 
   return (
     <div className="border rounded-lg p-4">
@@ -229,7 +178,10 @@ const TeamStatistics = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h3 className="font-medium mb-4">Radiant</h3>
+          <h3 className="font-medium mb-4 flex items-center gap-2">
+            {radiantName}
+            {matchResult === 'radiant' && <Crown className="w-4 h-4 text-yellow-500" />}
+          </h3>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span>Total Kills:</span>
@@ -242,19 +194,22 @@ const TeamStatistics = () => {
             <div className="flex justify-between text-sm">
               <span>Average GPM:</span>
               <span className="font-medium">
-                {Math.round(radiantPlayers.reduce((sum, p) => sum + p.gpm, 0) / radiantPlayers.length)}
+                {radiantPlayers.length > 0 ? Math.round(radiantPlayers.reduce((sum, p) => sum + p.gpm, 0) / radiantPlayers.length) : 0}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Average XPM:</span>
               <span className="font-medium">
-                {Math.round(radiantPlayers.reduce((sum, p) => sum + p.xpm, 0) / radiantPlayers.length)}
+                {radiantPlayers.length > 0 ? Math.round(radiantPlayers.reduce((sum, p) => sum + p.xpm, 0) / radiantPlayers.length) : 0}
               </span>
             </div>
           </div>
         </div>
         <div>
-          <h3 className="font-medium mb-4">Dire</h3>
+          <h3 className="font-medium mb-4 flex items-center gap-2">
+            {direName}
+            {matchResult === 'dire' && <Crown className="w-4 h-4 text-yellow-500" />}
+          </h3>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span>Total Kills:</span>
@@ -267,13 +222,13 @@ const TeamStatistics = () => {
             <div className="flex justify-between text-sm">
               <span>Average GPM:</span>
               <span className="font-medium">
-                {Math.round(direPlayers.reduce((sum, p) => sum + p.gpm, 0) / direPlayers.length)}
+                {direPlayers.length > 0 ? Math.round(direPlayers.reduce((sum, p) => sum + p.gpm, 0) / direPlayers.length) : 0}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Average XPM:</span>
               <span className="font-medium">
-                {Math.round(direPlayers.reduce((sum, p) => sum + p.xpm, 0) / direPlayers.length)}
+                {direPlayers.length > 0 ? Math.round(direPlayers.reduce((sum, p) => sum + p.xpm, 0) / direPlayers.length) : 0}
               </span>
             </div>
           </div>
@@ -284,13 +239,13 @@ const TeamStatistics = () => {
 };
 
 // Extracted component for Radiant Players
-const RadiantPlayers = () => {
-  const radiantPlayers = mockPlayers.filter(p => p.team === 'radiant');
+const RadiantPlayers: React.FC<{ players: Player[]; teamName: string }> = ({ players, teamName }) => {
+  const radiantPlayers = players.filter(p => p.team === 'radiant');
 
   return (
     <div className="border rounded-lg p-4">
       <div className="pb-3">
-        <h3 className="text-lg font-semibold">Radiant Players</h3>
+        <h3 className="text-lg font-semibold">{teamName} Players</h3>
       </div>
       <div className="space-y-4">
         {radiantPlayers.map((player) => (
@@ -302,13 +257,13 @@ const RadiantPlayers = () => {
 };
 
 // Extracted component for Dire Players
-const DirePlayers = () => {
-  const direPlayers = mockPlayers.filter(p => p.team === 'dire');
+const DirePlayers: React.FC<{ players: Player[]; teamName: string }> = ({ players, teamName }) => {
+  const direPlayers = players.filter(p => p.team === 'dire');
 
   return (
     <div className="border rounded-lg p-4">
       <div className="pb-3">
-        <h3 className="text-lg font-semibold">Dire Players</h3>
+        <h3 className="text-lg font-semibold">{teamName} Players</h3>
       </div>
       <div className="space-y-4">
         {direPlayers.map((player) => (
@@ -320,40 +275,63 @@ const DirePlayers = () => {
 };
 
 // Extracted component for Performance Highlights
-const PerformanceHighlights = () => (
-  <div className="border rounded-lg p-4">
-    <div className="pb-3">
-      <h3 className="text-lg font-semibold">Performance Highlights</h3>
-    </div>
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="text-center p-4 border rounded-lg">
-          <div className="text-2xl font-bold text-green-600">15</div>
-          <div className="text-sm text-muted-foreground">Most Kills</div>
-          <div className="text-xs">Phantom Assassin</div>
-        </div>
-        <div className="text-center p-4 border rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">18</div>
-          <div className="text-sm text-muted-foreground">Most Assists</div>
-          <div className="text-xs">Witch Doctor</div>
-        </div>
-        <div className="text-center p-4 border rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">720</div>
-          <div className="text-sm text-muted-foreground">Highest GPM</div>
-          <div className="text-xs">Phantom Assassin</div>
+const PerformanceHighlights: React.FC<{ players: Player[] }> = ({ players }) => {
+  if (players.length === 0) return null;
+
+  const mostKills = players.reduce((max, player) => player.kills > max.kills ? player : max, players[0]);
+  const mostAssists = players.reduce((max, player) => player.assists > max.assists ? player : max, players[0]);
+  const highestGpm = players.reduce((max, player) => player.gpm > max.gpm ? player : max, players[0]);
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="pb-3">
+        <h3 className="text-lg font-semibold">Performance Highlights</h3>
+      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 border rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{mostKills.kills}</div>
+            <div className="text-sm text-muted-foreground">Most Kills</div>
+            <div className="text-xs">{mostKills.hero}</div>
+          </div>
+          <div className="text-center p-4 border rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{mostAssists.assists}</div>
+            <div className="text-sm text-muted-foreground">Most Assists</div>
+            <div className="text-xs">{mostAssists.hero}</div>
+          </div>
+          <div className="text-center p-4 border rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">{highestGpm.gpm}</div>
+            <div className="text-sm text-muted-foreground">Highest GPM</div>
+            <div className="text-xs">{highestGpm.hero}</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = () => {
+export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ match }) => {
+  const players = getPlayersFromMatch(match);
+  const { radiantName, direName } = getTeamDisplayNames(match);
+  const matchResult = match?.result || 'radiant';
+
+  if (!match || players.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8 text-muted-foreground">
+        <div className="text-center">
+          <div className="text-lg font-medium mb-2">No player data available</div>
+          <div className="text-sm">Select a match to view player details.</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <TeamStatistics />
-      <RadiantPlayers />
-      <DirePlayers />
-      <PerformanceHighlights />
+      <TeamStatistics players={players} radiantName={radiantName} direName={direName} matchResult={matchResult} />
+      <RadiantPlayers players={players} teamName={radiantName} />
+      <DirePlayers players={players} teamName={direName} />
+      <PerformanceHighlights players={players} />
     </div>
   );
 }; 

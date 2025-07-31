@@ -366,17 +366,18 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={className}>
       {matches.map((match) => (
-        <MatchCard
-          key={match.id}
-          match={match}
-          selectedMatchId={selectedMatchId}
-          onSelectMatch={onSelectMatch}
-          onHideMatch={onHideMatch}
-          onRefreshMatch={onRefreshMatch}
-          teamMatches={teamMatches}
-        />
+        <div key={match.id} className="p-1">
+          <MatchCard
+            match={match}
+            selectedMatchId={selectedMatchId}
+            onSelectMatch={onSelectMatch}
+            onHideMatch={onHideMatch}
+            onRefreshMatch={onRefreshMatch}
+            teamMatches={teamMatches}
+          />
+        </div>
       ))}
     </div>
   );

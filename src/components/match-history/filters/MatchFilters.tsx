@@ -4,6 +4,8 @@ import { MultiSelectCombobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Toggle } from '@/components/ui/toggle';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConstantsContext } from '@/contexts/constants-context';
 import type { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
@@ -21,8 +23,7 @@ export interface MatchFilters {
   teamSide: 'all' | 'radiant' | 'dire';
   pickOrder: 'all' | 'first' | 'second';
   heroesPlayed: string[];
-  matchDuration: 'all' | 'short' | 'medium' | 'long';
-  playerPerformance: string[];
+  highPerformersOnly: boolean;
 }
 
 interface MatchFiltersProps {
@@ -240,45 +241,28 @@ function HeroesPlayedFilter({ value, onChange, matches, teamMatches }:
   );
 }
 
-function MatchDurationFilter({ value, onChange }: { value: MatchFilters['matchDuration']; onChange: (v: MatchFilters['matchDuration']) => void }) {
+function HighPerformersFilter({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div>
-      <Label className="mb-2 block">Match Duration</Label>
-      <Select value={value} onValueChange={v => onChange(v as MatchFilters['matchDuration'])}>
-        <SelectTrigger className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Durations</SelectItem>
-          <SelectItem value="short">Short (&lt; 30 min)</SelectItem>
-          <SelectItem value="medium">Medium (30-45 min)</SelectItem>
-          <SelectItem value="long">Long (&gt; 45 min)</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function PlayerPerformanceFilter({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const options = [
-    { value: 'high-kda', label: 'High KDA (> 3.0)' },
-    { value: 'high-gpm', label: 'High GPM (> 500)' },
-    { value: 'high-xpm', label: 'High XPM (> 600)' },
-    { value: 'high-last-hits', label: 'High Last Hits (> 200)' }
-  ];
-
-  return (
-    <div>
-      <Label className="mb-2 block">Player Performance</Label>
-      <MultiSelectCombobox
-        options={options}
-        value={value}
-        onValueChange={onChange}
-        placeholder="Select performance criteria..."
-        searchPlaceholder="Search performance criteria..."
-        emptyMessage="No criteria found."
-        className="w-full"
-      />
+    <div className="flex flex-col justify-end h-full py-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <Toggle
+                pressed={value}
+                onPressedChange={onChange}
+                size="sm"
+                className="px-3"
+              >
+                High Performing Heroes Only
+              </Toggle>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>5+ games with 60%+ win rate</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
@@ -325,24 +309,26 @@ function OpponentFilter({ value, onChange, teamMatches }:
 
 export const MatchFilters: React.FC<MatchFiltersProps> = ({ filters, onFiltersChange, matches, teamMatches, className }) => {
   const handleChange = <K extends keyof MatchFilters>(key: K, value: MatchFilters[K]) => {
-    onFiltersChange({ ...filters, [key]: value });
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
   };
 
   return (
-    <div className={`col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 ${className ?? ''}`}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ${className || ''}`}>
       <DateRangeFilter 
         value={filters.dateRange} 
         onChange={v => handleChange('dateRange', v)} 
-        customDateRange={filters.customDateRange} 
-        onCustomDateRangeChange={range => handleChange('customDateRange', range)} 
+        customDateRange={filters.customDateRange}
+        onCustomDateRangeChange={v => handleChange('customDateRange', v)}
       />
       <ResultFilter value={filters.result} onChange={v => handleChange('result', v)} />
       <TeamSideFilter value={filters.teamSide} onChange={v => handleChange('teamSide', v)} />
       <PickOrderFilter value={filters.pickOrder} onChange={v => handleChange('pickOrder', v)} />
       <HeroesPlayedFilter value={filters.heroesPlayed} onChange={v => handleChange('heroesPlayed', v)} matches={matches} teamMatches={teamMatches} />
-      <MatchDurationFilter value={filters.matchDuration} onChange={v => handleChange('matchDuration', v)} />
-      <PlayerPerformanceFilter value={filters.playerPerformance} onChange={v => handleChange('playerPerformance', v)} />
       <OpponentFilter value={filters.opponent} onChange={v => handleChange('opponent', v)} teamMatches={teamMatches} />
+      <HighPerformersFilter value={filters.highPerformersOnly} onChange={v => handleChange('highPerformersOnly', v)} />
     </div>
   );
 };

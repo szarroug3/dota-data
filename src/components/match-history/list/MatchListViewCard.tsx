@@ -233,7 +233,7 @@ export const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   
   if (matches.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-8 text-muted-foreground ${className}`}>
+      <div className="flex items-center justify-center p-8 text-muted-foreground">
         <div className="text-center">
           <div className="text-lg font-medium mb-2">No matches found</div>
           <div className="text-sm">Try adjusting your filters or adding more matches.</div>
@@ -246,22 +246,23 @@ export const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
     <>
       <div 
         ref={containerRef} 
-        className={`grid gap-4`} 
+        className="grid" 
         style={{ 
           gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           '--columns': columns.toString()
         } as React.CSSProperties}
       >
         {matches.map((match) => (
-          <MatchCard
-            key={match.id}
-            match={match}
-            selectedMatchId={selectedMatchId}
-            onSelectMatch={onSelectMatch}
-            onHideMatch={onHideMatch}
-            onRefreshMatch={onRefreshMatch}
-            teamMatch={teamMatches?.[match.id]}
-          />
+          <div key={match.id} className="p-1">
+            <MatchCard
+              match={match}
+              selectedMatchId={selectedMatchId}
+              onSelectMatch={onSelectMatch}
+              onHideMatch={onHideMatch}
+              onRefreshMatch={onRefreshMatch}
+              teamMatch={teamMatches?.[match.id]}
+            />
+          </div>
         ))}
       </div>
     </>

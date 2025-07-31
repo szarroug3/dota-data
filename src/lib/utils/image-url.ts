@@ -6,7 +6,7 @@
  */
 export function formatItemImageUrl(itemImagePath: string): string {
   const baseUrl = "https://cdn.cloudflare.steamstatic.com";
-  return baseUrl + itemImagePath;
+  return baseUrl + itemImagePath.replace(/[^a-zA-Z0-9/._?=-]/g, '');
 }
 
 /**

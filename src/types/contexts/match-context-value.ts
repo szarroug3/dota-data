@@ -6,6 +6,7 @@
  */
 
 import type { Hero, Item } from '@/types/contexts/constants-context-value';
+import type { PlayerRole } from '@/types/contexts/team-context-value';
 import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 // ============================================================================
@@ -110,7 +111,7 @@ export interface Match {
 export interface HeroPick {
   hero: Hero; // Hero data (always available since we wait for heroes to load)
   accountId: number;
-  role: PlayerRole;
+  role?: PlayerRole; // Optional - only show when we have valid role data
 }
 
 export interface PlayerMatchData {
@@ -195,15 +196,6 @@ export interface EventDetails {
   wardType?: 'observer' | 'sentry';
   wardLocation?: string;
 }
-
-export type PlayerRole =
-  | 'carry'
-  | 'mid'
-  | 'offlane'
-  | 'support'
-  | 'hard_support'
-  | 'jungle'
-  | 'roaming';
 
 // ============================================================================
 // MATCH CONTEXT STATE

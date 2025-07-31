@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import type { PlayerRole } from '@/types/contexts/team-context-value';
+
 /**
  * Player statistics view mode options
  */
@@ -22,11 +24,6 @@ export type PlayerStatsCategory =
   | 'objective'
   | 'positioning'
   | 'economy';
-
-/**
- * Player role classification
- */
-export type PlayerRole = 'carry' | 'mid' | 'offlane' | 'support' | 'hard_support';
 
 /**
  * Skill bracket classification

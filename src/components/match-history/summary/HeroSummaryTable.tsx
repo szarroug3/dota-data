@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,12 +20,13 @@ interface HeroSummary {
   winRate?: number;
   totalGames: number;
   primaryAttribute?: string;
-  playedRoles?: string[]; // Roles this hero was actually played as
+  playedRoles?: { role: string; count: number }[]; // Roles with counts
 }
 
 interface HeroSummaryTableProps {
   matches: Match[];
   teamMatches: Record<number, TeamMatchParticipation>;
+  showHighPerformersOnly?: boolean;
   className?: string;
 }
 
@@ -33,7 +34,7 @@ type SortField = 'name' | 'count' | 'winRate';
 type SortDirection = 'asc' | 'desc';
 
 function aggregateHeroes(matches: Match[], teamMatches: Record<number, TeamMatchParticipation>, isActiveTeam: boolean, heroes: Hero[]): HeroSummary[] {
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number; roles: Set<string> }> = {};
+  const heroCounts: Record<string, { count: number; wins: number; totalGames: number; roles: Record<string, number> }> = {};
   
   if (matches.length === 0) return [];
   
@@ -64,17 +65,18 @@ function aggregateHeroes(matches: Match[], teamMatches: Record<number, TeamMatch
     heroPicks.forEach(pick => {
       const heroId = pick.hero.id;
       if (!heroCounts[heroId]) {
-        heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0, roles: new Set() };
+        heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0, roles: {} };
       }
       
       heroCounts[heroId].count++;
       heroCounts[heroId].totalGames++;
       
-      // Track the role this hero was played as (only for active team)
-      if (isActiveTeam) {
-        if (pick.role) {
-          heroCounts[heroId].roles.add(pick.role);
+      // Track the role this hero was played as (for all picks)
+      if (pick.role) {
+        if (!heroCounts[heroId].roles[pick.role]) {
+          heroCounts[heroId].roles[pick.role] = 0;
         }
+        heroCounts[heroId].roles[pick.role]++;
       }
       
       // Determine if this match was a win for the active team
@@ -97,7 +99,7 @@ function aggregateHeroes(matches: Match[], teamMatches: Record<number, TeamMatch
         winRate: stats.count > 0 ? (stats.wins / stats.count) * 100 : 0,
         totalGames: stats.totalGames,
         primaryAttribute: heroData?.primaryAttribute,
-        playedRoles: isActiveTeam ? Array.from(stats.roles) : undefined,
+        playedRoles: Object.entries(stats.roles).map(([role, count]) => ({ role, count })),
       };
     });
 }
@@ -251,10 +253,15 @@ function renderHeroRow(hero: HeroSummary) {
       </TableCell>
       <TableCell>
         <div>
-          <div className="font-medium">{hero.heroName}</div>
+          <div className="font-medium flex items-center gap-2">
+            {hero.heroName}
+            {hero.count > 5 && (hero.winRate || 0) > 60 && (
+              <Star className="w-4 h-4 text-yellow-500" />
+            )}
+          </div>
           {hero.playedRoles && hero.playedRoles.length > 0 && (
             <div className="text-xs text-muted-foreground">
-              {hero.playedRoles.join(', ')}
+              {hero.playedRoles.map(role => `${role.role} (${role.count})`).join(', ')}
             </div>
           )}
         </div>
@@ -330,7 +337,7 @@ function HeroSummarySection({
   );
 }
 
-export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, teamMatches, className }) => {
+export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, teamMatches, showHighPerformersOnly, className }) => {
   const { heroes } = useConstantsContext();
   const [activeTeamSort, setActiveTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'winRate', direction: 'desc' });
   const [opponentTeamSort, setOpponentTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
@@ -355,6 +362,17 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   const opponentTeamPicks = aggregateHeroes(matches, teamMatches, false, heroesArray);
   const activeTeamBans = aggregateBans(matches, teamMatches, true, heroesArray);
   const opponentTeamBans = aggregateBans(matches, teamMatches, false, heroesArray);
+
+  // Filter for high performers if enabled
+  const filterHighPerformers = (heroes: HeroSummary[]) => {
+    if (!showHighPerformersOnly) return heroes;
+    return heroes.filter(hero => hero.count > 5 && (hero.winRate || 0) > 60);
+  };
+
+  const filteredActiveTeamPicks = filterHighPerformers(activeTeamPicks);
+  const filteredOpponentTeamPicks = filterHighPerformers(opponentTeamPicks);
+  const filteredActiveTeamBans = filterHighPerformers(activeTeamBans);
+  const filteredOpponentTeamBans = filterHighPerformers(opponentTeamBans);
 
   const handleActiveTeamSort = (field: SortField) => {
     setActiveTeamSort(prev => ({
@@ -385,8 +403,8 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center justify-between">
+    <div className={className}>
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Hero Summary</h3>
         <div className="text-sm text-muted-foreground">
           Based on {matches.length} match{matches.length !== 1 ? 'es' : ''}
@@ -397,28 +415,28 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <HeroSummarySection 
           title="Active Team Picks" 
-          heroes={activeTeamPicks} 
+          heroes={filteredActiveTeamPicks} 
           sortField={activeTeamSort.field}
           sortDirection={activeTeamSort.direction}
           onSortChange={handleActiveTeamSort}
         />
         <HeroSummarySection 
           title="Opponent Team Picks" 
-          heroes={opponentTeamPicks}
+          heroes={filteredOpponentTeamPicks}
           sortField={opponentTeamSort.field}
           sortDirection={opponentTeamSort.direction}
           onSortChange={handleOpponentTeamSort}
         />
         <HeroSummarySection 
           title="Active Team Bans" 
-          heroes={activeTeamBans}
+          heroes={filteredActiveTeamBans}
           sortField={activeTeamBansSort.field}
           sortDirection={activeTeamBansSort.direction}
           onSortChange={handleActiveTeamBansSort}
         />
         <HeroSummarySection 
           title="Opponent Team Bans" 
-          heroes={opponentTeamBans}
+          heroes={filteredOpponentTeamBans}
           sortField={opponentTeamBansSort.field}
           sortDirection={opponentTeamBansSort.direction}
           onSortChange={handleOpponentTeamBansSort}
