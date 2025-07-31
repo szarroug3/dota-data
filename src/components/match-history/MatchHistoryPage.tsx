@@ -155,10 +155,10 @@ function renderMainContent(
 }
 
 // Helper function to render the hero summary table
-function renderHeroSummaryTable(visibleMatches: Match[]) {
+function renderHeroSummaryTable(visibleMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>) {
   return (
     <div className="p-4">
-      <HeroSummaryTable matches={visibleMatches} />
+      <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} />
     </div>
   );
 }
@@ -225,7 +225,7 @@ const renderMatchHistoryContent = (
         setMatchDetailsViewMode
       )}
       
-      {renderHeroSummaryTable(visibleMatches)}
+      {renderHeroSummaryTable(visibleMatches, teamMatches)}
       
       {renderHiddenMatchesModal(
         showHiddenModal,

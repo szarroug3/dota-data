@@ -138,8 +138,6 @@ function assignRemainingRoles(playerAnalysis: PlayerAnalysisResult[], roleMap: R
   unassigned.forEach(analysis => {
     if (analysis.player.is_roaming) {
       roleMap[analysis.player.account_id.toString()] = 'roaming';
-    } else {
-      roleMap[analysis.player.account_id.toString()] = 'unknown';
     }
   });
 }
@@ -238,7 +236,7 @@ export function convertPlayer(
     accountId: player.account_id,
     playerName: player.personaname || `Player ${player.account_id}`,
     hero: playerHero,
-    role: roleMap[player.account_id.toString()] || 'unknown',
+    role: roleMap[player.account_id.toString()],
     items: playerItems,
     stats,
     heroStats
@@ -304,7 +302,6 @@ export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string
           accountId: 0, // Will be filled when we have player-hero mapping
           playerName: '', // Will be determined from player slot
           hero,
-          role: 'unknown', // Will be determined from player slot
           items: [],
           stats: { kills: 0, deaths: 0, assists: 0, lastHits: 0, denies: 0, gpm: 0, xpm: 0, netWorth: 0, level: 1 },
           heroStats: { damageDealt: 0, healingDone: 0, towerDamage: 0 }

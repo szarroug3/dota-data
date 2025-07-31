@@ -117,7 +117,7 @@ export interface PlayerMatchData {
   accountId: number;
   playerName: string;
   hero: Hero; // Hero data (always available since we wait for heroes to load)
-  role: PlayerRole;
+  role?: PlayerRole;
   
   // Performance stats
   stats: {
@@ -196,15 +196,14 @@ export interface EventDetails {
   wardLocation?: string;
 }
 
-export type PlayerRole = 
+export type PlayerRole =
   | 'carry'
   | 'mid'
   | 'offlane'
   | 'support'
   | 'hard_support'
   | 'jungle'
-  | 'roaming'
-  | 'unknown';
+  | 'roaming';
 
 // ============================================================================
 // MATCH CONTEXT STATE
@@ -278,7 +277,7 @@ export interface PlayerAnalysis {
   playerName: string;
   heroId: number;
   heroName: string;
-  role: PlayerRole;
+  role?: PlayerRole;
   lane: number;
   farmPriority: number;
   supportScore: number;

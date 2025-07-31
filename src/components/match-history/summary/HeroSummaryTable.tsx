@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useConstantsContext } from '@/contexts/constants-context';
 import { cn } from '@/lib/utils';
 import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
+import type { HeroPick, Match } from '@/types/contexts/match-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface HeroSummary {
   heroId: string;
@@ -19,66 +20,147 @@ interface HeroSummary {
   winRate?: number;
   totalGames: number;
   primaryAttribute?: string;
-  roles?: string[];
+  playedRoles?: string[]; // Roles this hero was actually played as
 }
 
 interface HeroSummaryTableProps {
   matches: Match[];
+  teamMatches: Record<number, TeamMatchParticipation>;
   className?: string;
 }
 
 type SortField = 'name' | 'count' | 'winRate';
 type SortDirection = 'asc' | 'desc';
 
-// Mock hero data for demonstration
-const mockHeroes: Hero[] = [
-  { id: '1', name: 'crystal_maiden', localizedName: 'Crystal Maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/crystal_maiden_vert.jpg' },
-  { id: '2', name: 'juggernaut', localizedName: 'Juggernaut', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Pusher'], imageUrl: 'https://dota2protracker.com/static/heroes/juggernaut_vert.jpg' },
-  { id: '3', name: 'lina', localizedName: 'Lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Nuker'], imageUrl: 'https://dota2protracker.com/static/heroes/lina_vert.jpg' },
-  { id: '4', name: 'pudge', localizedName: 'Pudge', primaryAttribute: 'strength', attackType: 'melee', roles: ['Disabler', 'Initiator'], imageUrl: 'https://dota2protracker.com/static/heroes/pudge_vert.jpg' },
-  { id: '5', name: 'lion', localizedName: 'Lion', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['Support', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/lion_vert.jpg' },
-  { id: '6', name: 'phantom_assassin', localizedName: 'Phantom Assassin', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry', 'Escape'], imageUrl: 'https://dota2protracker.com/static/heroes/phantom_assassin_vert.jpg' },
-  { id: '7', name: 'earthshaker', localizedName: 'Earthshaker', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Disabler'], imageUrl: 'https://dota2protracker.com/static/heroes/earthshaker_vert.jpg' },
-  { id: '8', name: 'windranger', localizedName: 'Windranger', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Support'], imageUrl: 'https://dota2protracker.com/static/heroes/windranger_vert.jpg' },
-  { id: '9', name: 'axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['Initiator', 'Durable'], imageUrl: 'https://dota2protracker.com/static/heroes/axe_vert.jpg' },
-  { id: '10', name: 'nevermore', localizedName: 'Shadow Fiend', primaryAttribute: 'agility', attackType: 'ranged', roles: ['Carry', 'Nuker'], imageUrl: 'https://dota2protracker.com/static/hero' },
-];
-
-function aggregateHeroes(matches: Match[], isActiveTeam: boolean, heroes: Hero[]): HeroSummary[] {
-  // Create mock hero usage data based on matches
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number }> = {};
+function aggregateHeroes(matches: Match[], teamMatches: Record<number, TeamMatchParticipation>, isActiveTeam: boolean, heroes: Hero[]): HeroSummary[] {
+  const heroCounts: Record<string, { count: number; wins: number; totalGames: number; roles: Set<string> }> = {};
   
-  // Generate mock data based on match count
-  const matchCount = matches.length;
-  if (matchCount === 0) return [];
+  if (matches.length === 0) return [];
   
-  // Use a subset of mock heroes for demonstration
-  const availableHeroes = mockHeroes.slice(0, 5);
-  
-  availableHeroes.forEach((hero, index) => {
-    const usageCount = Math.max(1, Math.floor(matchCount * (0.8 - index * 0.15)));
-    const winCount = Math.floor(usageCount * (0.6 + Math.random() * 0.3)); // 60-90% win rate
+  // Process each match to extract hero data
+  matches.forEach(match => {
+    const teamMatchData = teamMatches[match.id];
+    if (!teamMatchData || !teamMatchData.side) return; // Skip if no team data or side info
     
-    heroCounts[hero.id] = {
-      count: usageCount,
-      wins: winCount,
-      totalGames: usageCount
-    };
+    let heroPicks: HeroPick[] = [];
+    
+    if (isActiveTeam) {
+      // For active team, use the side from teamMatches
+      if (teamMatchData.side === 'radiant') {
+        heroPicks = match.draft.radiantPicks;
+      } else if (teamMatchData.side === 'dire') {
+        heroPicks = match.draft.direPicks;
+      }
+    } else {
+      // For opponent team, use the opposite side
+      if (teamMatchData.side === 'radiant') {
+        heroPicks = match.draft.direPicks;
+      } else if (teamMatchData.side === 'dire') {
+        heroPicks = match.draft.radiantPicks;
+      }
+    }
+    
+    // Count hero usage and wins, track roles
+    heroPicks.forEach(pick => {
+      const heroId = pick.hero.id;
+      if (!heroCounts[heroId]) {
+        heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0, roles: new Set() };
+      }
+      
+      heroCounts[heroId].count++;
+      heroCounts[heroId].totalGames++;
+      
+      // Track the role this hero was played as (only for active team)
+      if (isActiveTeam) {
+        if (pick.role) {
+          heroCounts[heroId].roles.add(pick.role);
+        }
+      }
+      
+      // Determine if this match was a win for the active team
+      const isWin = (teamMatchData.side === match.result);
+      
+      if (isWin) {
+        heroCounts[heroId].wins++;
+      }
+    });
   });
   
-  return [];
   return Object.entries(heroCounts)
     .map(([heroId, stats]) => {
-      const heroData = heroes.find(h => h.id === heroId) || mockHeroes.find(h => h.id === heroId);
+      const heroData = heroes.find(h => h.id === heroId);
       return {
         heroId,
         heroName: heroData?.localizedName || `Hero ${heroId}`,
         heroImage: heroData?.imageUrl,
         count: stats.count,
-        winRate: (stats.wins / stats.count) * 100, // Always calculate win rate
+        winRate: stats.count > 0 ? (stats.wins / stats.count) * 100 : 0,
         totalGames: stats.totalGames,
         primaryAttribute: heroData?.primaryAttribute,
-        roles: heroData?.roles,
+        playedRoles: isActiveTeam ? Array.from(stats.roles) : undefined,
+      };
+    });
+}
+
+function aggregateBans(matches: Match[], teamMatches: Record<number, TeamMatchParticipation>, isActiveTeam: boolean, heroes: Hero[]): HeroSummary[] {
+  const heroCounts: Record<string, { count: number; wins: number; totalGames: number }> = {};
+  
+  if (matches.length === 0) return [];
+  
+  // Process each match to extract ban data
+  matches.forEach(match => {
+    const teamMatchData = teamMatches[match.id];
+    if (!teamMatchData || !teamMatchData.side) return; // Skip if no team data or side info
+    
+    let heroIds: string[] = [];
+    
+    if (isActiveTeam) {
+      // For active team bans, use the side from teamMatches
+      if (teamMatchData.side === 'radiant') {
+        heroIds = match.draft.radiantBans;
+      } else if (teamMatchData.side === 'dire') {
+        heroIds = match.draft.direBans;
+      }
+    } else {
+      // For opponent team bans, use the opposite side
+      if (teamMatchData.side === 'radiant') {
+        heroIds = match.draft.direBans;
+      } else if (teamMatchData.side === 'dire') {
+        heroIds = match.draft.radiantBans;
+      }
+    }
+    
+    // Count hero bans
+    heroIds.forEach(heroId => {
+      if (!heroCounts[heroId]) {
+        heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0 };
+      }
+      
+      heroCounts[heroId].count++;
+      heroCounts[heroId].totalGames++;
+      
+      // For bans, we don't track wins since bans don't win games
+      // But we can track if the team that banned won the match
+      const isWin = (teamMatchData.side === match.result);
+      
+      if (isWin) {
+        heroCounts[heroId].wins++;
+      }
+    });
+  });
+  
+  return Object.entries(heroCounts)
+    .map(([heroId, stats]) => {
+      const heroData = heroes.find(h => h.id === heroId);
+      return {
+        heroId,
+        heroName: heroData?.localizedName || `Hero ${heroId}`,
+        heroImage: heroData?.imageUrl,
+        count: stats.count,
+        winRate: stats.count > 0 ? (stats.wins / stats.count) * 100 : 0,
+        totalGames: stats.totalGames,
+        primaryAttribute: heroData?.primaryAttribute,
+        playedRoles: undefined, // Bans don't have played roles
       };
     });
 }
@@ -104,27 +186,112 @@ function sortHeroes(heroes: HeroSummary[], sortField: SortField, sortDirection: 
 }
 
 function getProgressBarColor(count: number, winRate: number): string {
-  // Blue for high performance heroes
-  if ((count >= 5 && winRate >= 80) || (count >= 8 && winRate >= 70)) {
+  if (winRate >= 80) {
+    return 'bg-primary';
+  } else if (winRate >= 50) {
     return 'bg-blue-500';
+  } else {
+    return 'bg-yellow-600';
   }
-  // Default color for other heroes
-  return 'bg-primary';
+}
+
+function renderSortHeader(field: SortField, label: string, sortField: SortField, sortDirection: SortDirection, onSortChange?: (field: SortField) => void, alignment?: string) {
+  return (
+    <div 
+      className={`flex items-center cursor-pointer hover:bg-muted/50 rounded ${alignment || ''}`}
+      onClick={() => onSortChange?.(field)}
+    >
+      <span className={alignment === 'justify-center' ? 'flex-1 text-center' : ''}>{label}</span>
+      {onSortChange && (
+        sortField === field ? (
+          sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+        ) : (
+          <div className="w-3 h-3" />
+        )
+      )}
+    </div>
+  );
+}
+
+function renderTableHeaders(sortField: SortField, sortDirection: SortDirection, onSortChange?: (field: SortField) => void) {
+  return (
+    <TableHeader>
+      <TableRow>
+        <TableHead className="w-12">
+          {/* Avatar column - no header */}
+        </TableHead>
+        <TableHead>
+          {renderSortHeader('name', 'Name', sortField, sortDirection, onSortChange)}
+        </TableHead>
+        <TableHead className="text-center">
+          {renderSortHeader('count', 'Count', sortField, sortDirection, onSortChange, 'justify-center')}
+        </TableHead>
+        <TableHead className="text-right">
+          {renderSortHeader('winRate', 'Win Rate', sortField, sortDirection, onSortChange, 'justify-end')}
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function renderHeroRow(hero: HeroSummary) {
+  return (
+    <TableRow key={hero.heroId}>
+      <TableCell className="w-12">
+        <Avatar className="w-8 h-8 border-2 border-background">
+          <AvatarImage 
+            src={hero.heroImage} 
+            alt={hero.heroName}
+            className="object-cover object-center"
+          />
+          <AvatarFallback className="text-xs">
+            {hero.heroName.split(' ').map(word => word[0]).join('').toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </TableCell>
+      <TableCell>
+        <div>
+          <div className="font-medium">{hero.heroName}</div>
+          {hero.playedRoles && hero.playedRoles.length > 0 && (
+            <div className="text-xs text-muted-foreground">
+              {hero.playedRoles.join(', ')}
+            </div>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <Badge variant="secondary" className="text-xs">
+          {hero.count}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-xs text-muted-foreground">
+            {hero.winRate?.toFixed(1)}%
+          </span>
+          <div className="w-12">
+            <Progress 
+              value={hero.winRate || 0} 
+              indicatorClassName={cn(
+                getProgressBarColor(hero.count, hero.winRate || 0)
+              )}
+            />
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 }
 
 function HeroSummarySection({ 
   title, 
   heroes, 
-  showWinRate = false,
-  showHeroImages = false,
   sortField = 'winRate' as SortField,
   sortDirection = 'desc' as SortDirection,
   onSortChange
 }: { 
   title: string; 
   heroes: HeroSummary[]; 
-  showWinRate?: boolean;
-  showHeroImages?: boolean;
   sortField?: SortField;
   sortDirection?: SortDirection;
   onSortChange?: (field: SortField) => void;
@@ -133,11 +300,11 @@ function HeroSummarySection({
 
   if (heroes.length === 0) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="text-sm">{title}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex items-center justify-center">
           <div className="text-sm text-muted-foreground text-center py-4">
             No data available
           </div>
@@ -146,135 +313,16 @@ function HeroSummarySection({
     );
   }
 
-  // const SortButton = ({ field, label }: { field: SortField; label: string }) => (
-  //   <Button
-  //     variant="ghost"
-  //     size="sm"
-  //     className="h-auto p-1 text-xs inline-flex items-center gap-1"
-  //     onClick={() => onSortChange?.(field)}
-  //   >
-  //     {label}
-  //     {sortField === field && (
-  //       sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-  //     )}
-  //   </Button>
-  // );
-
   return (
-    <Card>
-      <CardHeader>
+    <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="text-sm">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-y-auto min-h-0">
         <Table>
-          <TableHeader>
-            <TableRow>
-              {showHeroImages && (
-                <TableHead className="w-12">
-                  {/* Avatar column - no header */}
-                </TableHead>
-              )}
-              <TableHead>
-                <div 
-                  className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-1 py-1"
-                  onClick={() => onSortChange?.('name')}
-                >
-                  <span>Name</span>
-                  {onSortChange && (
-                    sortField === 'name' ? (
-                      sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                    ) : (
-                      <div className="w-3 h-3" />
-                    )
-                  )}
-                </div>
-              </TableHead>
-              <TableHead className="text-center">
-                <div 
-                  className="flex items-center justify-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-1 py-1"
-                  onClick={() => onSortChange?.('count')}
-                >
-                  <span>Count</span>
-                  {onSortChange && (
-                    sortField === 'count' ? (
-                      sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                    ) : (
-                      <div className="w-3 h-3" />
-                    )
-                  )}
-                </div>
-              </TableHead>
-              {showWinRate && (
-                <TableHead className="text-center">
-                  <div 
-                    className="flex items-center justify-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-1 py-1"
-                    onClick={() => onSortChange?.('winRate')}
-                  >
-                    <span>Win Rate</span>
-                    {onSortChange && (
-                      sortField === 'winRate' ? (
-                        sortDirection === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-                      ) : (
-                        <div className="w-3 h-3" />
-                      )
-                    )}
-                  </div>
-                </TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
+          {renderTableHeaders(sortField, sortDirection, onSortChange)}
           <TableBody>
-            {sortedHeroes.map((hero) => (
-              <TableRow key={hero.heroId}>
-                {showHeroImages && (
-                  <TableCell className="w-12">
-                    <Avatar className="w-8 h-8 border-2 border-background">
-                      <AvatarImage 
-                        src={hero.heroImage} 
-                        alt={hero.heroName}
-                        className="object-cover object-center"
-                      />
-                      <AvatarFallback className="text-xs">
-                        {hero.heroName.split(' ').map(word => word[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </TableCell>
-                )}
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{hero.heroName}</div>
-                    {hero.roles && (
-                      <div className="text-xs text-muted-foreground">
-                        {hero.roles.join(', ')}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="secondary" className="text-xs">
-                    {hero.count}
-                  </Badge>
-                </TableCell>
-                {showWinRate && hero.winRate !== undefined && (
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {hero.winRate.toFixed(1)}%
-                      </span>
-                      <div className="w-12">
-                        <Progress 
-                          value={hero.winRate} 
-                          className="h-1" 
-                          indicatorClassName={cn(
-                            getProgressBarColor(hero.count, hero.winRate)
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
+            {sortedHeroes.map(hero => renderHeroRow(hero))}
           </TableBody>
         </Table>
       </CardContent>
@@ -282,7 +330,7 @@ function HeroSummarySection({
   );
 }
 
-export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, className }) => {
+export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, teamMatches, className }) => {
   const { heroes } = useConstantsContext();
   const [activeTeamSort, setActiveTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'winRate', direction: 'desc' });
   const [opponentTeamSort, setOpponentTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
@@ -300,10 +348,13 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, cla
     );
   }
 
-  const activeTeamPicks = aggregateHeroes(matches, true, heroes);
-  const opponentTeamPicks = aggregateHeroes(matches, false, heroes);
-  const activeTeamBans = aggregateHeroes(matches, true, heroes);
-  const opponentTeamBans = aggregateHeroes(matches, false, heroes);
+  // Convert heroes object to array
+  const heroesArray = Object.values(heroes);
+
+  const activeTeamPicks = aggregateHeroes(matches, teamMatches, true, heroesArray);
+  const opponentTeamPicks = aggregateHeroes(matches, teamMatches, false, heroesArray);
+  const activeTeamBans = aggregateBans(matches, teamMatches, true, heroesArray);
+  const opponentTeamBans = aggregateBans(matches, teamMatches, false, heroesArray);
 
   const handleActiveTeamSort = (field: SortField) => {
     setActiveTeamSort(prev => ({
@@ -347,8 +398,6 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, cla
         <HeroSummarySection 
           title="Active Team Picks" 
           heroes={activeTeamPicks} 
-          showWinRate={true}
-          showHeroImages={true}
           sortField={activeTeamSort.field}
           sortDirection={activeTeamSort.direction}
           onSortChange={handleActiveTeamSort}
@@ -356,8 +405,6 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, cla
         <HeroSummarySection 
           title="Opponent Team Picks" 
           heroes={opponentTeamPicks}
-          showWinRate={true}
-          showHeroImages={true}
           sortField={opponentTeamSort.field}
           sortDirection={opponentTeamSort.direction}
           onSortChange={handleOpponentTeamSort}
@@ -365,8 +412,6 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, cla
         <HeroSummarySection 
           title="Active Team Bans" 
           heroes={activeTeamBans}
-          showWinRate={true}
-          showHeroImages={true}
           sortField={activeTeamBansSort.field}
           sortDirection={activeTeamBansSort.direction}
           onSortChange={handleActiveTeamBansSort}
@@ -374,8 +419,6 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, cla
         <HeroSummarySection 
           title="Opponent Team Bans" 
           heroes={opponentTeamBans}
-          showWinRate={true}
-          showHeroImages={true}
           sortField={opponentTeamBansSort.field}
           sortDirection={opponentTeamBansSort.direction}
           onSortChange={handleOpponentTeamBansSort}
