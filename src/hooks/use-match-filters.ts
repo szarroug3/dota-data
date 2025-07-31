@@ -97,15 +97,12 @@ function applyPickOrderFilter(teamMatch: TeamMatchParticipation | undefined, fil
 }
 
 function applyHeroesFilter(match: Match, teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
-  if (filters.heroesPlayed.length === 0 || !teamMatch) return true;
+  if (filters.heroesPlayed.length === 0 || !teamMatch?.side) return true;
   
-  // Get heroes played by the team in this match from draft data
-  const teamPicks = teamMatch.side === 'radiant' ? 
-    match.draft?.radiantPicks || [] : 
-    match.draft?.direPicks || [];
-  
-  const playedHeroes = teamPicks
-    .map(pick => pick.hero?.id?.toString())
+  // Get heroes played by the team in this match from player data
+  const teamPlayers = match.players[teamMatch.side] || [];
+  const playedHeroes = teamPlayers
+    .map(player => player.hero.id.toString())
     .filter((id): id is string => !!id);
   
   // Check if any of the filtered heroes were played
@@ -122,48 +119,54 @@ function applyOpponentFilter(teamMatch: TeamMatchParticipation | undefined, filt
   return filters.opponent.some(opponentNameFilter => opponentNameFilter === opponentName);
 }
 
-function applyHighPerformersFilter(match: Match, teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
+function applyHighPerformersFilter(match: Match, teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters, allMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, hiddenMatchIds: Set<number>): boolean {
   if (!filters.highPerformersOnly || !teamMatch?.side) return true;
   
+  // Calculate hero statistics from unhidden matches (all matches minus manually hidden ones)
+  const heroStats: Record<string, { count: number; wins: number; totalGames: number }> = {};
+  
+  // Aggregate hero statistics from unhidden matches
+  allMatches.forEach(matchData => {
+    // Skip manually hidden matches
+    if (hiddenMatchIds.has(matchData.id)) return;
+    
+    const matchTeamData = teamMatches[matchData.id];
+    if (!matchTeamData?.side) return;
+    
+    const teamPlayers = matchData.players[matchTeamData.side] || [];
+    const isWin = matchTeamData.result === 'won';
+    
+    teamPlayers.forEach(player => {
+      const heroId = player.hero.id.toString();
+      if (!heroStats[heroId]) {
+        heroStats[heroId] = { count: 0, wins: 0, totalGames: 0 };
+      }
+      
+      heroStats[heroId].count++;
+      heroStats[heroId].totalGames++;
+      if (isWin) {
+        heroStats[heroId].wins++;
+      }
+    });
+  });
+  
+  // Identify high-performing heroes (5+ games, 60%+ win rate)
+  const highPerformingHeroes = new Set(
+    Object.entries(heroStats)
+      .filter(([_, stats]) => stats.count >= 5 && (stats.wins / stats.count) >= 0.6)
+      .map(([heroId, _]) => heroId)
+  );
+  
+  // Check if current match contains any high-performing heroes
   const teamPlayers = match.players[teamMatch.side] || [];
-  if (teamPlayers.length === 0) return true;
-  
-  // Calculate team performance metrics
-  const totalKDA = teamPlayers.reduce((sum, player) => {
-    const kda = player.stats.deaths > 0 ? (player.stats.kills + player.stats.assists) / player.stats.deaths : player.stats.kills + player.stats.assists;
-    return sum + kda;
-  }, 0);
-  
-  const totalGPM = teamPlayers.reduce((sum, player) => sum + player.stats.gpm, 0);
-  const totalXPM = teamPlayers.reduce((sum, player) => sum + player.stats.xpm, 0);
-  
-  const avgKDA = totalKDA / teamPlayers.length;
-  const avgGPM = totalGPM / teamPlayers.length;
-  const avgXPM = totalXPM / teamPlayers.length;
-  
-  // High performer thresholds (5+ games equivalent, 60%+ win rate equivalent)
-  // For individual matches, we'll use high performance metrics
-  const highPerformerThresholds = {
-    kda: 3.5,
-    gpm: 550,
-    xpm: 650
-  };
-  
-  // Check if team performed at high level (meeting multiple criteria)
-  const highKDA = avgKDA >= highPerformerThresholds.kda;
-  const highGPM = avgGPM >= highPerformerThresholds.gpm;
-  const highXPM = avgXPM >= highPerformerThresholds.xpm;
-  
-  // Team must meet at least 2 out of 3 high performance criteria
-  const highPerformanceCount = [highKDA, highGPM, highXPM].filter(Boolean).length;
-  return highPerformanceCount >= 2;
+  return teamPlayers.some(player => highPerformingHeroes.has(player.hero.id.toString()));
 }
 
 // ============================================================================
 // MAIN FILTER FUNCTION
 // ============================================================================
 
-function applyAllFilters(
+function applyAllFiltersExceptHighPerformers(
   match: Match,
   teamMatches: Record<number, TeamMatchParticipation>,
   filters: MatchFilters,
@@ -176,8 +179,22 @@ function applyAllFilters(
     applyTeamSideFilter(teamMatch, filters) &&
     applyPickOrderFilter(teamMatch, filters) &&
     applyHeroesFilter(match, teamMatch, filters) &&
-    applyOpponentFilter(teamMatch, filters) &&
-    applyHighPerformersFilter(match, teamMatch, filters)
+    applyOpponentFilter(teamMatch, filters)
+  );
+}
+
+function applyAllFilters(
+  match: Match,
+  teamMatches: Record<number, TeamMatchParticipation>,
+  filters: MatchFilters,
+  allMatches: Match[],
+  hiddenMatchIds: Set<number>,
+): boolean {
+  const teamMatch = teamMatches[match.id];
+
+  return (
+    applyAllFiltersExceptHighPerformers(match, teamMatches, filters) &&
+    applyHighPerformersFilter(match, teamMatch, filters, allMatches, teamMatches, hiddenMatchIds)
   );
 }
 
@@ -189,9 +206,10 @@ function getFilterStats(
   matches: Match[],
   teamMatches: Record<number, TeamMatchParticipation>,
   filters: MatchFilters,
+  hiddenMatchIds: Set<number>,
 ): FilterStats {
   const totalMatches = matches.length;
-  const filteredMatches = matches.filter(match => applyAllFilters(match, teamMatches, filters));
+  const filteredMatches = matches.filter(match => applyAllFilters(match, teamMatches, filters, matches, hiddenMatchIds));
   
   // Count matches that pass each individual filter
   const filterBreakdown = {
@@ -216,10 +234,12 @@ function getFilterStats(
       const teamMatch = teamMatches[match.id];
       return applyOpponentFilter(teamMatch, filters);
     }).length,
-    highPerformersOnly: matches.filter(match => {
-      const teamMatch = teamMatches[match.id];
-      return applyHighPerformersFilter(match, teamMatch, filters);
-    }).length,
+    highPerformersOnly: (() => {
+      return matches.filter(match => {
+        const teamMatch = teamMatches[match.id];
+        return applyHighPerformersFilter(match, teamMatch, filters, matches, teamMatches, hiddenMatchIds);
+      }).length;
+    })(),
   };
   
   return {
@@ -237,14 +257,15 @@ export function useMatchFilters(
   matches: Match[],
   teamMatches: Record<number, TeamMatchParticipation>,
   filters: MatchFilters,
+  hiddenMatchIds: Set<number> = new Set(),
 ) {
   const filteredMatches = useMemo(() => {
-    return matches.filter(match => applyAllFilters(match, teamMatches, filters));
-  }, [matches, teamMatches, filters]);
+    return matches.filter(match => applyAllFilters(match, teamMatches, filters, matches, hiddenMatchIds));
+  }, [matches, teamMatches, filters, hiddenMatchIds]);
   
   const filterStats = useMemo(() => {
-    return getFilterStats(matches, teamMatches, filters);
-  }, [matches, teamMatches, filters]);
+    return getFilterStats(matches, teamMatches, filters, hiddenMatchIds);
+  }, [matches, teamMatches, filters, hiddenMatchIds]);
   
   return {
     filteredMatches,

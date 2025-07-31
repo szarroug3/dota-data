@@ -110,39 +110,6 @@ function ResultFilter({ value, onChange }: { value: MatchFilters['result']; onCh
   );
 }
 
-// TODO: Fix OpponentFilter to work with actual Match type
-// function OpponentFilter({ value, onChange, matches }: { value: string[]; onChange: (v: string[]) => void; matches: Match[] }) {
-//   // Get all unique opponent names from matches
-//   const opponentSet = new Set<string>();
-//   matches.forEach(match => {
-//     if (match.opponent) {
-//       opponentSet.add(match.opponent);
-//     }
-//   });
-//   
-//   const opponents = Array.from(opponentSet).sort();
-//   
-//   const options = opponents.map(opponent => ({
-//     value: opponent,
-//     label: opponent
-//   }));
-//
-//   return (
-//     <div>
-//       <Label className="mb-2 block">Opponent</Label>
-//       <MultiSelectCombobox
-//         options={options}
-//         value={value}
-//         onValueChange={onChange}
-//         placeholder="Search opponents..."
-//         searchPlaceholder="Search opponents..."
-//         emptyMessage="No opponents found."
-//         className="w-full"
-//       />
-//     </div>
-//   );
-// }
-
 function TeamSideFilter({ value, onChange }: { value: MatchFilters['teamSide']; onChange: (v: MatchFilters['teamSide']) => void }) {
   return (
     <div>

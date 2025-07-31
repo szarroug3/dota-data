@@ -110,8 +110,6 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
         return;
       }
       
-      console.log('Items fetched successfully:', Object.keys(result).length, 'items');
-      
       // Convert items to our format, keyed by numeric ID for match data lookup
       const items: Record<number, Item> = {};
       

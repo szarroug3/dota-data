@@ -165,11 +165,7 @@ function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>
     player.item_3, player.item_4, player.item_5
   ];
   
-  console.log('Player item IDs:', itemIds);
-  console.log('Available items:', Object.keys(items));
-  console.log('Sample available items:', Object.entries(items).slice(0, 5));
-  
-  const result = itemIds
+  return itemIds
     .filter(itemId => itemId !== 0)
     .map(itemId => {
       const item = items[itemId];
@@ -177,9 +173,6 @@ function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>
       return item;
     })
     .filter(Boolean);
-    
-  console.log('Processed items:', result);
-  return result;
 }
 
 function getBasicStats(player: OpenDotaMatchPlayer) {

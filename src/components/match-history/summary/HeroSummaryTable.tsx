@@ -26,6 +26,7 @@ interface HeroSummary {
 interface HeroSummaryTableProps {
   matches: Match[];
   teamMatches: Record<number, TeamMatchParticipation>;
+  allMatches?: Match[];
   showHighPerformersOnly?: boolean;
   className?: string;
 }
@@ -255,7 +256,7 @@ function renderHeroRow(hero: HeroSummary) {
         <div>
           <div className="font-medium flex items-center gap-2">
             {hero.heroName}
-            {hero.count > 5 && (hero.winRate || 0) > 60 && (
+            {hero.count >= 5 && (hero.winRate || 0) >= 60 && (
               <Star className="w-4 h-4 text-yellow-500" />
             )}
           </div>

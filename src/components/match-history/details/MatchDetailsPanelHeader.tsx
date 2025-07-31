@@ -1,7 +1,7 @@
 import { Clock, TrendingUp, Users, Zap } from 'lucide-react';
 import React from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Match } from '@/types/contexts/match-context-value';
 
 import type { MatchDetailsPanelMode } from './MatchDetailsPanel';
@@ -22,43 +22,27 @@ const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({
   viewMode, 
   onViewModeChange,
 }) => (
-  <div className="@[180px]:flex hidden gap-2">
-    <Button
-      variant={viewMode === 'draft' ? 'default' : 'outline'}
-      size="sm"
-      className={`flex items-center gap-2`}
-      onClick={() => onViewModeChange('draft')}
-    >
-      <Clock className="w-5 h-5" />
-      <span className="@[420px]:block hidden">Draft</span>
-    </Button>
-    <Button
-      variant={viewMode === 'performance' ? 'default' : 'outline'}
-      size="sm"
-      className={`flex items-center gap-2`}
-      onClick={() => onViewModeChange('performance')}
-    >
-      <TrendingUp className="w-5 h-5" />
-      <span className="@[420px]:block hidden">Performance</span>
-    </Button>
-    <Button
-      variant={viewMode === 'players' ? 'default' : 'outline'}
-      size="sm"
-      className={`flex items-center gap-2`}
-      onClick={() => onViewModeChange('players')}
-    >
-      <Users className="w-5 h-5" />
-      <span className="@[420px]:block hidden">Players</span>
-    </Button>
-    <Button
-      variant={viewMode === 'events' ? 'default' : 'outline'}
-      size="sm"
-      className={`flex items-center gap-2`}
-      onClick={() => onViewModeChange('events')}
-    >
-      <Zap className="w-5 h-5" />
-      <span className="@[420px]:block hidden">Events</span>
-    </Button>
+  <div className="@[180px]:flex hidden">
+    <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as MatchDetailsPanelMode)}>
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="draft" className="flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          <span className="@[710px]:block hidden">Draft</span>
+        </TabsTrigger>
+        <TabsTrigger value="performance" className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" />
+          <span className="@[710px]:block hidden">Performance</span>
+        </TabsTrigger>
+        <TabsTrigger value="players" className="flex items-center gap-2">
+          <Users className="w-4 h-4" />
+          <span className="@[710px]:block hidden">Players</span>
+        </TabsTrigger>
+        <TabsTrigger value="events" className="flex items-center gap-2">
+          <Zap className="w-4 h-4" />
+          <span className="@[710px]:block hidden">Events</span>
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   </div>
 )
 

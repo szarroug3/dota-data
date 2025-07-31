@@ -110,9 +110,9 @@ function getMatchHistoryEmptyState(teamDataList: TeamData[], activeTeam: { teamI
 }
 
 // Helper function to render the hero summary table
-function renderHeroSummaryTable(visibleMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>) {
+function renderHeroSummaryTable(visibleMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, allMatches: Match[]) {
   return (
-    <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} />
+    <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} allMatches={allMatches} />
   );
 }
 
@@ -229,8 +229,8 @@ export const MatchHistoryPage: React.FC = () => {
     return selectedTeam?.matches || {};
   }, [getSelectedTeam]);
 
-  // Apply filters using the new hook
-  const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters);
+  // Apply filters using the new hook (without high performers filter for hidden matches calculation)
+  const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set());
 
   // Hide a match (remove from visible, add to hidden)
   const { 
@@ -241,6 +241,9 @@ export const MatchHistoryPage: React.FC = () => {
     handleUnhideMatch, 
     visibleMatches 
   } = useHiddenMatches(filteredMatches);
+
+  // Apply filters again with hidden matches excluded for high performers calculation
+  const { filteredMatches: finalFilteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set(hiddenMatches.map(m => m.id)));
 
   // Convert teams map to array for compatibility
   const teamDataList = useMemo(() => {
@@ -276,7 +279,7 @@ export const MatchHistoryPage: React.FC = () => {
           setShowHiddenModal,
           filters,
           setFilters,
-          visibleMatches,
+          finalFilteredMatches,
           activeTeamMatches,
           teamMatches,
           handleHideMatch,
