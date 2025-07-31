@@ -2,9 +2,10 @@ import { Crown } from 'lucide-react';
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import type { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
+import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface MatchDetailsPanelPlayersProps {
   match?: Match;
@@ -31,52 +32,48 @@ interface Player {
   heroImageUrl: string;
 }
 
-// Helper function to get team display names
 function getTeamDisplayNames(match?: Match): { radiantName: string; direName: string } {
   if (!match) {
     return { radiantName: 'Radiant', direName: 'Dire' };
   }
-  
-  return {
-    radiantName: match.radiant.name || 'Radiant',
-    direName: match.dire.name || 'Dire'
-  };
+
+  // Try to get team names from the match data
+  const radiantName = match.radiant?.name || 'Radiant';
+  const direName = match.dire?.name || 'Dire';
+
+  return { radiantName, direName };
 }
 
-// Convert PlayerMatchData to Player interface
 function convertPlayerMatchData(player: PlayerMatchData, team: 'radiant' | 'dire'): Player {
-  console.log('SAMREEN', player)
   return {
     id: player.accountId.toString(),
     name: player.playerName,
     hero: player.hero.localizedName,
     team,
     role: player.role,
-    heroImageUrl: player.hero.imageUrl,
     level: player.stats.level,
     kills: player.stats.kills,
     deaths: player.stats.deaths,
     assists: player.stats.assists,
+    gpm: player.stats.gpm,
+    xpm: player.stats.xpm,
     netWorth: player.stats.netWorth,
     lastHits: player.stats.lastHits,
     denies: player.stats.denies,
-    gpm: player.stats.gpm,
-    xpm: player.stats.xpm,
-    items: player.items.map(item => item.name)
+    items: player.items.map((item: any) => item.localizedName),
+    heroImageUrl: player.hero.imageUrl,
   };
 }
 
-// Get all players from match data
 function getPlayersFromMatch(match?: Match): Player[] {
   if (!match) return [];
-  
-  const radiantPlayers = match.players.radiant.map(player => convertPlayerMatchData(player, 'radiant'));
-  const direPlayers = match.players.dire.map(player => convertPlayerMatchData(player, 'dire'));
-  
+
+  const radiantPlayers = (match.players.radiant || []).map(player => convertPlayerMatchData(player, 'radiant'));
+  const direPlayers = (match.players.dire || []).map(player => convertPlayerMatchData(player, 'dire'));
+
   return [...radiantPlayers, ...direPlayers];
 }
 
-// Extracted component for Player Card
 const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
   <Card className="p-4">
     <div className="flex items-start gap-4">
@@ -88,11 +85,15 @@ const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
       <div className="flex-1 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-medium">{player.name}</div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium">{player.name}</h3>
+              {player.role && (
+                <Badge variant="secondary" className="text-xs">
+                  {player.role}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">{player.hero}</p>
-            {player.role && (
-              <p className="text-xs text-muted-foreground capitalize">{player.role}</p>
-            )}
           </div>
           <div className="flex items-center gap-4">
             <div className="flex flex-wrap gap-1">
@@ -161,94 +162,34 @@ const PlayerCard: React.FC<{ player: Player }> = ({ player }) => (
   </Card>
 );
 
-// Extracted component for Team Statistics
-const TeamStatistics: React.FC<{ 
-  players: Player[]; 
-  radiantName: string; 
-  direName: string;
-  matchResult: 'radiant' | 'dire';
-}> = ({ players, radiantName, direName, matchResult }) => {
-  const radiantPlayers = players.filter(p => p.team === 'radiant');
-  const direPlayers = players.filter(p => p.team === 'dire');
-
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="pb-3">
-        <h3 className="text-lg font-semibold">Team Statistics</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-medium mb-4 flex items-center gap-2">
-            {radiantName}
-            {matchResult === 'radiant' && <Crown className="w-4 h-4 text-yellow-500" />}
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span>Total Kills:</span>
-              <span className="font-medium">{radiantPlayers.reduce((sum, p) => sum + p.kills, 0)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Total Deaths:</span>
-              <span className="font-medium">{radiantPlayers.reduce((sum, p) => sum + p.deaths, 0)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Average GPM:</span>
-              <span className="font-medium">
-                {radiantPlayers.length > 0 ? Math.round(radiantPlayers.reduce((sum, p) => sum + p.gpm, 0) / radiantPlayers.length) : 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Average XPM:</span>
-              <span className="font-medium">
-                {radiantPlayers.length > 0 ? Math.round(radiantPlayers.reduce((sum, p) => sum + p.xpm, 0) / radiantPlayers.length) : 0}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h3 className="font-medium mb-4 flex items-center gap-2">
-            {direName}
-            {matchResult === 'dire' && <Crown className="w-4 h-4 text-yellow-500" />}
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span>Total Kills:</span>
-              <span className="font-medium">{direPlayers.reduce((sum, p) => sum + p.kills, 0)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Total Deaths:</span>
-              <span className="font-medium">{direPlayers.reduce((sum, p) => sum + p.deaths, 0)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Average GPM:</span>
-              <span className="font-medium">
-                {direPlayers.length > 0 ? Math.round(direPlayers.reduce((sum, p) => sum + p.gpm, 0) / direPlayers.length) : 0}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Average XPM:</span>
-              <span className="font-medium">
-                {direPlayers.length > 0 ? Math.round(direPlayers.reduce((sum, p) => sum + p.xpm, 0) / direPlayers.length) : 0}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Extracted component for Radiant Players
-const RadiantPlayers: React.FC<{ players: Player[]; teamName: string }> = ({ players, teamName }) => {
+const RadiantPlayers: React.FC<{ 
+  players: Player[]; 
+  teamName: string; 
+  isWinner: boolean;
+  match?: Match;
+}> = ({ players, teamName, isWinner, match }) => {
   const radiantPlayers = players.filter(p => p.team === 'radiant');
+  
+  // Sort players by pick order if draft data is available
+  const sortedRadiantPlayers = match?.draft?.radiantPicks 
+    ? radiantPlayers.sort((a, b) => {
+        const aPickIndex = match.draft.radiantPicks.findIndex(pick => pick.hero.localizedName === a.hero);
+        const bPickIndex = match.draft.radiantPicks.findIndex(pick => pick.hero.localizedName === b.hero);
+        return aPickIndex - bPickIndex;
+      })
+    : radiantPlayers;
 
   return (
-    <div className="border rounded-lg p-4">
+    <div>
       <div className="pb-3">
-        <h3 className="text-lg font-semibold">{teamName} Players</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          {teamName}
+          {isWinner && <Crown className="w-4 h-4 text-yellow-500" />}
+        </h3>
       </div>
       <div className="space-y-4">
-        {radiantPlayers.map((player) => (
+        {sortedRadiantPlayers.map((player) => (
           <PlayerCard key={player.id} player={player} />
         ))}
       </div>
@@ -257,54 +198,35 @@ const RadiantPlayers: React.FC<{ players: Player[]; teamName: string }> = ({ pla
 };
 
 // Extracted component for Dire Players
-const DirePlayers: React.FC<{ players: Player[]; teamName: string }> = ({ players, teamName }) => {
+const DirePlayers: React.FC<{ 
+  players: Player[]; 
+  teamName: string; 
+  isWinner: boolean;
+  match?: Match;
+}> = ({ players, teamName, isWinner, match }) => {
   const direPlayers = players.filter(p => p.team === 'dire');
+  
+  // Sort players by pick order if draft data is available
+  const sortedDirePlayers = match?.draft?.direPicks 
+    ? direPlayers.sort((a, b) => {
+        const aPickIndex = match.draft.direPicks.findIndex(pick => pick.hero.localizedName === a.hero);
+        const bPickIndex = match.draft.direPicks.findIndex(pick => pick.hero.localizedName === b.hero);
+        return aPickIndex - bPickIndex;
+      })
+    : direPlayers;
 
   return (
-    <div className="border rounded-lg p-4">
+    <div>
       <div className="pb-3">
-        <h3 className="text-lg font-semibold">{teamName} Players</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          {teamName}
+          {isWinner && <Crown className="w-4 h-4 text-yellow-500" />}
+        </h3>
       </div>
       <div className="space-y-4">
-        {direPlayers.map((player) => (
+        {sortedDirePlayers.map((player) => (
           <PlayerCard key={player.id} player={player} />
         ))}
-      </div>
-    </div>
-  );
-};
-
-// Extracted component for Performance Highlights
-const PerformanceHighlights: React.FC<{ players: Player[] }> = ({ players }) => {
-  if (players.length === 0) return null;
-
-  const mostKills = players.reduce((max, player) => player.kills > max.kills ? player : max, players[0]);
-  const mostAssists = players.reduce((max, player) => player.assists > max.assists ? player : max, players[0]);
-  const highestGpm = players.reduce((max, player) => player.gpm > max.gpm ? player : max, players[0]);
-
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="pb-3">
-        <h3 className="text-lg font-semibold">Performance Highlights</h3>
-      </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{mostKills.kills}</div>
-            <div className="text-sm text-muted-foreground">Most Kills</div>
-            <div className="text-xs">{mostKills.hero}</div>
-          </div>
-          <div className="text-center p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{mostAssists.assists}</div>
-            <div className="text-sm text-muted-foreground">Most Assists</div>
-            <div className="text-xs">{mostAssists.hero}</div>
-          </div>
-          <div className="text-center p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{highestGpm.gpm}</div>
-            <div className="text-sm text-muted-foreground">Highest GPM</div>
-            <div className="text-xs">{highestGpm.hero}</div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -327,11 +249,19 @@ export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> =
   }
 
   return (
-    <div className="space-y-4">
-      <TeamStatistics players={players} radiantName={radiantName} direName={direName} matchResult={matchResult} />
-      <RadiantPlayers players={players} teamName={radiantName} />
-      <DirePlayers players={players} teamName={direName} />
-      <PerformanceHighlights players={players} />
+    <div className="space-y-6">
+      <RadiantPlayers 
+        players={players} 
+        teamName={radiantName} 
+        isWinner={matchResult === 'radiant'}
+        match={match}
+      />
+      <DirePlayers 
+        players={players} 
+        teamName={direName} 
+        isWinner={matchResult === 'dire'}
+        match={match}
+      />
     </div>
   );
 }; 

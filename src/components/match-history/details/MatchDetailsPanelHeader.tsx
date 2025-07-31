@@ -1,18 +1,16 @@
-import { Clock, TrendingUp, Users } from 'lucide-react';
+import { Clock, TrendingUp, Users, Zap } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
 import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
-export type MatchDetailsPanelMode = 'draft' | 'players' | 'performance';
+import type { MatchDetailsPanelMode } from './MatchDetailsPanel';
 
 interface MatchDetailsPanelHeaderProps {
-  match: Match;
-  teamMatch?: TeamMatchParticipation;
-  className?: string;
+  match?: Match;
   viewMode: MatchDetailsPanelMode;
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
+  className?: string;
 }
 
 interface MatchDetailsLayoutButtonsProps {
@@ -24,7 +22,7 @@ const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({
   viewMode, 
   onViewModeChange,
 }) => (
-  <div className="@[150px]:flex hidden gap-2">
+  <div className="@[180px]:flex hidden gap-2">
     <Button
       variant={viewMode === 'draft' ? 'default' : 'outline'}
       size="sm"
@@ -33,6 +31,15 @@ const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({
     >
       <Clock className="w-5 h-5" />
       <span className="@[420px]:block hidden">Draft</span>
+    </Button>
+    <Button
+      variant={viewMode === 'performance' ? 'default' : 'outline'}
+      size="sm"
+      className={`flex items-center gap-2`}
+      onClick={() => onViewModeChange('performance')}
+    >
+      <TrendingUp className="w-5 h-5" />
+      <span className="@[420px]:block hidden">Performance</span>
     </Button>
     <Button
       variant={viewMode === 'players' ? 'default' : 'outline'}
@@ -44,39 +51,30 @@ const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({
       <span className="@[420px]:block hidden">Players</span>
     </Button>
     <Button
-      variant={viewMode === 'performance' ? 'default' : 'outline'}
+      variant={viewMode === 'events' ? 'default' : 'outline'}
       size="sm"
       className={`flex items-center gap-2`}
-      onClick={() => onViewModeChange('performance')}
+      onClick={() => onViewModeChange('events')}
     >
-      <TrendingUp className="w-5 h-5" />
-      <span className="@[420px]:block hidden">Performance</span>
+      <Zap className="w-5 h-5" />
+      <span className="@[420px]:block hidden">Events</span>
     </Button>
   </div>
 )
 
 export const MatchDetailsPanelHeader: React.FC<MatchDetailsPanelHeaderProps> = ({
-  teamMatch,
   className = '',
   viewMode,
   onViewModeChange,
 }) => {
-  // Get opponent name from team match data, only show if we have a valid name
-  const opponentName = teamMatch?.opponentName;
-  const shouldShowOpponent = opponentName;
-
   return (
-    <div className="flex items-center justify-between gap-2 min-w-0">
-      <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
-        {shouldShowOpponent && (
-          <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
-            vs {opponentName}
-          </h3>
-        )}
+    <div className={`flex items-center justify-between gap-2 min-w-0 ${className}`}>
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[280px]:flex hidden">Match Details</h2>
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0 min-h-[2rem]">
-        <MatchDetailsLayoutButtons
+        <MatchDetailsLayoutButtons 
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
         />

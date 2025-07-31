@@ -4,21 +4,21 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
-import MatchDetailsPanelDraft from './MatchDetailsPanelDraft';
+import { MatchDetailsPanelDraft } from './MatchDetailsPanelDraft';
+import { MatchDetailsPanelEvents } from './MatchDetailsPanelEvents';
 import { MatchDetailsPanelHeader } from './MatchDetailsPanelHeader';
-import MatchDetailsPanelPerformance from './MatchDetailsPanelPerformance';
+import { MatchDetailsPanelPerformance } from './MatchDetailsPanelPerformance';
 import { MatchDetailsPanelPlayers } from './MatchDetailsPanelPlayers';
 
-export type MatchDetailsPanelMode = 'draft' | 'players' | 'performance';
+export type MatchDetailsPanelMode = 'draft' | 'performance' | 'players' | 'events';
 
 type DraftFilter = 'picks' | 'bans' | 'both';
 
 interface MatchDetailsPanelProps {
   match: Match;
-  teamMatch?: TeamMatchParticipation;
+  teamMatch: TeamMatchParticipation;
   viewMode: MatchDetailsPanelMode;
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
-  className?: string;
 }
 
 export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
@@ -34,7 +34,6 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
       <CardHeader className="flex-shrink-0">
         <MatchDetailsPanelHeader 
           match={match}
-          teamMatch={teamMatch}
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
         />
@@ -52,15 +51,21 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
             </div>
           )}
 
+          {viewMode === 'performance' && (
+            <div className="space-y-4">
+              <MatchDetailsPanelPerformance match={match} teamMatch={teamMatch} />
+            </div>
+          )}
+
           {viewMode === 'players' && (
             <div className="space-y-4">
               <MatchDetailsPanelPlayers match={match} teamMatch={teamMatch} />
             </div>
           )}
 
-          {viewMode === 'performance' && (
+          {viewMode === 'events' && (
             <div className="space-y-4">
-              <MatchDetailsPanelPerformance match={match} teamMatch={teamMatch} />
+              <MatchDetailsPanelEvents match={match} teamMatch={teamMatch} />
             </div>
           )}
       </CardContent>

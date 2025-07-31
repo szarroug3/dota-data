@@ -30,7 +30,7 @@ interface DraftPhase {
 
 const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFilter) => void }> = ({ filter, setFilter }) => (
   <div className="flex justify-end h-10">
-    <div className="@[150px]:flex hidden gap-2">
+    <div className="@[170px]:flex hidden gap-2">
       <Button
         variant={filter === 'picks' ? 'default' : 'outline'}
         size="sm"
@@ -232,7 +232,7 @@ const DraftSummary: React.FC<{
   );
 };
 
-const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({ 
+export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({ 
   match, 
   teamMatch: _teamMatch, 
   filter = 'both',
@@ -258,5 +258,3 @@ const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
     </div>
   );
 };
-
-export default MatchDetailsPanelDraft; 
