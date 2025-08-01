@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 import containerQueries from '@tailwindcss/container-queries';
 
-const breakpoints = ['130px', '150px', '250px', '270px', '300px', '350px', '400px', '450px', '500px'];
+const breakpoints = ['130px', '150px', '250px', '270px', '300px', '350px', '400px', '450px', '500px', '600px', '650px'];
 const display = ['block', 'hidden', 'flex'];
 
 const safelist = [
@@ -10,12 +10,6 @@ const safelist = [
   ...breakpoints.flatMap(bp => display.map(d => `@[${bp}]:${d}`)),
   ...breakpoints.flatMap(bp => display.map(d => `@container @[${bp}]:${d}`)), // optional backup
 ];
-// const safelist = [
-//   ...display, // base utilities like "hidden" or "block"
-//   ...breakpoints.flatMap(bp =>
-//     display.map(d => `@[${bp}]:${d}`)
-//   ),
-// ];
 
 export default {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
@@ -35,6 +29,8 @@ export default {
         '400px': '400px',
         '450px': '450px',
         '500px': '500px',
+        '600px': '600px',
+        '650px': '650px',
       },
       containerQueries: {
         // Add container query breakpoints
@@ -50,6 +46,8 @@ export default {
         '400px': '400px',
         '450px': '450px',
         '500px': '500px',
+        '600px': '600px',
+        '650px': '650px',
       },
       colors: {
         // Semantic color tokens for Dota Scout Assistant theme

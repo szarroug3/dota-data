@@ -221,7 +221,7 @@ function HighPerformersFilter({ value, onChange }: { value: boolean; onChange: (
                 size="sm"
                 className="px-3"
               >
-                High Performing Heroes Only
+                Matches with High Performing Heroes Only
               </Toggle>
             </div>
           </TooltipTrigger>

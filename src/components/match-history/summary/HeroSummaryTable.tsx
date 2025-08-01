@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Toggle } from '@/components/ui/toggle';
 import { useConstantsContext } from '@/contexts/constants-context';
 import { cn } from '@/lib/utils';
 import type { Hero } from '@/types/contexts/constants-context-value';
@@ -237,7 +238,7 @@ function renderTableHeaders(sortField: SortField, sortDirection: SortDirection, 
   );
 }
 
-function renderHeroRow(hero: HeroSummary) {
+function renderHeroRow(hero: HeroSummary, showStar?: boolean) {
   return (
     <TableRow key={hero.heroId}>
       <TableCell className="w-12">
@@ -256,7 +257,7 @@ function renderHeroRow(hero: HeroSummary) {
         <div>
           <div className="font-medium flex items-center gap-2">
             {hero.heroName}
-            {hero.count >= 5 && (hero.winRate || 0) >= 60 && (
+            {showStar && hero.count >= 5 && (hero.winRate || 0) >= 60 && (
               <Star className="w-4 h-4 text-yellow-500" />
             )}
           </div>
@@ -296,17 +297,30 @@ function HeroSummarySection({
   heroes, 
   sortField = 'winRate' as SortField,
   sortDirection = 'desc' as SortDirection,
-  onSortChange
+  onSortChange,
+  showToggle = false,
+  toggleState = false,
+  onToggleChange
 }: { 
   title: string; 
   heroes: HeroSummary[]; 
   sortField?: SortField;
   sortDirection?: SortDirection;
   onSortChange?: (field: SortField) => void;
+  showToggle?: boolean;
+  toggleState?: boolean;
+  onToggleChange?: (checked: boolean) => void;
 }) {
-  const sortedHeroes = useMemo(() => sortHeroes(heroes, sortField, sortDirection), [heroes, sortField, sortDirection]);
+  const filteredHeroes = useMemo(() => {
+    if (showToggle && toggleState) {
+      return heroes.filter(hero => hero.count >= 5 && (hero.winRate || 0) >= 60);
+    }
+    return heroes;
+  }, [heroes, showToggle, toggleState]);
 
-  if (heroes.length === 0) {
+  const sortedHeroes = useMemo(() => sortHeroes(filteredHeroes, sortField, sortDirection), [filteredHeroes, sortField, sortDirection]);
+
+  if (filteredHeroes.length === 0) {
     return (
       <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
         <CardHeader className="flex-shrink-0">
@@ -324,13 +338,24 @@ function HeroSummarySection({
   return (
     <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
       <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-sm">{title}</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">{title}</CardTitle>
+          {showToggle && (
+            <Toggle
+              pressed={toggleState}
+              onPressedChange={onToggleChange}
+              className="text-xs"
+            >
+              Show High Performing Heroes Only
+            </Toggle>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto min-h-0">
         <Table>
           {renderTableHeaders(sortField, sortDirection, onSortChange)}
           <TableBody>
-            {sortedHeroes.map(hero => renderHeroRow(hero))}
+            {sortedHeroes.map(hero => renderHeroRow(hero, title === "Active Team Picks"))}
           </TableBody>
         </Table>
       </CardContent>
@@ -344,6 +369,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   const [opponentTeamSort, setOpponentTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
   const [activeTeamBansSort, setActiveTeamBansSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
   const [opponentTeamBansSort, setOpponentTeamBansSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
+  const [activeTeamPicksToggle, setActiveTeamPicksToggle] = useState(false);
   
   if (matches.length === 0) {
     return (
@@ -405,7 +431,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
 
   return (
     <div className={className}>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Hero Summary</h3>
         <div className="text-sm text-muted-foreground">
           Based on {matches.length} match{matches.length !== 1 ? 'es' : ''}
@@ -413,13 +439,16 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
       </div>
       
       {/* 2x2 Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <HeroSummarySection 
           title="Active Team Picks" 
           heroes={filteredActiveTeamPicks} 
           sortField={activeTeamSort.field}
           sortDirection={activeTeamSort.direction}
           onSortChange={handleActiveTeamSort}
+          showToggle={true}
+          toggleState={activeTeamPicksToggle}
+          onToggleChange={setActiveTeamPicksToggle}
         />
         <HeroSummarySection 
           title="Opponent Team Picks" 

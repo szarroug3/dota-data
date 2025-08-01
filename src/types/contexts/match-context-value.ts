@@ -21,10 +21,11 @@ export interface DraftPhase {
 }
 
 export interface GameEvent {
-  type: 'roshan' | 'aegis' | 'teamfight' | 'tower' | 'barracks' | 'first_blood';
+  type: EventType;
   time: number;
   description: string;
   team?: 'radiant' | 'dire';
+  details?: EventDetails;
 }
 
 export interface TeamFightStats {
@@ -152,14 +153,13 @@ export interface MatchEvent {
 }
 
 export type EventType = 
-  | 'roshan_kill'
-  | 'aegis_pickup'
-  | 'aegis_expire'
-  | 'tower_kill'
-  | 'barracks_kill'
+  | 'CHAT_MESSAGE_FIRSTBLOOD'
+  | 'CHAT_MESSAGE_ROSHAN_KILL'
+  | 'CHAT_MESSAGE_AEGIS'
+  | 'building_kill'
+  | 'CHAT_MESSAGE_COURIER_LOST'
   | 'team_fight'
   | 'hero_kill'
-  | 'first_blood'
   | 'bounty_rune'
   | 'power_rune'
   | 'ward_placed'
@@ -174,6 +174,11 @@ export interface EventDetails {
   victim?: string; // Player ID
   assists?: string[]; // Player IDs
   
+  // Hero information for tooltips
+  killerHero?: Hero;
+  victimHero?: Hero;
+  aegisHolderHero?: Hero;
+  
   // For tower/barracks kills
   buildingType?: 'tower' | 'barracks';
   buildingTier?: number;
@@ -183,6 +188,15 @@ export interface EventDetails {
   participants?: string[]; // Player IDs
   duration?: number;
   casualties?: number;
+  playerDetails?: Array<{
+    playerIndex: number;
+    deaths: number;
+    buybacks: number;
+    goldDelta: number;
+    xpDelta: number;
+    damage: number;
+    healing: number;
+  }>;
   
   // For roshan
   roshanKiller?: 'radiant' | 'dire'; // Team that killed roshan

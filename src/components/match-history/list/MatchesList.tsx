@@ -31,24 +31,29 @@ const MatchListLayoutButtons: React.FC<MatchListLayoutButtonsProps> = ({
   viewMode, 
   setViewMode,
 }) => (
-  <div className="@[180px]:flex hidden">
-    <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as MatchListViewMode)}>
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="list" className="flex items-center gap-2">
-          <List className="w-4 h-4" />
-          <span className="@[420px]:block hidden">List</span>
-        </TabsTrigger>
-        <TabsTrigger value="card" className="flex items-center gap-2">
-          <SquareStack className="w-4 h-4" />
-          <span className="@[420px]:block hidden">Card</span>
-        </TabsTrigger>
-        <TabsTrigger value="grid" className="flex items-center gap-2">
-          <LayoutGrid className="w-4 h-4" />
-          <span className="@[420px]:block hidden">Grid</span>
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
-  </div>
+  <>
+    <div className="@[180px]:flex hidden">
+      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as MatchListViewMode)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="w-4 h-4" />
+            <span className="@[420px]:block hidden">List</span>
+          </TabsTrigger>
+          <TabsTrigger value="card" className="flex items-center gap-2">
+            <SquareStack className="w-4 h-4" />
+            <span className="@[420px]:block hidden">Card</span>
+          </TabsTrigger>
+          <TabsTrigger value="grid" className="flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4" />
+            <span className="@[420px]:block hidden">Grid</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+    <div className="@[180px]:hidden h-9 w-24">
+      {/* Invisible placeholder to maintain space when tabs are hidden */}
+    </div>
+  </>
 )
 const MatchesList: React.FC<MatchesListProps> = ({ 
   matches, 

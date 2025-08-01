@@ -47,12 +47,12 @@ function useMatchState() {
 }
 
 function useMatchProcessing() {
-  const { heroes, items } = useConstantsContext();
+  const { heroes, heroesByName, items } = useConstantsContext();
 
   // Process match data from API responses using the processing module
   const processMatchDataFromApi = useCallback((matchData: OpenDotaMatch): Match => {
-    return processMatchData(matchData, heroes, items);
-  }, [heroes, items]);
+    return processMatchData(matchData, heroes, heroesByName, items);
+  }, [heroes, heroesByName, items]);
 
   return {
     processMatchData: processMatchDataFromApi

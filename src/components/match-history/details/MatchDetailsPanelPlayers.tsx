@@ -46,7 +46,6 @@ function getPlayersFromMatch(match?: Match): PlayerWithTeam[] {
 }
 
 const PlayerCard: React.FC<{ player: PlayerWithTeam }> = ({ player }) => {
-  console.log('Player items:', player.items);
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">

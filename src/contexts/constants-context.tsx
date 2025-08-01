@@ -58,6 +58,7 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
   
   // State
   const [heroes, setHeroes] = useState<Record<string, Hero>>({});
+  const [heroesByName, setHeroesByName] = useState<Record<string, Hero>>({});
   const [items, setItems] = useState<Record<string, Item>>({});
   
   // Loading states
@@ -83,12 +84,15 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
       
       const convertedHeroes = result.map(convertOpenDotaHeroToHero);
       
-      // Convert array to record for easier lookup
+      // Convert array to records for easier lookup
       const heroesById: Record<string, Hero> = {};
+      const heroesByName: Record<string, Hero> = {};
       convertedHeroes.forEach(hero => {
         heroesById[hero.id] = hero;
+        heroesByName[hero.name] = hero;
       });
       setHeroes(heroesById);
+      setHeroesByName(heroesByName);
     } catch (error) {
       setHeroesError(error instanceof Error ? error.message : 'Failed to fetch heroes');
     } finally {
@@ -143,10 +147,12 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
   
   const getItemById = useCallback((itemId: number) => items[itemId], [items]);
   const getHeroById = useCallback((heroId: string) => heroes[heroId], [heroes]);
+  const getHeroByName = useCallback((heroName: string) => heroesByName[heroName], [heroesByName]);
   
   const contextValue: ConstantsContextValue = useMemo(() => ({
     // Hero data
     heroes,
+    heroesByName,
     items,
     isLoadingHeroes,
     isLoadingItems,
@@ -156,9 +162,11 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     fetchItems,
     clearErrors,
     getItemById,
-    getHeroById
+    getHeroById,
+    getHeroByName
   }), [
     heroes,
+    heroesByName,
     items,
     isLoadingHeroes,
     isLoadingItems,
@@ -168,7 +176,8 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     fetchItems,
     clearErrors,
     getItemById,
-    getHeroById
+    getHeroById,
+    getHeroByName
   ]);
   
   return (

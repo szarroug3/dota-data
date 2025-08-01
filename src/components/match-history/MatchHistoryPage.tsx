@@ -159,7 +159,7 @@ const renderMatchHistoryContent = (
   if (emptyState) return emptyState;
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <ResizableMatchLayout
         filters={filters}
         onFiltersChange={setFilters}
@@ -179,7 +179,7 @@ const renderMatchHistoryContent = (
         setMatchDetailsViewMode={setMatchDetailsViewMode}
       />
       
-      {renderHeroSummaryTable(visibleMatches, teamMatches)}
+      {renderHeroSummaryTable(visibleMatches, teamMatches, activeTeamMatches)}
       
       {renderHiddenMatchesModal(
         showHiddenModal,
@@ -187,7 +187,7 @@ const renderMatchHistoryContent = (
         handleUnhideMatch,
         setShowHiddenModal
       )}
-    </>
+    </div>
   );
 };
 

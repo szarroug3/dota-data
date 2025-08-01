@@ -8,6 +8,7 @@
 
 import type { Hero, Item } from '@/types/contexts/constants-context-value';
 import type {
+  EventType,
   HeroPick,
   Match,
   MatchEvent,
@@ -169,7 +170,6 @@ function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>
     .filter(itemId => itemId !== 0)
     .map(itemId => {
       const item = items[itemId];
-      console.log(`Looking for item ${itemId}:`, item);
       return item;
     })
     .filter(Boolean);
@@ -336,21 +336,59 @@ function getSideFromPlayerSlot(playerSlot?: number): 'radiant' | 'dire' {
   return playerSlot !== undefined && playerSlot < 128 ? 'radiant' : 'dire';
 }
 
-function createFirstBloodEvent(objective: { time: number; player_slot?: number }): MatchEvent {
+function getHeroNameFromPlayerSlot(playerSlot: number, players: OpenDotaMatchPlayer[], heroes: Record<string, Hero>): string {
+  console.log('getHeroNameFromPlayerSlot called with playerSlot:', playerSlot, players);
+  const player = players.find(p => p.player_slot === playerSlot);
+  if (!player) return 'unknown player';
+  
+  const hero = heroes[player.hero_id.toString()];
+  return hero ? hero.localizedName : 'unknown hero';
+}
+
+export function createFirstBloodEvent(objective: { time: number; player_slot?: number; slot?: number; type: string }, players: OpenDotaMatchPlayer[], heroes: Record<string, Hero>, heroesByName: Record<string, Hero>): MatchEvent {
+  const killerName = objective.player_slot !== undefined ? getHeroNameFromPlayerSlot(objective.player_slot, players, heroes) : 'unknown player';
+  
+  // For First Blood, both player_slot and slot refer to the killer
+  // We need to find the victim by looking at the killer's first kill in their kills_log
+  let victimName = 'unknown player';
+  let victimHero: Hero | undefined;
+  let killerHero: Hero | undefined;
+  
+  if (objective.player_slot !== undefined) {
+    const killer = players.find(p => p.player_slot === objective.player_slot);
+    if (killer) {
+      // Get killer hero
+      killerHero = heroes[killer.hero_id.toString()];
+      
+      if (killer.kills_log && killer.kills_log.length > 0) {
+        // Find the first kill that matches the First Blood time
+        const firstKill = killer.kills_log.find(kill => kill.time === objective.time);
+        if (firstKill && firstKill.key) {
+          // Find the hero by name using the heroesByName map
+          victimHero = heroesByName[firstKill.key];
+          victimName = victimHero ? victimHero.localizedName : firstKill.key.replace('npc_dota_hero_', '');
+        }
+      }
+    }
+  }
+  
   return {
     timestamp: objective.time,
-    type: 'first_blood',
+    type: objective.type as EventType,
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
-      killer: objective.player_slot?.toString() || ''
+      killer: killerName,
+      victim: victimName,
+      killerHero,
+      victimHero
     }
   };
 }
 
-function createRoshanKillEvent(objective: { time: number; player_slot?: number }): MatchEvent {
+function createRoshanKillEvent(objective: { time: number; player_slot?: number; type: string }): MatchEvent {
   return {
     timestamp: objective.time,
-    type: 'roshan_kill',
+    type: objective.type as EventType,
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
       roshanKiller: getSideFromPlayerSlot(objective.player_slot)
@@ -358,13 +396,25 @@ function createRoshanKillEvent(objective: { time: number; player_slot?: number }
   };
 }
 
-function createAegisPickupEvent(objective: { time: number; player_slot?: number }): MatchEvent {
+function createAegisPickupEvent(objective: { time: number; player_slot?: number; type: string }, players: OpenDotaMatchPlayer[], heroes: Record<string, Hero>): MatchEvent {
+  const holderName = objective.player_slot !== undefined ? getHeroNameFromPlayerSlot(objective.player_slot, players, heroes) : 'unknown player';
+  
+  // Get the hero information for the aegis holder
+  let aegisHolderHero: Hero | undefined;
+  if (objective.player_slot !== undefined) {
+    const holder = players.find(p => p.player_slot === objective.player_slot);
+    if (holder) {
+      aegisHolderHero = heroes[holder.hero_id.toString()];
+    }
+  }
+  
   return {
     timestamp: objective.time,
-    type: 'aegis_pickup',
+    type: objective.type as EventType,
     side: getSideFromPlayerSlot(objective.player_slot),
     details: {
-      aegisHolder: objective.player_slot?.toString() || ''
+      aegisHolder: holderName,
+      aegisHolderHero
     }
   };
 }
@@ -407,7 +457,7 @@ function parseBuildingInfo(buildingKey: string): { buildingType: 'tower' | 'barr
   };
 }
 
-function createBuildingKillEvent(objective: { time: number; player_slot?: number; key?: string }): MatchEvent | null {
+function createBuildingKillEvent(objective: { time: number; player_slot?: number; key?: string; type: string }): MatchEvent | null {
   if (!objective.key) return null;
   
   const buildingInfo = parseBuildingInfo(objective.key);
@@ -415,7 +465,7 @@ function createBuildingKillEvent(objective: { time: number; player_slot?: number
   
   return {
     timestamp: objective.time,
-    type: buildingInfo.buildingType === 'barracks' ? 'barracks_kill' : 'tower_kill',
+    type: objective.type as EventType,
     side,
     details: {
       buildingType: buildingInfo.buildingType,
@@ -425,42 +475,81 @@ function createBuildingKillEvent(objective: { time: number; player_slot?: number
   };
 }
 
-export function generateEvents(matchData: OpenDotaMatch): MatchEvent[] {
+function createTeamFightEvent(teamfight: { start: number; end: number; deaths: number; players: any[] }): MatchEvent {
+  const duration = teamfight.end - teamfight.start;
+  
+  // Determine which team won the teamfight based on deaths
+  // This is a simplified approach - we could make it more sophisticated later
+  const side: 'radiant' | 'dire' | 'neutral' = 'neutral';
+  
+  // Process player data for the teamfight
+  const playerDetails = teamfight.players.map((player, index) => ({
+    playerIndex: index,
+    deaths: player.deaths || 0,
+    buybacks: player.buybacks || 0,
+    goldDelta: player.gold_delta || 0,
+    xpDelta: player.xp_delta || 0,
+    damage: player.damage || 0,
+    healing: player.healing || 0
+  }));
+  
+  return {
+    timestamp: teamfight.start,
+    type: 'team_fight',
+    side,
+    details: {
+      participants: teamfight.players.map((_, index) => index.toString()),
+      duration,
+      casualties: teamfight.deaths,
+      playerDetails
+    }
+  };
+}
+
+export function generateEvents(matchData: OpenDotaMatch, heroes: Record<string, Hero>, heroesByName: Record<string, Hero>): MatchEvent[] {
   const events: MatchEvent[] = [];
   
-  if (!matchData.objectives) return events;
-  
-  matchData.objectives.forEach(objective => {
-    switch (objective.type) {
-      case 'CHAT_MESSAGE_FIRSTBLOOD':
-        events.push(createFirstBloodEvent(objective));
-        break;
-        
-      case 'CHAT_MESSAGE_ROSHAN_KILL':
-        events.push(createRoshanKillEvent(objective));
-        break;
-        
-      case 'CHAT_MESSAGE_AEGIS':
-        events.push(createAegisPickupEvent(objective));
-        break;
-        
-      case 'building_kill': {
-        const buildingEvent = createBuildingKillEvent(objective);
-        if (buildingEvent) {
-          events.push(buildingEvent);
+  // Process objectives
+  if (matchData.objectives) {
+    matchData.objectives.forEach(objective => {
+      switch (objective.type) {
+        case 'CHAT_MESSAGE_FIRSTBLOOD':
+          events.push(createFirstBloodEvent(objective, matchData.players, heroes, heroesByName));
+          break;
+          
+        case 'CHAT_MESSAGE_ROSHAN_KILL':
+          events.push(createRoshanKillEvent(objective));
+          break;
+          
+        case 'CHAT_MESSAGE_AEGIS':
+          events.push(createAegisPickupEvent(objective, matchData.players, heroes));
+          break;
+          
+        case 'building_kill': {
+          const buildingEvent = createBuildingKillEvent(objective);
+          if (buildingEvent) {
+            events.push(buildingEvent);
+          }
+          break;
         }
-        break;
+          
+        case 'CHAT_MESSAGE_COURIER_LOST':
+          // Skip courier lost events for now as they're less significant
+          break;
+          
+        default:
+          // Skip unknown event types
+          break;
       }
-        
-      case 'CHAT_MESSAGE_COURIER_LOST':
-        // Skip courier lost events for now as they're less significant
-        break;
-        
-      default:
-        // Skip unknown event types
-        break;
-    }
-  });
+    });
+  }
+  
+  // Process teamfights
+  if (matchData.teamfights) {
+    matchData.teamfights.forEach(teamfight => {
+      events.push(createTeamFightEvent(teamfight));
+    });
+  }
   
   return events.sort((a, b) => a.timestamp - b.timestamp);
 }
@@ -477,7 +566,7 @@ export interface DraftPhase {
 }
 
 export interface GameEvent {
-  type: 'roshan' | 'aegis' | 'teamfight' | 'tower' | 'barracks' | 'first_blood';
+  type: EventType;
   time: number;
   description: string;
   team?: 'radiant' | 'dire';
@@ -530,28 +619,15 @@ export function processDraftData(match: Match, originalMatchData?: OpenDotaMatch
 
 export function processGameEvents(match: Match): GameEvent[] {
   return match.events.map(event => ({
-    type: mapEventType(event.type),
+    type: event.type,
     time: event.timestamp,
     description: generateEventDescription(event),
-    team: event.side === 'neutral' ? undefined : event.side
+    team: event.side === 'neutral' ? undefined : event.side,
+    details: event.details
   }));
 }
 
-function mapEventType(eventType: string): GameEvent['type'] {
-  switch (eventType) {
-    case 'CHAT_MESSAGE_ROSHAN_KILL':
-      return 'roshan';
-    case 'CHAT_MESSAGE_AEGIS':
-      return 'aegis';
-    case 'CHAT_MESSAGE_FIRSTBLOOD':
-      return 'first_blood';
-    case 'building_kill':
-      // Check if it's a barracks or tower based on the key
-      return 'tower'; // Default to tower, will be refined in createBuildingKillEvent
-    default:
-      return 'teamfight';
-  }
-}
+
 
 function getTeamName(side: 'radiant' | 'dire' | 'neutral'): string {
   return side === 'radiant' ? 'Radiant' : 'Dire';
@@ -561,18 +637,16 @@ function generateEventDescription(event: MatchEvent): string {
   const teamName = getTeamName(event.side);
   
   switch (event.type) {
-    case 'roshan_kill':
+    case 'CHAT_MESSAGE_ROSHAN_KILL':
       return `${teamName} killed Roshan`;
-    case 'aegis_pickup':
+    case 'CHAT_MESSAGE_AEGIS':
       return `Aegis picked up by ${event.details.aegisHolder || 'unknown player'}`;
+    case 'building_kill':
+      return `${teamName} destroyed ${event.details.buildingType || 'building'}`;
+    case 'CHAT_MESSAGE_FIRSTBLOOD':
+      return `First Blood: ${event.details.killer || 'unknown player'} killed ${event.details.victim || 'unknown player'}`;
     case 'team_fight':
-      return `Team fight at ${event.timestamp}s - ${teamName} victory`;
-    case 'tower_kill':
-      return `${teamName} destroyed ${event.details.buildingType || 'tower'}`;
-    case 'barracks_kill':
-      return `${teamName} destroyed barracks`;
-    case 'first_blood':
-      return `${teamName} got first blood`;
+      return `Team Fight`;
     default:
       return `Event at ${event.timestamp}s`;
   }
@@ -605,6 +679,7 @@ export function calculateTeamFightStats(match: Match): TeamFightStats {
 export function processMatchData(
   matchData: OpenDotaMatch,
   heroes: Record<string, Hero>,
+  heroesByName: Record<string, Hero>,
   items: Record<string, Item>
 ): Match {
   // Separate radiant and dire players
@@ -621,7 +696,7 @@ export function processMatchData(
   const { radiantPicks, direPicks, radiantBans, direBans } = convertDraftData(matchData, heroes);
 
   // Generate events
-  const events = generateEvents(matchData);
+  const events = generateEvents(matchData, heroes, heroesByName);
 
   // Detect roles for each team
   const radiantRoleMap = detectTeamRoles(radiantPlayers);

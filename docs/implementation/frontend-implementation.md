@@ -1,10 +1,10 @@
 # Frontend Implementation Plan
 
-> **Status**: ✅ **DATA FLOW IMPROVEMENTS COMPLETED** - All architectural improvements for data management, error handling, and user experience have been successfully implemented
+> **Status**: ✅ **MATCH DETAILS PANEL ENHANCEMENTS COMPLETED** - Major improvements to performance chart, teamfight tooltips, and hero summary functionality have been successfully implemented
 
-## 🎯 **CURRENT STATUS: PHASE 2 IN PROGRESS**
+## 🎯 **CURRENT STATUS: PHASE 3 IN PROGRESS**
 
-The frontend has achieved excellent architectural foundations with comprehensive improvements for data flow, error handling, and user experience. **Phase 2 (Fix MatchDetailsPanelPlayers Mock Data) is currently in progress** with Phase 1 successfully completed.
+The frontend has achieved excellent architectural foundations with comprehensive improvements for data flow, error handling, user experience, and match details visualization. **Phase 3 (Component Architecture Refactoring) is currently in progress** with Phases 1 and 2 successfully completed.
 
 ### ✅ **Solid Foundations:**
 - ✅ **Zero TypeScript errors** in frontend code
@@ -47,6 +47,42 @@ The frontend has achieved excellent architectural foundations with comprehensive
 - ✅ **Removed all mock data** and replaced with real data processing
 - ✅ **Added crown indicators** for winning teams in draft information
 - ✅ **Improved component architecture** with proper separation of concerns
+
+### ✅ **Completed Phase 2: Match Details Panel Performance Chart Enhancements**
+- ✅ **Implemented `heroesByName` map** in constants context for hero lookup by programmatic name
+- ✅ **Fixed React key prop warnings** in chart components with proper unique keys
+- ✅ **Added teamfight events to events line** with sword icon display
+- ✅ **Refined event data display** using `null` values for event-only data points and `connectNulls={true}`
+- ✅ **Enhanced teamfight tooltip details**:
+  - ✅ Show fight duration in `minutes:seconds` format
+  - ✅ List all heroes involved with death indicators (skull icon 💀)
+  - ✅ Display gold and XP deltas for each hero with formatted values (e.g., "1.2k")
+  - ✅ Add summary section showing total gold and XP gained/lost by each team
+  - ✅ Align hero avatars, names, and numerical values in structured table-like format
+  - ✅ Use specific colors (primary pink for Radiant, blue-600 for Dire) for team-related text
+  - ✅ Add up/down triangles (▲/▼) next to gold values with appropriate colors
+  - ✅ Ensure icons and numbers are tightly spaced and aligned
+- ✅ **Refined chart aesthetics**:
+  - ✅ Added built-in Shadcn chart legend
+  - ✅ Added Y-axis label for Radiant/Dire advantage clarification
+  - ✅ Controlled number of ticks on Y-axis (`tickCount={10}`)
+  - ✅ Made chart taller by removing "Key Metrics" section
+  - ✅ Made advantage description truncate if too long
+  - ✅ Ensured X-axis includes negative time (e.g., First Blood before 0:00)
+  - ✅ Added extra space at beginning of X-axis so icons aren't on axis line
+  - ✅ Added X-axis ticks for negative times every minute
+  - ✅ Added data point with 0 gold/XP at first negative tick to ensure lines start at 0
+  - ✅ Made "Performance Timeline" title truncate
+  - ✅ Hide chart at screen widths <= 300px
+  - ✅ Made chart legend items truncate
+- ✅ **Refined resizable component layout**:
+  - ✅ Fixed height of resizable handle to not extend into empty space
+  - ✅ Ensured uniform spacing between major sections consistent with dashboard's `gap-6` pattern
+- ✅ **Refined hero summary table**:
+  - ✅ Ensured star icons only show on "Active Team Picks" table
+  - ✅ Added toggle for "High Performing Heroes Only" (5+ games, 60%+ win rate) using `<Toggle>` component
+  - ✅ Implemented filtering logic within `HeroSummarySection` component
+  - ✅ Added state management for toggle functionality
 
 ## 📋 **Implementation Checklist**
 
@@ -359,19 +395,14 @@ The frontend has achieved excellent architectural foundations with comprehensive
 - ✅ **Theme Context**: 129 lines (well-structured, appropriate size)
 
 #### 2.7 Stateful Components Integration
-**Status**: 🗒️ **IN PROGRESS** - Context integration updates
+**Status**: ✅ **COMPLETED** - Context integration updates
 
 **Audit Findings:**
 - ✅ **DashboardPage**: Already using updated `useTeamContext` correctly
 - ✅ **DraftSuggestionsPage**: Already using updated `useTeamContext` correctly
 - ✅ **PlayerStatsPage**: Already using updated `usePlayerContext` via `usePlayerStats` hook
-- ⚠️ **MatchHistoryPage**: **PARTIALLY COMPLETED** - Main page uses real data, but detail components use mock data
+- ✅ **MatchHistoryPage**: **COMPLETED** - All components now use real data
 - ❌ **Team Analysis Page**: Missing entirely
-
-**Critical Issue Found: Opponent Name Showing "undefined"**
-- **Root Cause**: Match details panel components are using `match.opponent` but real `Match` interface has `radiant.name` and `dire.name` but no `opponent` field
-- **Solution**: Opponent name should come from `teamMatch?.opponentName` (team context data)
-- **Files Affected**: All match details panel components showing "undefined" for opponent names
 
 **Completed Changes:**
 - ✅ **Hydration Logic Fixes**: Fixed team data loading during app initialization
@@ -387,218 +418,143 @@ The frontend has achieved excellent architectural foundations with comprehensive
 - ✅ **Main Page**: Uses real context data correctly
 - ✅ **Match List**: Uses real match data from context
 - ✅ **Match Selection**: Uses real match selection from context
-- ❌ **Match Details Panel**: **USES 100% MOCK DATA**
-  - ❌ `MatchDetailsPanelDraftEvents.tsx` - Ignores real match data, uses hardcoded draft data
-  - ❌ `MatchDetailsPanelPlayers.tsx` - Ignores real match data, uses hardcoded player data
-  - ❌ `MatchDetailsPanelTimings.tsx` - Ignores real match data, uses hardcoded timing data
-- ❌ **Hero Summary Table**: **USES 100% MOCK DATA**
-  - ❌ `HeroSummaryTable.tsx` - `aggregateHeroes()` returns empty array, ignores real match data
-- ❌ **Opponent Name**: **SHOWS "undefined"** in all match details panels
-  - ❌ All match details components use `match.opponent` which doesn't exist in real Match interface
-  - ❌ Should use `teamMatch?.opponentName` from team context data
-
-**Implementation Plan:**
-
-**Phase 0: Fix Opponent Name Issue** (CRITICAL PRIORITY) - ✅ **COMPLETED**
-- **Files Updated**:
-  - ✅ `src/components/match-history/details/MatchDetailsPanelDetailed.tsx` - Added teamMatch prop, fixed opponent name access
-  - ✅ `src/components/match-history/details/MatchDetailsPanelSummary.tsx` - Added teamMatch prop, fixed opponent name access
-  - ✅ `src/components/match-history/details/MatchDetailsPanelMinimal.tsx` - Added teamMatch prop, fixed opponent name access
-  - ✅ `src/components/match-history/details/MatchDetailsPanel.tsx` - Added teamMatch prop, fixed opponent name access
-  - ✅ `src/components/match-history/MatchHistoryPage.tsx` - Pass teamMatch prop to detail components
-
-**Required Changes**:
-1. ✅ **Update Component Props**: Added `teamMatch?: TeamMatchParticipation` to all match details panel components
-2. ✅ **Fix Opponent Name Access**: Replaced `match.opponent` with `teamMatch?.opponentName || 'Unknown Opponent'`
-3. ✅ **Update Parent Components**: Pass `teamMatch` prop from parent components to match details panels
-4. ✅ **Add Fallback Logic**: Handle cases where `teamMatch` is undefined
-5. ✅ **Clean Up Unused Variables**: Removed unused parameters and fixed all linting issues
-6. ✅ **Break Down Large Functions**: Extracted components to reduce function length and improve maintainability
+- ✅ **Match Details Panel**: **USES REAL DATA**
+  - ✅ `MatchDetailsPanelEvents.tsx` - Enhanced with real performance chart and teamfight tooltips
+  - ✅ `MatchDetailsPanelPlayers.tsx` - Uses real player data from match context
+  - ✅ `MatchDetailsPanelTimings.tsx` - Uses real statistics data from match context
+- ✅ **Hero Summary Table**: **USES REAL DATA**
+  - ✅ `HeroSummaryTable.tsx` - Implemented real hero aggregation with toggle functionality
+- ✅ **Opponent Name**: **FIXED** - All components show correct opponent names from team context data
 
 **Implementation Results:**
-- ✅ **Opponent Name Fixed**: All components now show correct opponent names from team context data
-- ✅ **No More "undefined"**: Opponent names display properly with fallback to 'Unknown Opponent'
+- ✅ **Real Data Integration**: All components now use real match data from context
+- ✅ **Opponent Name Fixed**: All components show correct opponent names
+- ✅ **Performance Chart Enhanced**: Advanced chart with teamfight events, tooltips, and responsive design
+- ✅ **Hero Summary Improved**: Real hero aggregation with high-performing heroes toggle
 - ✅ **Clean Code**: All linting issues resolved, functions broken down into manageable pieces
 - ✅ **Type Safety**: All components maintain proper TypeScript interfaces
 - ✅ **Maintainable Architecture**: Components are now well-structured and easy to understand
 
-**Phase 1: Fix MatchDetailsPanelDraftEvents.tsx**
-- **Current Issues**:
-  - Lines 32-95: Hardcoded hero data with mock hero information
-  - Lines 97-106: Mock draft phases with hardcoded pick/ban data
-  - Lines 108-115: Mock game events with hardcoded timings
-  - Lines 117-125: Mock team fight analysis with hardcoded statistics
-  - **Ignores the `match` parameter entirely**
+### Phase 3: Component Architecture Refactoring (Priority 3) - 🗒️ **IN PROGRESS**
 
-**Required Changes**:
-1. **Use Real Match Data**: Replace all hardcoded data with `match.draft` properties
-2. **Hero Data Integration**: Use `match.draft.radiantPicks` and `match.draft.direPicks` for real hero data
-3. **Draft Phases**: Use `match.draft.radiantBans` and `match.draft.direBans` for real ban information
-4. **Game Events**: Use `match.events` for real game event data
-5. **Team Fight Analysis**: Calculate real statistics from `match.events`
-6. **Error Handling**: Add proper error handling for missing draft data
-7. **Loading States**: Add loading states while draft data is being processed
+#### 3.1 Refactor Stateless Components
+**Status**: 🗒️ **PLANNED** - Move processing logic out of components
 
-**Phase 2: Fix MatchDetailsPanelPlayers.tsx**
-- **Current Issues**:
-  - **Ignores the `match` parameter entirely**
-  - Uses hardcoded player data instead of `match.players`
-  - No integration with real player statistics
+**Current Issues:**
+- **Match Processing in Components**: `MatchDetailsPanelEvents.tsx` contains complex chart data processing logic
+- **Player Processing in Components**: `MatchDetailsPanelPlayers.tsx` contains player data transformation logic
+- **Hero Processing in Components**: `HeroSummaryTable.tsx` contains hero aggregation and filtering logic
+- **Mixed Responsibilities**: Components handle both presentation and data processing
 
-**Required Changes**:
-1. **Use Real Player Data**: Replace hardcoded data with `match.players.radiant` and `match.players.dire`
-2. **Player Statistics**: Use `match.players[].stats` for real player stats
-3. **Hero Information**: Use `match.players[].hero` for real hero data
-4. **Team Assignment**: Use `match.players[].role` for real role information
-5. **Performance Data**: Use `match.players[].stats` for real performance metrics
-6. **Error Handling**: Add proper error handling for missing player data
-7. **Loading States**: Add loading states while player data is being processed
+**Required Changes:**
+1. **Extract Chart Processing Logic**:
+   - Move `createChartData()` function from `MatchDetailsPanelEvents.tsx` to `src/lib/processing/chart-processing.ts`
+   - Move `generateTimeTicks()` function to chart processing utilities
+   - Move `formatTime()` function to chart processing utilities
+   - Create reusable chart data processing hooks
 
-**Phase 3: Fix MatchDetailsPanelTimings.tsx**
-- **Current Issues**:
-  - **Ignores the `match` parameter entirely**
-  - Uses hardcoded timing data instead of `match.statistics`
-  - No integration with real match statistics
+2. **Extract Player Processing Logic**:
+   - Move player data transformation from `MatchDetailsPanelPlayers.tsx` to `src/lib/processing/player-processing.ts`
+   - Create `usePlayerDataProcessing()` hook for player statistics
+   - Extract role detection and team assignment logic
+   - Create reusable player data processing utilities
 
-**Required Changes**:
-1. **Use Real Statistics**: Replace hardcoded data with `match.statistics`
-2. **Timing Data**: Use `match.statistics.goldAdvantage` and `match.statistics.experienceAdvantage` for real timing information
-3. **Game Events**: Use `match.events` for real game event data
-4. **Performance Metrics**: Use `match.statistics.radiantScore` and `match.statistics.direScore` for real metrics
-5. **Team Statistics**: Use `match.statistics` for real team data
-6. **Error Handling**: Add proper error handling for missing statistics
-7. **Loading States**: Add loading states while statistics are being processed
+3. **Extract Hero Processing Logic**:
+   - Move hero aggregation logic from `HeroSummaryTable.tsx` to `src/lib/processing/hero-processing.ts`
+   - Create `useHeroDataProcessing()` hook for hero statistics
+   - Extract filtering and sorting logic
+   - Create reusable hero data processing utilities
 
-**Phase 4: Fix HeroSummaryTable.tsx**
-- **Current Issues**:
-  - `aggregateHeroes()` function returns empty array
-  - **Ignores real match data entirely**
-  - No integration with real hero usage data
+4. **Create Processing Hooks**:
+   - `useChartDataProcessing(match)` - Process match data for chart display
+   - `usePlayerDataProcessing(match)` - Process match data for player display
+   - `useHeroDataProcessing(matches)` - Process match data for hero summary
+   - `useTeamFightProcessing(match)` - Process teamfight data for tooltips
 
-**Required Changes**:
-1. **Implement Real Aggregation**: Process `match.players.radiant` and `match.players.dire` to aggregate hero usage
-2. **Hero Data Integration**: Use constants context for hero information
-3. **Usage Statistics**: Calculate real hero pick rates from draft data
-4. **Performance Metrics**: Calculate real hero performance from player data
-5. **Team Analysis**: Separate hero usage by team (radiant/dire)
-6. **Error Handling**: Add proper error handling for missing hero data
-7. **Loading States**: Add loading states while hero data is being processed
-
-**Data Flow Architecture:**
-
-**Opponent Name Data Flow:**
-```
-teamMatch?.opponentName → Component Props → Real Opponent Name
-├── From team context data
-├── Fallback to 'Unknown Opponent' if undefined
-└── Used in all match details panel components
-```
-
-**MatchDetailsPanelDraftEvents.tsx Data Flow:**
-```
-match.draft → Component Props → Real Draft Data
-├── match.draft.radiantPicks → Hero Information
-├── match.draft.direPicks → Hero Information
-├── match.draft.radiantBans → Ban Information
-├── match.draft.direBans → Ban Information
-└── match.events → Game Events
-```
-
-**MatchDetailsPanelPlayers.tsx Data Flow:**
-```
-match.players → Component Props → Real Player Data
-├── match.players.radiant → Radiant Team Players
-├── match.players.dire → Dire Team Players
-├── match.players[].stats → Player Statistics
-├── match.players[].hero → Hero Information
-└── match.players[].role → Role Information
-```
-
-**MatchDetailsPanelTimings.tsx Data Flow:**
-```
-match.statistics → Component Props → Real Statistics Data
-├── match.statistics.goldAdvantage → Gold Timing Information
-├── match.statistics.experienceAdvantage → Experience Timing Information
-├── match.statistics.radiantScore → Radiant Score
-├── match.statistics.direScore → Dire Score
-└── match.events → Game Events
-```
-
-**HeroSummaryTable.tsx Data Flow:**
-```
-match.players + constants.heroes → Component Props → Real Hero Data
-├── Aggregate hero usage from match.players.radiant and match.players.dire
-├── Get hero information from constants.heroes
-├── Calculate pick rates from draft data
-└── Calculate performance metrics from player stats
-```
-
-**Implementation Order:**
-1. **Phase 0: Fix Opponent Name** (CRITICAL - immediate fix)
-2. **Phase 1: Fix HeroSummaryTable.tsx** (easiest to implement)
-3. **Phase 2: Fix MatchDetailsPanelPlayers.tsx** (straightforward data mapping)
-4. **Phase 3: Fix MatchDetailsPanelTimings.tsx** (statistics processing)
-5. **Phase 4: Fix MatchDetailsPanelDraftEvents.tsx** (most complex, requires draft data processing)
+5. **Refactor Components to be Stateless**:
+   - Components should only handle presentation and user interaction
+   - All data processing should happen in hooks or utilities
+   - Components should receive processed data as props
+   - Improve testability and maintainability
 
 **Files to Update:**
-
-**Priority 0: Fix Opponent Name Issue**
-- `src/components/match-history/details/MatchDetailsPanelDetailed.tsx` - Add teamMatch prop, fix opponent name access
-- `src/components/match-history/details/MatchDetailsPanelSummary.tsx` - Add teamMatch prop, fix opponent name access
-- `src/components/match-history/details/MatchDetailsPanelMinimal.tsx` - Add teamMatch prop, fix opponent name access
-- `src/components/match-history/details/MatchDetailsPanel.tsx` - Add teamMatch prop, fix opponent name access
-- `src/components/match-history/MatchHistoryPage.tsx` - Pass teamMatch prop to detail components
-
-**Priority 1: Fix Match Details Panel Mock Data**
-- `src/components/match-history/details/MatchDetailsPanelDraftEvents.tsx` - Use real `match.draft` data
-- `src/components/match-history/details/MatchDetailsPanelPlayers.tsx` - Use real `match.players` data
-- `src/components/match-history/details/MatchDetailsPanelTimings.tsx` - Use real `match.statistics` data
-
-**Priority 2: Fix Hero Summary Table Mock Data**
-- `src/components/match-history/summary/HeroSummaryTable.tsx` - Implement real `aggregateHeroes()` function
-- Process real match data instead of returning empty array
-- Use real hero data from constants context
-
-**Priority 3: Team Analysis Page Creation**
-- `src/app/team-analysis/page.tsx` - Create new file
-- `src/components/team-analysis/TeamAnalysisPage.tsx` - Create new file
-- Implement team analysis components with proper context integration
-- Add team analysis to navigation
-
-**Implementation:**
-- ✅ **Phase 0**: Fix opponent name issue in all match details panel components
-- [ ] **Phase 1**: Update MatchDetailsPanelDraft to use real match.draft data
-- [ ] **Phase 2**: Update MatchDetailsPanelPlayers to use real match.players data
-- [ ] **Phase 3**: Update MatchDetailsPanelPerformance to use real match.statistics data
-- [ ] **Phase 4**: Implement real aggregateHeroes function in HeroSummaryTable
-- [ ] Create team analysis page and components
-- [ ] Add navigation integration for team analysis
-- [ ] Test all context operations in each page
-- [ ] Verify error handling works correctly
-- [ ] Check data flow between contexts
-- [ ] Ensure proper loading states
+- `src/lib/processing/chart-processing.ts` - Create new file for chart data processing
+- `src/lib/processing/player-processing.ts` - Create new file for player data processing
+- `src/lib/processing/hero-processing.ts` - Create new file for hero data processing
+- `src/hooks/use-chart-data-processing.ts` - Create new hook for chart processing
+- `src/hooks/use-player-data-processing.ts` - Create new hook for player processing
+- `src/hooks/use-hero-data-processing.ts` - Create new hook for hero processing
+- `src/components/match-history/details/MatchDetailsPanelEvents.tsx` - Refactor to use processing hooks
+- `src/components/match-history/details/MatchDetailsPanelPlayers.tsx` - Refactor to use processing hooks
+- `src/components/match-history/summary/HeroSummaryTable.tsx` - Refactor to use processing hooks
 
 **Benefits:**
-- Consistent context usage across all pages
-- Proper error handling and loading states
-- Complete feature coverage
-- Better user experience with real data
-- Maintainable and testable components
-- **Fixed opponent name display** (no more "undefined")
+- **Better Separation of Concerns**: Components focus on presentation, processing logic is separated
+- **Improved Testability**: Processing logic can be tested independently
+- **Enhanced Reusability**: Processing hooks can be reused across components
+- **Easier Maintenance**: Changes to processing logic don't affect component structure
+- **Better Performance**: Processing can be memoized and optimized independently
 
-**Success Criteria:**
-- ✅ **No Mock Data**: All components use real match data from context
-- ✅ **Opponent Name Fixed**: All components show correct opponent names
-- ✅ **Proper Error Handling**: Components handle missing/invalid data gracefully
-- ✅ **Loading States**: Components show appropriate loading states
-- ✅ **Type Safety**: All data access is type-safe with proper TypeScript
-- ✅ **Performance**: Components render efficiently with real data
-- ✅ **Accessibility**: Components maintain accessibility standards
-- ✅ **Testing**: All components have proper unit and integration tests
+#### 3.2 Create Processing Utilities
+**Status**: 🗒️ **PLANNED** - Extract common processing patterns
 
-### Phase 3: Performance and UX Enhancements (Priority 3) - ✅ COMPLETED
+**Chart Processing Utilities:**
+- `processChartData(match, options)` - Process match data for chart display
+- `generateTimeTicks(minTime, maxTime)` - Generate time axis ticks
+- `formatTime(seconds)` - Format time for display
+- `processTeamFightData(teamfight)` - Process teamfight data for tooltips
+- `processEventData(events)` - Process game events for chart display
 
-#### 3.1 Add Virtualization for Large Lists
+**Player Processing Utilities:**
+- `processPlayerData(match)` - Process player data for display
+- `calculatePlayerStats(players)` - Calculate player statistics
+- `detectPlayerRoles(players)` - Detect player roles from match data
+- `processTeamAssignments(players)` - Process team assignments
+
+**Hero Processing Utilities:**
+- `aggregateHeroUsage(matches)` - Aggregate hero usage across matches
+- `calculateHeroStats(heroData)` - Calculate hero performance statistics
+- `filterHeroesByPerformance(heroes, criteria)` - Filter heroes by performance criteria
+- `sortHeroesByField(heroes, field, direction)` - Sort heroes by various fields
+
+**Processing Hooks:**
+- `useChartDataProcessing(match)` - Hook for chart data processing
+- `usePlayerDataProcessing(match)` - Hook for player data processing
+- `useHeroDataProcessing(matches)` - Hook for hero data processing
+- `useTeamFightProcessing(match)` - Hook for teamfight data processing
+
+#### 3.3 Update Component Architecture
+**Status**: 🗒️ **PLANNED** - Make components purely presentational
+
+**Component Responsibilities:**
+- **Presentation Only**: Components should only handle UI rendering and user interaction
+- **Props-Based**: All data should come through props from processing hooks
+- **Event Handlers**: Components should only handle user events and callbacks
+- **No Business Logic**: No data processing or business logic in components
+
+**Processing Hook Responsibilities:**
+- **Data Processing**: All data transformation and calculation
+- **Memoization**: Optimize performance with useMemo and useCallback
+- **Error Handling**: Handle processing errors gracefully
+- **Loading States**: Manage processing loading states
+
+**Architecture Pattern:**
+```
+Processing Hook → Processed Data → Stateless Component → UI
+     ↓              ↓                    ↓              ↓
+useChartData    chartData         ChartComponent   Rendered UI
+```
+
+**Implementation Strategy:**
+1. **Create Processing Utilities**: Extract all processing logic to utility functions
+2. **Create Processing Hooks**: Wrap utilities in hooks for React integration
+3. **Refactor Components**: Update components to use processing hooks
+4. **Add Memoization**: Optimize performance with proper memoization
+5. **Update Tests**: Update tests to focus on component behavior, not processing logic
+
+### Phase 4: Performance and UX Enhancements (Priority 4) - ✅ COMPLETED
+
+#### 4.1 Add Virtualization for Large Lists
 **Status**: ✅ **COMPLETED** - Performance optimization
 
 **Components Virtualized:**
@@ -613,7 +569,7 @@ match.players + constants.heroes → Component Props → Real Hero Data
 - ✅ Add proper accessibility for virtualized lists
 - ✅ Test performance with large datasets
 
-#### 3.2 Improve Loading States
+#### 4.2 Improve Loading States
 **Status**: ✅ **COMPLETED** - Better user feedback
 
 **Files Updated:**
@@ -628,7 +584,7 @@ match.players + constants.heroes → Component Props → Real Hero Data
 - ✅ Show progress indicators for long operations
 - ✅ Add loading states for individual operations
 
-#### 3.3 Add Retry Mechanisms
+#### 4.3 Add Retry Mechanisms
 **Status**: ✅ **PARTIALLY COMPLETED** - Error recovery
 
 **Implementation:**
@@ -638,9 +594,9 @@ match.players + constants.heroes → Component Props → Real Hero Data
 - ⚠️ Add "Retry All" functionality (partially implemented)
 - ✅ Log retry attempts for debugging
 
-### Phase 4: Testing and Quality Assurance (Priority 4) - ✅ COMPLETED
+### Phase 5: Testing and Quality Assurance (Priority 5) - ✅ COMPLETED
 
-#### 4.1 Update Tests for New Architecture
+#### 5.1 Update Tests for New Architecture
 **Status**: ✅ **COMPLETED** - Test coverage
 
 **Implementation:**
@@ -652,36 +608,17 @@ match.players + constants.heroes → Component Props → Real Hero Data
 
 ## 🎯 **NEXT PRIORITIES**
 
-With the opponent name issue resolved and data flow improvements completed, the next priorities are:
+With the match details panel enhancements completed and data flow improvements finished, the next priorities are:
 
-**Phase 1: Fix MatchDetailsPanelDraft Mock Data** (CURRENT PRIORITY) - ✅ **COMPLETED**
-1. ✅ **Replace Mock Draft Data** - Use real `match.draft` data instead of hardcoded values
-2. ✅ **Integrate Real Hero Information** - Use constants context for hero data
-3. ✅ **Implement Real Draft Phases** - Use `match.draft.radiantPicks`, `match.draft.direPicks`, etc.
-4. ✅ **Add Real Game Events** - Use `match.events` for game event data
-5. ✅ **Calculate Real Team Fight Statistics** - Process real match data for team fight analysis
-
-### **Phase 2: Fix MatchDetailsPanelPlayers Mock Data** (CURRENT PRIORITY)
-1. **Replace Mock Player Data** - Use real `match.players` data
-2. **Integrate Real Player Statistics** - Use `match.players[].stats` for performance metrics
-3. **Add Real Hero Information** - Use `match.players[].hero` for hero data
-4. **Implement Real Team Assignment** - Use `match.players[].role` for role information
-
-### **Phase 3: Fix MatchDetailsPanelPerformance Mock Data** (NEXT PRIORITY)
-1. **Replace Mock Statistics** - Use real `match.statistics` data
-2. **Integrate Real Timing Data** - Use `match.statistics.goldAdvantage` and `match.statistics.experienceAdvantage`
-3. **Add Real Game Events** - Use `match.events` for game event data
-4. **Implement Real Performance Metrics** - Use `match.statistics.radiantScore` and `match.statistics.direScore`
-
-### **Phase 4: Fix HeroSummaryTable Mock Data** (FUTURE PRIORITY)
-1. **Implement Real Aggregation** - Process `match.players.radiant` and `match.players.dire` to aggregate hero usage
-2. **Integrate Hero Data** - Use constants context for hero information
-3. **Calculate Real Usage Statistics** - Calculate real hero pick rates from draft data
-4. **Add Real Performance Metrics** - Calculate real hero performance from player data
+### **Phase 3: Component Architecture Refactoring** (CURRENT PRIORITY)
+1. **Extract Chart Processing Logic** - Move chart data processing from components to utilities
+2. **Extract Player Processing Logic** - Move player data processing from components to utilities
+3. **Extract Hero Processing Logic** - Move hero aggregation logic from components to utilities
+4. **Create Processing Hooks** - Create reusable hooks for data processing
+5. **Refactor Components to be Stateless** - Make components purely presentational
 
 ### **Future Considerations**
 - **Team Analysis Page Creation** - Create missing team analysis page and components
-- **Context Integration Verification** - Ensure all pages use updated contexts correctly
 - **Advanced Error Boundaries** - More sophisticated error handling
 - **Progressive Web App Features** - Offline support and caching
 - **Accessibility Improvements** - Enhanced screen reader support
@@ -698,7 +635,9 @@ The frontend now has excellent architectural foundations:
 - ✅ **Type Safety**: Comprehensive TypeScript coverage throughout
 - ✅ **Maintainable Code**: Reduced duplication and improved organization
 - ✅ **User Experience**: Optimistic updates, validation, and proper loading states
+- ✅ **Enhanced Match Details**: Advanced performance chart with teamfight tooltips and real data integration
+- ✅ **Improved Hero Summary**: Real hero aggregation with high-performing heroes toggle
 
-**CRITICAL ISSUE**: Match details panel and hero summary components still use 100% mock data and need immediate attention to complete the integration.
+**NEXT FOCUS**: Component architecture refactoring to separate processing logic from presentation components for better maintainability and testability.
 
-The application is ready for feature development with a solid, maintainable foundation, but requires completion of Phase 2.7 to fully integrate real data into the match details components.
+The application is ready for feature development with a solid, maintainable foundation, and the next phase will focus on improving component architecture for better separation of concerns.

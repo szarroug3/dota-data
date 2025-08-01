@@ -56,7 +56,7 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   setMatchDetailsViewMode,
 }) => {
   return (
-    <div className="h-full flex flex-col gap-6">
+    <div className="h-fit flex flex-col">
       {/* Filters - Always at the top */}
       <div className="flex-shrink-0 pb-2">
         <MatchFilters
@@ -68,8 +68,8 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       </div>
       
       {/* Resizable Panels */}
-      <div className="flex-1">
-        <ResizablePanelGroup direction="horizontal" className="h-fit">
+      <div className="h-fit">
+        <ResizablePanelGroup direction="horizontal">
           {/* Match List Panel */}
           <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
             <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>

@@ -46,6 +46,9 @@ export interface ConstantsContextValue {
   // Hero data - mapped by hero ID for easier lookup
   heroes: Record<string, Hero>; // Key is hero ID as string
   
+  // Hero data - mapped by hero name for easier lookup
+  heroesByName: Record<string, Hero>; // Key is hero name (e.g., "npc_dota_hero_lion")
+  
   // Item data - mapped by item ID for easier lookup
   items: Record<number, Item>; // Key is item ID as number
   
@@ -65,6 +68,7 @@ export interface ConstantsContextValue {
   // Utility functions
   getItemById: (itemId: number) => Item | undefined;
   getHeroById: (heroId: string) => Hero | undefined;
+  getHeroByName: (heroName: string) => Hero | undefined;
 }
 
 /**

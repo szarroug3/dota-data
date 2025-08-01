@@ -7,10 +7,9 @@ import type { TeamMatchParticipation } from '@/types/contexts/team-context-value
 import { MatchDetailsPanelDraft } from './MatchDetailsPanelDraft';
 import { MatchDetailsPanelEvents } from './MatchDetailsPanelEvents';
 import { MatchDetailsPanelHeader } from './MatchDetailsPanelHeader';
-import { MatchDetailsPanelPerformance } from './MatchDetailsPanelPerformance';
 import { MatchDetailsPanelPlayers } from './MatchDetailsPanelPlayers';
 
-export type MatchDetailsPanelMode = 'draft' | 'performance' | 'players' | 'events';
+export type MatchDetailsPanelMode = 'draft' | 'players' | 'events';
 
 type DraftFilter = 'picks' | 'bans' | 'both';
 
@@ -48,12 +47,6 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
                 filter={draftFilter}
                 onFilterChange={setDraftFilter}
               />
-            </div>
-          )}
-
-          {viewMode === 'performance' && (
-            <div className="space-y-4">
-              <MatchDetailsPanelPerformance match={match} teamMatch={teamMatch} />
             </div>
           )}
 
