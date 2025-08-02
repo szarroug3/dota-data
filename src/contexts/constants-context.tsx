@@ -105,7 +105,6 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
       setIsLoadingItems(true);
       setItemsError(null);
       
-      console.log('Fetching items...');
       const result = await fetchItemsData(force);
       
       if ('error' in result) {
@@ -128,7 +127,6 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
         items[itemData.id] = item;
       });
       
-      console.log('Items converted and set:', Object.keys(items).length, 'items');
       setItems(items);
     } catch (error) {
       console.error('Exception fetching items:', error);

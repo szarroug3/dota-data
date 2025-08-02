@@ -114,7 +114,9 @@ jest.mock('@/components/match-history/details/MatchDetailsPanel', () => ({
       {match ? (
         <div>
           <div>Match: {match.opponent}</div>
+          <button onClick={() => onViewModeChange?.('draft')}>Set Draft</button>
           <button onClick={() => onViewModeChange?.('players')}>Set Players</button>
+          <button onClick={() => onViewModeChange?.('events')}>Set Events</button>
         </div>
       ) : (
         <div>No match selected</div>
@@ -180,6 +182,8 @@ const defaultProps = {
   activeTeamMatches: [mockMatch],
   teamMatches: {},
   visibleMatches: [mockMatch],
+  filteredMatches: [mockMatch],
+  unhiddenMatches: [mockMatch],
   onHideMatch: jest.fn(),
   onRefreshMatch: jest.fn(),
   viewMode: 'list' as MatchListViewMode,
@@ -188,7 +192,7 @@ const defaultProps = {
   onSelectMatch: jest.fn(),
   hiddenMatchesCount: 0,
   onShowHiddenMatches: jest.fn(),
-  hiddenMatchIds: new Set(),
+  hiddenMatchIds: new Set<number>(),
   selectedMatch: null,
   matchDetailsViewMode: 'summary' as MatchDetailsPanelMode,
   setMatchDetailsViewMode: jest.fn(),
@@ -320,8 +324,8 @@ describe('ResizableMatchLayout', () => {
       />
     );
     
-    fireEvent.click(screen.getByText('Set Detailed'));
-    expect(setMatchDetailsViewMode).toHaveBeenCalledWith('detailed');
+    fireEvent.click(screen.getByText('Set Players'));
+    expect(setMatchDetailsViewMode).toHaveBeenCalledWith('players');
   });
 
   it('renders with correct layout structure', () => {
@@ -329,7 +333,7 @@ describe('ResizableMatchLayout', () => {
     
     // Check that the layout has the correct structure
     const container = screen.getByTestId('resizable-panel-group').parentElement;
-    expect(container).toHaveClass('flex-1', 'min-h-0');
+    expect(container).toHaveClass('h-fit');
     
     // Check that filters are at the top - look for the flex-shrink-0 class in the parent container
     const filtersContainer = screen.getByTestId('match-filters').parentElement;

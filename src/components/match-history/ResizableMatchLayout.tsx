@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { Match } from '@/types/contexts/match-context-value';
@@ -10,7 +10,7 @@ import type { MatchDetailsPanelMode } from './details/MatchDetailsPanel';
 import { MatchDetailsPanel } from './details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from './filters/MatchFilters';
 import { MatchFilters } from './filters/MatchFilters';
-import MatchesList from './list/MatchesList';
+import MatchesList, { type MatchesListRef } from './list/MatchesList';
 import type { MatchListViewMode } from './list/MatchListView';
 
 interface ResizableMatchLayoutProps {
@@ -38,15 +38,24 @@ interface ResizableMatchLayoutProps {
   selectedMatch: Match | null;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
+  
+  // Scroll functionality
+  onScrollToMatch?: (matchId: number) => void;
+  
+  // Add match functionality
+  onAddMatch?: () => void;
 }
 
-export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
+export interface ResizableMatchLayoutRef {
+  scrollToMatch: (matchId: number) => void;
+}
+
+export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, ResizableMatchLayoutProps>(({
   filters,
   onFiltersChange,
   activeTeamMatches,
   teamMatches,
   visibleMatches,
-  filteredMatches,
   unhiddenMatches,
   onHideMatch,
   onRefreshMatch,
@@ -60,17 +69,16 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   selectedMatch,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
-}) => {
-  console.log('🏗️ ResizableMatchLayout:', {
-    selectedMatchId,
-    selectedMatch: selectedMatch?.id,
-    activeTeamMatchesCount: activeTeamMatches.length,
-    teamMatchesCount: Object.keys(teamMatches).length,
-    hiddenMatchIdsCount: hiddenMatchIds.size,
-    activeTeamMatchesIds: activeTeamMatches.map(m => m.id),
-    teamMatchesKeys: Object.keys(teamMatches),
-    hiddenMatchIds: Array.from(hiddenMatchIds)
-  });
+  onScrollToMatch,
+  onAddMatch,
+}, ref) => {
+  const matchesListRef = React.useRef<MatchesListRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    scrollToMatch: (matchId: number) => {
+      matchesListRef.current?.scrollToMatch(matchId);
+    }
+  }));
 
   return (
     <div className="h-fit flex flex-col">
@@ -88,9 +96,10 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       <div className="h-fit">
         <ResizablePanelGroup direction="horizontal">
           {/* Match List Panel */}
-          <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
+          <ResizablePanel defaultSize={50} minSize={0} maxSize={100} className="overflow-visible">
             <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>
               <MatchesList
+                ref={matchesListRef}
                 matches={visibleMatches}
                 onHideMatch={onHideMatch}
                 onRefreshMatch={onRefreshMatch}
@@ -103,6 +112,8 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
                 teamMatches={teamMatches}
                 hiddenMatchIds={hiddenMatchIds}
                 allMatches={unhiddenMatches}
+                onScrollToMatch={onScrollToMatch}
+                onAddMatch={onAddMatch}
               />
             </div>
           </ResizablePanel>
@@ -116,20 +127,6 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
               {selectedMatch ? (
                 (() => {
                   const teamMatchData = teamMatches[selectedMatch.id];
-                  console.log('🎯 ResizableMatchLayout - teamMatch data:', {
-                    selectedMatchId: selectedMatch.id,
-                    teamMatchData: JSON.stringify(teamMatchData),
-                    teamMatchSide: teamMatchData?.side,
-                    teamMatchesKeys: Object.keys(teamMatches),
-                    hasTeamMatchData: !!teamMatchData,
-                    teamMatchesCount: Object.keys(teamMatches).length,
-                    allTeamMatchIds: Object.keys(teamMatches).map(id => parseInt(id))
-                  });
-                  
-                  if (!teamMatchData) {
-                    console.log('❌ No teamMatchData found for match:', selectedMatch.id);
-                    console.log('Available teamMatches keys:', Object.keys(teamMatches));
-                  }
                   
                   return (
                     <MatchDetailsPanel
@@ -157,4 +154,6 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
       </div>
     </div>
   );
-}; 
+});
+
+ResizableMatchLayout.displayName = 'ResizableMatchLayout'; 

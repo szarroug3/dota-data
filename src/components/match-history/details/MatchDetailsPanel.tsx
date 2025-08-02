@@ -32,24 +32,6 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   teamMatches = {},
   hiddenMatchIds = new Set(),
 }) => {
-  console.log('📋 MatchDetailsPanel:', {
-    matchId: match?.id,
-    teamMatchSide: teamMatch?.side,
-    hasTeamMatch: !!teamMatch,
-    viewMode,
-    allMatchesCount: allMatches.length,
-    teamMatchesCount: Object.keys(teamMatches).length,
-    hiddenMatchIdsCount: hiddenMatchIds.size,
-    teamMatchesKeys: Object.keys(teamMatches),
-    teamMatch: JSON.stringify(teamMatch),
-    allMatchesIds: allMatches.map(m => m.id),
-    hiddenMatchIds: Array.from(hiddenMatchIds)
-  });
-
-  if (!teamMatch) {
-    console.log('❌ MatchDetailsPanel: No teamMatch provided for match:', match?.id);
-  }
-
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
 
   return (

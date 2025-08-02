@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { EditTeamModal } from '@/components/dashboard/EditTeamModal';
+import { EditTeamSheet } from '@/components/dashboard/EditTeamModal';
 
-describe('EditTeamModal', () => {
+describe('EditTeamSheet', () => {
   const mockOnClose = jest.fn();
   const mockOnSave = jest.fn();
   const mockTeamExists = jest.fn();
@@ -22,8 +22,8 @@ describe('EditTeamModal', () => {
     mockTeamExists.mockReturnValue(false);
   });
 
-  it('should render modal when isOpen is true', () => {
-    render(<EditTeamModal {...defaultProps} />);
+  it('should render sheet when isOpen is true', () => {
+    render(<EditTeamSheet {...defaultProps} />);
     
     expect(screen.getByText('Edit Team')).toBeInTheDocument();
     expect(screen.getByLabelText('Team ID *')).toBeInTheDocument();
@@ -32,14 +32,14 @@ describe('EditTeamModal', () => {
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
-  it('should not render modal when isOpen is false', () => {
-    render(<EditTeamModal {...defaultProps} isOpen={false} />);
+  it('should not render sheet when isOpen is false', () => {
+    render(<EditTeamSheet {...defaultProps} isOpen={false} />);
     
     expect(screen.queryByText('Edit Team')).not.toBeInTheDocument();
   });
 
   it('should populate form with current team and league IDs', () => {
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *') as HTMLInputElement;
     const leagueIdInput = screen.getByLabelText('League ID *') as HTMLInputElement;
@@ -50,17 +50,17 @@ describe('EditTeamModal', () => {
 
   it('should call onSave with correct parameters when save is clicked', async () => {
     const user = userEvent.setup();
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
     
-    expect(mockOnSave).toHaveBeenCalledWith('team1', 'league1', 'team1', 'league1');
+    expect(mockOnSave).toHaveBeenCalledWith('12345', '67890', '12345', '67890');
   });
 
   it('should call onClose when cancel is clicked', async () => {
     const user = userEvent.setup();
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const cancelButton = screen.getByText('Cancel');
     await user.click(cancelButton);
@@ -70,7 +70,7 @@ describe('EditTeamModal', () => {
 
   it('should disable save button when team ID is empty', async () => {
     const user = userEvent.setup();
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *');
     const saveButton = screen.getByText('Save Changes');
@@ -83,7 +83,7 @@ describe('EditTeamModal', () => {
 
   it('should disable save button when league ID is empty', async () => {
     const user = userEvent.setup();
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const leagueIdInput = screen.getByLabelText('League ID *');
     const saveButton = screen.getByText('Save Changes');
@@ -97,7 +97,7 @@ describe('EditTeamModal', () => {
   it('should disable save button when team already exists', async () => {
     const user = userEvent.setup();
     mockTeamExists.mockReturnValue(true);
-    render(<EditTeamModal {...defaultProps} />);
+    render(<EditTeamSheet {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *');
     const leagueIdInput = screen.getByLabelText('League ID *');
@@ -121,7 +121,7 @@ describe('EditTeamModal', () => {
     const user = userEvent.setup();
     const mockOnSaveWithError = jest.fn().mockRejectedValue(new Error('Failed to update team'));
     
-    render(<EditTeamModal {...defaultProps} onSave={mockOnSaveWithError} />);
+    render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithError} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
@@ -140,7 +140,7 @@ describe('EditTeamModal', () => {
       new Promise(resolve => setTimeout(resolve, 100))
     );
     
-    render(<EditTeamModal {...defaultProps} onSave={mockOnSaveWithDelay} />);
+    render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithDelay} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
@@ -154,7 +154,7 @@ describe('EditTeamModal', () => {
     const user = userEvent.setup();
     const mockOnSaveWithError = jest.fn().mockRejectedValue(new Error('Failed to update team'));
     
-    render(<EditTeamModal {...defaultProps} onSave={mockOnSaveWithError} />);
+    const { unmount } = render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithError} />);
     
     // Trigger an error
     const saveButton = screen.getByText('Save Changes');
@@ -168,8 +168,9 @@ describe('EditTeamModal', () => {
     const cancelButton = screen.getByText('Cancel');
     await user.click(cancelButton);
     
-    // Reopen modal
-    render(<EditTeamModal {...defaultProps} onSave={mockOnSave} />);
+    // Unmount and remount to simulate reopening
+    unmount();
+    render(<EditTeamSheet {...defaultProps} onSave={mockOnSave} />);
     
     // Error should be cleared
     expect(screen.queryByText('Failed to update team')).not.toBeInTheDocument();

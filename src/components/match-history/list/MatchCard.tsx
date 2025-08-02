@@ -5,7 +5,7 @@
  * Uses shadcn components for consistent styling.
  */
 
-import { AlertCircle, Clock, Loader2, Sword, Users } from 'lucide-react';
+import { AlertCircle, Clock, Sword, Users } from 'lucide-react';
 import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -101,7 +101,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   const matchName = getMatchDisplayName(match);
   const playerCount = getPlayerCount(match);
   const heroCount = getHeroCount(match);
-  const opponentName = teamMatch?.opponentName;
+  // Get opponent name from team data
+  const opponentName = teamMatch?.opponentName || `Loading ${match.id}`;
 
   return (
     <Card 
@@ -113,14 +114,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">
-            vs {opponentName}
+            vs {isLoading && !hasError ? 'Loading...' : opponentName}
           </CardTitle>
           <div className="flex items-center gap-2">
             {isLoading && (
-              <Badge variant="secondary" className="text-xs">
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Loading
-              </Badge>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             )}
             {hasError && (
               <Badge variant="destructive" className="text-xs">

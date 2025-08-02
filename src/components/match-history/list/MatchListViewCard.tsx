@@ -2,14 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { useConfigContext } from '@/contexts/config-context';
+import { useTeamContext } from '@/contexts/team-context';
 import type { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
+import { EditManualMatchButton } from '../common/EditManualMatchButton';
 import { ExternalSiteButton } from '../common/ExternalSiteButton';
 import { HeroAvatar } from '../common/HeroAvatar';
 import { HideButton } from '../common/HideButton';
 import { RefreshButton } from '../common/RefreshButton';
+import { RemoveManualMatchButton } from '../common/RemoveManualMatchButton';
+import { EditManualMatchSheet } from '../EditManualMatchSheet';
 
 // Custom hook for responsive grid columns
 const useResponsiveGrid = () => {
@@ -142,6 +146,7 @@ interface MatchListViewCardProps {
   onRefreshMatch: (matchId: number) => void;
   className?: string;
   teamMatches?: Record<number, TeamMatchParticipation>;
+  onScrollToMatch?: (matchId: number) => void;
 }
 
 interface MatchCardProps {
@@ -151,6 +156,7 @@ interface MatchCardProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   teamMatch?: TeamMatchParticipation;
+  onScrollToMatch?: (matchId: number) => void;
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({ 
@@ -159,10 +165,38 @@ const MatchCard: React.FC<MatchCardProps> = ({
   onSelectMatch, 
   onHideMatch,
   onRefreshMatch,
-  teamMatch
+  teamMatch,
+  onScrollToMatch
 }) => {
   const { config } = useConfigContext();
+  const { getSelectedTeam, removeManualMatch, editManualMatch } = useTeamContext();
   
+  // Edit sheet state
+  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  
+  // Check if match has an error
+  const hasError = Boolean(match.error);
+  const isLoading = Boolean(match.isLoading);
+  
+  // Check if this is a manual match
+  const isManualMatch = useMemo(() => {
+    const selectedTeam = getSelectedTeam();
+    if (!selectedTeam?.manualMatches) {
+      return false;
+    }
+    const isManual = match.id in selectedTeam.manualMatches;
+    return isManual;
+  }, [match.id, getSelectedTeam]);
+  
+  // Get current team side for manual matches
+  const currentTeamSide = useMemo(() => {
+    if (!isManualMatch) return 'radiant' as const;
+    const selectedTeam = getSelectedTeam();
+    return selectedTeam?.manualMatches?.[match.id]?.side || 'radiant';
+  }, [isManualMatch, match.id, getSelectedTeam]);
+
   // Get actual heroes from the match data based on team match participation
   const matchHeroes = useMemo(() => {
     if (!teamMatch?.side) return [];
@@ -177,27 +211,74 @@ const MatchCard: React.FC<MatchCardProps> = ({
   // Get opponent name from team data
   const opponentName = teamMatch?.opponentName || `Match ${match.id}`;
 
+  // Handle click - only allow selection if no error
+  const handleClick = () => {
+    if (!hasError) {
+      onSelectMatch(match.id);
+    }
+  };
+
+  // Handle remove manual match
+  const handleRemoveManualMatch = () => {
+    removeManualMatch(match.id);
+  };
+
+  // Handle edit manual match
+  const handleEditManualMatch = async (newMatchId: number, teamSide: 'radiant' | 'dire') => {
+    // Close the modal immediately and set submitting state
+    setShowEditSheet(false);
+    setIsSubmitting(true);
+    setError(undefined);
+    
+    try {
+      await editManualMatch(match.id, newMatchId, teamSide);
+      
+      // Scroll to the new match ID (whether it changed or not)
+      onScrollToMatch?.(newMatchId);
+      
+      // Select the new match after editing
+      onSelectMatch(newMatchId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to edit match');
+      // Could potentially reopen the modal on error, but for now just log
+      console.error('Failed to edit match:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md ${
-        selectedMatchId === match.id ? 'ring-2 ring-primary' : ''
+      className={`transition-all ${
+        selectedMatchId === match.id 
+          ? 'ring-2 ring-primary' 
+          : hasError
+          ? 'border-destructive bg-destructive/5 cursor-not-allowed'
+          : 'cursor-pointer hover:shadow-md'
       }`}
-      onClick={() => onSelectMatch(match.id)}
+      onClick={handleClick}
+      role="button"
+      tabIndex={hasError ? -1 : 0}
+      aria-label={hasError ? `Match ${match.id} - Error: ${match.error}` : `Select match vs ${opponentName}`}
     >
       <CardContent className="p-4 h-[140px] relative">
         {/* Top row: Opponent name (centered) - hidden below 150px */}
         <div className="absolute top-4 left-0 right-0 text-center @[100px]:block hidden h-5 flex items-center justify-center">
           <h3 className="font-medium text-sm truncate">
-            {opponentName}
+            {isLoading && !hasError ? 'Loading...' : opponentName}
           </h3>
         </div>
 
-        {/* Middle row: Hero badges (centered) */}
+        {/* Middle row: Hero badges (centered) or Loading indicator */}
         <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 flex justify-center h-8 flex items-center justify-center">
-          <HeroAvatars 
-            heroes={matchHeroes} 
-            avatarSize={{ width: 'w-8', height: 'h-8' }}
-          />
+          {isLoading && !hasError ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          ) : (
+            <HeroAvatars 
+              heroes={matchHeroes} 
+              avatarSize={{ width: 'w-8', height: 'h-8' }}
+            />
+          )}
         </div>
 
         {/* Bottom row: Action buttons (centered) - hidden below 200px */}
@@ -211,60 +292,78 @@ const MatchCard: React.FC<MatchCardProps> = ({
             onClick={() => onRefreshMatch(match.id)}
             ariaLabel={`Refresh match vs ${opponentName}`}
           />
-          <HideButton
-            onClick={() => onHideMatch(match.id)}
-            ariaLabel={`Hide match`}
-          />
+          {isManualMatch ? (
+            <>
+              <EditManualMatchButton
+                onClick={() => setShowEditSheet(true)}
+                ariaLabel={`Edit manual match`}
+              />
+              <RemoveManualMatchButton
+                onClick={handleRemoveManualMatch}
+                ariaLabel={`Remove manual match`}
+              />
+            </>
+          ) : (
+            <>
+              <HideButton
+                onClick={() => onHideMatch(match.id)}
+                ariaLabel={`Hide match`}
+              />
+            </>
+          )}
         </div>
       </CardContent>
+      
+      {/* Edit Manual Match Sheet */}
+      <EditManualMatchSheet
+        isOpen={showEditSheet}
+        onClose={() => setShowEditSheet(false)}
+        matchId={match.id}
+        currentTeamSide={currentTeamSide}
+        onEditMatch={handleEditManualMatch}
+        isSubmitting={isSubmitting}
+        error={error}
+      />
     </Card>
   );
 };
 
-export const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
+const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   matches,
   selectedMatchId,
   onSelectMatch,
   onHideMatch,
   onRefreshMatch,
-  teamMatches
+  className = '',
+  teamMatches = {},
+  onScrollToMatch
 }) => {
-  const { containerRef, columns } = useResponsiveGrid();
   
-  if (matches.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8 text-muted-foreground">
-        <div className="text-center">
-          <div className="text-lg font-medium mb-2">No matches found</div>
-          <div className="text-sm">Try adjusting your filters or adding more matches.</div>
-        </div>
-      </div>
-    );
-  }
+  const { containerRef, columns } = useResponsiveGrid();
 
   return (
-    <>
-      <div 
-        ref={containerRef} 
-        className="grid" 
-        style={{ 
-          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-          '--columns': columns.toString()
-        } as React.CSSProperties}
-      >
-        {matches.map((match) => (
-          <div key={match.id} className="p-1">
-            <MatchCard
-              match={match}
-              selectedMatchId={selectedMatchId}
-              onSelectMatch={onSelectMatch}
-              onHideMatch={onHideMatch}
-              onRefreshMatch={onRefreshMatch}
-              teamMatch={teamMatches?.[match.id]}
-            />
-          </div>
-        ))}
-      </div>
-    </>
+    <div 
+      ref={containerRef}
+      className={`grid gap-4 ${className}`}
+      style={{
+        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`
+      }}
+    >
+      {matches.map((match) => (
+        <div key={match.id} data-match-id={match.id}>
+          <MatchCard
+            match={match}
+            selectedMatchId={selectedMatchId}
+            onSelectMatch={onSelectMatch}
+            onHideMatch={onHideMatch}
+            onRefreshMatch={onRefreshMatch}
+            teamMatch={teamMatches[match.id]}
+            onScrollToMatch={onScrollToMatch}
+          />
+        </div>
+      ))}
+    </div>
   );
-}; 
+};
+
+export { MatchListViewCard };

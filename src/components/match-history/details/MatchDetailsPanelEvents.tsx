@@ -47,7 +47,6 @@ const generateTimeTicks = (minTime: number, maxTime: number): number[] => {
     ticks.push(time);
   }
   
-  console.log('Generated ticks:', ticks.map(t => formatTime(t)));
   return ticks;
 };
 
@@ -201,14 +200,11 @@ const generateTimeTicks = (minTime: number, maxTime: number): number[] => {
     
     // Add a data point at the first negative tick if needed
     const minTime = Math.min(...combinedData.map(d => d.time));
-    console.log('Original minTime:', minTime, 'formatted:', formatTime(minTime));
     
     if (minTime < 0) {
       const firstNegativeTick = Math.floor(minTime / 60) * 60; // Round down to nearest minute
-      console.log('First negative tick:', firstNegativeTick, 'formatted:', formatTime(firstNegativeTick));
       
       if (firstNegativeTick < minTime && !combinedData.some(d => d.time === firstNegativeTick)) {
-        console.log('Adding negative tick data point at:', formatTime(firstNegativeTick));
         combinedData.unshift({
           time: firstNegativeTick,
           goldAdvantage: 0,
@@ -219,12 +215,8 @@ const generateTimeTicks = (minTime: number, maxTime: number): number[] => {
           direXP: 0,
           event: undefined,
         });
-      } else {
-        console.log('Not adding negative tick - already exists or not needed');
       }
     }
-    
-    console.log('Final combinedData times:', combinedData.map(d => formatTime(d.time)));
     
     return combinedData;
   };
@@ -271,8 +263,6 @@ const PerformanceChart: React.FC<{ match?: Match }> = ({ match }) => {
   const { goldAdvantage: goldData, experienceAdvantage } = match.statistics;
   const events = match.processedEvents || [];
   
-  console.log('PerformanceChart - match.processedEvents:', JSON.stringify(events.slice(0, 3), null, 2));
-
   // Create chart data points with advantage calculations
   const chartData = createChartData(goldData, experienceAdvantage, events);
 
@@ -290,8 +280,6 @@ const PerformanceChart: React.FC<{ match?: Match }> = ({ match }) => {
   const maxTime = Math.max(...chartData.map(d => d.time));
   const chartMaxAdvantage = Math.max(...chartData.flatMap(d => [d.goldAdvantage ?? 0, d.xpAdvantage ?? 0]));
   const chartMinAdvantage = Math.min(...chartData.flatMap(d => [d.goldAdvantage ?? 0, d.xpAdvantage ?? 0]));
-  console.log('Chart time range:', formatTime(minTime), 'to', formatTime(maxTime));
-  console.log('Domain range:', formatTime(minTime - 90), 'to', formatTime(maxTime));
 
   // Filter significant events for overlay
   const significantEvents = events.filter(event => 

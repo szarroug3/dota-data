@@ -153,7 +153,7 @@ const useMatchApiFetching = (
         errorMsg = response.statusText || errorMsg;
       }
       
-      console.error(`Match API: Error response for match ${matchId}:`, errorMsg);
+      console.warn(`Match API: Error response for match ${matchId}:`, errorMsg);
       handleMatchError(matchId, errorMsg);
       return { error: errorMsg };
     }
@@ -166,7 +166,7 @@ const useMatchApiFetching = (
       return match;
     } catch (parseError) {
       const errorMsg = `Failed to parse match data for ${matchId}: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`;
-      console.error(`Match API: Parse error for match ${matchId}:`, parseError);
+      console.warn(`Match API: Parse error for match ${matchId}:`, parseError);
       handleMatchError(matchId, errorMsg);
       return { error: errorMsg };
     }
@@ -188,7 +188,7 @@ const useMatchApiFetching = (
       return await processMatchResponse(response, matchId);
     } catch (error) {
       const errorMsg = 'Failed to fetch match data';
-      console.error(`Match API: Network error for match ${matchId}:`, error);
+      console.warn(`Match API: Network error for match ${matchId}:`, error);
       handleMatchError(matchId, errorMsg);
       return { error: errorMsg };
     }

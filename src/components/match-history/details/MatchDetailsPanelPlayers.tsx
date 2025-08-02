@@ -54,14 +54,6 @@ function getPlayersFromMatch(match?: Match): PlayerWithTeam[] {
 const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, hiddenMatchIds: Set<number>): boolean => {
   const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
   
-  console.log('🔍 isHighPerformingHero (Players):', JSON.stringify({
-    heroId: hero?.id,
-    heroName: hero?.localizedName,
-    allMatchesCount: allMatches.length,
-    teamMatchesCount: Object.keys(teamMatches).length,
-    hiddenMatchIdsCount: hiddenMatchIds.size
-  }));
-  
   // Aggregate hero statistics from unhidden matches
   allMatches.forEach(matchData => {
     // Skip manually hidden matches
@@ -77,17 +69,6 @@ const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Reco
     const teamPlayers = matchData.players[matchTeamData.side] || [];
     const isWin = matchTeamData.result === 'won';
     
-    // Debug: Log the hero IDs in this match's player data
-    console.log('🔍 Match players (Players):', JSON.stringify({
-      matchId: matchData.id,
-      side: matchTeamData.side,
-      playerCount: teamPlayers.length,
-      playerHeroIds: teamPlayers.map(p => p.hero?.id),
-      playerHeroNames: teamPlayers.map(p => p.hero?.localizedName),
-      targetHeroId: hero?.id,
-      targetHeroName: hero?.localizedName
-    }));
-    
     teamPlayers.forEach(player => {
       if (player.hero?.id === hero.id) {
         heroStats.count++;
@@ -100,19 +81,7 @@ const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Reco
   });
   
   // High-performing criteria: 5+ games, 60%+ win rate
-  const isHighPerforming = heroStats.count >= 5 && (heroStats.wins / heroStats.count) >= 0.6;
-  
-  console.log('📊 Hero stats (Players):', JSON.stringify({
-    heroId: hero?.id,
-    heroName: hero?.localizedName,
-    count: heroStats.count,
-    wins: heroStats.wins,
-    totalGames: heroStats.totalGames,
-    winRate: heroStats.count > 0 ? (heroStats.wins / heroStats.count) : 0,
-    isHighPerforming
-  }));
-  
-  return isHighPerforming;
+  return heroStats.count >= 5 && (heroStats.wins / heroStats.count) >= 0.6;
 };
 
 const PlayerCard: React.FC<{ 
@@ -125,21 +94,6 @@ const PlayerCard: React.FC<{
   // Determine if this hero is on the active team's side AND is high-performing
   const isOnActiveTeamSide = player.team === teamMatch?.side;
   const isHighPerforming = isOnActiveTeamSide && isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds);
-  
-  console.log('👤 PlayerCard:', {
-    playerName: player.playerName,
-    heroId: player.hero?.id,
-    heroName: player.hero?.localizedName,
-    playerTeam: player.team,
-    teamMatchSide: teamMatch?.side,
-    isOnActiveTeamSide,
-    isHighPerforming,
-    allMatchesCount: allMatches.length,
-    teamMatchesCount: Object.keys(teamMatches).length,
-    teamMatch: JSON.stringify(teamMatch),
-    allMatchesIds: allMatches.map(m => m.id),
-    teamMatchesKeys: Object.keys(teamMatches)
-  });
   
   return (
     <Card className="p-4">

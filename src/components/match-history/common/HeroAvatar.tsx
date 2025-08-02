@@ -24,17 +24,6 @@ export const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize, isHigh
   
   const fallbackText = getFallbackText();
   
-  // Debug logging
-  console.log('🎨 HeroAvatar:', JSON.stringify({
-    heroId: hero?.id,
-    heroName: hero?.localizedName,
-    isHighPerforming,
-    borderClass: isHighPerforming ? 'border-blue-500' : 'border-gray-300',
-    width,
-    height,
-    condition: `isHighPerforming=${isHighPerforming}`
-  }));
-  
   return (
     <Avatar className={`${width} ${height} border ${isHighPerforming ? 'border-primary' : 'border-background'}`}>
       <AvatarImage 

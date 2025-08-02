@@ -1,13 +1,22 @@
-import { AlertCircle, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { getValidationAriaAttributes, validateTeamForm } from '@/utils/validation';
 
-interface EditTeamModalProps {
+interface EditTeamSheetProps {
   isOpen: boolean;
   onClose: () => void;
   currentTeamId: string;
@@ -54,26 +63,6 @@ const getButtonState = (
   };
 };
 
-const ModalHeader: React.FC<{ onCancel: () => void }> = ({ onCancel }) => (
-  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-    <div>
-      <CardTitle>Edit Team</CardTitle>
-      <CardDescription>
-        Update team and league information
-      </CardDescription>
-    </div>
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onCancel}
-      aria-label="Close modal"
-      className="h-8 w-8"
-    >
-      <X className="h-4 w-4" />
-    </Button>
-  </CardHeader>
-);
-
 interface FormFieldInputProps {
   id: string;
   label: string;
@@ -97,8 +86,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label} *</Label>
+    <FormField>
+      <Label htmlFor={id} className="text-sm font-medium">
+        {label} *
+      </Label>
       <div className="relative">
         <Input
           id={id}
@@ -115,7 +106,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive" role="alert">
+        <p className="text-xs text-destructive mt-1" role="alert">
           {error}
         </p>
       ) : (
@@ -123,80 +114,19 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           {id === 'teamId' ? 'Find this in Dotabuff team URLs' : 'Find this in Dotabuff league URLs'}
         </p>
       )}
-    </div>
+    </FormField>
   );
 };
 
-const ModalForm: React.FC<{
-  newTeamId: string;
-  newLeagueId: string;
-  setNewTeamId: (value: string) => void;
-  setNewLeagueId: (value: string) => void;
-  error?: string;
-  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
-}> = ({ newTeamId, newLeagueId, setNewTeamId, setNewLeagueId, error, validation }) => (
-  <div className="space-y-4">
-    {error && (
-      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-        <p className="text-sm text-destructive">{error}</p>
-      </div>
-    )}
-    
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <FormFieldInput
-        id="teamId"
-        label="Team ID"
-        placeholder="e.g., 9517508"
-        value={newTeamId}
-        onChange={setNewTeamId}
-        error={validation.errors.teamId}
-        isValid={!validation.errors.teamId}
-      />
-      <FormFieldInput
-        id="leagueId"
-        label="League ID"
-        placeholder="e.g., 16435"
-        value={newLeagueId}
-        onChange={setNewLeagueId}
-        error={validation.errors.leagueId}
-        isValid={!validation.errors.leagueId}
-      />
-    </div>
-  </div>
-);
+// ============================================================================
+// CUSTOM HOOKS
+// ============================================================================
 
-const ModalActions: React.FC<{
-  onCancel: () => void;
-  onSave: () => void;
-  buttonState: ButtonState;
-}> = ({ onCancel, onSave, buttonState }) => (
-  <div className="flex gap-4 justify-end">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onCancel}
-      disabled={buttonState.disabled}
-    >
-      Cancel
-    </Button>
-    <Button
-      type="button"
-      onClick={onSave}
-      disabled={buttonState.disabled}
-    >
-      {buttonState.text}
-    </Button>
-  </div>
-);
-
-export const EditTeamModal: React.FC<EditTeamModalProps> = ({
-  isOpen,
-  onClose,
-  currentTeamId,
-  currentLeagueId,
-  onSave,
-  teamExists
-}) => {
+const useEditTeamSheetState = (
+  isOpen: boolean,
+  currentTeamId: string,
+  currentLeagueId: string
+) => {
   const [newTeamId, setNewTeamId] = useState(currentTeamId);
   const [newLeagueId, setNewLeagueId] = useState(currentLeagueId);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -210,7 +140,7 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
     setValidation(validateTeamForm(newTeamId, newLeagueId));
   }, [newTeamId, newLeagueId]);
 
-  // Reset form when modal opens/closes
+  // Reset form when sheet opens/closes
   useEffect(() => {
     if (isOpen) {
       setNewTeamId(currentTeamId);
@@ -219,6 +149,39 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
       setIsSubmitting(false);
     }
   }, [isOpen, currentTeamId, currentLeagueId]);
+
+  return {
+    newTeamId,
+    setNewTeamId,
+    newLeagueId,
+    setNewLeagueId,
+    isSubmitting,
+    setIsSubmitting,
+    error,
+    setError,
+    validation
+  };
+};
+
+export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
+  isOpen,
+  onClose,
+  currentTeamId,
+  currentLeagueId,
+  onSave,
+  teamExists
+}) => {
+  const {
+    newTeamId,
+    setNewTeamId,
+    newLeagueId,
+    setNewLeagueId,
+    isSubmitting,
+    setIsSubmitting,
+    error,
+    setError,
+    validation
+  } = useEditTeamSheetState(isOpen, currentTeamId, currentLeagueId);
 
   const buttonState = getButtonState(
     newTeamId,
@@ -229,7 +192,7 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
     isSubmitting
   );
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (buttonState.disabled) return;
 
     try {
@@ -242,47 +205,117 @@ export const EditTeamModal: React.FC<EditTeamModalProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCancel = () => {
-    setNewTeamId(currentTeamId);
-    setNewLeagueId(currentLeagueId);
-    setError(undefined);
-    onClose();
-  };
+  }, [buttonState.disabled, setIsSubmitting, setError, onSave, currentTeamId, currentLeagueId, newTeamId, newLeagueId, onClose]);
 
   // Only show errors for fields that have been touched (have content)
   const shouldShowTeamError = newTeamId.trim().length > 0 ? validation.errors.teamId : undefined;
   const shouldShowLeagueError = newLeagueId.trim().length > 0 ? validation.errors.leagueId : undefined;
 
-  if (!isOpen) return null;
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="p-6">
+        <SheetHeader>
+          <SheetTitle>Edit Team</SheetTitle>
+          <SheetDescription>
+            Update team and league information
+          </SheetDescription>
+        </SheetHeader>
+        
+        <EditTeamSheetContent
+          error={error}
+          newTeamId={newTeamId}
+          setNewTeamId={setNewTeamId}
+          newLeagueId={newLeagueId}
+          setNewLeagueId={setNewLeagueId}
+          shouldShowTeamError={shouldShowTeamError}
+          shouldShowLeagueError={shouldShowLeagueError}
+        />
+        
+        <SheetFooter className="flex flex-col gap-2 w-full">
+          <Button 
+            type="button" 
+            onClick={handleSave}
+            disabled={buttonState.disabled}
+            className="w-full"
+            data-save-team-button
+          >
+            {buttonState.text}
+          </Button>
+          <SheetClose asChild>
+            <Button type="button" variant="outline" disabled={buttonState.disabled} className="w-full">
+              Cancel
+            </Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+// ============================================================================
+// SHEET CONTENT COMPONENT
+// ============================================================================
+
+interface EditTeamSheetContentProps {
+  error?: string;
+  newTeamId: string;
+  setNewTeamId: (value: string) => void;
+  newLeagueId: string;
+  setNewLeagueId: (value: string) => void;
+  shouldShowTeamError?: string;
+  shouldShowLeagueError?: string;
+}
+
+const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
+  error,
+  newTeamId,
+  setNewTeamId,
+  newLeagueId,
+  setNewLeagueId,
+  shouldShowTeamError,
+  shouldShowLeagueError
+}) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Find the save button and trigger it
+      const saveButton = document.querySelector('[data-save-team-button]') as HTMLButtonElement;
+      if (saveButton && !saveButton.disabled) {
+        saveButton.click();
+      }
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
-        <ModalHeader onCancel={handleCancel} />
-        <CardContent className="space-y-4">
-          <ModalForm
-            newTeamId={newTeamId}
-            newLeagueId={newLeagueId}
-            setNewTeamId={setNewTeamId}
-            setNewLeagueId={setNewLeagueId}
-            error={error}
-            validation={{
-              ...validation,
-              errors: {
-                teamId: shouldShowTeamError,
-                leagueId: shouldShowLeagueError
-              }
-            }}
-          />
-          <ModalActions
-            onCancel={handleCancel}
-            onSave={handleSave}
-            buttonState={buttonState}
-          />
-        </CardContent>
-      </Card>
+    <div className="grid flex-1 auto-rows-min gap-6 py-4">
+      <div className="grid gap-4" onKeyDown={handleKeyDown}>
+      {error && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 gap-4">
+        <FormFieldInput
+          id="teamId"
+          label="Team ID"
+          placeholder="e.g., 9517508"
+          value={newTeamId}
+          onChange={setNewTeamId}
+          error={shouldShowTeamError}
+          isValid={!shouldShowTeamError}
+        />
+        <FormFieldInput
+          id="leagueId"
+          label="League ID"
+          placeholder="e.g., 16435"
+          value={newLeagueId}
+          onChange={setNewLeagueId}
+          error={shouldShowLeagueError}
+          isValid={!shouldShowLeagueError}
+        />
+      </div>
     </div>
+  </div>
   );
 }; 

@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { useTeamContext } from '@/contexts/team-context';
 
 import { AddTeamForm } from './AddTeamForm';
-import { EditTeamModal } from './EditTeamModal';
+import { EditTeamSheet } from './EditTeamModal';
 import { TeamList } from './TeamList';
 
 // ============================================================================
@@ -107,7 +107,7 @@ export const DashboardPage: React.FC = () => {
         onEditTeam={handleEditTeam}
       />
 
-      <EditTeamModal
+      <EditTeamSheet
         isOpen={modal.isEditModalOpen}
         onClose={modal.close}
         currentTeamId={modal.editingTeamId}

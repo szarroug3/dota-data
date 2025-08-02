@@ -185,10 +185,13 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     // Team-specific operations
     addMatchToTeam: actions.addMatchToTeam,
     addPlayerToTeam: actions.addPlayerToTeam,
+    removeManualMatch: actions.removeManualMatch,
+    editManualMatch: actions.editManualMatch,
     
     // Team list management
     setTeams: actions.setTeams,
     loadTeamsFromConfig: actions.loadTeamsFromConfig,
+    loadManualMatches: actions.loadManualMatches,
     
     // Data access
     setSelectedTeamId: (teamId: number, leagueId: number) => {

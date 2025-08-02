@@ -171,10 +171,12 @@ export function useMatchOperations(
 
       // Check if operation was aborted
       const abortResult = handleMatchAbortCheck(abortController, optimisticMatch);
-      if (abortResult) return abortResult;
+      if (abortResult) {
+        return abortResult;
+      }
       
       // Fetch and process match data
-      return await fetchAndProcessMatch(
+      const result = await fetchAndProcessMatch(
         matchId,
         force,
         abortController,
@@ -183,6 +185,13 @@ export function useMatchOperations(
         processing,
         state
       );
+      
+      // If the fetch failed (result is null), return the optimistic match instead
+      if (result === null) {
+        return optimisticMatch;
+      }
+      
+      return result;
       
     } catch (err) {
       return handleMatchOperationError(err as Error | string | object, abortController, matchId, state);

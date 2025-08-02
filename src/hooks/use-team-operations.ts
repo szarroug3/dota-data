@@ -1,16 +1,19 @@
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 
+import type { ConfigContextValue } from '@/contexts/config-context';
+import type { MatchContextValue } from '@/contexts/match-context';
+import type { PlayerContextValue } from '@/contexts/player-context';
 import type { TeamDataFetchingContextValue } from '@/contexts/team-data-fetching-context';
-import { abortTeamLeagueOperations, createTeamLeagueOperationKey, useAbortController, type AbortControllerManager } from '@/hooks/use-abort-controller';
+import { abortTeamLeagueOperations, createTeamLeagueOperationKey, useAbortController } from '@/hooks/use-abort-controller';
 import { processMatchAndExtractPlayers } from '@/lib/processing/team-processing';
-import type { ConfigContextValue } from '@/types/contexts/config-context-value';
-import type { MatchContextValue } from '@/types/contexts/match-context-value';
-import type { PlayerContextValue } from '@/types/contexts/player-context-value';
+import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamData, TeamMatchParticipation, TeamState } from '@/types/contexts/team-context-value';
 import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
 import { updateMapItemError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { generateTeamKey } from '@/utils/team-helpers';
+
+import type { AbortControllerManager } from '@/contexts/abort-controller-context';
 
 // ============================================================================
 // HELPER FUNCTIONS FOR TEAM OPERATIONS
@@ -32,6 +35,7 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
     timeAdded: new Date().toISOString(),
     error,
     matches: {},
+    manualMatches: {},
     players: [],
     performance: {
       totalMatches: 0,
@@ -93,6 +97,7 @@ function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: Dotab
       });
       return matches;
     })(),
+    manualMatches: {},
     players: [], // Will be populated from match data
     performance: {
       totalMatches: matchesArray.length,
@@ -223,9 +228,33 @@ async function handleTeamSummaryOperation(
     // Both succeeded - transform data
     const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, leagueData as DotabuffLeague);
     
-    // Update state with fetched data
+    // Update state with fetched data, preserving existing manualMatches
     setTeams(prev => {
       const newTeams = new Map(prev);
+      const existingTeam = newTeams.get(teamKey);
+      
+      // Preserve existing manualMatches if they exist
+      if (existingTeam?.manualMatches) {
+        transformedTeam.manualMatches = { ...existingTeam.manualMatches };
+        
+        // Also add manual matches back to the matches object so they appear in the UI
+        Object.entries(existingTeam.manualMatches).forEach(([matchId, matchData]) => {
+          const matches = transformedTeam.matches as Record<string, any>;
+          if (!matches[matchId]) {
+            matches[matchId] = {
+              matchId: parseInt(matchId),
+              result: 'lost',
+              duration: 0,
+              opponentName: 'Unknown',
+              leagueId: transformedTeam.league.id,
+              startTime: Date.now(),
+              side: matchData.side, // Use the original side from manual match data
+              pickOrder: null
+            };
+          }
+        });
+      }
+      
       newTeams.set(teamKey, transformedTeam);
       return newTeams;
     });
@@ -297,36 +326,42 @@ function useTeamDataAccessOperations(
  */
 function useTeamSpecificOperations(
   selectedTeamId: { teamId: number; leagueId: number } | null,
+  teams: Map<string, TeamData>,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue
 ) {
   // Add match to team
   const addMatchToTeam = useCallback(async (matchId: number, teamSide: 'radiant' | 'dire') => {
+    
     if (!selectedTeamId) {
       throw new Error('No active team selected');
     }
     
     const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    
     const match = matchContext.getMatch(matchId);
     
-    if (match) {
-      const result = match?.result === teamSide ? 'won' : 'lost';
-      const startTime = new Date(match.date).getTime();
-      const opponentName = teamSide === 'radiant' ? match?.radiant.name : match?.dire.name;
-      const pickOrder = match.pickOrder?.[teamSide] || null;
-
-      setTeams(prev => {
-        const newTeams = new Map(prev);
-        const team = newTeams.get(teamKey);
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      
+      if (team) {
+        // Check if match already exists in team's matches
+        const matchExists = matchId in team.matches;
         
-        if (team) {
-          // Check if match already exists in team's matches
-          const matchExists = matchId in team.matches;
+        if (!matchExists) {
+          // Create team match entry - either with full data or optimistic data
+          let teamMatch: TeamMatchParticipation;
           
-          if (!matchExists) {
-            // Add new match to team's matches record
-            team.matches[matchId] = {
+          if (match && !match.isLoading && !match.error) {
+            // We have full match data
+            const result = match.result === teamSide ? 'won' : 'lost';
+            const startTime = new Date(match.date).getTime();
+            const opponentName = teamSide === 'radiant' ? match.radiant?.name : match.dire?.name;
+            const pickOrder = match.pickOrder?.[teamSide] || null;
+
+            teamMatch = {
               matchId,
               result,
               duration: match.duration,
@@ -336,18 +371,112 @@ function useTeamSpecificOperations(
               side: teamSide,
               pickOrder,
             };
+          } else {
+            // We have optimistic data or the match is still loading
+            const startTime = Date.now(); // Use current time for optimistic match
+            const opponentName = match?.isLoading ? 'Loading...' : 'Unknown';
             
-            newTeams.set(teamKey, {
-              ...team,
-              matches: team.matches
-            });
+            teamMatch = {
+              matchId,
+              result: 'lost', // Use 'lost' as default for optimistic matches
+              duration: 0,
+              opponentName,
+              leagueId: selectedTeamId.leagueId.toString(),
+              startTime,
+              side: teamSide,
+              pickOrder: null,
+            };
           }
+          
+          // Add new match to team's matches record
+          team.matches[matchId] = teamMatch;
+          
+          // Add to manual matches for persistence
+          if (!team.manualMatches) {
+            team.manualMatches = {};
+          }
+          team.manualMatches[matchId] = { side: teamSide };
+          
+          newTeams.set(teamKey, {
+            ...team,
+            matches: team.matches,
+            manualMatches: team.manualMatches
+          });
+        } else {
+        }
+      } else {
+      }
+      
+      return newTeams;
+    });
+    
+    // If we don't have match data yet, don't throw an error
+    // The optimistic match will be updated when real data arrives
+    if (!match) {
+    }
+  }, [selectedTeamId, matchContext, setTeams]);
+
+  // Update team match when real match data arrives
+  const updateTeamMatchFromMatch = useCallback((matchId: number, match: Match) => {
+    if (!selectedTeamId) return;
+    
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    const team = teams.get(teamKey);
+    const teamMatch = team?.matches[matchId];
+    
+    if (teamMatch && !match.isLoading && !match.error) {
+      // Update the team match with real data
+      const teamSide = teamMatch.side;
+      const result = match.result === teamSide ? 'won' : 'lost';
+      const startTime = new Date(match.date).getTime();
+      const opponentName = teamSide === 'radiant' ? match.radiant?.name : match.dire?.name;
+      const pickOrder = match.pickOrder?.[teamSide] || null;
+
+      setTeams(prev => {
+        const newTeams = new Map(prev);
+        const team = newTeams.get(teamKey);
+        
+        if (team && team.matches[matchId]) {
+          team.matches[matchId] = {
+            ...team.matches[matchId],
+            result,
+            duration: match.duration,
+            opponentName: opponentName || '',
+            startTime,
+            pickOrder,
+          };
+          
+          newTeams.set(teamKey, {
+            ...team,
+            matches: team.matches
+          });
         }
         
         return newTeams;
       });
     }
-  }, [selectedTeamId, matchContext, setTeams]);
+  }, [selectedTeamId, teams, setTeams]);
+
+  // Watch for match updates and update team matches accordingly
+  React.useEffect(() => {
+    if (!selectedTeamId) return;
+    
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    const team = teams.get(teamKey);
+    
+    if (!team) return;
+    
+    // Check each match in the team and update if real data is available
+    Object.keys(team.matches).forEach(matchIdStr => {
+      const matchId = parseInt(matchIdStr, 10);
+      const match = matchContext.getMatch(matchId);
+      const teamMatch = team.matches[matchId];
+      
+      if (match && teamMatch && (teamMatch.opponentName === 'Loading...' || teamMatch.opponentName === 'Unknown') && !match.isLoading && !match.error) {
+        updateTeamMatchFromMatch(matchId, match);
+      }
+    });
+  }, [selectedTeamId, teams, matchContext, updateTeamMatchFromMatch]);
 
   // Add player to team
   const addPlayerToTeam = useCallback(async (playerId: number) => {
@@ -420,7 +549,7 @@ export function useTeamOperations(
   const { getTeam, getSelectedTeam, getAllTeams } = useTeamDataAccessOperations(teams, selectedTeamId);
 
   // Team-specific operations
-  const { addMatchToTeam, addPlayerToTeam } = useTeamSpecificOperations(selectedTeamId, setTeams, matchContext, playerContext);
+  const { addMatchToTeam, addPlayerToTeam } = useTeamSpecificOperations(selectedTeamId, teams, setTeams, matchContext, playerContext);
 
   // Add team
   const addTeam = useCallback(async (teamId: number, leagueId: number, force = false): Promise<void> => {
@@ -444,9 +573,21 @@ export function useTeamOperations(
         setSelectedTeam(teamId, leagueId);
         
         // Process each match to get full data
-        const matchProcessingPromises = Object.values(transformedTeam.matches).map(match => 
-          processMatchAndExtractPlayers(match.matchId, teamId, matchContext, playerContext)
-        );
+        const matchProcessingPromises = Object.values(transformedTeam.matches).map(match => {
+          // Check if this is a manual match by looking up the team's manual matches
+          const teamKey = generateTeamKey(teamId, leagueId);
+          const team = teams.get(teamKey);
+          const isManualMatch = team?.manualMatches?.[match.matchId];
+          const knownSide = isManualMatch?.side;
+          
+          return processMatchAndExtractPlayers(
+            match.matchId, 
+            teamId, 
+            matchContext, 
+            playerContext,
+            knownSide
+          );
+        });
         
         const processedMatches = await Promise.all(matchProcessingPromises);
         
@@ -529,6 +670,163 @@ export function useTeamOperations(
     setTeams(teams);
   }, [setTeams]);
 
+  // Load manual matches after normal team loading
+  const loadManualMatches = useCallback(async () => {
+    // Process manual matches to ensure they have corresponding team match participation records
+    const manualMatches = new Set<number>();
+    
+    teams.forEach((teamData, teamKey) => {
+      if (teamData.manualMatches) {
+        Object.entries(teamData.manualMatches).forEach(([matchId, manualMatch]) => {
+          const matchIdNum = parseInt(matchId, 10);
+          manualMatches.add(matchIdNum);
+          
+          // If this manual match doesn't have a corresponding team match participation record,
+          // create an optimistic entry
+          if (!teamData.matches[matchIdNum]) {
+            // Create optimistic team match entry
+            const optimisticMatch: TeamMatchParticipation = {
+              matchId: matchIdNum,
+              result: 'lost', // Default for optimistic matches
+              duration: 0,
+              opponentName: 'Loading...',
+              leagueId: teamData.league.id.toString(),
+              startTime: Date.now(),
+              side: manualMatch.side,
+              pickOrder: null,
+            };
+            
+            // Update the team data with the optimistic match
+            setTeams(prev => {
+              const newTeams = new Map(prev);
+              const team = newTeams.get(teamKey);
+              if (team) {
+                team.matches[matchIdNum] = optimisticMatch;
+                newTeams.set(teamKey, { ...team });
+              }
+              return newTeams;
+            });
+          }
+        });
+      }
+    });
+    
+    // Add manual matches to match context for data fetching
+    for (const matchId of manualMatches) {
+      await matchContext.addMatch(matchId);
+    }
+  }, [teams, setTeams, matchContext]);
+
+  // Remove manual match from team
+  const removeManualMatch = useCallback((matchId: number) => {
+    if (!selectedTeamId) return;
+    
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      
+      if (team) {
+        // Remove from manual matches
+        if (team.manualMatches) {
+          delete team.manualMatches[matchId];
+        }
+        
+        // Remove from matches
+        if (team.matches) {
+          delete team.matches[matchId];
+        }
+        
+        newTeams.set(teamKey, { ...team });
+      }
+      
+      return newTeams;
+    });
+  }, [selectedTeamId, setTeams]);
+
+  // Edit manual match in team
+  const editManualMatch = useCallback(async (oldMatchId: number, newMatchId: number, teamSide: 'radiant' | 'dire') => {
+    
+    if (!selectedTeamId) {
+      return;
+    }
+    
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    const team = teams.get(teamKey);
+    
+    if (!team) {
+      return;
+    }
+    
+    // Validate that new match ID is not already in use
+    if (oldMatchId !== newMatchId) {
+      // Check if new match ID already exists in manual matches
+      if (team.manualMatches && newMatchId in team.manualMatches) {
+        throw new Error(`Match ${newMatchId} is already added as a manual match`);
+      }
+      
+      // Check if new match ID already exists in regular matches
+      if (team.matches && newMatchId in team.matches) {
+        throw new Error(`Match ${newMatchId} is already in the team's match history`);
+      }
+    }
+    
+    // Update team data first
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      
+      if (team) {
+        // Remove old match from manual matches
+        if (team.manualMatches) {
+          delete team.manualMatches[oldMatchId];
+        }
+        
+        // Remove old match from matches
+        if (team.matches) {
+          delete team.matches[oldMatchId];
+        }
+        
+        // Add new match to manual matches
+        if (!team.manualMatches) {
+          team.manualMatches = {};
+        }
+        team.manualMatches[newMatchId] = { side: teamSide };
+        
+        // Also add to regular matches for the match list to pick it up
+        if (!team.matches) {
+          team.matches = {};
+        }
+        team.matches[newMatchId] = {
+          matchId: newMatchId,
+          result: 'lost', // Set to 'lost' so it gets updated when real data arrives
+          duration: 0,
+          opponentName: 'Loading...',
+          leagueId: team.league.id.toString(),
+          startTime: Date.now(),
+          side: teamSide,
+          pickOrder: null,
+        };
+        
+        newTeams.set(teamKey, { ...team });
+      }
+      
+      return newTeams;
+    });
+    
+    // Handle match context updates after state update
+    if (oldMatchId !== newMatchId) {
+      // Only remove old match if ID changed
+      matchContext.removeMatch(oldMatchId);
+      // Add new match and await the result
+      const newMatch = await matchContext.addMatch(newMatchId);
+    } else {
+      // If only team side changed, just refresh the match
+      const refreshedMatch = await matchContext.refreshMatch(newMatchId);
+    }
+  }, [selectedTeamId, setTeams, matchContext, teams]);
+
   return {
     // Core operations
     addTeam,
@@ -539,10 +837,13 @@ export function useTeamOperations(
     // Team-specific operations
     addMatchToTeam,
     addPlayerToTeam,
+    removeManualMatch,
+    editManualMatch,
     
     // Team list management
     setTeams,
     loadTeamsFromConfig,
+    loadManualMatches,
     
     // Data access
     setSelectedTeamId: setSelectedTeam,

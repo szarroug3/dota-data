@@ -19,21 +19,10 @@ import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
  * Determine team side from match data
  */
 export function determineTeamSideFromMatch(match: Match, teamId: number): 'radiant' | 'dire' {
-  console.log('🔍 determineTeamSideFromMatch:', {
-    matchId: match.id,
-    teamId,
-    radiantId: match.radiant.id,
-    direId: match.dire.id,
-    radiantName: match.radiant.name,
-    direName: match.dire.name
-  });
-
   // Check if we have team IDs in the processed match data
   if (match.radiant.id && match.radiant.id === teamId) {
-    console.log('✅ Team is on radiant side');
     return 'radiant';
   } else if (match.dire.id && match.dire.id === teamId) {
-    console.log('✅ Team is on dire side');
     return 'dire';
   }
   
@@ -125,13 +114,9 @@ export async function processMatchAndExtractPlayers(
   matchId: number,
   teamId: number,
   matchContext: MatchContextValue,
-  playerContext: PlayerContextValue
+  playerContext: PlayerContextValue,
+  knownTeamSide?: 'radiant' | 'dire'
 ): Promise<TeamMatchParticipation | null> {
-  console.log('🔄 processMatchAndExtractPlayers:', {
-    matchId,
-    teamId
-  });
-
   try {
     // Get match data
     const match = await matchContext.addMatch(matchId);
@@ -140,8 +125,8 @@ export async function processMatchAndExtractPlayers(
       return null;
     }
     
-    // Determine team side
-    const teamSide = determineTeamSideFromMatch(match, teamId);
+    // Determine team side - use known side for manual matches, otherwise determine from match data
+    const teamSide = knownTeamSide || determineTeamSideFromMatch(match, teamId);
     
     // Determine pick order for the team
     const pickOrder = match.pickOrder?.[teamSide] || null;
@@ -262,6 +247,7 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
     },
     timeAdded: new Date().toISOString(),
     matches: {},
+    manualMatches: {},
     players: [],
     performance: {
       totalMatches: 0,

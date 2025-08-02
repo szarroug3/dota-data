@@ -52,18 +52,40 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
         // Determine if active team won
         const teamWon = activeTeamSide ? match.result === activeTeamSide : false;
         
+        // Check if match has an error
+        const hasError = Boolean(match.error);
+        const isLoading = Boolean(match.isLoading);
+        
+        // Handle click - only allow selection if no error
+        const handleClick = () => {
+          if (!hasError) {
+            onSelectMatch(match.id);
+          }
+        };
+        
         return (
           <Card
             key={match.id}
-            className={`cursor-pointer transition-all hover:shadow-md ${
-              selectedMatchId === match.id ? 'ring-2 ring-primary' : ''
+            data-match-id={match.id}
+            className={`transition-all ${
+              selectedMatchId === match.id 
+                ? 'ring-2 ring-primary' 
+                : hasError
+                ? 'border-destructive bg-destructive/5 cursor-not-allowed'
+                : 'cursor-pointer hover:shadow-md'
             }`}
+            onClick={handleClick}
+            role="button"
+            tabIndex={hasError ? -1 : 0}
+            aria-label={hasError ? `Match ${match.id} - Error: ${match.error}` : `Select match vs ${opponentName}`}
           >
             <CardContent className="p-3">
               <div className="flex items-center justify-between mb-1">
                 <div 
-                  className="font-medium text-sm truncate cursor-pointer flex-1"
-                  onClick={() => onSelectMatch(match.id)}
+                  className={`font-medium text-sm truncate flex-1 ${
+                    hasError ? 'cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  onClick={handleClick}
                 >
                   {opponentName}
                 </div>
@@ -74,22 +96,36 @@ export const MatchListViewGrid: React.FC<MatchListViewGridProps> = ({
                 />
               </div>
               <div 
-                className="flex items-center gap-1 mb-1 cursor-pointer"
-                onClick={() => onSelectMatch(match.id)}
+                className={`flex items-center gap-1 mb-1 ${
+                  hasError ? 'cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                onClick={handleClick}
               >
-                <Badge
-                  variant={teamWon ? 'success' : 'default'}
-                  className="text-xs"
-                >
-                  {teamWon ? 'Victory' : 'Defeat'}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="text-xs"
-                >
-                  {activeTeamSide === 'radiant' ? 'Radiant' : 'Dire'}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{formatDuration(match.duration)}</span>
+                {hasError ? (
+                  <Badge variant="destructive" className="text-xs">
+                    Error
+                  </Badge>
+                ) : isLoading ? (
+                  <Badge variant="secondary" className="text-xs">
+                    Loading
+                  </Badge>
+                ) : (
+                  <>
+                    <Badge
+                      variant={teamWon ? 'success' : 'default'}
+                      className="text-xs"
+                    >
+                      {teamWon ? 'Victory' : 'Defeat'}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="text-xs"
+                    >
+                      {activeTeamSide === 'radiant' ? 'Radiant' : 'Dire'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{formatDuration(match.duration)}</span>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

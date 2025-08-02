@@ -341,7 +341,7 @@ function HeroSummarySection({
   return (
     <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
       <CardHeader className="flex-shrink-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between h-8">
           <CardTitle className="text-sm">{title}</CardTitle>
           {showToggle && (
             <Toggle
@@ -352,6 +352,7 @@ function HeroSummarySection({
               Show High Performing Heroes Only
             </Toggle>
           )}
+          {!showToggle && <div className="w-[200px]" />}
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto min-h-0">

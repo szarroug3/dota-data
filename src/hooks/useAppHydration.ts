@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/contexts/config-context';
 import { useConstantsContext } from '@/contexts/constants-context';
+import { useMatchContext } from '@/contexts/match-context';
 import { useTeamContext } from '@/contexts/team-context';
 
 /**
@@ -10,15 +11,17 @@ import { useTeamContext } from '@/contexts/team-context';
 export function useAppHydration() {
   const [isHydrating, setIsHydrating] = useState(false);
   const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
   const hasHydratedRef = useRef(false);
 
   const configContext = useConfigContext();
   const constantsContext = useConstantsContext();
   const teamContext = useTeamContext();
+  const matchContext = useMatchContext();
 
   // Store context references in refs to avoid recreation
-  const contextsRef = useRef({ configContext, constantsContext, teamContext });
-  contextsRef.current = { configContext, constantsContext, teamContext };
+  const contextsRef = useRef({ configContext, constantsContext, teamContext, matchContext });
+  contextsRef.current = { configContext, constantsContext, teamContext, matchContext };
 
   // Track component lifecycle
   const mountCountRef = useRef(0);
@@ -57,7 +60,6 @@ export function useAppHydration() {
           (Object.keys(contextsRef.current.constantsContext.heroes).length === 0 ||
            Object.keys(contextsRef.current.constantsContext.items).length === 0)
         ) {
-          console.log('Waiting for constants to be available...');
           await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
           attempts++;
         }
@@ -72,6 +74,9 @@ export function useAppHydration() {
           // Delegate to team context to handle loading teams from config
           await contextsRef.current.teamContext.loadTeamsFromConfig(teams);
 
+          // Step 4: Load manual matches after normal team loading
+          await contextsRef.current.teamContext.loadManualMatches();
+
           // Refresh all team summaries in background
           // This will handle summary data for non-active teams and full data for active team
           contextsRef.current.teamContext.refreshAllTeamSummaries().catch(error => {
@@ -80,6 +85,7 @@ export function useAppHydration() {
         }
 
         hasHydratedRef.current = true;
+        setHasHydrated(true);
         setIsHydrating(false);
       } catch (error) {
         console.error('Hydration: failed:', error);
@@ -93,6 +99,7 @@ export function useAppHydration() {
 
   return {
     isHydrating,
-    hydrationError
+    hydrationError,
+    hasHydrated
   };
 } 

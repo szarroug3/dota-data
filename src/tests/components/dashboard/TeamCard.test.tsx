@@ -185,7 +185,7 @@ describe('TeamCard', () => {
     const refreshButton = screen.getByTitle('Refresh team data');
     fireEvent.click(refreshButton);
     
-    expect(mockOnRefreshTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
+    expect(mockOnRefreshTeam).toHaveBeenCalledWith(12345, 67890);
   });
 
   it('should call onEditTeam when edit button is clicked', () => {
@@ -203,7 +203,7 @@ describe('TeamCard', () => {
     const editButton = screen.getByTitle('Edit team');
     fireEvent.click(editButton);
     
-    expect(mockOnEditTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
+    expect(mockOnEditTeam).toHaveBeenCalledWith(12345, 67890);
   });
 
   it('should call onRemoveTeam when delete button is clicked', () => {
@@ -221,7 +221,7 @@ describe('TeamCard', () => {
     const deleteButton = screen.getByTitle('Delete team');
     fireEvent.click(deleteButton);
     
-    expect(mockOnRemoveTeam).toHaveBeenCalledWith('team-liquid', 'esl-pro-league');
+    expect(mockOnRemoveTeam).toHaveBeenCalledWith(12345, 67890);
   });
 
   it('should prevent event bubbling when action buttons are clicked', () => {
@@ -358,7 +358,7 @@ describe('TeamCard', () => {
       />
     );
     
-    expect(screen.getByText('Loading esl-pro-league...')).toBeInTheDocument();
+    expect(screen.getByText('Loading 67890...')).toBeInTheDocument();
   });
 
   it('should have proper accessibility attributes', () => {

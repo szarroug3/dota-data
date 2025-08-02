@@ -234,6 +234,9 @@ export interface MatchContextValue {
   getMatch: (matchId: number) => Match | undefined;
   getMatches: (matchIds: number[]) => Match[];
   
+  // State setters for optimistic updates
+  setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
+  
   // High-performing heroes (calculated once, used by multiple components)
   highPerformingHeroes: Set<string>; // Set of hero IDs that are high-performing
 }

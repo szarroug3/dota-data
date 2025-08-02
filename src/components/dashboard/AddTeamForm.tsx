@@ -132,8 +132,8 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     setValidation(validateTeamForm(teamId, leagueId));
   }, [teamId, leagueId]);
 
-  // Only disable if team already exists or is submitting
-  const isDisabled = teamExists(teamId, leagueId) || isSubmitting;
+  // Disable if team already exists, is submitting, or fields are empty
+  const isDisabled = teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

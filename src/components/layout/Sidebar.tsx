@@ -1,8 +1,8 @@
 'use client';
 
 import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Target, Trophy, Users } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -104,7 +104,9 @@ const ExternalSites = () => {
  * Quick links section for external team and league pages
  */
 const QuickLinks = () => {
-  const { activeTeam } = useTeamContext();
+  const { getSelectedTeam } = useTeamContext();
+
+  const activeTeam = getSelectedTeam();
 
   if (!activeTeam) return null;
 
@@ -113,13 +115,13 @@ const QuickLinks = () => {
       id: 'team-page',
       label: 'Team Page',
       icon: <Users />, 
-      url: `https://dotabuff.com/teams/${activeTeam.teamId}`
+      url: `https://dotabuff.com/teams/${activeTeam.team.id}`
     },
     {
       id: 'league-page',
       label: 'League Page',
       icon: <Trophy />, 
-      url: `https://dotabuff.com/esports/leagues/${activeTeam.leagueId}`
+      url: `https://dotabuff.com/esports/leagues/${activeTeam.league.id}`
     },
   ];
 

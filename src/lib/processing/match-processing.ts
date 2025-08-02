@@ -337,7 +337,6 @@ function getSideFromPlayerSlot(playerSlot?: number): 'radiant' | 'dire' {
 }
 
 function getHeroNameFromPlayerSlot(playerSlot: number, players: OpenDotaMatchPlayer[], heroes: Record<string, Hero>): string {
-  console.log('getHeroNameFromPlayerSlot called with playerSlot:', playerSlot, players);
   const player = players.find(p => p.player_slot === playerSlot);
   if (!player) return 'unknown player';
   

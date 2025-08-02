@@ -31,6 +31,9 @@ export interface TeamData {
   // Match participation
   matches: Record<number, TeamMatchParticipation>;
   
+  // Manual matches (user-added matches with chosen sides)
+  manualMatches: Record<number, { side: 'radiant' | 'dire' }>;
+  
   // Player information
   players: TeamPlayer[];
   
@@ -191,10 +194,13 @@ export interface TeamContextValue {
   // Team-specific operations
   addMatchToTeam: (matchId: number, teamSide: 'radiant' | 'dire') => Promise<void>;
   addPlayerToTeam: (playerId: number) => Promise<void>;
+  removeManualMatch: (matchId: number) => void;
+  editManualMatch: (oldMatchId: number, newMatchId: number, teamSide: 'radiant' | 'dire') => Promise<void>;
   
   // Team list management
   setTeams: (teams: Map<string, TeamData>) => void;
   loadTeamsFromConfig: (teams: Map<string, TeamData>) => Promise<void>;
+  loadManualMatches: () => Promise<void>;
   
   // Data access
   getTeam: (teamId: number, leagueId: number) => TeamData | undefined;
