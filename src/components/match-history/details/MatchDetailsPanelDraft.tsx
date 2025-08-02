@@ -1,7 +1,7 @@
 import { Check, Crown, List, X } from 'lucide-react';
 import React from 'react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { HeroAvatar } from '@/components/match-history/common/HeroAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useConstantsContext } from '@/contexts/constants-context';
@@ -17,6 +17,9 @@ interface MatchDetailsPanelDraftProps {
   filter?: DraftFilter;
   onFilterChange?: (filter: DraftFilter) => void;
   className?: string;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
 }
 
 type DraftFilter = 'picks' | 'bans' | 'both';
@@ -62,32 +65,107 @@ const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFi
   </div>
 );
 
-const TeamHeaders: React.FC<{ 
-  leftDisplayName: string; 
-  rightDisplayName: string; 
-  isRadiantWin: boolean 
-}> = ({ leftDisplayName, rightDisplayName, isRadiantWin }) => (
-  <div className="grid grid-cols-2 gap-4 @[210px]:block hidden">
-    <div className="flex items-center gap-2 min-w-0 justify-start">
-      <span className="font-semibold truncate">{leftDisplayName}</span>
-      {isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
-    </div>
-    <div className="flex items-center gap-2 min-w-0 justify-start">
-      <span className="font-semibold truncate">{rightDisplayName}</span>
-      {!isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
-    </div>
-  </div>
-);
+// Helper function to determine if a hero is high-performing
+const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, hiddenMatchIds: Set<number>): boolean => {
+  const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
+  
+  console.log('🔍 isHighPerformingHero:', JSON.stringify({
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    allMatchesCount: allMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    hiddenMatchIdsCount: hiddenMatchIds.size
+  }));
+  
+  // Aggregate hero statistics from unhidden matches
+  allMatches.forEach(matchData => {
+    // Skip manually hidden matches
+    if (hiddenMatchIds.has(matchData.id)) {
+      return;
+    }
+    
+    const matchTeamData = teamMatches[matchData.id];
+    if (!matchTeamData?.side) {
+      return;
+    }
+    
+    const teamPlayers = matchData.players[matchTeamData.side] || [];
+    const isWin = matchTeamData.result === 'won';
+    
+    // Debug: Log the hero IDs in this match's player data
+    console.log('🔍 Match players:', JSON.stringify({
+      matchId: matchData.id,
+      side: matchTeamData.side,
+      playerCount: teamPlayers.length,
+      playerHeroIds: teamPlayers.map(p => p.hero?.id),
+      playerHeroNames: teamPlayers.map(p => p.hero?.localizedName),
+      targetHeroId: hero?.id,
+      targetHeroName: hero?.localizedName
+    }));
+    
+    teamPlayers.forEach(player => {
+      if (player.hero?.id === hero.id) {
+        heroStats.count++;
+        heroStats.totalGames++;
+        if (isWin) {
+          heroStats.wins++;
+        }
+      }
+    });
+  });
+  
+  // High-performing criteria: 5+ games, 60%+ win rate
+  const isHighPerforming = heroStats.count >= 5 && (heroStats.wins / heroStats.count) >= 0.6;
+  
+  console.log('📊 Hero stats:', JSON.stringify({
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    count: heroStats.count,
+    wins: heroStats.wins,
+    totalGames: heroStats.totalGames,
+    winRate: heroStats.count > 0 ? (heroStats.wins / heroStats.count) : 0,
+    isHighPerforming
+  }));
+  
+  return isHighPerforming;
+};
 
 const DraftEntry: React.FC<{ 
   phase: DraftPhase; 
   heroes: Record<string, Hero>; 
-  team: 'radiant' | 'dire' 
-}> = ({ phase, heroes, team }) => {
+  team: 'radiant' | 'dire';
+  teamMatch?: TeamMatchParticipation;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ phase, heroes, team, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
   const hero = heroes[phase.hero];
   const heroName = hero?.localizedName || `Hero ${phase.hero}`;
   const isTeamPhase = phase.team === team;
   
+  // Determine if this hero is on the active team's side AND is a pick (not ban) AND is high-performing
+  const isOnActiveTeamSide = team === teamMatch?.side;
+  const isPick = phase.phase === 'pick';
+  const isHighPerforming = isOnActiveTeamSide && isPick && isHighPerformingHero(hero, allMatches, teamMatches, hiddenMatchIds);
+  
+  console.log('🎯 DraftEntry:', JSON.stringify({
+    matchId: teamMatch?.matchId,
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    phase: phase.phase,
+    team: team,
+    teamMatchSide: teamMatch?.side,
+    isOnActiveTeamSide,
+    isPick,
+    isHighPerforming,
+    allMatchesCount: allMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    teamMatch: JSON.stringify(teamMatch),
+    allMatchesIds: allMatches.map(m => m.id),
+    teamMatchesKeys: Object.keys(teamMatches)
+  }));
+  
+
   if (!isTeamPhase) {
     return <div className="h-6"></div>; // Empty space for non-team picks
   }
@@ -95,10 +173,11 @@ const DraftEntry: React.FC<{
   return (
     <div className="flex items-center justify-between h-6">
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <Avatar className="w-6 h-6 flex-shrink-0 @[125px]:block hidden">
-          <AvatarImage src={hero?.imageUrl} alt={heroName} />
-          <AvatarFallback>{heroName.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <HeroAvatar 
+          hero={hero}
+          avatarSize={{ width: 'w-6', height: 'h-6' }}
+          isHighPerforming={isHighPerforming}
+        />
         <div className="@[125px]:hidden block w-6 h-6"></div>
         <span className="text-sm font-medium truncate @[300px]:block hidden">{heroName}</span>
         <Badge variant="outline" className="text-xs flex-shrink-0 @[530px]:block hidden">
@@ -118,7 +197,11 @@ const DraftTimeline: React.FC<{
   leftDisplayName: string;
   rightDisplayName: string;
   isRadiantWin: boolean;
-}> = ({ filteredDraft, heroes, leftDisplayName, rightDisplayName, isRadiantWin }) => (
+  teamMatch?: TeamMatchParticipation;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ filteredDraft, heroes, leftDisplayName, rightDisplayName, isRadiantWin, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => (
   <div>
     {/* Team Headers */}
     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -147,14 +230,14 @@ const DraftTimeline: React.FC<{
       {/* Radiant Column */}
       <div className="space-y-2 pr-4">
         {filteredDraft.map((phase, index) => (
-          <DraftEntry key={index} phase={phase} heroes={heroes} team="radiant" />
+          <DraftEntry key={index} phase={phase} heroes={heroes} team="radiant" teamMatch={teamMatch} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
         ))}
       </div>
 
       {/* Dire Column */}
       <div className="space-y-2 pl-4">
         {filteredDraft.map((phase, index) => (
-          <DraftEntry key={index} phase={phase} heroes={heroes} team="dire" />
+          <DraftEntry key={index} phase={phase} heroes={heroes} team="dire" teamMatch={teamMatch} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
         ))}
       </div>
     </div>
@@ -188,7 +271,10 @@ const DraftSummary: React.FC<{
   teamMatch?: TeamMatchParticipation; 
   filter: DraftFilter;
   onFilterChange: (filter: DraftFilter) => void;
-}> = ({ match, teamMatch, filter, onFilterChange }) => {
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ match, teamMatch, filter, onFilterChange, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
   const { heroes } = useConstantsContext();
   const { getSelectedTeam } = useTeamContext();
 
@@ -226,6 +312,10 @@ const DraftSummary: React.FC<{
           leftDisplayName={leftDisplayName}
           rightDisplayName={rightDisplayName}
           isRadiantWin={isRadiantWin}
+          teamMatch={teamMatch}
+          allMatches={allMatches}
+          teamMatches={teamMatches}
+          hiddenMatchIds={hiddenMatchIds}
         />
       </div>
     </div>
@@ -237,7 +327,10 @@ export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
   teamMatch: _teamMatch, 
   filter = 'both',
   onFilterChange = () => {},
-  className 
+  className,
+  allMatches = [],
+  teamMatches = {},
+  hiddenMatchIds = new Set()
 }) => {
   if (!match) {
     return (
@@ -254,6 +347,9 @@ export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
         teamMatch={_teamMatch} 
         filter={filter}
         onFilterChange={onFilterChange}
+        allMatches={allMatches}
+        teamMatches={teamMatches}
+        hiddenMatchIds={hiddenMatchIds}
       />
     </div>
   );

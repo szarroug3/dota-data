@@ -64,7 +64,9 @@ jest.mock('@/components/match-history/list/MatchesList', () => ({
     selectedMatchId, 
     onSelectMatch,
     hiddenMatchesCount,
-    onShowHiddenMatches 
+    onShowHiddenMatches,
+    teamMatches,
+    hiddenMatchIds
   }: {
     matches: Match[];
     onHideMatch: (id: string) => void;
@@ -74,12 +76,15 @@ jest.mock('@/components/match-history/list/MatchesList', () => ({
     onSelectMatch?: (matchId: string) => void;
     hiddenMatchesCount?: number;
     onShowHiddenMatches?: () => void;
+    teamMatches?: Record<number, any>;
+    hiddenMatchIds?: Set<number>;
   }) => (
     <div data-testid="matches-list">
       <div>View Mode: {viewMode}</div>
       <div>Matches: {matches.length}</div>
       <div>Selected: {selectedMatchId || 'none'}</div>
       <div>Hidden: {hiddenMatchesCount || 0}</div>
+      <div>Hidden IDs: {hiddenMatchIds?.size || 0}</div>
       {matches.map(match => (
         <button 
           key={match.id} 
@@ -168,10 +173,12 @@ const defaultProps = {
     opponent: [],
     teamSide: 'all' as const,
     pickOrder: 'all' as const,
-    heroesPlayed: []
+    heroesPlayed: [],
+    highPerformersOnly: false
   },
   onFiltersChange: jest.fn(),
   activeTeamMatches: [mockMatch],
+  teamMatches: {},
   visibleMatches: [mockMatch],
   onHideMatch: jest.fn(),
   onRefreshMatch: jest.fn(),
@@ -181,6 +188,7 @@ const defaultProps = {
   onSelectMatch: jest.fn(),
   hiddenMatchesCount: 0,
   onShowHiddenMatches: jest.fn(),
+  hiddenMatchIds: new Set(),
   selectedMatch: null,
   matchDetailsViewMode: 'summary' as MatchDetailsPanelMode,
   setMatchDetailsViewMode: jest.fn(),

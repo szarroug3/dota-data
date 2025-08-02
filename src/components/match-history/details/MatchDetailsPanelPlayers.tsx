@@ -1,9 +1,11 @@
 import { Crown } from 'lucide-react';
 import React from 'react';
 
+import { HeroAvatar } from '@/components/match-history/common/HeroAvatar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import type { Hero } from '@/types/contexts/constants-context-value';
 import { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
 import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
@@ -11,6 +13,9 @@ interface MatchDetailsPanelPlayersProps {
   match?: Match;
   teamMatch?: TeamMatchParticipation;
   className?: string;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
 }
 
 
@@ -45,14 +50,105 @@ function getPlayersFromMatch(match?: Match): PlayerWithTeam[] {
   return [...radiantPlayers, ...direPlayers];
 }
 
-const PlayerCard: React.FC<{ player: PlayerWithTeam }> = ({ player }) => {
+// Helper function to determine if a hero is high-performing
+const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, hiddenMatchIds: Set<number>): boolean => {
+  const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
+  
+  console.log('🔍 isHighPerformingHero (Players):', JSON.stringify({
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    allMatchesCount: allMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    hiddenMatchIdsCount: hiddenMatchIds.size
+  }));
+  
+  // Aggregate hero statistics from unhidden matches
+  allMatches.forEach(matchData => {
+    // Skip manually hidden matches
+    if (hiddenMatchIds.has(matchData.id)) {
+      return;
+    }
+    
+    const matchTeamData = teamMatches[matchData.id];
+    if (!matchTeamData?.side) {
+      return;
+    }
+    
+    const teamPlayers = matchData.players[matchTeamData.side] || [];
+    const isWin = matchTeamData.result === 'won';
+    
+    // Debug: Log the hero IDs in this match's player data
+    console.log('🔍 Match players (Players):', JSON.stringify({
+      matchId: matchData.id,
+      side: matchTeamData.side,
+      playerCount: teamPlayers.length,
+      playerHeroIds: teamPlayers.map(p => p.hero?.id),
+      playerHeroNames: teamPlayers.map(p => p.hero?.localizedName),
+      targetHeroId: hero?.id,
+      targetHeroName: hero?.localizedName
+    }));
+    
+    teamPlayers.forEach(player => {
+      if (player.hero?.id === hero.id) {
+        heroStats.count++;
+        heroStats.totalGames++;
+        if (isWin) {
+          heroStats.wins++;
+        }
+      }
+    });
+  });
+  
+  // High-performing criteria: 5+ games, 60%+ win rate
+  const isHighPerforming = heroStats.count >= 5 && (heroStats.wins / heroStats.count) >= 0.6;
+  
+  console.log('📊 Hero stats (Players):', JSON.stringify({
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    count: heroStats.count,
+    wins: heroStats.wins,
+    totalGames: heroStats.totalGames,
+    winRate: heroStats.count > 0 ? (heroStats.wins / heroStats.count) : 0,
+    isHighPerforming
+  }));
+  
+  return isHighPerforming;
+};
+
+const PlayerCard: React.FC<{ 
+  player: PlayerWithTeam;
+  teamMatch?: TeamMatchParticipation;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ player, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
+  // Determine if this hero is on the active team's side AND is high-performing
+  const isOnActiveTeamSide = player.team === teamMatch?.side;
+  const isHighPerforming = isOnActiveTeamSide && isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds);
+  
+  console.log('👤 PlayerCard:', {
+    playerName: player.playerName,
+    heroId: player.hero?.id,
+    heroName: player.hero?.localizedName,
+    playerTeam: player.team,
+    teamMatchSide: teamMatch?.side,
+    isOnActiveTeamSide,
+    isHighPerforming,
+    allMatchesCount: allMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    teamMatch: JSON.stringify(teamMatch),
+    allMatchesIds: allMatches.map(m => m.id),
+    teamMatchesKeys: Object.keys(teamMatches)
+  });
+  
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">
-        <Avatar className="w-12 h-12 @[135px]:block hidden">
-          <AvatarImage src={player.hero.imageUrl} alt={player.hero.localizedName} />
-          <AvatarFallback>{player.hero.localizedName.substring(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
+        <HeroAvatar 
+          hero={player.hero}
+          avatarSize={{ width: 'w-12', height: 'h-12' }}
+          isHighPerforming={isHighPerforming}
+        />
         
         <div className="flex-1 space-y-3">
           <div className="flex items-center justify-between">
@@ -143,7 +239,11 @@ const RadiantPlayers: React.FC<{
   teamName: string; 
   isWinner: boolean;
   match?: Match;
-}> = ({ players, teamName, isWinner, match }) => {
+  teamMatch?: TeamMatchParticipation;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
   const radiantPlayers = players.filter(p => p.team === 'radiant');
   
   // Sort players by pick order if draft data is available
@@ -165,7 +265,7 @@ const RadiantPlayers: React.FC<{
       </div>
       <div className="space-y-4">
         {sortedRadiantPlayers.map((player) => (
-          <PlayerCard key={player.accountId} player={player} />
+          <PlayerCard key={player.accountId} player={player} teamMatch={teamMatch} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
         ))}
       </div>
     </div>
@@ -178,7 +278,11 @@ const DirePlayers: React.FC<{
   teamName: string; 
   isWinner: boolean;
   match?: Match;
-}> = ({ players, teamName, isWinner, match }) => {
+  teamMatch?: TeamMatchParticipation;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+}> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
   const direPlayers = players.filter(p => p.team === 'dire');
   
   // Sort players by pick order if draft data is available
@@ -200,42 +304,43 @@ const DirePlayers: React.FC<{
       </div>
       <div className="space-y-4">
         {sortedDirePlayers.map((player) => (
-          <PlayerCard key={player.accountId} player={player} />
+          <PlayerCard key={player.accountId} player={player} teamMatch={teamMatch} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
         ))}
       </div>
     </div>
   );
 };
 
-export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ match }) => {
+export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({ match, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
   const players = getPlayersFromMatch(match);
   const { radiantName, direName } = getTeamDisplayNames(match);
-  const matchResult = match?.result || 'radiant';
-
-  if (!match || players.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8 text-muted-foreground">
-        <div className="text-center">
-          <div className="text-lg font-medium mb-2">No player data available</div>
-          <div className="text-sm">Select a match to view player details.</div>
-        </div>
-      </div>
-    );
-  }
+  const isRadiantWin = match?.result === 'radiant';
+  const isDireWin = match?.result === 'dire';
 
   return (
     <div className="space-y-6">
+      {/* Radiant Team */}
       <RadiantPlayers 
-        players={players} 
+        players={players.filter(p => p.team === 'radiant')} 
         teamName={radiantName} 
-        isWinner={matchResult === 'radiant'}
+        isWinner={isRadiantWin}
         match={match}
+        teamMatch={teamMatch}
+        allMatches={allMatches}
+        teamMatches={teamMatches}
+        hiddenMatchIds={hiddenMatchIds}
       />
+      
+      {/* Dire Team */}
       <DirePlayers 
-        players={players} 
+        players={players.filter(p => p.team === 'dire')} 
         teamName={direName} 
-        isWinner={matchResult === 'dire'}
+        isWinner={isDireWin}
         match={match}
+        teamMatch={teamMatch}
+        allMatches={allMatches}
+        teamMatches={teamMatches}
+        hiddenMatchIds={hiddenMatchIds}
       />
     </div>
   );

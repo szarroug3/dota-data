@@ -5,9 +5,9 @@ import { MatchDetailsPanel } from '@/components/match-history/details/MatchDetai
 import type { MatchDetails } from '@/types/contexts/match-context-value';
 
 // Mock the child components
-jest.mock('@/components/match-history/details/MatchDetailsPanelDraftEvents', () => ({
-  MatchDetailsPanelDraftEvents: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="draft-events-panel">Draft & Events Panel</div>
+jest.mock('@/components/match-history/details/MatchDetailsPanelDraft', () => ({
+  MatchDetailsPanelDraft: ({ _match }: { _match: MatchDetails | null }) => (
+    <div data-testid="draft-panel">Draft Panel</div>
   ),
 }));
 
@@ -17,9 +17,9 @@ jest.mock('@/components/match-history/details/MatchDetailsPanelPlayers', () => (
   ),
 }));
 
-jest.mock('@/components/match-history/details/MatchDetailsPanelTimings', () => ({
-  MatchDetailsPanelTimings: ({ _match }: { _match: MatchDetails | null }) => (
-    <div data-testid="timings-panel">Timings Panel</div>
+jest.mock('@/components/match-history/details/MatchDetailsPanelEvents', () => ({
+  MatchDetailsPanelEvents: ({ _match }: { _match: MatchDetails | null }) => (
+    <div data-testid="events-panel">Events Panel</div>
   ),
 }));
 

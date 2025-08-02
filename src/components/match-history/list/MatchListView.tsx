@@ -18,6 +18,8 @@ interface MatchListViewProps {
   viewMode: MatchListViewMode;
   className?: string;
   teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+  allMatches?: Match[]; // Unfiltered matches for hero performance calculation
 }
 
 export const MatchListView: React.FC<MatchListViewProps> = ({
@@ -28,6 +30,8 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   onRefreshMatch,
   viewMode,
   teamMatches,
+  hiddenMatchIds = new Set(),
+  allMatches = []
 }) => {
   if (viewMode === 'list') {
     return (
@@ -38,6 +42,8 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
         teamMatches={teamMatches}
+        hiddenMatchIds={hiddenMatchIds}
+        allMatches={allMatches}
       />
     );
   }

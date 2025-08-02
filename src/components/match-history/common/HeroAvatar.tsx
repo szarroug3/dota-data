@@ -6,9 +6,10 @@ import type { Hero } from '@/types/contexts/constants-context-value';
 export interface HeroAvatarProps {
   hero?: Hero;
   avatarSize: { width: string; height: string };
+  isHighPerforming?: boolean;
 }
 
-export const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize }) => {
+export const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize, isHighPerforming = false }) => {
   const { width, height } = avatarSize;
   
   const getFallbackText = () => {
@@ -23,8 +24,19 @@ export const HeroAvatar: React.FC<HeroAvatarProps> = ({ hero, avatarSize }) => {
   
   const fallbackText = getFallbackText();
   
+  // Debug logging
+  console.log('🎨 HeroAvatar:', JSON.stringify({
+    heroId: hero?.id,
+    heroName: hero?.localizedName,
+    isHighPerforming,
+    borderClass: isHighPerforming ? 'border-blue-500' : 'border-gray-300',
+    width,
+    height,
+    condition: `isHighPerforming=${isHighPerforming}`
+  }));
+  
   return (
-    <Avatar className={`${width} ${height} border-2 border-background`}>
+    <Avatar className={`${width} ${height} border ${isHighPerforming ? 'border-primary' : 'border-background'}`}>
       <AvatarImage 
         src={hero?.imageUrl} 
         alt={hero?.localizedName || 'Hero'}

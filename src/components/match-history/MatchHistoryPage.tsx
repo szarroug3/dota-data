@@ -121,7 +121,8 @@ function renderHiddenMatchesModal(
   showHiddenModal: boolean,
   hiddenMatches: Match[],
   handleUnhideMatch: (id: number) => void,
-  setShowHiddenModal: (show: boolean) => void
+  setShowHiddenModal: (show: boolean) => void,
+  teamMatches: Record<number, TeamMatchParticipation>
 ) {
   if (!showHiddenModal) return null;
   
@@ -130,6 +131,7 @@ function renderHiddenMatchesModal(
       hiddenMatches={hiddenMatches}
       onUnhide={handleUnhideMatch}
       onClose={() => setShowHiddenModal(false)}
+      teamMatches={teamMatches}
     />
   );
 }
@@ -144,6 +146,8 @@ const renderMatchHistoryContent = (
   setFilters: (filters: MatchFiltersType) => void,
   visibleMatches: Match[],
   activeTeamMatches: Match[],
+  filteredMatches: Match[],
+  unhiddenMatches: Match[],
   teamMatches: Record<number, TeamMatchParticipation>,
   handleHideMatch: (id: number) => void,
   handleUnhideMatch: (id: number) => void,
@@ -166,6 +170,8 @@ const renderMatchHistoryContent = (
         activeTeamMatches={activeTeamMatches}
         teamMatches={teamMatches}
         visibleMatches={visibleMatches}
+        filteredMatches={filteredMatches}
+        unhiddenMatches={unhiddenMatches}
         onHideMatch={handleHideMatch}
         onRefreshMatch={handleRefreshMatch}
         viewMode={viewMode}
@@ -174,18 +180,20 @@ const renderMatchHistoryContent = (
         onSelectMatch={selectMatch}
         hiddenMatchesCount={hiddenMatches.length}
         onShowHiddenMatches={() => setShowHiddenModal(true)}
+        hiddenMatchIds={new Set(hiddenMatches.map(m => m.id))}
         selectedMatch={selectedMatch}
         matchDetailsViewMode={matchDetailsViewMode}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
       />
       
-      {renderHeroSummaryTable(visibleMatches, teamMatches, activeTeamMatches)}
+      {renderHeroSummaryTable(visibleMatches, teamMatches, unhiddenMatches)}
       
       {renderHiddenMatchesModal(
         showHiddenModal,
         hiddenMatches,
         handleUnhideMatch,
-        setShowHiddenModal
+        setShowHiddenModal,
+        teamMatches
       )}
     </div>
   );
@@ -229,21 +237,29 @@ export const MatchHistoryPage: React.FC = () => {
     return selectedTeam?.matches || {};
   }, [getSelectedTeam]);
 
-  // Apply filters using the new hook (without high performers filter for hidden matches calculation)
-  const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set());
-
   // Hide a match (remove from visible, add to hidden)
   const { 
     hiddenMatches, 
     showHiddenModal, 
     setShowHiddenModal, 
     handleHideMatch, 
-    handleUnhideMatch, 
-    visibleMatches 
-  } = useHiddenMatches(filteredMatches);
+    handleUnhideMatch 
+  } = useHiddenMatches([]); // Start with empty array, will be updated after filtering
 
-  // Apply filters again with hidden matches excluded for high performers calculation
-  const { filteredMatches: finalFilteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set(hiddenMatches.map(m => m.id)));
+  // Create unhidden matches (all matches minus manually hidden ones) for hero performance calculation
+  const unhiddenMatches = useMemo(() => {
+    const hiddenIds = new Set(hiddenMatches.map(m => m.id));
+    return activeTeamMatches.filter(match => !hiddenIds.has(match.id));
+  }, [activeTeamMatches, hiddenMatches]);
+
+  // Apply all filters including high performers to unhidden matches
+  const { filteredMatches } = useMatchFilters(unhiddenMatches, teamMatches, filters, new Set());
+
+  // Update visible matches to be filtered matches minus hidden matches
+  const visibleMatches = useMemo(() => {
+    const hiddenIds = new Set(hiddenMatches.map(m => m.id));
+    return filteredMatches.filter(match => !hiddenIds.has(match.id));
+  }, [filteredMatches, hiddenMatches]);
 
   // Convert teams map to array for compatibility
   const teamDataList = useMemo(() => {
@@ -279,8 +295,10 @@ export const MatchHistoryPage: React.FC = () => {
           setShowHiddenModal,
           filters,
           setFilters,
-          finalFilteredMatches,
+          visibleMatches,
           activeTeamMatches,
+          filteredMatches,
+          unhiddenMatches,
           teamMatches,
           handleHideMatch,
           handleUnhideMatch,

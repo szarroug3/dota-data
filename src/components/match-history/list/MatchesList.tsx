@@ -20,6 +20,8 @@ interface MatchesListProps {
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
   teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
+  allMatches?: Match[]; // Unfiltered matches for hero performance calculation
 }
 
 interface MatchListLayoutButtonsProps {
@@ -65,7 +67,9 @@ const MatchesList: React.FC<MatchesListProps> = ({
   onSelectMatch,
   hiddenMatchesCount = 0,
   onShowHiddenMatches,
-  teamMatches
+  teamMatches,
+  hiddenMatchIds = new Set(),
+  allMatches = []
 }) => {
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
@@ -108,6 +112,8 @@ const MatchesList: React.FC<MatchesListProps> = ({
             onRefreshMatch={onRefreshMatch}
             viewMode={viewMode}
             teamMatches={teamMatches}
+            hiddenMatchIds={hiddenMatchIds}
+            allMatches={allMatches}
           />
         </div>
       </CardContent>

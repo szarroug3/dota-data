@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useConfigContext } from '@/contexts/config-context';
+import { useTeamContext } from '@/contexts/team-context';
 import { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
@@ -36,6 +37,8 @@ interface MatchListViewProps {
   onRefreshMatch: (matchId: number) => void;
   className?: string;
   teamMatches?: Record<number, TeamMatchParticipation>; // Team match data for opponent names and team sides
+  hiddenMatchIds?: Set<number>;
+  allMatches?: Match[]; // Unfiltered matches for hero performance calculation
 }
 
 interface HeroAvatarsProps {
@@ -45,6 +48,9 @@ interface HeroAvatarsProps {
     height: string;
   };
   className?: string;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
 }
 
 interface HeroIndicatorProps {
@@ -64,18 +70,29 @@ const HeroIndicator: React.FC<HeroIndicatorProps> = ({ count, avatarSize }) => {
   );
 };
 
+
+
 const HeroAvatars: React.FC<HeroAvatarsProps> = ({ 
   heroes, 
   avatarSize = { width: 'w-8', height: 'h-8' },
-  className = ''
+  className = '',
+  allMatches = [],
+  teamMatches = {},
+  hiddenMatchIds = new Set()
 }) => {
+  const { highPerformingHeroes } = useTeamContext();
   const totalHeroes = heroes.length;
 
   // Helper function to render large container (5 heroes)
   const renderLargeContainer = () => (
     <div className="@[400px]:flex hidden">
       {heroes.slice(0, 5).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        <HeroAvatar 
+          key={index} 
+          hero={hero} 
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
     </div>
   );
@@ -83,8 +100,13 @@ const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   // Helper function to render medium container (3 heroes + indicator)
   const renderMediumContainer = () => (
     <div className="@[350px]:flex @[400px]:hidden hidden">
-      {heroes.slice(0, 3).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+      {heroes.slice(0, 3).filter(hero => hero).map((hero, index) => (
+        <HeroAvatar 
+          key={index} 
+          hero={hero} 
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 3 && (
         <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />
@@ -96,7 +118,12 @@ const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   const renderSmallContainer = () => (
     <div className="@[290px]:flex @[350px]:hidden hidden">
       {heroes.slice(0, 2).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        <HeroAvatar 
+          key={index} 
+          hero={hero} 
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 2 && (
         <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />
@@ -108,7 +135,12 @@ const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   const renderVerySmallContainer = () => (
     <div className="@[270px]:flex @[290px]:hidden hidden">
       {heroes.slice(0, 1).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        <HeroAvatar 
+          key={index} 
+          hero={hero} 
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 1 && (
         <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
@@ -120,7 +152,12 @@ const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   const renderDefaultFallback = () => (
     <div className="@[270px]:hidden flex">
       {heroes.slice(0, 1).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} />
+        <HeroAvatar 
+          key={index} 
+          hero={hero} 
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 1 && (
         <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
@@ -247,6 +284,8 @@ interface MatchCardProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   teamMatches?: Record<number, TeamMatchParticipation>; // Team match data for opponent names
+  allMatches?: Match[];
+  hiddenMatchIds?: Set<number>;
 }
 
 const getHeroesFromDraft = (match: Match, teamSide: 'radiant' | 'dire'): Hero[] => {
@@ -262,7 +301,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onSelectMatch, 
   onHideMatch,
   onRefreshMatch,
-  teamMatches
+  teamMatches,
+  allMatches = [],
+  hiddenMatchIds = new Set()
 }) => {
   const { config } = useConfigContext();
   
@@ -276,11 +317,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     // Get heroes from the team's side
     const teamPlayers = match.players[teamMatch.side] || [];
     
-    let heroes = teamPlayers.map(player => player.hero);
+    let heroes = teamPlayers.map(player => player.hero).filter(hero => hero);
     
     // Fallback: if no heroes from players, try to get them from draft data
     if (heroes.length === 0 && match.draft) {
-      heroes = getHeroesFromDraft(match, teamMatch.side);
+      heroes = getHeroesFromDraft(match, teamMatch.side).filter(hero => hero);
     }
     
     // Temporary fallback: if no heroes found, show some placeholder data for debugging
@@ -317,6 +358,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             <HeroAvatars
               heroes={matchHeroes} 
               avatarSize={{ width: 'w-8', height: 'h-8' }}
+              allMatches={allMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
             />
           </div>
 
@@ -352,7 +396,9 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
   onHideMatch,
   onRefreshMatch,
   className,
-  teamMatches
+  teamMatches,
+  hiddenMatchIds = new Set(),
+  allMatches = []
 }) => {
   if (matches.length === 0) {
     return (
@@ -376,6 +422,8 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
             onHideMatch={onHideMatch}
             onRefreshMatch={onRefreshMatch}
             teamMatches={teamMatches}
+            allMatches={allMatches}
+            hiddenMatchIds={hiddenMatchIds}
           />
         </div>
       ))}

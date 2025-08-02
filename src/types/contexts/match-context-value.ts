@@ -233,6 +233,9 @@ export interface MatchContextValue {
   // Data access
   getMatch: (matchId: number) => Match | undefined;
   getMatches: (matchIds: number[]) => Match[];
+  
+  // High-performing heroes (calculated once, used by multiple components)
+  highPerformingHeroes: Set<string>; // Set of hero IDs that are high-performing
 }
 
 export interface MatchContextProviderProps {

@@ -22,6 +22,8 @@ interface ResizableMatchLayoutProps {
   
   // Match list
   visibleMatches: Match[];
+  filteredMatches: Match[]; // Matches after filtering but before hiding
+  unhiddenMatches: Match[]; // All matches minus manually hidden ones (for hero performance)
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
@@ -30,6 +32,7 @@ interface ResizableMatchLayoutProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
+  hiddenMatchIds?: Set<number>;
   
   // Match details
   selectedMatch: Match | null;
@@ -43,6 +46,8 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   activeTeamMatches,
   teamMatches,
   visibleMatches,
+  filteredMatches,
+  unhiddenMatches,
   onHideMatch,
   onRefreshMatch,
   viewMode,
@@ -51,10 +56,22 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
   onSelectMatch,
   hiddenMatchesCount = 0,
   onShowHiddenMatches,
+  hiddenMatchIds = new Set(),
   selectedMatch,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
 }) => {
+  console.log('🏗️ ResizableMatchLayout:', {
+    selectedMatchId,
+    selectedMatch: selectedMatch?.id,
+    activeTeamMatchesCount: activeTeamMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    hiddenMatchIdsCount: hiddenMatchIds.size,
+    activeTeamMatchesIds: activeTeamMatches.map(m => m.id),
+    teamMatchesKeys: Object.keys(teamMatches),
+    hiddenMatchIds: Array.from(hiddenMatchIds)
+  });
+
   return (
     <div className="h-fit flex flex-col">
       {/* Filters - Always at the top */}
@@ -84,6 +101,8 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
                 hiddenMatchesCount={hiddenMatchesCount}
                 onShowHiddenMatches={onShowHiddenMatches}
                 teamMatches={teamMatches}
+                hiddenMatchIds={hiddenMatchIds}
+                allMatches={unhiddenMatches}
               />
             </div>
           </ResizablePanel>
@@ -95,12 +114,35 @@ export const ResizableMatchLayout: React.FC<ResizableMatchLayoutProps> = ({
           <ResizablePanel defaultSize={50} minSize={0} maxSize={100}>
             <div className="h-fit pt-2 pl-3">
               {selectedMatch ? (
-                <MatchDetailsPanel
-                  match={selectedMatch}
-                  teamMatch={teamMatches[selectedMatch.id]}
-                  viewMode={matchDetailsViewMode}
-                  onViewModeChange={setMatchDetailsViewMode}
-                />
+                (() => {
+                  const teamMatchData = teamMatches[selectedMatch.id];
+                  console.log('🎯 ResizableMatchLayout - teamMatch data:', {
+                    selectedMatchId: selectedMatch.id,
+                    teamMatchData: JSON.stringify(teamMatchData),
+                    teamMatchSide: teamMatchData?.side,
+                    teamMatchesKeys: Object.keys(teamMatches),
+                    hasTeamMatchData: !!teamMatchData,
+                    teamMatchesCount: Object.keys(teamMatches).length,
+                    allTeamMatchIds: Object.keys(teamMatches).map(id => parseInt(id))
+                  });
+                  
+                  if (!teamMatchData) {
+                    console.log('❌ No teamMatchData found for match:', selectedMatch.id);
+                    console.log('Available teamMatches keys:', Object.keys(teamMatches));
+                  }
+                  
+                  return (
+                    <MatchDetailsPanel
+                      match={selectedMatch}
+                      teamMatch={teamMatchData}
+                      viewMode={matchDetailsViewMode}
+                      onViewModeChange={setMatchDetailsViewMode}
+                      allMatches={unhiddenMatches}
+                      teamMatches={teamMatches}
+                      hiddenMatchIds={hiddenMatchIds}
+                    />
+                  );
+                })()
               ) : (
                 <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
                   <div className="text-center">

@@ -15,9 +15,9 @@ import { useMatchDataFetching } from '@/contexts/match-data-fetching-context';
 import { useMatchOperations } from '@/hooks/use-match-operations';
 import { processMatchData } from '@/lib/processing/match-processing';
 import type {
-  Match,
-  MatchContextProviderProps,
-  MatchContextValue
+    Match,
+    MatchContextProviderProps,
+    MatchContextValue
 } from '@/types/contexts/match-context-value';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
@@ -59,6 +59,8 @@ function useMatchProcessing() {
   };
 }
 
+
+
 // ============================================================================
 // PROVIDER IMPLEMENTATION
 // ============================================================================
@@ -85,7 +87,10 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     
     // Data access
     getMatch: (matchId: number) => state.matches.get(matchId),
-    getMatches: (matchIds: number[]) => matchIds.map(id => state.matches.get(id)).filter((match): match is Match => match !== undefined)
+    getMatches: (matchIds: number[]) => matchIds.map(id => state.matches.get(id)).filter((match): match is Match => match !== undefined),
+    
+    // High-performing heroes (will be provided by TeamProvider)
+    highPerformingHeroes: new Set()
   };
 
   return (

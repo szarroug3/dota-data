@@ -18,6 +18,9 @@ interface MatchDetailsPanelProps {
   teamMatch: TeamMatchParticipation;
   viewMode: MatchDetailsPanelMode;
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
+  allMatches?: Match[];
+  teamMatches?: Record<number, TeamMatchParticipation>;
+  hiddenMatchIds?: Set<number>;
 }
 
 export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
@@ -25,7 +28,28 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   teamMatch,
   viewMode,
   onViewModeChange,
+  allMatches = [],
+  teamMatches = {},
+  hiddenMatchIds = new Set(),
 }) => {
+  console.log('📋 MatchDetailsPanel:', {
+    matchId: match?.id,
+    teamMatchSide: teamMatch?.side,
+    hasTeamMatch: !!teamMatch,
+    viewMode,
+    allMatchesCount: allMatches.length,
+    teamMatchesCount: Object.keys(teamMatches).length,
+    hiddenMatchIdsCount: hiddenMatchIds.size,
+    teamMatchesKeys: Object.keys(teamMatches),
+    teamMatch: JSON.stringify(teamMatch),
+    allMatchesIds: allMatches.map(m => m.id),
+    hiddenMatchIds: Array.from(hiddenMatchIds)
+  });
+
+  if (!teamMatch) {
+    console.log('❌ MatchDetailsPanel: No teamMatch provided for match:', match?.id);
+  }
+
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
 
   return (
@@ -46,13 +70,22 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
                 teamMatch={teamMatch} 
                 filter={draftFilter}
                 onFilterChange={setDraftFilter}
+                allMatches={allMatches}
+                teamMatches={teamMatches}
+                hiddenMatchIds={hiddenMatchIds}
               />
             </div>
           )}
 
           {viewMode === 'players' && (
             <div className="space-y-4">
-              <MatchDetailsPanelPlayers match={match} teamMatch={teamMatch} />
+              <MatchDetailsPanelPlayers 
+                match={match} 
+                teamMatch={teamMatch}
+                allMatches={allMatches}
+                teamMatches={teamMatches}
+                hiddenMatchIds={hiddenMatchIds}
+              />
             </div>
           )}
 

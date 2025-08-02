@@ -19,14 +19,26 @@ import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
  * Determine team side from match data
  */
 export function determineTeamSideFromMatch(match: Match, teamId: number): 'radiant' | 'dire' {
-  if (match.radiant.id === teamId) {
+  console.log('🔍 determineTeamSideFromMatch:', {
+    matchId: match.id,
+    teamId,
+    radiantId: match.radiant.id,
+    direId: match.dire.id,
+    radiantName: match.radiant.name,
+    direName: match.dire.name
+  });
+
+  // Check if we have team IDs in the processed match data
+  if (match.radiant.id && match.radiant.id === teamId) {
+    console.log('✅ Team is on radiant side');
     return 'radiant';
-  } else if (match.dire.id === teamId) {
+  } else if (match.dire.id && match.dire.id === teamId) {
+    console.log('✅ Team is on dire side');
     return 'dire';
   }
   
   // If we can't determine the side, throw an error
-  throw new Error(`Could not determine team side for team ${teamId} in match ${match.id}`);
+  throw new Error(`Could not determine team side for team ${teamId} in match ${match.id}. Radiant ID: ${match.radiant.id}, Dire ID: ${match.dire.id}`);
 }
 
 // ============================================================================
@@ -115,6 +127,11 @@ export async function processMatchAndExtractPlayers(
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue
 ): Promise<TeamMatchParticipation | null> {
+  console.log('🔄 processMatchAndExtractPlayers:', {
+    matchId,
+    teamId
+  });
+
   try {
     // Get match data
     const match = await matchContext.addMatch(matchId);

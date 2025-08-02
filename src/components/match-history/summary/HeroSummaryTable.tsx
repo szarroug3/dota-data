@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
 import { useConstantsContext } from '@/contexts/constants-context';
+import { useTeamContext } from '@/contexts/team-context';
 import { cn } from '@/lib/utils';
 import type { Hero } from '@/types/contexts/constants-context-value';
 import type { HeroPick, Match } from '@/types/contexts/match-context-value';
@@ -238,11 +239,11 @@ function renderTableHeaders(sortField: SortField, sortDirection: SortDirection, 
   );
 }
 
-function renderHeroRow(hero: HeroSummary, showStar?: boolean) {
+function renderHeroRow(hero: HeroSummary, showStar?: boolean, isHighPerforming?: boolean) {
   return (
     <TableRow key={hero.heroId}>
       <TableCell className="w-12">
-        <Avatar className="w-8 h-8 border-2 border-background">
+        <Avatar className={`w-8 h-8 border-2 ${isHighPerforming ? 'border-primary' : 'border-background'}`}>
           <AvatarImage 
             src={hero.heroImage} 
             alt={hero.heroName}
@@ -257,7 +258,7 @@ function renderHeroRow(hero: HeroSummary, showStar?: boolean) {
         <div>
           <div className="font-medium flex items-center gap-2">
             {hero.heroName}
-            {showStar && hero.count >= 5 && (hero.winRate || 0) >= 60 && (
+            {showStar && isHighPerforming && (
               <Star className="w-4 h-4 text-yellow-500" />
             )}
           </div>
@@ -300,7 +301,8 @@ function HeroSummarySection({
   onSortChange,
   showToggle = false,
   toggleState = false,
-  onToggleChange
+  onToggleChange,
+  highPerformingHeroes
 }: { 
   title: string; 
   heroes: HeroSummary[]; 
@@ -310,13 +312,14 @@ function HeroSummarySection({
   showToggle?: boolean;
   toggleState?: boolean;
   onToggleChange?: (checked: boolean) => void;
+  highPerformingHeroes?: Set<string>;
 }) {
   const filteredHeroes = useMemo(() => {
     if (showToggle && toggleState) {
-      return heroes.filter(hero => hero.count >= 5 && (hero.winRate || 0) >= 60);
+      return heroes.filter(hero => highPerformingHeroes?.has(hero.heroId));
     }
     return heroes;
-  }, [heroes, showToggle, toggleState]);
+  }, [heroes, showToggle, toggleState, highPerformingHeroes]);
 
   const sortedHeroes = useMemo(() => sortHeroes(filteredHeroes, sortField, sortDirection), [filteredHeroes, sortField, sortDirection]);
 
@@ -355,7 +358,7 @@ function HeroSummarySection({
         <Table>
           {renderTableHeaders(sortField, sortDirection, onSortChange)}
           <TableBody>
-            {sortedHeroes.map(hero => renderHeroRow(hero, title === "Active Team Picks"))}
+            {sortedHeroes.map(hero => renderHeroRow(hero, title === "Active Team Picks", highPerformingHeroes?.has(hero.heroId)))}
           </TableBody>
         </Table>
       </CardContent>
@@ -364,6 +367,7 @@ function HeroSummarySection({
 }
 
 export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, teamMatches, showHighPerformersOnly, className }) => {
+  const { highPerformingHeroes } = useTeamContext();
   const { heroes } = useConstantsContext();
   const [activeTeamSort, setActiveTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'winRate', direction: 'desc' });
   const [opponentTeamSort, setOpponentTeamSort] = useState<{ field: SortField; direction: SortDirection }>({ field: 'count', direction: 'desc' });
@@ -393,7 +397,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   // Filter for high performers if enabled
   const filterHighPerformers = (heroes: HeroSummary[]) => {
     if (!showHighPerformersOnly) return heroes;
-    return heroes.filter(hero => hero.count > 5 && (hero.winRate || 0) > 60);
+    return heroes.filter(hero => highPerformingHeroes.has(hero.heroId));
   };
 
   const filteredActiveTeamPicks = filterHighPerformers(activeTeamPicks);
@@ -449,6 +453,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
           showToggle={true}
           toggleState={activeTeamPicksToggle}
           onToggleChange={setActiveTeamPicksToggle}
+          highPerformingHeroes={highPerformingHeroes}
         />
         <HeroSummarySection 
           title="Opponent Team Picks" 
@@ -456,6 +461,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
           sortField={opponentTeamSort.field}
           sortDirection={opponentTeamSort.direction}
           onSortChange={handleOpponentTeamSort}
+          highPerformingHeroes={highPerformingHeroes}
         />
         <HeroSummarySection 
           title="Active Team Bans" 
@@ -463,6 +469,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
           sortField={activeTeamBansSort.field}
           sortDirection={activeTeamBansSort.direction}
           onSortChange={handleActiveTeamBansSort}
+          highPerformingHeroes={highPerformingHeroes}
         />
         <HeroSummarySection 
           title="Opponent Team Bans" 
@@ -470,6 +477,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
           sortField={opponentTeamBansSort.field}
           sortDirection={opponentTeamBansSort.direction}
           onSortChange={handleOpponentTeamBansSort}
+          highPerformingHeroes={highPerformingHeroes}
         />
       </div>
     </div>

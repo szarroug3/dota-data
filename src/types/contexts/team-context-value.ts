@@ -200,6 +200,9 @@ export interface TeamContextValue {
   getTeam: (teamId: number, leagueId: number) => TeamData | undefined;
   getSelectedTeam: () => TeamData | undefined;
   getAllTeams: () => TeamData[];
+  
+  // High-performing heroes (calculated once, used by multiple components)
+  highPerformingHeroes: Set<string>; // Set of hero IDs that are high-performing
 }
 
 export interface TeamContextProviderProps {

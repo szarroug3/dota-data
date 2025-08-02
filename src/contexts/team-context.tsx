@@ -8,7 +8,7 @@
  * Uses config context for persistence of team list and active team.
  */
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 
 import { useConfigContext } from '@/contexts/config-context';
 import { useMatchContext } from '@/contexts/match-context';
@@ -17,7 +17,8 @@ import { useTeamDataFetching } from '@/contexts/team-data-fetching-context';
 import { useTeamOperations } from '@/hooks/use-team-operations';
 import { useTeamStateOperations } from '@/hooks/use-team-state-operations';
 import { useTeamSummaryOperations } from '@/hooks/use-team-summary-operations';
-import type { TeamContextProviderProps, TeamContextValue, TeamData, TeamState } from '@/types/contexts/team-context-value';
+import type { Match } from '@/types/contexts/match-context-value';
+import type { TeamContextProviderProps, TeamContextValue, TeamData, TeamMatchParticipation, TeamState } from '@/types/contexts/team-context-value';
 
 // ============================================================================
 // CONTEXT CREATION
@@ -36,6 +37,53 @@ function useTeamState() {
     teams,
     setTeams
   };
+}
+
+// Helper function to calculate high-performing heroes
+function calculateHighPerformingHeroes(
+  matches: Map<number, Match>,
+  teamMatches: Record<number, TeamMatchParticipation>,
+  hiddenMatchIds: Set<number>
+): Set<string> {
+  const heroStats: Record<string, { count: number; wins: number; totalGames: number }> = {};
+  
+  // Aggregate hero statistics from unhidden matches
+  matches.forEach((matchData, matchId) => {
+    // Skip manually hidden matches
+    if (hiddenMatchIds.has(matchId)) {
+      return;
+    }
+    
+    const matchTeamData = teamMatches[matchId];
+    if (!matchTeamData?.side) {
+      return;
+    }
+    
+    const teamPlayers = matchData.players[matchTeamData.side] || [];
+    const isWin = matchTeamData.result === 'won';
+    
+    teamPlayers.forEach(player => {
+      const heroId = player.hero.id.toString();
+      if (!heroStats[heroId]) {
+        heroStats[heroId] = { count: 0, wins: 0, totalGames: 0 };
+      }
+      
+      heroStats[heroId].count++;
+      heroStats[heroId].totalGames++;
+      if (isWin) {
+        heroStats[heroId].wins++;
+      }
+    });
+  });
+  
+  // Identify high-performing heroes (5+ games, 60%+ win rate)
+  const highPerformingHeroes = new Set(
+    Object.entries(heroStats)
+      .filter(([_, stats]) => stats.count >= 5 && (stats.wins / stats.count) >= 0.6)
+      .map(([heroId, _]) => heroId)
+  );
+  
+  return highPerformingHeroes;
 }
 
 // ============================================================================
@@ -110,6 +158,19 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     actions.refreshTeam
   );
 
+  // Calculate high-performing heroes based on selected team's matches
+  const highPerformingHeroes = useMemo(() => {
+    const selectedTeam = actions.getSelectedTeam();
+    if (!selectedTeam) {
+      return new Set<string>();
+    }
+
+    // For now, we'll use an empty set for hidden matches
+    // This will be updated when we have access to hidden matches
+    const hiddenMatchIds = new Set<number>();
+    return calculateHighPerformingHeroes(matchContext.matches, selectedTeam.matches, hiddenMatchIds);
+  }, [matchContext.matches, actions.getSelectedTeam]);
+
   const contextValue: TeamContextValue = {
     // State
     teams: state.teams,
@@ -140,7 +201,10 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     
     // Summary operations
     refreshTeamSummary: summaryOperations.refreshTeamSummary,
-    refreshAllTeamSummaries: summaryOperations.refreshAllTeamSummaries
+    refreshAllTeamSummaries: summaryOperations.refreshAllTeamSummaries,
+    
+    // High-performing heroes
+    highPerformingHeroes
   };
 
   return (
