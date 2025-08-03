@@ -5,8 +5,7 @@ import { MatchDetailsPanelMode } from '@/components/match-history/details/MatchD
 import type { MatchFilters as MatchFiltersType } from '@/components/match-history/filters/MatchFilters';
 import { MatchListViewMode } from '@/components/match-history/list/MatchListView';
 import { ResizableMatchLayout } from '@/components/match-history/ResizableMatchLayout';
-import type { Match, MatchDetails } from '@/types/contexts/match-context-value';
-
+import type { Match } from '@/types/contexts/match-context-value';
 
 // Mock the Resizable components since they use browser APIs
 jest.mock('@/components/ui/resizable', () => ({
@@ -23,9 +22,9 @@ jest.mock('@/components/ui/resizable', () => ({
   }) => (
     <div 
       data-testid="resizable-panel" 
-      data-default-size={defaultSize}
-      data-min-size={minSize}
-      data-max-size={maxSize}
+      data-default-size={defaultSize?.toString()}
+      data-min-size={minSize?.toString()}
+      data-max-size={maxSize?.toString()}
     >
       {children}
     </div>
@@ -88,10 +87,10 @@ jest.mock('@/components/match-history/list/MatchesList', () => ({
       {matches.map(match => (
         <button 
           key={match.id} 
-          onClick={() => onSelectMatch?.(match.id)}
+          onClick={() => onSelectMatch?.(match.id.toString())}
           data-testid={`match-${match.id}`}
         >
-          {match.opponent}
+          {match.radiant.name}
         </button>
       ))}
       <button onClick={() => onHideMatch('match1')}>Hide Match</button>
@@ -105,7 +104,7 @@ jest.mock('@/components/match-history/list/MatchesList', () => ({
 
 jest.mock('@/components/match-history/details/MatchDetailsPanel', () => ({
   MatchDetailsPanel: ({ match, viewMode, onViewModeChange }: {
-    match: MatchDetails | null;
+    match: Match | null;
     viewMode: MatchDetailsPanelMode;
     onViewModeChange?: (mode: MatchDetailsPanelMode) => void;
   }) => (
@@ -113,7 +112,7 @@ jest.mock('@/components/match-history/details/MatchDetailsPanel', () => ({
       <div>View Mode: {viewMode}</div>
       {match ? (
         <div>
-          <div>Match: {match.opponent}</div>
+          <div>Match: {match.radiant.name}</div>
           <button onClick={() => onViewModeChange?.('draft')}>Set Draft</button>
           <button onClick={() => onViewModeChange?.('players')}>Set Players</button>
           <button onClick={() => onViewModeChange?.('events')}>Set Events</button>
@@ -126,44 +125,46 @@ jest.mock('@/components/match-history/details/MatchDetailsPanel', () => ({
 }));
 
 const mockMatch: Match = {
-  id: 'match1',
-  teamId: 'team1',
-  leagueId: 'league1',
-  opponent: 'Team Alpha',
+  id: 1,
   date: '2024-01-01',
   duration: 1800,
-  result: 'win',
-  teamSide: 'radiant',
-  pickOrder: 'first',
-  players: [],
-  heroes: ['hero1', 'hero2']
-};
-
-const mockMatchDetails: MatchDetails = {
-  ...mockMatch,
-  radiantTeam: 'Team Alpha',
-  direTeam: 'Team Beta',
-  radiantScore: 25,
-  direScore: 20,
-  gameMode: 'captains_mode',
-  lobbyType: 'ranked',
-  radiantPlayers: [],
-  direPlayers: [],
-  radiantPicks: ['hero1', 'hero2', 'hero3'],
-  radiantBans: ['hero4', 'hero5'],
-  direPicks: ['hero6', 'hero7', 'hero8'],
-  direBans: ['hero9', 'hero10'],
-  events: [],
-  analysis: {
-    keyMoments: [],
-    teamFights: [],
-    objectives: [],
-    performance: {
-      radiantAdvantage: [],
-      direAdvantage: [],
-      goldGraph: [],
-      xpGraph: []
+  radiant: {
+    id: 1,
+    name: 'Team Alpha'
+  },
+  dire: {
+    id: 2,
+    name: 'Team Beta'
+  },
+  draft: {
+    radiantPicks: [],
+    direPicks: [],
+    radiantBans: [],
+    direBans: []
+  },
+  players: {
+    radiant: [],
+    dire: []
+  },
+  statistics: {
+    radiantScore: 25,
+    direScore: 20,
+    goldAdvantage: {
+      times: [],
+      radiantGold: [],
+      direGold: []
+    },
+    experienceAdvantage: {
+      times: [],
+      radiantExperience: [],
+      direExperience: []
     }
+  },
+  events: [],
+  result: 'radiant',
+  pickOrder: {
+    radiant: 'first',
+    dire: 'second'
   }
 };
 
@@ -209,41 +210,28 @@ describe('ResizableMatchLayout', () => {
     expect(screen.getByTestId('resizable-panel-group')).toBeInTheDocument();
     expect(screen.getByTestId('match-filters')).toBeInTheDocument();
     expect(screen.getByTestId('matches-list')).toBeInTheDocument();
-    // Handle is always rendered but may be invisible
     expect(screen.getByTestId('resizable-handle')).toBeInTheDocument();
   });
 
   it('renders with handle when match is selected', () => {
-    render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatchDetails} />);
+    render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatch} />);
     
     const handle = screen.getByTestId('resizable-handle');
     expect(handle).toHaveAttribute('data-with-handle', 'true');
     expect(screen.getByTestId('handle-grip')).toBeInTheDocument();
   });
 
-  it('renders two panels when no match is selected (details panel is hidden)', () => {
+  it('renders two panels with correct structure', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
     
     const panels = screen.getAllByTestId('resizable-panel');
     expect(panels).toHaveLength(2);
     
-    // Check panel constraints - when no match is selected, match list should be fully expanded
-    expect(panels[0]).toHaveAttribute('data-min-size', '0');
-    expect(panels[0]).toHaveAttribute('data-max-size', '100');
+    // Check that both panels exist and have the correct structure
+    expect(panels[0]).toBeInTheDocument();
+    expect(panels[1]).toBeInTheDocument();
     
-    // Details panel should be hidden (size 0)
-    expect(panels[1]).toHaveAttribute('data-min-size', '0');
-    expect(panels[1]).toHaveAttribute('data-max-size', '100');
-  });
-
-  it('renders two panels when match is selected', () => {
-    render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatchDetails} />);
-    
-    const panels = screen.getAllByTestId('resizable-panel');
-    expect(panels).toHaveLength(2);
-    
-    // Check panel constraints - when match is selected, both panels should be 50%
-    // Note: The actual sizes may not be immediately updated due to animation timing
+    // Check panel constraints - both panels should be fully flexible
     expect(panels[0]).toHaveAttribute('data-min-size', '0');
     expect(panels[0]).toHaveAttribute('data-max-size', '100');
     expect(panels[1]).toHaveAttribute('data-min-size', '0');
@@ -269,7 +257,7 @@ describe('ResizableMatchLayout', () => {
   });
 
   it('renders match details panel in right panel when match is selected', () => {
-    render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatchDetails} />);
+    render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatch} />);
     
     const detailsPanel = screen.getByTestId('match-details-panel');
     expect(detailsPanel).toBeInTheDocument();
@@ -307,8 +295,8 @@ describe('ResizableMatchLayout', () => {
     expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ result: 'wins' }));
     
     // Test match selection
-    fireEvent.click(screen.getByTestId('match-match1'));
-    expect(onSelectMatch).toHaveBeenCalledWith('match1');
+    fireEvent.click(screen.getByTestId('match-1'));
+    expect(onSelectMatch).toHaveBeenCalledWith('1');
     
     // Test view mode change
     fireEvent.click(screen.getByText('Set Card View'));
@@ -338,7 +326,7 @@ describe('ResizableMatchLayout', () => {
     render(
       <ResizableMatchLayout
         {...defaultProps}
-        selectedMatch={mockMatchDetails}
+        selectedMatch={mockMatch}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
       />
     );
@@ -354,7 +342,7 @@ describe('ResizableMatchLayout', () => {
     const container = screen.getByTestId('resizable-panel-group').parentElement;
     expect(container).toHaveClass('h-fit');
     
-    // Check that filters are at the top - look for the flex-shrink-0 class in the parent container
+    // Check that filters are at the top
     const filtersContainer = screen.getByTestId('match-filters').parentElement;
     expect(filtersContainer).toHaveClass('flex-shrink-0');
   });

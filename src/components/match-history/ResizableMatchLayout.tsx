@@ -80,8 +80,6 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
     }
   }));
 
-  const hasSelectedMatch = selectedMatch !== null;
-
   return (
     <div className="h-fit flex flex-col">
       {/* Filters - Always at the top */}
@@ -100,12 +98,9 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
           {/* Match List Panel */}
           <ResizablePanel 
             id="match-list" 
+            defaultSize={50}
             minSize={0} 
             maxSize={100} 
-            style={{
-              flexBasis: hasSelectedMatch ? '50%' : '100%',
-              transition: 'flex-basis 300ms ease-in-out',
-            }}
             className="overflow-visible"
           >
             <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>
@@ -135,13 +130,9 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
           {/* Match Details Panel */}
           <ResizablePanel 
             id="match-details" 
+            defaultSize={50}
             minSize={0} 
             maxSize={100}
-            style={{
-              flexBasis: hasSelectedMatch ? '50%' : '0%',
-              transition: 'flex-basis 300ms ease-in-out',
-              overflow: 'hidden',
-            }}
             className="overflow-hidden"
           >
             <div className="h-fit pt-2 pl-3">

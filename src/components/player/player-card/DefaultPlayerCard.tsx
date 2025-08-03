@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import React from 'react';
 
 
@@ -67,7 +67,7 @@ const renderStatusBadges = (isLoading: boolean, hasError: boolean, showRank: boo
   if (isLoading) {
     return (
       <Badge variant="secondary" className="text-xs">
-        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+        <RefreshCw className="h-4 w-4" />
         Loading
       </Badge>
     );

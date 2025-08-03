@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import React from 'react';
 
 
@@ -64,7 +64,7 @@ export const CompactPlayerCard: React.FC<CompactPlayerCardProps> = ({
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             {isLoading && (
               <Badge variant="secondary" className="text-xs">
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                <RefreshCw className="h-4 w-4" />
                 Loading
               </Badge>
             )}
