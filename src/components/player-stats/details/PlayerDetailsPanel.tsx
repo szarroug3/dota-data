@@ -18,15 +18,15 @@ interface PlayerDetailsPanelProps {
   hiddenPlayerIds?: Set<number>;
 }
 
-export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = ({
+export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(({
   player,
   viewMode,
   onViewModeChange,
   allPlayers = [],
-  hiddenPlayerIds = new Set(),
+  hiddenPlayerIds = new Set<number>(),
 }) => {
   return (
-    <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)] @container">
+    <Card className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)] @container">
       <CardHeader className="flex-shrink-0">
         <PlayerDetailsPanelHeader 
           player={player}
@@ -68,4 +68,6 @@ export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = ({
       </CardContent>
     </Card>
   );
-}; 
+});
+
+PlayerDetailsPanel.displayName = 'PlayerDetailsPanel'; 

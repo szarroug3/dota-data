@@ -23,9 +23,9 @@ export interface PlayerRank {
 }
 
 /**
- * Process player rank from rank_tier
+ * Process player rank from rank_tier and leaderboard_rank
  */
-export function processPlayerRank(rankTier: number): PlayerRank | null {
+export function processPlayerRank(rankTier: number, leaderboardRank?: number): PlayerRank | null {
   if (rankTier === 0) {
     return null;
   }
@@ -33,6 +33,19 @@ export function processPlayerRank(rankTier: number): PlayerRank | null {
   // Immortal ranks (80+)
   if (rankTier >= 80) {
     const immortalRank = rankTier - 80;
+    
+    // If leaderboard_rank is available and > 0, use it for the display
+    if (leaderboardRank && leaderboardRank > 0) {
+      return {
+        medal: 'Immortal',
+        stars: 0,
+        isImmortal: true,
+        immortalRank: leaderboardRank,
+        displayText: `Immortal #${leaderboardRank}`
+      };
+    }
+    
+    // Fallback to the calculated immortal rank
     return {
       medal: 'Immortal',
       stars: 0,

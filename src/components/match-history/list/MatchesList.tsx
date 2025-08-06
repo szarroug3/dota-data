@@ -85,20 +85,16 @@ const MatchListLayoutButtons: React.FC<MatchListLayoutButtonsProps> = ({
   setViewMode,
 }) => (
   <>
-    <div className="@[120px]:flex hidden">
+    <div className="@[120px]:flex hidden flex-shrink-0">
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as MatchListViewMode)}>
-        <TabsList className="grid w-[120px] grid-cols-3 @[390px]:w-[228px]">
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <List className="w-4 h-4" />
+        <TabsList className="grid w-auto grid-cols-2">
+          <TabsTrigger value="list" className="flex items-center gap-2 min-w-0">
+            <List className="w-4 h-4 flex-shrink-0" />
             <span className="@[420px]:block hidden">List</span>
           </TabsTrigger>
-          <TabsTrigger value="card" className="flex items-center gap-2">
-            <SquareStack className="w-4 h-4" />
+          <TabsTrigger value="card" className="flex items-center gap-2 min-w-0">
+            <SquareStack className="w-4 h-4 flex-shrink-0" />
             <span className="@[420px]:block hidden">Card</span>
-          </TabsTrigger>
-          <TabsTrigger value="grid" className="flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4" />
-            <span className="@[420px]:block hidden">Grid</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -148,8 +144,8 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
 
   return (
   <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
-    <CardHeader className="flex items-center justify-end flex-shrink-0 min-w-0">
-      <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
+    <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
+      <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
         <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
           Match History
         </h3>
@@ -182,10 +178,12 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
             <span className="@[420px]:block hidden">Add Match</span>
           </Button>
         )}
-        <MatchListLayoutButtons
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-        />
+        <div className="ml-auto">
+          <MatchListLayoutButtons
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+          />
+        </div>
       </div>
     </CardHeader>
     <CardContent ref={cardContentRef} className="flex-1 min-h-0 px-0 py-0 overflow-y-auto @[35px]:block hidden">

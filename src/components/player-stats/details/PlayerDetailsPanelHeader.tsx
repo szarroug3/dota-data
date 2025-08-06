@@ -56,7 +56,7 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
   onViewModeChange,
   className = '',
 }) => {
-  const playerRank = processPlayerRank(player.profile.rank_tier || 0);
+  const playerRank = processPlayerRank(player.profile.rank_tier || 0, player.profile.leaderboard_rank);
   const rankDisplay = playerRank ? playerRank.displayText : '';
 
   return (

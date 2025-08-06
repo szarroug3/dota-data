@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 
 interface RefreshButtonProps {
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent) => void;
   loading?: boolean;
   ariaLabel?: string;
   className?: string;
@@ -15,7 +15,10 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ onClick, loading =
     type="button"
     variant="ghost"
     size="sm"
-    onClick={onClick}
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick(e);
+    }}
     aria-label={ariaLabel}
     className={className}
     disabled={loading}

@@ -126,10 +126,6 @@ export const AddMatchForm: React.FC<AddMatchFormProps> = ({
     setValidation(validateMatchId(matchId));
   }, [matchId]);
 
-  // Check if form is valid
-  const isFormValid = validation.isValid && teamSide !== '';
-  const isDisabled = matchExists(matchId) || isSubmitting || !isFormValid;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -145,18 +141,22 @@ export const AddMatchForm: React.FC<AddMatchFormProps> = ({
   };
 
   const getButtonText = () => {
+    if (matchId.trim() === '') return 'Add Match';
     if (matchExists(matchId)) return 'Match Already Added';
     if (!validation.isValid) return 'Invalid Match ID';
-    if (teamSide === '') return 'Select Team Side';
     return 'Add Match';
   };
 
   // Only show errors for fields that have been touched (have content)
   const shouldShowMatchError = matchId.trim().length > 0 ? validation.error : undefined;
 
+  // Check if form is valid
+  const isFormValid = validation.isValid && teamSide !== '';
+  const isDisabled = matchExists(matchId) || isSubmitting || !isFormValid;
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="p-6">
+      <SheetContent>
         <SheetHeader>
           <SheetTitle>Add New Match</SheetTitle>
           <SheetDescription>
@@ -164,7 +164,7 @@ export const AddMatchForm: React.FC<AddMatchFormProps> = ({
           </SheetDescription>
         </SheetHeader>
         
-        <div className="grid flex-1 auto-rows-min gap-6 py-4">
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <Form onSubmit={handleSubmit}>
             <div className="grid gap-4" onKeyDown={(e) => {
               if (e.key === 'Enter' && !isDisabled) {
@@ -214,23 +214,24 @@ export const AddMatchForm: React.FC<AddMatchFormProps> = ({
                 <span>{error}</span>
               </div>
             )}
-            
-            <SheetFooter className="mt-6">
-              <Button
-                type="submit"
-                disabled={isDisabled}
-                className="flex-1"
-              >
-                {isSubmitting ? 'Adding Match...' : getButtonText()}
-              </Button>
-              <SheetClose asChild>
-                <Button variant="outline">
-                  Cancel
-                </Button>
-              </SheetClose>
-            </SheetFooter>
           </Form>
         </div>
+        
+        <SheetFooter>
+          <Button
+            type="submit"
+            disabled={isDisabled}
+            className="w-full"
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? 'Adding Match...' : getButtonText()}
+          </Button>
+          <SheetClose asChild>
+            <Button variant="outline" className="w-full">
+              Cancel
+            </Button>
+          </SheetClose>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

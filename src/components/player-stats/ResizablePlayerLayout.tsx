@@ -7,18 +7,12 @@ import type { Player } from '@/types/contexts/player-context-value';
 
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from './details/PlayerDetailsPanel';
-import type { PlayerFilters as PlayerFiltersType } from './filters/PlayerFilters';
-import { PlayerFilters } from './filters/PlayerFilters';
 import type { PlayerListViewMode } from './list/PlayerListView';
 import { PlayersList, type PlayersListRef } from './list/PlayersList';
 
 interface ResizablePlayerLayoutProps {
-  // Filters
-  filters: PlayerFiltersType;
-  onFiltersChange: (filters: PlayerFiltersType) => void;
-  players: Player[];
-  
   // Player list
+  players: Player[];
   visiblePlayers: Player[];
   filteredPlayers: Player[]; // Players after filtering but before hiding
   onHidePlayer: (playerId: number) => void;
@@ -47,9 +41,8 @@ export interface ResizablePlayerLayoutRef {
   scrollToPlayer: (playerId: number) => void;
 }
 
-export const ResizablePlayerLayout = forwardRef<ResizablePlayerLayoutRef, ResizablePlayerLayoutProps>(({
-  filters,
-  onFiltersChange,
+export const ResizablePlayerLayout =
+  React.memo(forwardRef<ResizablePlayerLayoutRef, ResizablePlayerLayoutProps>(({
   players,
   visiblePlayers,
   filteredPlayers,
@@ -78,15 +71,6 @@ export const ResizablePlayerLayout = forwardRef<ResizablePlayerLayoutRef, Resiza
 
   return (
     <div className="h-fit flex flex-col">
-      {/* Filters - Always at the top */}
-      <div className="flex-shrink-0 pb-2">
-        <PlayerFilters
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          players={players}
-        />
-      </div>
-      
       {/* Resizable Panels */}
       <div className="h-fit">
         <ResizablePanelGroup direction="horizontal">
@@ -139,7 +123,7 @@ export const ResizablePlayerLayout = forwardRef<ResizablePlayerLayoutRef, Resiza
                   hiddenPlayerIds={hiddenPlayerIds}
                 />
               ) : (
-                <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
+                <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)]">
                   <div className="text-center">
                     <div className="text-lg font-medium mb-2">No Player Selected</div>
                     <div className="text-sm">Select a player from the list to view details</div>
@@ -152,6 +136,6 @@ export const ResizablePlayerLayout = forwardRef<ResizablePlayerLayoutRef, Resiza
       </div>
     </div>
   );
-});
+}));
 
 ResizablePlayerLayout.displayName = 'ResizablePlayerLayout'; 

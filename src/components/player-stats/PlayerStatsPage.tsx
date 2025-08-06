@@ -8,8 +8,8 @@ import { usePlayerContext } from '@/contexts/player-context';
 import { useTeamContext } from '@/contexts/team-context';
 import type { Player } from '@/types/contexts/player-context-value';
 
+import { AddPlayerSheet } from './AddPlayerSheet';
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
-import type { PlayerFilters as PlayerFiltersType } from './filters/PlayerFilters';
 import type { PlayerListViewMode } from './list/PlayerListView';
 import { EmptyStateContent } from './player-stats-page/EmptyStateContent';
 import { ErrorContent } from './player-stats-page/ErrorContent';
@@ -20,7 +20,7 @@ import { ResizablePlayerLayout, type ResizablePlayerLayoutRef } from './Resizabl
 // ============================================================================
 
 function usePlayerData() {
-  const { players, isLoading } = usePlayerContext();
+  const { players, isLoading, refreshPlayer, addPlayer } = usePlayerContext();
   const { selectedTeamId } = useTeamContext();
 
   const playersArray = useMemo(() => {
@@ -31,7 +31,9 @@ function usePlayerData() {
     players: playersArray,
     isLoading,
     error: null, // TODO: Add error handling from player context
-    selectedTeamId
+    selectedTeamId,
+    refreshPlayer,
+    addPlayer
   };
 }
 
@@ -91,19 +93,6 @@ function useHiddenPlayers(filteredPlayers: Player[]) {
   };
 }
 
-function usePlayerFilters() {
-  const [filters, setFilters] = useState<PlayerFiltersType>({
-    search: '',
-    sortBy: 'name',
-    sortDirection: 'asc'
-  });
-
-  return {
-    filters,
-    setFilters
-  };
-}
-
 function usePlayerViewModes() {
   const [viewMode, setViewMode] = useState<PlayerListViewMode>('list');
   const [playerDetailsViewMode, setPlayerDetailsViewMode] = useState<PlayerDetailsPanelMode>('summary');
@@ -135,75 +124,53 @@ function getPlayerStatsEmptyState(players: Player[], selectedTeamId: { teamId: n
 // ============================================================================
 
 export const PlayerStatsPage: React.FC = () => {
-  const { players, isLoading, error, selectedTeamId } = usePlayerData();
+  const { players, isLoading, error, refreshPlayer, addPlayer } = usePlayerData();
+  const { selectedTeamId } = useTeamContext();
   const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelection();
-  const { filters, setFilters } = usePlayerFilters();
   const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModes();
   const { hiddenPlayers, showHiddenModal, setShowHiddenModal, handleHidePlayer, handleUnhidePlayer, visiblePlayers } = useHiddenPlayers(players);
   
   const resizableLayoutRef = useRef<ResizablePlayerLayoutRef | null>(null);
+  const [showAddPlayerSheet, setShowAddPlayerSheet] = useState(false);
 
-  // Filter and sort players
-  const filteredPlayers = useMemo(() => {
-    let filtered = players;
+  // Sort players alphabetically by name
+  const sortedPlayers = useMemo(() => {
+    return [...players].sort((a, b) => 
+      a.profile.profile.personaname.localeCompare(b.profile.profile.personaname)
+    );
+  }, [players]);
 
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(player => 
-        player.profile.profile.personaname.toLowerCase().includes(searchLower)
-      );
+  const handleRefreshPlayer = useCallback(async (playerId: number) => {
+    try {
+      console.log('handleRefreshPlayer called with playerId:', playerId);
+      // Add a small delay to prevent any race conditions
+      await new Promise(resolve => setTimeout(resolve, 10));
+      await refreshPlayer(playerId);
+    } catch (error) {
+      console.error('Error in handleRefreshPlayer:', error);
     }
+  }, [refreshPlayer]);
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (filters.sortBy) {
-        case 'name':
-          aValue = a.profile.profile.personaname;
-          bValue = b.profile.profile.personaname;
-          break;
-        case 'rank':
-          aValue = a.profile.rank_tier;
-          bValue = b.profile.rank_tier;
-          break;
-        case 'games':
-          aValue = a.wl.win + a.wl.lose;
-          bValue = b.wl.win + b.wl.lose;
-          break;
-        case 'winRate':
-          aValue = a.wl.win + a.wl.lose > 0 ? a.wl.win / (a.wl.win + a.wl.lose) : 0;
-          bValue = b.wl.win + b.wl.lose > 0 ? b.wl.win / (b.wl.win + b.wl.lose) : 0;
-          break;
-        case 'heroes':
-          aValue = a.heroes.length;
-          bValue = b.heroes.length;
-          break;
-        default:
-          aValue = a.profile.profile.personaname;
-          bValue = b.profile.profile.personaname;
+  const handleAddPlayer = useCallback(async (playerId: string) => {
+    try {
+      const playerIdNum = parseInt(playerId, 10);
+      if (isNaN(playerIdNum)) {
+        throw new Error('Invalid player ID');
       }
-
-      if (filters.sortDirection === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
+      
+      const newPlayer = await addPlayer(playerIdNum);
+      if (newPlayer) {
+        // Optionally select the newly added player
+        selectPlayer(playerIdNum);
       }
-    });
+    } catch (error) {
+      console.error('Failed to add player:', error);
+      throw error;
+    }
+  }, [addPlayer, selectPlayer]);
 
-    return filtered;
-  }, [players, filters]);
-
-  const handleRefreshPlayer = useCallback((playerId: number) => {
-    // TODO: Implement player refresh functionality
-    console.log('Refresh player:', playerId);
-  }, []);
-
-  const handleAddPlayer = useCallback(() => {
-    // TODO: Implement add player functionality
-    console.log('Add player');
+  const handleOpenAddPlayerSheet = useCallback(() => {
+    setShowAddPlayerSheet(true);
   }, []);
 
   const handleScrollToPlayer = useCallback((playerId: number) => {
@@ -227,11 +194,9 @@ export const PlayerStatsPage: React.FC = () => {
     return (
       <ResizablePlayerLayout
         ref={resizableLayoutRef}
-        filters={filters}
-        onFiltersChange={setFilters}
         players={players}
         visiblePlayers={visiblePlayers}
-        filteredPlayers={filteredPlayers}
+        filteredPlayers={sortedPlayers}
         onHidePlayer={handleHidePlayer}
         onRefreshPlayer={handleRefreshPlayer}
         viewMode={viewMode}
@@ -245,7 +210,7 @@ export const PlayerStatsPage: React.FC = () => {
         playerDetailsViewMode={playerDetailsViewMode}
         setPlayerDetailsViewMode={setPlayerDetailsViewMode}
         onScrollToPlayer={handleScrollToPlayer}
-        onAddPlayer={handleAddPlayer}
+        onAddPlayer={handleOpenAddPlayerSheet}
       />
     );
   };
@@ -255,6 +220,13 @@ export const PlayerStatsPage: React.FC = () => {
       <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>
         {renderContent()}
       </Suspense>
+      
+      <AddPlayerSheet
+        isOpen={showAddPlayerSheet}
+        onClose={() => setShowAddPlayerSheet(false)}
+        onAddPlayer={handleAddPlayer}
+        existingPlayers={players}
+      />
     </ErrorBoundary>
   );
 }; 

@@ -4,10 +4,9 @@ import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { MatchListViewCard } from './MatchListViewCard';
-import { MatchListViewGrid } from './MatchListViewGrid';
 import { MatchListViewList } from './MatchListViewList';
 
-export type MatchListViewMode = 'list' | 'card' | 'grid';
+export type MatchListViewMode = 'list' | 'card';
 
 interface MatchListViewProps {
   matches: Match[];
@@ -16,10 +15,9 @@ interface MatchListViewProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
-  className?: string;
   teamMatches?: Record<number, TeamMatchParticipation>;
   hiddenMatchIds?: Set<number>;
-  allMatches?: Match[]; // Unfiltered matches for hero performance calculation
+  allMatches?: Match[];
   onScrollToMatch?: (matchId: number) => void;
 }
 
@@ -63,22 +61,11 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
       />
     );
   }
-  if (viewMode === 'grid') {
-    return (
-      <MatchListViewGrid
-        matches={matches}
-        selectedMatchId={selectedMatchId}
-        onSelectMatch={onSelectMatch}
-        onHideMatch={onHideMatch}
-        teamMatches={teamMatches}
-      />
-    );
-  }
   return (
     <div className={`flex items-center justify-center p-8 text-muted-foreground`}>
       <div className="text-center">
         <div className="text-lg font-medium mb-2">This view mode is not yet implemented.</div>
-        <div className="text-sm">Try switching to list, card, or grid view.</div>
+        <div className="text-sm">Try switching to list or card view.</div>
       </div>
     </div>
   );

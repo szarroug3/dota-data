@@ -1,6 +1,8 @@
 import React from 'react';
 
 import { HeroAvatar } from '@/components/match-history/common/HeroAvatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useConstantsContext } from '@/contexts/constants-context';
 import type { Player } from '@/types/contexts/player-context-value';
 import { processPlayerRank } from '@/utils/player-statistics';
@@ -44,13 +46,13 @@ const renderHeroWithAvatar = (hero: any) => (
   </div>
 );
 
-export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = ({
+export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = React.memo(({
   player,
   allPlayers = [],
-  hiddenPlayerIds = new Set(),
+  hiddenPlayerIds = new Set<number>(),
 }) => {
   const { heroes } = useConstantsContext();
-  const rank = processPlayerRank(player.profile.rank_tier);
+  const rank = processPlayerRank(player.profile.rank_tier, player.profile.leaderboard_rank);
   
   // Get top 5 heroes by games played
   const topHeroes = player.heroes
@@ -105,31 +107,39 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
       </div>
 
       {/* Top Heroes */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground dark:text-foreground">Top Heroes</h3>
-        <div className="space-y-2">
-          {topHeroes.map((hero, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-muted dark:bg-muted rounded-lg">
-              <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
-                  #{index + 1}
-                </span>
-                {renderHeroWithAvatar(hero.hero)}
-              </div>
-              <div className="flex items-center space-x-4 text-sm">
-                <div className="text-center">
-                  <div className="font-semibold text-foreground dark:text-foreground">{hero.games}</div>
-                  <div className="text-muted-foreground dark:text-muted-foreground">Games</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold text-foreground dark:text-foreground">{hero.winRate.toFixed(1)}%</div>
-                  <div className="text-muted-foreground dark:text-muted-foreground">Win Rate</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground">Top Heroes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rank</TableHead>
+                <TableHead>Hero</TableHead>
+                <TableHead className="text-center">Games</TableHead>
+                <TableHead className="text-center">Win Rate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topHeroes.map((hero, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-semibold text-foreground dark:text-foreground">{index + 1}</TableCell>
+                  <TableCell>
+                    {renderHeroWithAvatar(hero.hero)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="font-semibold text-foreground dark:text-foreground">{hero.games}</div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="font-semibold text-foreground dark:text-foreground">{hero.winRate.toFixed(1)}%</div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Recent Performance */}
       <div className="space-y-4">
@@ -163,4 +173,6 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
       </div>
     </div>
   );
-}; 
+});
+
+PlayerDetailsPanelSummary.displayName = 'PlayerDetailsPanelSummary'; 

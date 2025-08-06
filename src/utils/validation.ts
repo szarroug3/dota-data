@@ -188,6 +188,29 @@ export function validateTeamForm(teamId: string, leagueId: string): {
   };
 }
 
+/**
+ * Validate player form (player ID only)
+ */
+export function validatePlayerForm(playerId: string): {
+  isValid: boolean;
+  errors: {
+    playerId?: string;
+  };
+} {
+  const playerIdValidation = validatePlayerId(playerId);
+
+  const errors: { playerId?: string } = {};
+  
+  if (!playerIdValidation.isValid) {
+    errors.playerId = playerIdValidation.error;
+  }
+
+  return {
+    isValid: playerIdValidation.isValid,
+    errors
+  };
+}
+
 // ============================================================================
 // ACCESSIBILITY HELPERS
 // ============================================================================

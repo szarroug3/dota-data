@@ -82,23 +82,22 @@ const PlayerListLayoutButtons: React.FC<PlayerListLayoutButtonsProps> = ({
   setViewMode,
 }) => (
   <>
-    <div className="@[120px]:flex hidden">
+    <div className="@[120px]:flex hidden flex-shrink-0">
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as PlayerListViewMode)}>
-        <TabsList className="grid w-[120px] grid-cols-3 @[390px]:w-[228px]">
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <List className="w-4 h-4" />
+        <TabsList className="grid w-auto grid-cols-2">
+          <TabsTrigger value="list" className="flex items-center gap-2 min-w-0">
+            <List className="w-4 h-4 flex-shrink-0" />
             <span className="@[420px]:block hidden">List</span>
           </TabsTrigger>
-          <TabsTrigger value="card" className="flex items-center gap-2">
-            <SquareStack className="w-4 h-4" />
+          <TabsTrigger value="card" className="flex items-center gap-2 min-w-0">
+            <SquareStack className="w-4 h-4 flex-shrink-0" />
             <span className="@[420px]:block hidden">Card</span>
-          </TabsTrigger>
-          <TabsTrigger value="grid" className="flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4" />
-            <span className="@[420px]:block hidden">Grid</span>
           </TabsTrigger>
         </TabsList>
       </Tabs>
+    </div>
+    <div className="@[120px]:hidden h-9 w-24">
+      {/* Invisible placeholder to maintain space when tabs are hidden */}
     </div>
   </>
 );
@@ -125,13 +124,13 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
   players,
   selectedPlayerId,
   onSelectPlayer,
-  _onHidePlayer,
-  _onRefreshPlayer,
+  onHidePlayer,
+  onRefreshPlayer,
   viewMode,
-  _teamPlayers,
-  _hiddenPlayerIds,
-  _filteredPlayers,
-  _onScrollToPlayer,
+  teamPlayers,
+  hiddenPlayerIds,
+  filteredPlayers,
+  onScrollToPlayer,
   onAddPlayer,
   hiddenPlayersCount = 0,
   onShowHiddenPlayers,
@@ -139,9 +138,9 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
   cardContentRef
 }) => {
   return (
-    <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
-      <CardHeader className="flex items-center justify-end flex-shrink-0 min-w-0">
-        <div className="min-w-0 flex-1 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
+    <Card className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)]">
+      <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
+        <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
           <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
             Player Statistics
           </h3>
@@ -174,10 +173,12 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
               <span className="@[420px]:block hidden">Add Player</span>
             </Button>
           )}
-          <PlayerListLayoutButtons
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-          />
+          <div className="ml-auto">
+            <PlayerListLayoutButtons
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent ref={cardContentRef} className="flex-1 min-h-0 px-0 py-0 overflow-y-auto @[35px]:block hidden">
@@ -186,6 +187,7 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
             players={players}
             selectedPlayerId={selectedPlayerId}
             onSelectPlayer={onSelectPlayer}
+            onRefreshPlayer={onRefreshPlayer}
             viewMode={viewMode}
           />
         </div>
