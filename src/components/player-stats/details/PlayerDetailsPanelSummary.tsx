@@ -4,8 +4,8 @@ import { HeroAvatar } from '@/components/match-history/common/HeroAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useConstantsContext } from '@/contexts/constants-context';
+import type { Hero as ConstantsHero } from '@/types/contexts/constants-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
-import { processPlayerRank } from '@/utils/player-statistics';
 
 interface PlayerDetailsPanelSummaryProps {
   player: Player;
@@ -13,46 +13,23 @@ interface PlayerDetailsPanelSummaryProps {
   hiddenPlayerIds?: Set<number>;
 }
 
-// Helper function to render rank display
-const renderRank = (rank: any) => {
-  if (!rank) return null;
-  
-  return (
-    <div className="flex items-center space-x-2">
-      <span className="text-sm font-medium text-foreground dark:text-foreground">
-        {rank.displayText}
-      </span>
-      {!rank.isImmortal && rank.stars > 0 && (
-        <div className="flex space-x-1">
-          {Array.from({ length: rank.stars }, (_, i) => (
-            <span key={i} className="text-yellow-500">★</span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+// Rank display removed per requirements
 
 // Helper function to render hero with avatar
-const renderHeroWithAvatar = (hero: any) => (
-  <div className="flex items-center space-x-2">
+const renderHeroWithAvatar = (hero: ConstantsHero) => (
+  <div className="flex items-center space-x-2 min-w-0 w-full">
     <HeroAvatar 
       hero={hero}
       avatarSize={{ width: 'w-8', height: 'h-8' }}
     />
-    <span className="text-muted-foreground dark:text-muted-foreground">
+    <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">
       {hero.localizedName}
     </span>
   </div>
 );
 
-export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = React.memo(({
-  player,
-  allPlayers = [],
-  hiddenPlayerIds = new Set<number>(),
-}) => {
+export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = React.memo(({ player }) => {
   const { heroes } = useConstantsContext();
-  const rank = processPlayerRank(player.profile.rank_tier, player.profile.leaderboard_rank);
   
   // Get top 5 heroes by games played
   const topHeroes = player.heroes
@@ -82,56 +59,45 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
   return (
     <div className="space-y-6">
       {/* Basic Info */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground dark:text-foreground">Basic Information</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Rank</div>
-            <div className="text-foreground dark:text-foreground">
-              {rank ? renderRank(rank) : <span className="text-muted-foreground">Not calibrated</span>}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Total Games</div>
-            <div className="text-foreground dark:text-foreground">{totalGames}</div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Win Rate</div>
-            <div className="text-foreground dark:text-foreground">{winRate.toFixed(1)}%</div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Wins</div>
-            <div className="text-foreground dark:text-foreground">{player.wl.win}</div>
-          </div>
-        </div>
+      <div className="space-y-4 min-w-0">
+        <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Basic Information</h3>
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground @[190px]:block hidden truncate">
+          <span className="text-foreground dark:text-foreground">{totalGames}</span>
+          <span className="@[350px]:inline hidden">{' '}Games</span>
+          <span className="mx-1">•</span>
+          <span className="text-foreground dark:text-foreground">{player.wl.win}</span>
+          <span className="@[350px]:inline hidden">{' '}Wins</span>
+          <span className="mx-1">•</span>
+          <span className="text-foreground dark:text-foreground">{winRate.toFixed(1)}%</span>
+          <span className="@[350px]:inline hidden">{' '}Win Rate</span>
+        </p>
+        <div className="@[190px]:hidden block h-5" aria-hidden="true" />
       </div>
 
       {/* Top Heroes */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground">Top Heroes</CardTitle>
+        <CardHeader className="min-w-0">
+          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">Top Heroes</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="min-w-0">
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead>Rank</TableHead>
-                <TableHead>Hero</TableHead>
-                <TableHead className="text-center">Games</TableHead>
-                <TableHead className="text-center">Win Rate</TableHead>
+                <TableHead className="truncate">Hero</TableHead>
+                <TableHead className="text-center @[315px]:table-cell hidden w-[72px]">Games</TableHead>
+                <TableHead className="text-center @[245px]:table-cell hidden w-[96px]">Win Rate</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {topHeroes.map((hero, index) => (
-                <TableRow key={index}>
-                  <TableCell className="font-semibold text-foreground dark:text-foreground">{index + 1}</TableCell>
-                  <TableCell>
+              {topHeroes.map((hero) => (
+                <TableRow key={hero.hero.id}>
+                  <TableCell className="min-w-0">
                     {renderHeroWithAvatar(hero.hero)}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center @[315px]:table-cell hidden w-[72px]">
                     <div className="font-semibold text-foreground dark:text-foreground">{hero.games}</div>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center @[245px]:table-cell hidden w-[96px]">
                     <div className="font-semibold text-foreground dark:text-foreground">{hero.winRate.toFixed(1)}%</div>
                   </TableCell>
                 </TableRow>
@@ -141,36 +107,7 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
         </CardContent>
       </Card>
 
-      {/* Recent Performance */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground dark:text-foreground">Recent Performance</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              {player.recentMatches.length}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Recent Matches</div>
-          </div>
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              {player.heroes.length}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Heroes Played</div>
-          </div>
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              {player.rankings.length}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Rankings</div>
-          </div>
-          <div className="text-center p-3 bg-muted dark:bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-foreground dark:text-foreground">
-              {player.ratings.length}
-            </div>
-            <div className="text-sm text-muted-foreground dark:text-muted-foreground">Ratings</div>
-          </div>
-        </div>
-      </div>
+      {/* Recent Performance section removed as requested */}
     </div>
   );
 });

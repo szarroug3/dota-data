@@ -74,8 +74,9 @@ export function useAppHydration() {
           // Delegate to team context to handle loading teams from config
           await contextsRef.current.teamContext.loadTeamsFromConfig(teams);
 
-          // Step 4: Load manual matches after normal team loading
+          // Step 4: Load manual matches and players after normal team loading
           await contextsRef.current.teamContext.loadManualMatches();
+          await contextsRef.current.teamContext.loadManualPlayers();
 
           // Refresh all team summaries in background
           // This will handle summary data for non-active teams and full data for active team

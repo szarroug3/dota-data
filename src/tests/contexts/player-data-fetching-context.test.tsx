@@ -102,24 +102,14 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
       lobby_type: 7,
       hero_id: 1,
       start_time: 1640995200,
-      version: 50,
+      version: null,
       kills: 8,
       deaths: 2,
       assists: 12,
-      skill: 2,
-      average_rank: 80,
-      xp_per_min: 720,
-      gold_per_min: 650,
-      hero_damage: 25000,
-      tower_damage: 5000,
-      hero_healing: 0,
-      last_hits: 185,
-      lane: 1,
-      lane_role: 1,
-      is_roaming: false,
-      cluster: 1,
+      average_rank: null,
       leaver_status: 0,
-      party_size: 1
+      party_size: null,
+      hero_variant: null
     }
   ],
   totals: {

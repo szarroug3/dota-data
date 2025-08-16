@@ -248,6 +248,7 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
     timeAdded: new Date().toISOString(),
     matches: {},
     manualMatches: {},
+    manualPlayers: [],
     players: [],
     performance: {
       totalMatches: 0,

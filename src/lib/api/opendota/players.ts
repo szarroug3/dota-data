@@ -2,16 +2,16 @@ import path from 'path';
 
 import { request, requestWithRetry } from '@/lib/utils/request';
 import {
-    OpenDotaPlayer,
-    OpenDotaPlayerComprehensive,
-    OpenDotaPlayerCounts,
-    OpenDotaPlayerHero,
-    OpenDotaPlayerRanking,
-    OpenDotaPlayerRating,
-    OpenDotaPlayerRecentMatches,
-    OpenDotaPlayerTotals,
-    OpenDotaPlayerWardMap,
-    OpenDotaPlayerWL
+  OpenDotaPlayer,
+  OpenDotaPlayerComprehensive,
+  OpenDotaPlayerCounts,
+  OpenDotaPlayerHero,
+  OpenDotaPlayerMatches,
+  OpenDotaPlayerRanking,
+  OpenDotaPlayerRating,
+  OpenDotaPlayerTotals,
+  OpenDotaPlayerWardMap,
+  OpenDotaPlayerWL
 } from '@/types/external-apis';
 
 /**
@@ -22,7 +22,7 @@ import {
  * - https://api.opendota.com/api/players/{playerId}/heroes
  * - https://api.opendota.com/api/players/{playerId}/rankings
  * - https://api.opendota.com/api/players/{playerId}/ratings
- * - https://api.opendota.com/api/players/{playerId}/recentMatches
+ * - https://api.opendota.com/api/players/{playerId}/matches
  * - https://api.opendota.com/api/players/{playerId}/totals
  * - https://api.opendota.com/api/players/{playerId}/wl
  * - https://api.opendota.com/api/players/{playerId}/wardMap
@@ -104,8 +104,8 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
   }
   await delay(delayMs);
 
-  // 6. Recent Matches
-  const recentMatches: OpenDotaPlayerRecentMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/recentMatches`);
+  // 6. Matches
+  const recentMatches: OpenDotaPlayerMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/matches`);
   await delay(delayMs);
 
   // 7. Totals

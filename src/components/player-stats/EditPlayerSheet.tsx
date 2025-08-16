@@ -1,5 +1,7 @@
+'use client';
+
 import { AlertCircle } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormField } from '@/components/ui/form';
@@ -9,12 +11,12 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHe
 import type { Player } from '@/types/contexts/player-context-value';
 import { getValidationAriaAttributes, validatePlayerId } from '@/utils/validation';
 
-interface AddPlayerSheetProps {
+interface EditPlayerSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPlayer: (playerId: string) => Promise<void>;
   existingPlayers: Player[];
-  initialPlayerId?: string;
+  currentPlayerId: number;
+  onEditPlayer: (newPlayerId: string) => Promise<void>;
 }
 
 interface FormFieldInputProps {
@@ -78,100 +80,81 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   );
 };
 
-export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
+export const EditPlayerSheet: React.FC<EditPlayerSheetProps> = ({
   isOpen,
   onClose,
-  onAddPlayer,
   existingPlayers,
-  initialPlayerId
+  currentPlayerId,
+  onEditPlayer
 }) => {
   const [playerId, setPlayerId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
+  // Prefill when opening
+  useEffect(() => {
+    if (isOpen) {
+      setPlayerId(String(currentPlayerId));
+      setError(undefined);
+      setIsSubmitting(false);
+    }
+  }, [isOpen, currentPlayerId]);
+
   // Validation state
   const [validation, setValidation] = useState(() => validatePlayerId(playerId));
 
-  // Update validation when values change
   useEffect(() => {
-    // Only validate if the field has content
     if (playerId.trim().length > 0) {
       setValidation(validatePlayerId(playerId));
     } else {
-      // When empty, don't show validation errors
       setValidation({ isValid: true });
     }
   }, [playerId]);
 
-  // Prefill when editing
-  useEffect(() => {
-    if (isOpen && initialPlayerId) {
-      setPlayerId(initialPlayerId);
-    }
-  }, [isOpen, initialPlayerId]);
+  const isDuplicate = useMemo(() => {
+    const nextId = parseInt(playerId, 10);
+    if (!Number.isFinite(nextId)) return false;
+    if (nextId === currentPlayerId) return false;
+    return existingPlayers.some(p => p.profile.profile.account_id === nextId);
+  }, [playerId, currentPlayerId, existingPlayers]);
 
-  const handleAddPlayer = useCallback(async (newPlayerId: string) => {
-    try {
-      // Optimistic: close immediately; background add handled by parent
-      onClose();
-      await onAddPlayer(newPlayerId);
-    } catch (error) {
-      console.error('Failed to add player:', error);
-      // No-op: sheet is closed; log only
-    }
-  }, [onAddPlayer, onClose]);
-
-  const handleClose = useCallback(() => {
-    setPlayerId('');
-    setIsSubmitting(false);
-    setError(undefined);
-    onClose();
-  }, [onClose]);
-
-  const checkPlayerExists = useCallback((playerId: string) => {
-    const playerIdNum = parseInt(playerId, 10);
-    if (isNaN(playerIdNum)) return false;
-    
-    return existingPlayers.some(player => 
-      player.profile.profile.account_id === playerIdNum
-    );
-  }, [existingPlayers]);
-
-  // Check if form is valid
-  const isFormValid = playerId.trim() !== '' && validation.isValid;
-  const isDisabled = checkPlayerExists(playerId) || isSubmitting || !isFormValid;
+  const isFormValid = playerId.trim() !== '' && validation.isValid && !isDuplicate;
+  const isDisabled = isSubmitting || !isFormValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isDisabled) {
-      const currentPlayerId = playerId;
-      // Clear fields immediately
-      setPlayerId('');
-      void handleAddPlayer(currentPlayerId);
+    if (isDisabled) return;
+    try {
+      // Optimistic: close immediately; background edit handled by parent
+      onClose();
+      await onEditPlayer(playerId);
+    } catch (err) {
+      // No-op: sheet is closed; log only
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const getButtonText = () => {
-    if (playerId.trim() === '') return 'Add Player';
-    if (checkPlayerExists(playerId)) return 'Player Already Added';
+    if (playerId.trim() === '') return 'Update Player';
+    if (isDuplicate) return 'Player Already Added';
     if (!validation.isValid) return 'Invalid Player ID';
-    return 'Add Player';
+    return isSubmitting ? 'Updating...' : 'Update Player';
   };
 
-  // Only show errors for fields that have been touched (have content)
   const shouldShowPlayerError = playerId.trim().length > 0 ? validation.error : undefined;
+  const combinedError = isDuplicate ? 'Player already exists in the list' : shouldShowPlayerError;
 
   return (
-    <Sheet open={isOpen} onOpenChange={handleClose}>
+    <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Add New Player</SheetTitle>
+          <SheetTitle>Edit Player</SheetTitle>
           <SheetDescription>
-            Add a player to track their performance and statistics
+            Update the Account ID for this player
           </SheetDescription>
         </SheetHeader>
-        
+
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <Form onSubmit={handleSubmit}>
             <div className="grid gap-4" onKeyDown={(e) => {
@@ -188,11 +171,11 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
                 onChange={setPlayerId}
                 disabled={isSubmitting}
                 helpText="Find this in Dotabuff or OpenDota player URLs"
-                error={shouldShowPlayerError}
-                isValid={playerId.trim().length === 0 || validation.isValid}
+                error={combinedError}
+                isValid={playerId.trim().length === 0 || (validation.isValid && !isDuplicate)}
               />
             </div>
-            
+
             {/* Error Message */}
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
@@ -202,7 +185,7 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
             )}
           </Form>
         </div>
-        
+
         <SheetFooter>
           <Button
             type="submit"
@@ -221,4 +204,6 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
       </SheetContent>
     </Sheet>
   );
-}; 
+};
+
+

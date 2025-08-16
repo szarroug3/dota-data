@@ -44,12 +44,10 @@ function updateStateWithProcessedPlayer(playerId: number, processedPlayer: Playe
         JSON.stringify(existingPlayer.recentMatches) !== JSON.stringify(processedPlayer.recentMatches);
       
       if (!hasChanged) {
-        console.log('Player data unchanged, skipping state update');
         return prev;
       }
     }
     
-    console.log('Updating player state for playerId:', playerId);
     const newPlayers = new Map(prev);
     newPlayers.set(playerId, processedPlayer);
     return newPlayers;
@@ -68,8 +66,6 @@ async function fetchAndProcessPlayer(
   processing: PlayerProcessing,
   state: PlayerState
 ): Promise<Player | null> {
-  console.log('fetchAndProcessPlayer called with playerId:', playerId, 'force:', force);
-  
   // Fetch player data with force parameter
   const playerData = await playerDataFetching.fetchPlayerData(playerId, force);
   
@@ -79,20 +75,17 @@ async function fetchAndProcessPlayer(
   }
   
   if ('error' in playerData) {
-    console.error('Player data fetch error:', playerData.error);
+    // Handle gracefully without throwing console errors
+    console.warn('Player data fetch warning:', playerData.error);
     updateMapItemError(state.setPlayers, playerId, playerData.error);
     return null;
   }
-  
-  console.log('Player data fetched successfully, processing...');
   
   // Process player data
   const processedPlayer = processing.processPlayerData(playerData);
   
   // Update state with fetched data
   updateStateWithProcessedPlayer(playerId, processedPlayer, state);
-  
-  console.log('Player data processed and state updated successfully');
   
   return processedPlayer;
 }
@@ -109,8 +102,6 @@ async function handlePlayerOperation(
   processing: PlayerProcessing,
   state: PlayerState
 ): Promise<Player | null> {
-  console.log('handlePlayerOperation called with playerId:', playerId, 'force:', force);
-  
   // Check if player already exists (skip if exists and not forcing)
   if (!force && state.players.has(playerId)) {
     return state.players.get(playerId) || null;
@@ -147,7 +138,8 @@ async function handlePlayerOperation(
     );
     
   } catch (err) {
-    console.error('Error in handlePlayerOperation:', err);
+    // Handle gracefully without emitting console errors
+    console.warn('Player operation warning:', err);
     const errorMessage = handleOperationError(err as Error | string | object, controller, 'Failed to process player');
     if (errorMessage) {
       updateMapItemError(state.setPlayers, playerId, errorMessage);
@@ -184,7 +176,6 @@ export function usePlayerOperations(
 
   // Refresh player (force = true)
   const refreshPlayer = useCallback(async (playerId: number): Promise<Player | null> => {
-    console.log('refreshPlayer called with playerId:', playerId);
     return await processPlayer(playerId, true);
   }, [processPlayer]);
 

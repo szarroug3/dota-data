@@ -84,20 +84,10 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
       kills: 10,
       deaths: 5,
       assists: 15,
-      skill: 1,
       average_rank: 80,
-      xp_per_min: 750,
-      gold_per_min: 650,
-      hero_damage: 15000,
-      tower_damage: 5000,
-      hero_healing: 0,
-      last_hits: 200,
-      lane: 1,
-      lane_role: 1,
-      is_roaming: false,
-      cluster: 1,
       leaver_status: 0,
-      party_size: 1
+      party_size: 1,
+      hero_variant: null
     }
   ],
   totals: {

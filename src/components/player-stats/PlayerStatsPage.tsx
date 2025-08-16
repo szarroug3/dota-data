@@ -4,12 +4,14 @@ import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/layout/LoadingSkeleton';
+import { useConfigContext } from '@/contexts/config-context';
 import { usePlayerContext } from '@/contexts/player-context';
 import { useTeamContext } from '@/contexts/team-context';
 import type { Player } from '@/types/contexts/player-context-value';
 
 import { AddPlayerSheet } from './AddPlayerSheet';
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
+import { EditPlayerSheet } from './EditPlayerSheet';
 import type { PlayerListViewMode } from './list/PlayerListView';
 import { EmptyStateContent } from './player-stats-page/EmptyStateContent';
 import { ErrorContent } from './player-stats-page/ErrorContent';
@@ -94,8 +96,16 @@ function useHiddenPlayers(filteredPlayers: Player[]) {
 }
 
 function usePlayerViewModes() {
-  const [viewMode, setViewMode] = useState<PlayerListViewMode>('list');
+  const { config, updateConfig } = useConfigContext();
+  const [viewMode, setViewModeState] = useState<PlayerListViewMode>(config.preferredPlayerlistView ?? 'list');
   const [playerDetailsViewMode, setPlayerDetailsViewMode] = useState<PlayerDetailsPanelMode>('summary');
+
+  const setViewMode = useCallback((mode: PlayerListViewMode) => {
+    setViewModeState(mode);
+    updateConfig({ preferredPlayerlistView: mode }).catch((error) => {
+      console.error('Failed to save player list view mode preference:', error);
+    });
+  }, [updateConfig]);
 
   return {
     viewMode,
@@ -120,30 +130,75 @@ function getPlayerStatsEmptyState(players: Player[], selectedTeamId: { teamId: n
 }
 
 // ============================================================================
-// MAIN COMPONENT
+// DERIVED STATE HOOKS (to keep main component small)
 // ============================================================================
 
-export const PlayerStatsPage: React.FC = () => {
-  const { players, isLoading, error, refreshPlayer, addPlayer } = usePlayerData();
-  const { selectedTeamId } = useTeamContext();
-  const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelection();
-  const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModes();
-  const { hiddenPlayers, showHiddenModal, setShowHiddenModal, handleHidePlayer, handleUnhidePlayer, visiblePlayers } = useHiddenPlayers(players);
-  
-  const resizableLayoutRef = useRef<ResizablePlayerLayoutRef | null>(null);
-  const [showAddPlayerSheet, setShowAddPlayerSheet] = useState(false);
-
-  // Sort players alphabetically by name
-  const sortedPlayers = useMemo(() => {
-    return [...players].sort((a, b) => 
+function useSortedPlayers(players: Player[]) {
+  return useMemo(() => {
+    return [...players].sort((a, b) =>
       a.profile.profile.personaname.localeCompare(b.profile.profile.personaname)
     );
   }, [players]);
+}
+
+function useManualPlayerIds(getSelectedTeam?: () => import('@/types/contexts/team-context-value').TeamData | undefined) {
+  return useMemo(() => {
+    const selectedTeam = getSelectedTeam?.();
+    const manual = selectedTeam?.manualPlayers ?? [];
+    return new Set<number>(manual);
+  }, [getSelectedTeam]);
+}
+
+function useWaitForPlayerReadySource(players: Player[]) {
+  const playersRef = useRef<Player[]>(players);
+  React.useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
+  const waitForPlayerReady = useCallback(async (playerId: number, timeoutMs = 3000): Promise<boolean> => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const player = playersRef.current.find(p => p.profile.profile.account_id === playerId);
+      if (player && !player.error) {
+        return true;
+      }
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    return false;
+  }, []);
+
+  return waitForPlayerReady;
+}
+
+function usePlayerStatsHandlers(
+  deps: {
+    refreshPlayer: (id: number) => Promise<void | object | null>;
+    addPlayer: (id: number) => Promise<Player | null>;
+    addPlayerToTeam?: (id: number) => Promise<void>;
+    removeManualPlayer?: (id: number) => void;
+    editManualPlayer?: (oldId: number, newId: number) => Promise<void>;
+    selectPlayer: (id: number) => void;
+    resizableLayoutRef: React.MutableRefObject<ResizablePlayerLayoutRef | null>;
+    setShowAddPlayerSheet: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowEditPlayerSheet: React.Dispatch<React.SetStateAction<{ open: boolean; playerId: number | null }>>;
+    waitForPlayerReady: (playerId: number, timeoutMs?: number) => Promise<boolean>;
+  }
+) {
+  const {
+    refreshPlayer,
+    addPlayer,
+    addPlayerToTeam,
+    removeManualPlayer,
+    editManualPlayer,
+    selectPlayer,
+    resizableLayoutRef,
+    setShowAddPlayerSheet,
+    setShowEditPlayerSheet,
+    waitForPlayerReady
+  } = deps;
 
   const handleRefreshPlayer = useCallback(async (playerId: number) => {
     try {
-      console.log('handleRefreshPlayer called with playerId:', playerId);
-      // Add a small delay to prevent any race conditions
       await new Promise(resolve => setTimeout(resolve, 10));
       await refreshPlayer(playerId);
     } catch (error) {
@@ -151,37 +206,107 @@ export const PlayerStatsPage: React.FC = () => {
     }
   }, [refreshPlayer]);
 
-  const handleAddPlayer = useCallback(async (playerId: string) => {
+  const handleRemoveManualPlayer = useCallback((playerId: number) => {
     try {
-      const playerIdNum = parseInt(playerId, 10);
-      if (isNaN(playerIdNum)) {
-        throw new Error('Invalid player ID');
-      }
-      
-      const newPlayer = await addPlayer(playerIdNum);
-      if (newPlayer) {
-        // Optionally select the newly added player
-        selectPlayer(playerIdNum);
-      }
-    } catch (error) {
-      console.error('Failed to add player:', error);
-      throw error;
+      removeManualPlayer?.(playerId);
+    } catch (e) {
+      console.error('Failed to remove manual player:', e);
     }
-  }, [addPlayer, selectPlayer]);
+  }, [removeManualPlayer]);
+
+  const handleEditManualPlayer = useCallback((playerId: number) => {
+    setShowEditPlayerSheet({ open: true, playerId });
+  }, [setShowEditPlayerSheet]);
+
+  const handleAddPlayer = useCallback(async (playerId: string) => {
+    const playerIdNum = parseInt(playerId, 10);
+    if (isNaN(playerIdNum)) {
+      throw new Error('Invalid player ID');
+    }
+
+    const added = await addPlayer(playerIdNum);
+    try {
+      await addPlayerToTeam?.(playerIdNum);
+    } catch (e) {
+      console.warn('addPlayerToTeam failed, player added to context only:', e);
+    }
+
+    if (added && !added.error) {
+      selectPlayer(playerIdNum);
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+    resizableLayoutRef.current?.scrollToPlayer(playerIdNum);
+  }, [addPlayer, addPlayerToTeam, selectPlayer, resizableLayoutRef]);
 
   const handleOpenAddPlayerSheet = useCallback(() => {
     setShowAddPlayerSheet(true);
-  }, []);
+  }, [setShowAddPlayerSheet]);
 
   const handleScrollToPlayer = useCallback((playerId: number) => {
     resizableLayoutRef.current?.scrollToPlayer(playerId);
-  }, []);
+  }, [resizableLayoutRef]);
+
+  const onEditPlayer = useCallback(async (oldId: number, newPlayerId: string) => {
+    if (!Number.isFinite(Number(newPlayerId))) return;
+    const newIdNum = Number(newPlayerId);
+    await editManualPlayer?.(oldId, newIdNum);
+    await new Promise(resolve => setTimeout(resolve, 10));
+    resizableLayoutRef.current?.scrollToPlayer(newIdNum);
+    const ready = await waitForPlayerReady(newIdNum);
+    if (ready) {
+      selectPlayer(newIdNum);
+    }
+  }, [editManualPlayer, resizableLayoutRef, waitForPlayerReady, selectPlayer]);
+
+  return {
+    handleRefreshPlayer,
+    handleRemoveManualPlayer,
+    handleEditManualPlayer,
+    handleAddPlayer,
+    handleOpenAddPlayerSheet,
+    handleScrollToPlayer,
+    onEditPlayer
+  };
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export function PlayerStatsPage(): React.ReactElement {
+  const { players, error, refreshPlayer, addPlayer } = usePlayerData();
+  const {
+    selectedTeamId,
+    addPlayerToTeam,
+    getSelectedTeam,
+    removeManualPlayer,
+    editManualPlayer,
+  } = useTeamContext();
+  const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelection();
+  const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModes();
+  const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayers(players);
+  const sortedPlayers = useSortedPlayers(players);
+  const manualPlayerIds = useManualPlayerIds(getSelectedTeam);
+  
+  const resizableLayoutRef = useRef<ResizablePlayerLayoutRef | null>(null);
+  const [showAddPlayerSheet, setShowAddPlayerSheet] = useState(false);
+  const [showEditPlayerSheet, setShowEditPlayerSheet] = useState<{ open: boolean; playerId: number | null }>({ open: false, playerId: null });
+
+  const waitForPlayerReady = useWaitForPlayerReadySource(players);
+  const handlers = usePlayerStatsHandlers({
+    refreshPlayer,
+    addPlayer,
+    addPlayerToTeam,
+    removeManualPlayer,
+    editManualPlayer,
+    selectPlayer,
+    resizableLayoutRef,
+    setShowAddPlayerSheet,
+    setShowEditPlayerSheet,
+    waitForPlayerReady,
+  });
 
   const renderContent = () => {
-    if (isLoading) {
-      return <LoadingSkeleton type="text" lines={8} />;
-    }
-
     if (error) {
       return <ErrorContent error={error} />;
     }
@@ -197,8 +322,8 @@ export const PlayerStatsPage: React.FC = () => {
         players={players}
         visiblePlayers={visiblePlayers}
         filteredPlayers={sortedPlayers}
-        onHidePlayer={handleHidePlayer}
-        onRefreshPlayer={handleRefreshPlayer}
+        onHidePlayer={() => {}}
+        onRefreshPlayer={handlers.handleRefreshPlayer}
         viewMode={viewMode}
         setViewMode={setViewMode}
         selectedPlayerId={selectedPlayerId}
@@ -209,8 +334,11 @@ export const PlayerStatsPage: React.FC = () => {
         selectedPlayer={selectedPlayer}
         playerDetailsViewMode={playerDetailsViewMode}
         setPlayerDetailsViewMode={setPlayerDetailsViewMode}
-        onScrollToPlayer={handleScrollToPlayer}
-        onAddPlayer={handleOpenAddPlayerSheet}
+        onScrollToPlayer={handlers.handleScrollToPlayer}
+        onAddPlayer={handlers.handleOpenAddPlayerSheet}
+        manualPlayerIds={manualPlayerIds}
+        onEditPlayer={handlers.handleEditManualPlayer}
+        onRemovePlayer={handlers.handleRemoveManualPlayer}
       />
     );
   };
@@ -224,9 +352,21 @@ export const PlayerStatsPage: React.FC = () => {
       <AddPlayerSheet
         isOpen={showAddPlayerSheet}
         onClose={() => setShowAddPlayerSheet(false)}
-        onAddPlayer={handleAddPlayer}
+        onAddPlayer={handlers.handleAddPlayer}
         existingPlayers={players}
+      />
+
+      <EditPlayerSheet
+        isOpen={showEditPlayerSheet.open}
+        onClose={() => setShowEditPlayerSheet({ open: false, playerId: null })}
+        existingPlayers={players}
+        currentPlayerId={showEditPlayerSheet.playerId ?? 0}
+        onEditPlayer={async (newPlayerId: string) => {
+          const oldId = showEditPlayerSheet.playerId;
+          if (oldId == null) return;
+          await handlers.onEditPlayer(oldId, newPlayerId);
+        }}
       />
     </ErrorBoundary>
   );
-}; 
+}

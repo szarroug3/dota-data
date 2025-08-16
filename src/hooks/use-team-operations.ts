@@ -1,19 +1,17 @@
 import React, { useCallback } from 'react';
 
-import type { ConfigContextValue } from '@/contexts/config-context';
-import type { MatchContextValue } from '@/contexts/match-context';
-import type { PlayerContextValue } from '@/contexts/player-context';
 import type { TeamDataFetchingContextValue } from '@/contexts/team-data-fetching-context';
-import { abortTeamLeagueOperations, createTeamLeagueOperationKey, useAbortController } from '@/hooks/use-abort-controller';
+import { abortTeamLeagueOperations, createTeamLeagueOperationKey, useAbortController, type AbortControllerManager } from '@/hooks/use-abort-controller';
 import { processMatchAndExtractPlayers } from '@/lib/processing/team-processing';
-import type { Match } from '@/types/contexts/match-context-value';
+import type { ConfigContextValue } from '@/types/contexts/config-context-value';
+import type { Match, MatchContextValue } from '@/types/contexts/match-context-value';
+import type { PlayerContextValue } from '@/types/contexts/player-context-value';
 import type { TeamData, TeamMatchParticipation, TeamState } from '@/types/contexts/team-context-value';
 import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
 import { updateMapItemError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { generateTeamKey } from '@/utils/team-helpers';
 
-import type { AbortControllerManager } from '@/contexts/abort-controller-context';
 
 // ============================================================================
 // HELPER FUNCTIONS FOR TEAM OPERATIONS
@@ -36,6 +34,7 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
     error,
     matches: {},
     manualMatches: {},
+    manualPlayers: [],
     players: [],
     performance: {
       totalMatches: 0,
@@ -98,6 +97,7 @@ function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: Dotab
       return matches;
     })(),
     manualMatches: {},
+    manualPlayers: [],
     players: [], // Will be populated from match data
     performance: {
       totalMatches: matchesArray.length,
@@ -228,7 +228,7 @@ async function handleTeamSummaryOperation(
     // Both succeeded - transform data
     const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, leagueData as DotabuffLeague);
     
-    // Update state with fetched data, preserving existing manualMatches
+    // Update state with fetched data, preserving existing manualMatches and manualPlayers
     setTeams(prev => {
       const newTeams = new Map(prev);
       const existingTeam = newTeams.get(teamKey);
@@ -253,6 +253,23 @@ async function handleTeamSummaryOperation(
             };
           }
         });
+      }
+      
+      // Preserve existing manualPlayers (and ensure their entries remain in players list)
+      if (existingTeam?.manualPlayers) {
+        const manualArray = Array.isArray(existingTeam.manualPlayers)
+          ? existingTeam.manualPlayers
+          : Object.keys(existingTeam.manualPlayers).map(id => Number(id));
+        transformedTeam.manualPlayers = [...manualArray];
+        if (existingTeam.players?.length) {
+          const manualPlayerIds = new Set(manualArray);
+          const manualPlayers = existingTeam.players.filter(p => manualPlayerIds.has(p.accountId));
+          // Merge manual players with any players discovered from matches, de-duplicated by accountId
+          const combinedById = new Map<number, typeof manualPlayers[number]>();
+          manualPlayers.forEach(p => combinedById.set(p.accountId, p));
+          transformedTeam.players.forEach(p => combinedById.set(p.accountId, p));
+          transformedTeam.players = Array.from(combinedById.values());
+        }
       }
       
       newTeams.set(teamKey, transformedTeam);
@@ -426,11 +443,11 @@ function useTeamSpecificOperations(
     
     if (teamMatch && !match.isLoading && !match.error) {
       // Update the team match with real data
-      const teamSide = teamMatch.side;
-      const result = match.result === teamSide ? 'won' : 'lost';
+      const teamSide = teamMatch.side as 'radiant' | 'dire' | null;
+      const result = teamSide ? (match.result === teamSide ? 'won' : 'lost') : teamMatch.result;
       const startTime = new Date(match.date).getTime();
-      const opponentName = teamSide === 'radiant' ? match.radiant?.name : match.dire?.name;
-      const pickOrder = match.pickOrder?.[teamSide] || null;
+      const opponentName = teamSide === 'radiant' ? match.radiant?.name : teamSide === 'dire' ? match.dire?.name : teamMatch.opponentName;
+      const pickOrder = teamSide ? (match.pickOrder?.[teamSide] || null) : teamMatch.pickOrder;
 
       setTeams(prev => {
         const newTeams = new Map(prev);
@@ -486,22 +503,25 @@ function useTeamSpecificOperations(
     
     const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
     const player = await playerContext.addPlayer(playerId);
-    
-    if (player) {
-      setTeams(prev => {
-        const newTeams = new Map(prev);
-        const team = newTeams.get(teamKey);
-        
-        if (team) {
-          // Check if player already exists in team's players
-          const playerExists = team.players.some(p => p.accountId === player.profile.profile.account_id);
-          
+
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      if (team) {
+        // Ensure manualPlayers is updated and persisted regardless of player fetch success
+        const existingManual = Array.isArray(team.manualPlayers)
+          ? team.manualPlayers
+          : Object.keys(team.manualPlayers || {}).map(n => Number(n));
+        const updatedManualPlayers = Array.from(new Set([...existingManual, playerId]));
+
+        let updatedPlayers = team.players;
+        if (player) {
+          const playerExists = updatedPlayers.some(p => p.accountId === player.profile.profile.account_id);
           if (!playerExists) {
-            // Add new player to team's players list
             const newTeamPlayer = {
               accountId: player.profile.profile.account_id,
               playerName: player.profile.profile.personaname || 'Unknown Player',
-              roles: [], // Will be populated based on match data
+              roles: [],
               totalMatches: 0,
               totalWins: 0,
               totalLosses: 0,
@@ -512,20 +532,73 @@ function useTeamSpecificOperations(
               averageLastHits: 0,
               averageDenies: 0
             };
-            
-            newTeams.set(teamKey, {
-              ...team,
-              players: [...team.players, newTeamPlayer]
-            });
+            updatedPlayers = [...updatedPlayers, newTeamPlayer];
           }
         }
-        
-        return newTeams;
-      });
-    }
+
+        newTeams.set(teamKey, {
+          ...team,
+          players: updatedPlayers,
+          manualPlayers: updatedManualPlayers
+        });
+      }
+      return newTeams;
+    });
   }, [selectedTeamId, playerContext, setTeams]);
 
-  return { addMatchToTeam, addPlayerToTeam };
+  // Remove manual player from team and persist
+  const removeManualPlayer = useCallback((playerId: number) => {
+    if (!selectedTeamId) return;
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      if (team) {
+        // Remove from manualPlayers
+        const manual = Array.isArray(team.manualPlayers) ? team.manualPlayers : Object.keys(team.manualPlayers || {}).map(n => Number(n));
+        team.manualPlayers = manual.filter(id => id !== playerId);
+        // Remove from team players list
+        team.players = team.players.filter(p => p.accountId !== playerId);
+        newTeams.set(teamKey, { ...team });
+      }
+      return newTeams;
+    });
+    // Also remove from global player context so it disappears from list
+    playerContext.removePlayer(playerId);
+  }, [selectedTeamId, setTeams, playerContext]);
+
+  // Edit manual player ID (update array and team players list)
+  const editManualPlayer = useCallback(async (oldPlayerId: number, newPlayerId: number) => {
+    if (!selectedTeamId) return;
+    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
+    setTeams(prev => {
+      const newTeams = new Map(prev);
+      const team = newTeams.get(teamKey);
+      if (team) {
+        const manual = Array.isArray(team.manualPlayers) ? team.manualPlayers : Object.keys(team.manualPlayers || {}).map(n => Number(n));
+        // If new id already present, just remove old one
+        const nextManual = Array.from(new Set([...manual.filter(id => id !== oldPlayerId), newPlayerId]));
+        team.manualPlayers = nextManual;
+        // Update players list: replace old accountId entry if present
+        team.players = team.players.map(p => p.accountId === oldPlayerId ? { ...p, accountId: newPlayerId } : p)
+          .filter((p, idx, arr) => arr.findIndex(x => x.accountId === p.accountId) === idx);
+        newTeams.set(teamKey, { ...team });
+      }
+      return newTeams;
+    });
+    // Trigger player fetch for new id and remove old from global context
+    await playerContext.addPlayer(newPlayerId);
+    // Defer removal of old id slightly to avoid flicker where neither id exists
+    setTimeout(() => {
+      try {
+        playerContext.removePlayer(oldPlayerId);
+      } catch (_e) {
+        // no-op
+      }
+    }, 50);
+  }, [selectedTeamId, setTeams, playerContext]);
+
+  return { addMatchToTeam, addPlayerToTeam, removeManualPlayer, editManualPlayer };
 }
 
 // ============================================================================
@@ -549,7 +622,7 @@ export function useTeamOperations(
   const { getTeam, getSelectedTeam, getAllTeams } = useTeamDataAccessOperations(teams, selectedTeamId);
 
   // Team-specific operations
-  const { addMatchToTeam, addPlayerToTeam } = useTeamSpecificOperations(selectedTeamId, teams, setTeams, matchContext, playerContext);
+  const { addMatchToTeam, addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamSpecificOperations(selectedTeamId, teams, setTeams, matchContext, playerContext);
 
   // Add team
   const addTeam = useCallback(async (teamId: number, leagueId: number, force = false): Promise<void> => {
@@ -717,6 +790,22 @@ export function useTeamOperations(
     }
   }, [teams, setTeams, matchContext]);
 
+  // Load manual players after team loading
+  const loadManualPlayers = useCallback(async () => {
+    const manualPlayerIds = new Set<number>();
+    teams.forEach((teamData) => {
+      if (Array.isArray(teamData.manualPlayers)) {
+        teamData.manualPlayers.forEach(id => manualPlayerIds.add(id));
+      } else if (teamData.manualPlayers && typeof teamData.manualPlayers === 'object') {
+        // Back-compat if legacy object shape is encountered in-memory
+        Object.keys(teamData.manualPlayers).forEach(id => manualPlayerIds.add(Number(id)));
+      }
+    });
+    for (const playerId of manualPlayerIds) {
+      await playerContext.addPlayer(playerId);
+    }
+  }, [teams, playerContext]);
+
   // Remove manual match from team
   const removeManualMatch = useCallback((matchId: number) => {
     if (!selectedTeamId) return;
@@ -837,6 +926,8 @@ export function useTeamOperations(
     // Team-specific operations
     addMatchToTeam,
     addPlayerToTeam,
+    removeManualPlayer,
+    editManualPlayer,
     removeManualMatch,
     editManualMatch,
     
@@ -844,6 +935,7 @@ export function useTeamOperations(
     setTeams,
     loadTeamsFromConfig,
     loadManualMatches,
+    loadManualPlayers,
     
     // Data access
     setSelectedTeamId: setSelectedTeam,

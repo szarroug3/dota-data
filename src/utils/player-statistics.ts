@@ -70,7 +70,8 @@ export function processPlayerRank(rankTier: number, leaderboardRank?: number): P
       medal,
       stars,
       isImmortal: false,
-      displayText: stars > 0 ? `${medal} ${stars}` : medal
+      // Display medal only; stars are rendered as icons in UI (no numbers)
+      displayText: medal
     };
   }
 
@@ -301,8 +302,6 @@ export interface PlayerDetailedStats {
   totalWins: number;
   winRate: number;
   averageKDA: number;
-  averageGPM: number;
-  averageXPM: number;
 }
 
 /**
@@ -324,25 +323,19 @@ export function processPlayerDetailedStats(
   const totalGames = player.wl.win + player.wl.lose;
   const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
   
-  // Calculate average KDA, GPM, XPM from recent matches
+  // Calculate average KDA from recent matches
   let totalKDA = 0;
-  let totalGPM = 0;
-  let totalXPM = 0;
   let matchCount = 0;
   
   player.recentMatches.forEach(match => {
     if (match.kills !== undefined && match.deaths !== undefined && match.assists !== undefined) {
       const kda = match.deaths > 0 ? (match.kills + match.assists) / match.deaths : match.kills + match.assists;
       totalKDA += kda;
-      totalGPM += match.gold_per_min || 0;
-      totalXPM += match.xp_per_min || 0;
       matchCount++;
     }
   });
   
   const averageKDA = matchCount > 0 ? totalKDA / matchCount : 0;
-  const averageGPM = matchCount > 0 ? totalGPM / matchCount : 0;
-  const averageXPM = matchCount > 0 ? totalXPM / matchCount : 0;
   
   return {
     playerId: player.profile.profile.account_id,
@@ -355,8 +348,6 @@ export function processPlayerDetailedStats(
     totalGames,
     totalWins: player.wl.win,
     winRate,
-    averageKDA,
-    averageGPM,
-    averageXPM
+    averageKDA
   };
 } 

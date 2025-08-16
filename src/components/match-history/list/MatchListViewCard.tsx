@@ -111,7 +111,7 @@ const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   );
 
   return (
-    <div className={`flex -space-x-1 @[100px]:block hidden ${className}`}>
+    <div className={`-space-x-1 @[100px]:flex hidden ${className}`}>
       {renderLargeContainer()}
       {renderMediumContainer()}
       {renderSmallContainer()}
@@ -263,14 +263,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
     >
       <CardContent className="p-4 h-[140px] relative">
         {/* Top row: Opponent name (centered) - hidden below 150px */}
-        <div className="absolute top-4 left-0 right-0 text-center @[100px]:block hidden h-5 flex items-center justify-center">
+        <div className="absolute top-4 left-0 right-0 text-center @[100px]:flex hidden h-5 items-center justify-center">
           <h3 className="font-medium text-sm truncate">
             {isLoading && !hasError ? 'Loading...' : opponentName}
           </h3>
         </div>
 
         {/* Middle row: Hero badges (centered) or Loading indicator */}
-        <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 flex justify-center h-8 flex items-center justify-center">
+        <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 transform flex h-8 items-center justify-center">
           {isLoading && !hasError ? (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           ) : (
@@ -282,7 +282,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         </div>
 
         {/* Bottom row: Action buttons (centered) - hidden below 200px */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1 @[200px]:flex hidden h-8" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute bottom-4 left-0 right-0 @[200px]:flex hidden h-8 items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
           <ExternalSiteButton
             matchId={match.id}
             preferredSite={config.preferredExternalSite}
@@ -344,7 +344,7 @@ const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`grid gap-4 ${className}`}
+      className={`grid gap-2 ${className}`}
       style={{
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`
       }}

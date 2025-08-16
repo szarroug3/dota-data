@@ -2,7 +2,6 @@ import { ChevronDown, ChevronUp, Star } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -222,13 +221,10 @@ function renderTableHeaders(sortField: SortField, sortDirection: SortDirection, 
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-12">
-          {/* Avatar column - no header */}
-        </TableHead>
         <TableHead>
-          {renderSortHeader('name', 'Name', sortField, sortDirection, onSortChange)}
+          {renderSortHeader('name', 'Hero', sortField, sortDirection, onSortChange)}
         </TableHead>
-        <TableHead className="text-center">
+        <TableHead className="text-center @[285px]:table-cell hidden">
           {renderSortHeader('count', 'Count', sortField, sortDirection, onSortChange, 'justify-center')}
         </TableHead>
         <TableHead className="text-right">
@@ -242,37 +238,35 @@ function renderTableHeaders(sortField: SortField, sortDirection: SortDirection, 
 function renderHeroRow(hero: HeroSummary, showStar?: boolean, isHighPerforming?: boolean) {
   return (
     <TableRow key={hero.heroId}>
-      <TableCell className="w-12">
-        <Avatar className={`w-8 h-8 border-2 ${isHighPerforming ? 'border-primary' : 'border-background'}`}>
-          <AvatarImage 
-            src={hero.heroImage} 
-            alt={hero.heroName}
-            className="object-cover object-center"
-          />
-          <AvatarFallback className="text-xs">
-            {hero.heroName.split(' ').map(word => word[0]).join('').toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      </TableCell>
       <TableCell>
-        <div>
-          <div className="font-medium flex items-center gap-2">
-            {hero.heroName}
-            {showStar && isHighPerforming && (
-              <Star className="w-4 h-4 text-yellow-500" />
+        <div className="flex items-center gap-3">
+          <Avatar className={`w-8 h-8 border-2 ${(showStar && isHighPerforming) ? 'border-primary' : 'border-background'}`}>
+            <AvatarImage 
+              src={hero.heroImage} 
+              alt={hero.heroName}
+              className="object-cover object-center"
+            />
+            <AvatarFallback className="text-xs">
+              {hero.heroName.split(' ').map(word => word[0]).join('').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium flex items-center gap-2">
+              {hero.heroName}
+              {showStar && isHighPerforming && (
+                <Star className="w-4 h-4 text-yellow-500" />
+              )}
+            </div>
+            {hero.playedRoles && hero.playedRoles.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {hero.playedRoles.map(role => `${role.role} (${role.count})`).join(', ')}
+              </div>
             )}
           </div>
-          {hero.playedRoles && hero.playedRoles.length > 0 && (
-            <div className="text-xs text-muted-foreground">
-              {hero.playedRoles.map(role => `${role.role} (${role.count})`).join(', ')}
-            </div>
-          )}
         </div>
       </TableCell>
-      <TableCell className="text-center">
-        <Badge variant="secondary" className="text-xs">
-          {hero.count}
-        </Badge>
+      <TableCell className="text-center @[285px]:table-cell hidden">
+        {hero.count}
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
@@ -367,6 +361,105 @@ function HeroSummarySection({
   );
 }
 
+function NoMatchesNotice({ className }: { className?: string }) {
+  return (
+    <div className={`flex items-center justify-center p-8 text-muted-foreground ${className}`}>
+      <div className="text-center">
+        <div className="text-lg font-medium mb-2">No matches to analyze</div>
+        <div className="text-sm">Add matches to see hero summary.</div>
+      </div>
+    </div>
+  );
+}
+
+interface HeroSummaryGridProps {
+  className?: string;
+  matchesCount: number;
+  filteredActiveTeamPicks: HeroSummary[];
+  filteredOpponentTeamPicks: HeroSummary[];
+  filteredActiveTeamBans: HeroSummary[];
+  filteredOpponentTeamBans: HeroSummary[];
+  activeTeamSort: { field: SortField; direction: SortDirection };
+  opponentTeamSort: { field: SortField; direction: SortDirection };
+  activeTeamBansSort: { field: SortField; direction: SortDirection };
+  opponentTeamBansSort: { field: SortField; direction: SortDirection };
+  handleActiveTeamSort: (field: SortField) => void;
+  handleOpponentTeamSort: (field: SortField) => void;
+  handleActiveTeamBansSort: (field: SortField) => void;
+  handleOpponentTeamBansSort: (field: SortField) => void;
+  activeTeamPicksToggle: boolean;
+  setActiveTeamPicksToggle: (checked: boolean) => void;
+  highPerformingHeroes: Set<string>;
+}
+
+const HeroSummaryGrid: React.FC<HeroSummaryGridProps> = ({
+  className,
+  matchesCount,
+  filteredActiveTeamPicks,
+  filteredOpponentTeamPicks,
+  filteredActiveTeamBans,
+  filteredOpponentTeamBans,
+  activeTeamSort,
+  opponentTeamSort,
+  activeTeamBansSort,
+  opponentTeamBansSort,
+  handleActiveTeamSort,
+  handleOpponentTeamSort,
+  handleActiveTeamBansSort,
+  handleOpponentTeamBansSort,
+  activeTeamPicksToggle,
+  setActiveTeamPicksToggle,
+  highPerformingHeroes,
+}) => {
+  return (
+    <div className={className}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Hero Summary</h3>
+        <div className="text-sm text-muted-foreground">
+          Based on {matchesCount} match{matchesCount !== 1 ? 'es' : ''}
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <HeroSummarySection 
+          title="Active Team Picks" 
+          heroes={filteredActiveTeamPicks} 
+          sortField={activeTeamSort.field}
+          sortDirection={activeTeamSort.direction}
+          onSortChange={handleActiveTeamSort}
+          showToggle={true}
+          toggleState={activeTeamPicksToggle}
+          onToggleChange={setActiveTeamPicksToggle}
+          highPerformingHeroes={highPerformingHeroes}
+        />
+        <HeroSummarySection 
+          title="Opponent Team Picks" 
+          heroes={filteredOpponentTeamPicks}
+          sortField={opponentTeamSort.field}
+          sortDirection={opponentTeamSort.direction}
+          onSortChange={handleOpponentTeamSort}
+          highPerformingHeroes={highPerformingHeroes}
+        />
+        <HeroSummarySection 
+          title="Active Team Bans" 
+          heroes={filteredActiveTeamBans}
+          sortField={activeTeamBansSort.field}
+          sortDirection={activeTeamBansSort.direction}
+          onSortChange={handleActiveTeamBansSort}
+          highPerformingHeroes={highPerformingHeroes}
+        />
+        <HeroSummarySection 
+          title="Opponent Team Bans" 
+          heroes={filteredOpponentTeamBans}
+          sortField={opponentTeamBansSort.field}
+          sortDirection={opponentTeamBansSort.direction}
+          onSortChange={handleOpponentTeamBansSort}
+          highPerformingHeroes={highPerformingHeroes}
+        />
+      </div>
+    </div>
+  );
+};
+
 export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, teamMatches, showHighPerformersOnly, className }) => {
   const { highPerformingHeroes } = useTeamContext();
   const { heroes } = useConstantsContext();
@@ -377,14 +470,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   const [activeTeamPicksToggle, setActiveTeamPicksToggle] = useState(false);
   
   if (matches.length === 0) {
-    return (
-      <div className={`flex items-center justify-center p-8 text-muted-foreground ${className}`}>
-        <div className="text-center">
-          <div className="text-lg font-medium mb-2">No matches to analyze</div>
-          <div className="text-sm">Add matches to see hero summary.</div>
-        </div>
-      </div>
-    );
+    return <NoMatchesNotice className={className} />;
   }
 
   // Convert heroes object to array
@@ -435,52 +521,24 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({ matches, tea
   };
 
   return (
-    <div className={className}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Hero Summary</h3>
-        <div className="text-sm text-muted-foreground">
-          Based on {matches.length} match{matches.length !== 1 ? 'es' : ''}
-        </div>
-      </div>
-      
-      {/* 2x2 Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <HeroSummarySection 
-          title="Active Team Picks" 
-          heroes={filteredActiveTeamPicks} 
-          sortField={activeTeamSort.field}
-          sortDirection={activeTeamSort.direction}
-          onSortChange={handleActiveTeamSort}
-          showToggle={true}
-          toggleState={activeTeamPicksToggle}
-          onToggleChange={setActiveTeamPicksToggle}
-          highPerformingHeroes={highPerformingHeroes}
-        />
-        <HeroSummarySection 
-          title="Opponent Team Picks" 
-          heroes={filteredOpponentTeamPicks}
-          sortField={opponentTeamSort.field}
-          sortDirection={opponentTeamSort.direction}
-          onSortChange={handleOpponentTeamSort}
-          highPerformingHeroes={highPerformingHeroes}
-        />
-        <HeroSummarySection 
-          title="Active Team Bans" 
-          heroes={filteredActiveTeamBans}
-          sortField={activeTeamBansSort.field}
-          sortDirection={activeTeamBansSort.direction}
-          onSortChange={handleActiveTeamBansSort}
-          highPerformingHeroes={highPerformingHeroes}
-        />
-        <HeroSummarySection 
-          title="Opponent Team Bans" 
-          heroes={filteredOpponentTeamBans}
-          sortField={opponentTeamBansSort.field}
-          sortDirection={opponentTeamBansSort.direction}
-          onSortChange={handleOpponentTeamBansSort}
-          highPerformingHeroes={highPerformingHeroes}
-        />
-      </div>
-    </div>
+    <HeroSummaryGrid
+      className={className}
+      matchesCount={matches.length}
+      filteredActiveTeamPicks={filteredActiveTeamPicks}
+      filteredOpponentTeamPicks={filteredOpponentTeamPicks}
+      filteredActiveTeamBans={filteredActiveTeamBans}
+      filteredOpponentTeamBans={filteredOpponentTeamBans}
+      activeTeamSort={activeTeamSort}
+      opponentTeamSort={opponentTeamSort}
+      activeTeamBansSort={activeTeamBansSort}
+      opponentTeamBansSort={opponentTeamBansSort}
+      handleActiveTeamSort={handleActiveTeamSort}
+      handleOpponentTeamSort={handleOpponentTeamSort}
+      handleActiveTeamBansSort={handleActiveTeamBansSort}
+      handleOpponentTeamBansSort={handleOpponentTeamBansSort}
+      activeTeamPicksToggle={activeTeamPicksToggle}
+      setActiveTeamPicksToggle={setActiveTeamPicksToggle}
+      highPerformingHeroes={highPerformingHeroes}
+    />
   );
 }; 

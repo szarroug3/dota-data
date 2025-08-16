@@ -22,6 +22,11 @@ export type PreferredExternalSite = 'opendota' | 'dotabuff';
 export type PreferredMatchlistView = 'list' | 'card' | 'grid';
 
 /**
+ * Preferred player list view mode
+ */
+export type PreferredPlayerlistView = 'list' | 'card';
+
+/**
  * Theme type
  */
 export type Theme = 'light' | 'dark' | 'system';
@@ -32,6 +37,7 @@ export type Theme = 'light' | 'dark' | 'system';
 export interface AppConfig {
   preferredExternalSite: PreferredExternalSite;
   preferredMatchlistView: PreferredMatchlistView;
+  preferredPlayerlistView: PreferredPlayerlistView;
   theme: Theme;
 }
 

@@ -185,6 +185,8 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     // Team-specific operations
     addMatchToTeam: actions.addMatchToTeam,
     addPlayerToTeam: actions.addPlayerToTeam,
+    removeManualPlayer: actions.removeManualPlayer,
+    editManualPlayer: actions.editManualPlayer,
     removeManualMatch: actions.removeManualMatch,
     editManualMatch: actions.editManualMatch,
     
@@ -192,6 +194,7 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
     setTeams: actions.setTeams,
     loadTeamsFromConfig: actions.loadTeamsFromConfig,
     loadManualMatches: actions.loadManualMatches,
+    loadManualPlayers: actions.loadManualPlayers,
     
     // Data access
     setSelectedTeamId: (teamId: number, leagueId: number) => {

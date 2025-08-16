@@ -95,9 +95,9 @@ export interface OpenDotaPlayerWL {
 }
 
 /**
- * OpenDota Player Recent Matches response
+ * OpenDota Player Matches response
  */
-export interface OpenDotaPlayerRecentMatches {
+export interface OpenDotaPlayerMatches {
   match_id: number;
   player_slot: number;
   radiant_win: boolean;
@@ -110,20 +110,10 @@ export interface OpenDotaPlayerRecentMatches {
   kills: number;
   deaths: number;
   assists: number;
-  skill: number | null;
-  average_rank: number;
-  xp_per_min: number;
-  gold_per_min: number;
-  hero_damage: number;
-  tower_damage: number;
-  hero_healing: number;
-  last_hits: number;
-  lane: number | null;
-  lane_role: number | null;
-  is_roaming: boolean | null;
-  cluster: number;
+  average_rank: number | null;
   leaver_status: number;
   party_size: number | null;
+  hero_variant: number | null;
 }
 
 /**
@@ -164,7 +154,7 @@ export interface OpenDotaPlayerComprehensive {
   heroes: OpenDotaPlayerHero[];
   rankings: OpenDotaPlayerRanking[];
   ratings: OpenDotaPlayerRating[];
-  recentMatches: OpenDotaPlayerRecentMatches[];
+  recentMatches: OpenDotaPlayerMatches[];
   totals: OpenDotaPlayerTotals;
   wl: OpenDotaPlayerWL;
   wardMap: OpenDotaPlayerWardMap;

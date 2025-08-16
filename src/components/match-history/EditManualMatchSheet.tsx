@@ -192,7 +192,7 @@ export const EditManualMatchSheet: React.FC<EditManualMatchSheetProps> = ({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="p-6">
+      <SheetContent>
         <SheetHeader>
           <SheetTitle>Edit Match</SheetTitle>
           <SheetDescription>
@@ -200,7 +200,7 @@ export const EditManualMatchSheet: React.FC<EditManualMatchSheetProps> = ({
           </SheetDescription>
         </SheetHeader>
         
-        <div className="grid flex-1 auto-rows-min gap-6 py-4">
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <div className="grid gap-4" onKeyDown={(e) => {
             if (e.key === 'Enter' && !isDisabled) {
               e.preventDefault();

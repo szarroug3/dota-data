@@ -24,6 +24,9 @@ interface ResizablePlayerLayoutProps {
   hiddenPlayersCount?: number;
   onShowHiddenPlayers?: () => void;
   hiddenPlayerIds?: Set<number>;
+  manualPlayerIds?: Set<number>;
+  onEditPlayer?: (playerId: number) => void;
+  onRemovePlayer?: (playerId: number) => void;
   
   // Player details
   selectedPlayer: Player | null;
@@ -60,6 +63,9 @@ export const ResizablePlayerLayout =
   setPlayerDetailsViewMode,
   onScrollToPlayer,
   onAddPlayer,
+  manualPlayerIds,
+  onEditPlayer,
+  onRemovePlayer,
 }, ref) => {
   const playersListRef = React.useRef<PlayersListRef>(null);
 
@@ -98,6 +104,9 @@ export const ResizablePlayerLayout =
                 filteredPlayers={filteredPlayers}
                 onScrollToPlayer={onScrollToPlayer}
                 onAddPlayer={onAddPlayer}
+                manualPlayerIds={manualPlayerIds}
+                onEditPlayer={onEditPlayer}
+                onRemovePlayer={onRemovePlayer}
               />
             </div>
           </ResizablePanel>
