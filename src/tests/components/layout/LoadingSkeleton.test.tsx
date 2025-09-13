@@ -1,12 +1,12 @@
 import { render } from '@testing-library/react';
 
 import {
-    AvatarSkeleton,
-    CardSkeleton,
-    ListSkeleton,
-    LoadingSkeleton,
-    TableSkeleton
-} from '@/components/layout/LoadingSkeleton';
+  AvatarSkeleton,
+  CardSkeleton,
+  ListSkeleton,
+  LoadingSkeleton,
+  TableSkeleton
+} from '@/frontend/shared/layout/LoadingSkeleton';
 
 // Helper function to get skeleton elements
 const getSkeletonElements = () => {

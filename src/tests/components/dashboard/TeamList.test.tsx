@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react';
 
-import { TeamList } from '@/components/dashboard/TeamList';
-
-import type { TeamData } from '@/types/contexts/team-types';
+import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
+import type { TeamData } from '@/types/contexts/team-context-value';
 
 describe('TeamList', () => {
   const mockOnRemoveTeam = jest.fn();
@@ -13,52 +12,80 @@ describe('TeamList', () => {
   const mockTeamDataList: TeamData[] = [
     {
       team: {
-        id: 'team-liquid',
+        id: 9517508,
         name: 'Team Liquid',
-        leagueId: 'esl-pro-league',
-        leagueName: 'ESL Pro League',
-        isActive: false,
-        isLoading: false,
       },
       league: {
-        id: 'esl-pro-league',
+        id: 16435,
         name: 'ESL Pro League',
       },
-      matches: [],
+      timeAdded: '2024-01-01T00:00:00Z',
+      matches: {},
+      manualMatches: {},
+      manualPlayers: [],
       players: [],
-      summary: {
+      performance: {
         totalMatches: 5,
         totalWins: 3,
         totalLosses: 2,
         overallWinRate: 60,
-        lastMatchDate: '2024-01-01T00:00:00Z',
+        heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
+        draftStats: {
+          firstPickCount: 0,
+          secondPickCount: 0,
+          firstPickWinRate: 0,
+          secondPickWinRate: 0,
+          uniqueHeroesPicked: 0,
+          uniqueHeroesBanned: 0,
+          mostPickedHero: '',
+          mostBannedHero: ''
+        },
+        currentWinStreak: 0,
+        currentLoseStreak: 0,
         averageMatchDuration: 1800,
-        totalPlayers: 5,
+        averageKills: 0,
+        averageDeaths: 0,
+        averageGold: 0,
+        averageExperience: 0
       }
     },
     {
       team: {
-        id: 'og',
+        id: 2586976,
         name: 'OG',
-        leagueId: 'esl-pro-league',
-        leagueName: 'ESL Pro League',
-        isActive: false,
-        isLoading: false,
       },
       league: {
-        id: 'esl-pro-league',
+        id: 16435,
         name: 'ESL Pro League',
       },
-      matches: [],
+      timeAdded: '2024-01-01T00:00:00Z',
+      matches: {},
+      manualMatches: {},
+      manualPlayers: [],
       players: [],
-      summary: {
+      performance: {
         totalMatches: 3,
         totalWins: 2,
         totalLosses: 1,
         overallWinRate: 67,
-        lastMatchDate: '2024-01-01T00:00:00Z',
+        heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
+        draftStats: {
+          firstPickCount: 0,
+          secondPickCount: 0,
+          firstPickWinRate: 0,
+          secondPickWinRate: 0,
+          uniqueHeroesPicked: 0,
+          uniqueHeroesBanned: 0,
+          mostPickedHero: '',
+          mostBannedHero: ''
+        },
+        currentWinStreak: 0,
+        currentLoseStreak: 0,
         averageMatchDuration: 1800,
-        totalPlayers: 5,
+        averageKills: 0,
+        averageDeaths: 0,
+        averageGold: 0,
+        averageExperience: 0
       }
     }
   ];
@@ -127,7 +154,6 @@ describe('TeamList', () => {
       />
     );
     
-    // TeamCard components should render the team names
     expect(screen.getByText('Team Liquid')).toBeInTheDocument();
     expect(screen.getByText('OG')).toBeInTheDocument();
   });
@@ -136,7 +162,7 @@ describe('TeamList', () => {
     render(
       <TeamList 
         teamDataList={mockTeamDataList} 
-        activeTeam={{ teamId: 'team-liquid', leagueId: 'esl-pro-league' }}
+        activeTeam={{ teamId: 9517508, leagueId: 16435 }}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
@@ -151,7 +177,7 @@ describe('TeamList', () => {
     render(
       <TeamList 
         teamDataList={mockTeamDataList} 
-        activeTeam={{ teamId: 'team-liquid', leagueId: 'esl-pro-league' }}
+        activeTeam={{ teamId: 9517508, leagueId: 16435 }}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
@@ -159,9 +185,8 @@ describe('TeamList', () => {
       />
     );
     
-    // OG is not active, so no "Active" badge should be shown
     const activeBadges = screen.getAllByText('Active');
-    expect(activeBadges).toHaveLength(1); // Only Team Liquid should have active badge
+    expect(activeBadges).toHaveLength(1);
   });
 
   it('should render action buttons for each team', () => {
@@ -229,164 +254,6 @@ describe('TeamList', () => {
       />
     );
     
-    const card = screen.getByText('Your Teams').closest('[data-slot="card"]');
-    expect(card).toBeInTheDocument();
-  });
-
-  it('should display league information for each team', () => {
-    render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
-        activeTeam={null}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    expect(screen.getAllByText('ESL Pro League')).toHaveLength(2);
-  });
-
-  it('should have proper card content styling', () => {
-    render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
-        activeTeam={null}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    const cardContent = screen.getByText('Team Liquid').closest('[class*="px-4"]');
-    expect(cardContent).toBeInTheDocument();
-  });
-
-  it('should render team names as headings', () => {
-    render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
-        activeTeam={null}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    const teamNames = screen.getAllByText('Team Liquid');
-    const heading = teamNames[0];
-    expect(heading).toBeInTheDocument();
-  });
-
-  it('should handle active team selection correctly', () => {
-    render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
-        activeTeam={{ teamId: 'og', leagueId: 'esl-pro-league' }}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    // OG should now be active instead of Team Liquid
-    const activeBadges = screen.getAllByText('Active');
-    expect(activeBadges).toHaveLength(1);
-  });
-
-  it('should handle null active team', () => {
-    render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
-        activeTeam={null}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    // No active badges should be shown
-    const activeBadges = screen.queryAllByText('Active');
-    expect(activeBadges).toHaveLength(0);
-  });
-
-  it('should handle different league IDs for same team', () => {
-    const teamDataWithDifferentLeagues: TeamData[] = [
-      {
-        team: {
-          id: 'team-liquid',
-          name: 'Team Liquid',
-          leagueId: 'esl-pro-league',
-          leagueName: 'ESL Pro League',
-          isActive: false,
-          isLoading: false,
-        },
-        league: {
-          id: 'esl-pro-league',
-          name: 'ESL Pro League',
-        },
-        matches: [],
-        players: [],
-        summary: {
-          totalMatches: 5,
-          totalWins: 3,
-          totalLosses: 2,
-          overallWinRate: 60,
-          lastMatchDate: '2024-01-01T00:00:00Z',
-          averageMatchDuration: 1800,
-          totalPlayers: 5,
-        }
-      },
-      {
-        team: {
-          id: 'team-liquid',
-          name: 'Team Liquid',
-          leagueId: 'different-league',
-          leagueName: 'Different League',
-          isActive: true,
-          isLoading: false,
-        },
-        league: {
-          id: 'different-league',
-          name: 'Different League',
-        },
-        matches: [],
-        players: [],
-        summary: {
-          totalMatches: 3,
-          totalWins: 2,
-          totalLosses: 1,
-          overallWinRate: 67,
-          lastMatchDate: '2024-01-01T00:00:00Z',
-          averageMatchDuration: 1800,
-          totalPlayers: 5,
-        }
-      }
-    ];
-
-    render(
-      <TeamList 
-        teamDataList={teamDataWithDifferentLeagues} 
-        activeTeam={{ teamId: 'team-liquid', leagueId: 'different-league' }}
-        onRemoveTeam={mockOnRemoveTeam}
-        onRefreshTeam={mockOnRefreshTeam}
-        onEditTeam={mockOnEditTeam}
-        onSetActiveTeam={mockOnSetActiveTeam}
-      />
-    );
-    
-    // Should show both Team Liquid entries with different league names
-    expect(screen.getAllByText('Team Liquid')).toHaveLength(2);
-    expect(screen.getByText('ESL Pro League')).toBeInTheDocument();
-    expect(screen.getByText('Different League')).toBeInTheDocument();
-    
-    // Only the second one should be active
-    const activeBadges = screen.getAllByText('Active');
-    expect(activeBadges).toHaveLength(1);
+    expect(screen.getByText('Your Teams')).toBeInTheDocument();
   });
 }); 

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { MatchDataFetchingContextValue } from '@/contexts/match-data-fetching-context';
+import type { MatchDataFetchingContextValue } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import type { Match, MatchProcessing, MatchState } from '@/types/contexts/match-context-value';
 import { createInitialMatchData, updateMatchError } from '@/utils/match-helpers';
 

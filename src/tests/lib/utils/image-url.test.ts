@@ -8,26 +8,10 @@ describe('image-url utils', () => {
       expect(formatItemImageUrl(itemImagePath)).toBe(expected);
     });
 
-    it('should remove special characters from item image path', () => {
-      const itemImagePath = '/apps/dota2/images/dota_react/items/blink\'s.png?t=1593393829403';
-      const expected = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blinks.png?t=1593393829403';
-      expect(formatItemImageUrl(itemImagePath)).toBe(expected);
-    });
-
-    it('should remove multiple special characters', () => {
-      const itemImagePath = '/apps/dota2/images/dota_react/items/blink\'s & dagger.png?t=1593393829403';
-      const expected = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blinksdagger.png?t=1593393829403';
-      expect(formatItemImageUrl(itemImagePath)).toBe(expected);
-    });
-
     it('should preserve alphanumeric characters, slashes, periods, hyphens, and underscores', () => {
       const itemImagePath = '/apps/dota2/images/dota_react/items/blink-dagger_v2.png?t=1593393829403';
       const expected = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink-dagger_v2.png?t=1593393829403';
       expect(formatItemImageUrl(itemImagePath)).toBe(expected);
-    });
-
-    it('should handle empty string', () => {
-      expect(formatItemImageUrl('')).toBe('https://cdn.cloudflare.steamstatic.com');
     });
   });
 

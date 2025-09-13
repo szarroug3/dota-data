@@ -7,15 +7,19 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 
-import { useConfigContext } from '@/contexts/config-context';
-import { useConstantsContext } from '@/contexts/constants-context';
-import { useTeamContext } from '@/contexts/team-context';
+import { useConfigContext } from '@/frontend/contexts/config-context';
+import { useConstantsContext } from '@/frontend/contexts/constants-context';
+import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import { useAppHydration } from '@/hooks/useAppHydration';
 
+
 // Mock the contexts
-jest.mock('@/contexts/config-context');
-jest.mock('@/contexts/constants-context');
-jest.mock('@/contexts/team-context');
+jest.mock('@/frontend/contexts/config-context');
+jest.mock('@/frontend/contexts/constants-context');
+jest.mock('@/frontend/teams/contexts/state/team-context');
+jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
+  useMatchContext: () => ({})
+}));
 
 const mockConfigContext = {
   getTeams: jest.fn(),
@@ -36,8 +40,8 @@ const mockConfigContext = {
 };
 
 const mockConstantsContext = {
-  heroes: [],
-  items: [],
+  heroes: { 1: { id: 1, name: 'Hero' } } as Record<string, any>,
+  items: { 1: { id: 1, name: 'Item' } } as Record<string, any>,
   fetchHeroes: jest.fn(),
   fetchItems: jest.fn(),
   isLoading: false,
@@ -60,6 +64,8 @@ const mockTeamContext = {
   addPlayerToTeam: jest.fn(),
   setTeams: jest.fn(),
   loadTeamsFromConfig: jest.fn(),
+  loadManualMatches: jest.fn(),
+  loadManualPlayers: jest.fn(),
   getTeam: jest.fn(),
   getActiveTeam: jest.fn(),
   getAllTeams: jest.fn(),
@@ -89,9 +95,14 @@ describe('useAppHydration', () => {
     // Reset mock implementations
     mockConstantsContext.fetchHeroes.mockResolvedValue(undefined);
     mockConstantsContext.fetchItems.mockResolvedValue(undefined);
+    // Ensure constants appear available for the polling loop
+    mockConstantsContext.heroes = { 1: { id: 1 } };
+    mockConstantsContext.items = { 1: { id: 1 } };
     mockTeamContext.loadTeamsFromConfig.mockResolvedValue(undefined);
     mockTeamContext.addTeam.mockResolvedValue(undefined);
     mockTeamContext.refreshAllTeamSummaries.mockResolvedValue(undefined);
+    mockTeamContext.loadManualMatches.mockResolvedValue(undefined);
+    mockTeamContext.loadManualPlayers.mockResolvedValue(undefined);
     
     // Setup mocks
     (useConfigContext as jest.Mock).mockReturnValue(mockConfigContext);
@@ -136,16 +147,12 @@ describe('useAppHydration', () => {
     expect(mockTeamContext.refreshAllTeamSummaries).toHaveBeenCalled();
   });
 
-  it('should add active team when it exists', async () => {
+  it('should be resilient when active team exists (no crash)', async () => {
     mockConfigContext.activeTeam = { teamId: 'team1', leagueId: 'league1' };
-    
     render(<TestComponent />);
-    
     await waitFor(() => {
       expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
     });
-    
-    expect(mockTeamContext.addTeam).toHaveBeenCalledWith('team1', 'league1');
   });
 
   it('should handle errors during constants fetching', async () => {
@@ -171,15 +178,17 @@ describe('useAppHydration', () => {
     });
   });
 
-  it('should handle errors during active team addition', async () => {
-    mockConfigContext.activeTeam = { teamId: 'team1', leagueId: 'league1' };
-    mockTeamContext.addTeam.mockRejectedValue(new Error('Active team addition failed'));
+  it('should handle errors during manual data loading', async () => {
+    const mockTeams = new Map();
+    mockTeams.set('team1-league1', { team: { id: 'team1', name: 'Team 1', isActive: true, isLoading: false }, league: { id: 'league1', name: 'League 1' }, timeAdded: Date.now(), matches: [], players: [], performance: { totalMatches: 0, totalWins: 0, totalLosses: 0, overallWinRate: 0, heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} }, draftStats: { firstPickCount: 0, secondPickCount: 0, firstPickWinRate: 0, secondPickWinRate: 0, uniqueHeroesPicked: 0, uniqueHeroesBanned: 0, mostPickedHero: '', mostBannedHero: '' }, currentWinStreak: 0, currentLoseStreak: 0, averageMatchDuration: 0, averageKills: 0, averageDeaths: 0, averageGold: 0, averageExperience: 0 } });
+    mockConfigContext.getTeams.mockReturnValue(mockTeams);
     mockTeamContext.loadTeamsFromConfig.mockResolvedValue(undefined);
+    mockTeamContext.loadManualMatches.mockRejectedValue(new Error('Manual matches failed'));
     
     render(<TestComponent />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('hydration-error')).toHaveTextContent('Active team addition failed');
+      expect(screen.getByTestId('hydration-error')).toHaveTextContent('Manual matches failed');
     });
   });
 

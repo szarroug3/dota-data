@@ -13,6 +13,8 @@
     "type-check": "tsc --noEmit --project . --skipLibCheck",
     "type-check:watch": "tsc --noEmit --project . --skipLibCheck --watch",
     "generate:openapi": "node scripts/generate-swagger.js",
+    "generate:api-zod": "openapi-zod-client public/openapi.json -o src/types/api-zod",
+    "gen:api": "pnpm generate:openapi && pnpm generate:api-zod",
     "test": "cross-env NODE_ENV=test jest",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage",
@@ -44,6 +46,7 @@
     "@types/react-window": "^1.8.8",
     "@types/swagger-ui-react": "^5.18.0",
     "@upstash/redis": "^1.35.0",
+    "@zodios/core": "^10.9.6",
     "cheerio": "^1.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -60,7 +63,8 @@
     "recharts": "2.15.4",
     "swagger-ui-react": "^5.25.4",
     "tailwind-merge": "^3.3.1",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -95,6 +99,7 @@
     "msw": "^1.3.5",
     "node-fetch": "^2.7.0",
     "openapi-comment-parser": "^1.0.0",
+    "openapi-zod-client": "^1.16.0",
     "playwright": "^1.54.1",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",

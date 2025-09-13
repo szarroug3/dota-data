@@ -63,9 +63,3 @@ global.process.env.UPSTASH_REDIS_REST_TOKEN = 'dummy-token';
 global.process.env.MOCK_DATA = 'true';
 global.process.env.USE_MOCK_OPENDOTA = 'true';
 global.process.env.USE_MOCK_DOTABUFF = 'true';
-
-// Mock all Redis/cache/queue/rate-limit backend modules globally
-// These are only needed for backend tests, not frontend tests
-// jest.mock('@/lib/api/cache-backends/redis');
-// jest.mock('@/lib/api/queue-backends/redis');
-// jest.mock('@/lib/api/rate-limit-backends/redis'); 

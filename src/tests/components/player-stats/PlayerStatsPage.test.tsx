@@ -1,21 +1,16 @@
+import React from 'react';
 
-import { PlayerStatsPage } from '@/components/player-stats/PlayerStatsPage';
+import { PlayerStatsPage } from '@/frontend/players/components/stateless/PlayerStatsPage';
 import { renderWithProviders, screen } from '@/tests/utils/test-utils';
 
 // We don’t want a global loading skeleton to show on add/refresh
 // This test ensures the page renders list content even when the player context is in a loading state,
 // leaving per-player loading to individual cards.
 
-// Provide a simple mock for HeroProvider used in test wrapper
-jest.mock('@/contexts/hero-context', () => ({
-  HeroProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-jest.mock('@/contexts/player-context', () => {
-  const actual = jest.requireActual('@/contexts/player-context');
+// Provide player context mock with a loading state and one player
+jest.mock('@/frontend/players/contexts/state/player-context', () => {
   const helpers = jest.requireActual('@/utils/player-helpers');
   return {
-    ...actual,
     usePlayerContext: () => {
       const players = new Map<number, ReturnType<typeof helpers.createInitialPlayerData>>();
       players.set(123456789, helpers.createInitialPlayerData(123456789));
@@ -31,13 +26,12 @@ jest.mock('@/contexts/player-context', () => {
         getPlayers: jest.fn(),
       };
     },
+    PlayerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
-jest.mock('@/contexts/team-context', () => {
-  const actual = jest.requireActual('@/contexts/team-context');
+jest.mock('@/frontend/teams/contexts/state/team-context', () => {
   return {
-    ...actual,
     useTeamContext: () => ({
       selectedTeamId: { teamId: 1, leagueId: 1 },
       addPlayerToTeam: jest.fn(),
@@ -45,11 +39,27 @@ jest.mock('@/contexts/team-context', () => {
       removeManualPlayer: jest.fn(),
       editManualPlayer: jest.fn(),
     }),
+    TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
+// Provide a minimal constants context so MatchProvider can mount
+jest.mock('@/frontend/contexts/constants-context', () => {
+  return {
+    useConstantsContext: () => ({
+      heroes: {},
+      items: {},
+      fetchHeroes: jest.fn(),
+      fetchItems: jest.fn(),
+      isLoading: false,
+      error: null,
+    }),
+    ConstantsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
 // Mock ResizablePlayerLayout to render a deterministic marker
-jest.mock('@/components/player-stats/ResizablePlayerLayout', () => ({
+jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () => ({
   ResizablePlayerLayout: (props: any) => (
     <div data-testid="player-layout" data-view-mode={props.viewMode}>layout</div>
   ),

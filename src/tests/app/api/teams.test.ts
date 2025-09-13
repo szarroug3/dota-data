@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/teams/[id]/route';
 import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
+import { DotabuffTeam } from '@/types/external-apis';
 
 // Mock external dependencies
 jest.mock('@/lib/api/dotabuff/teams', () => ({
@@ -10,20 +11,19 @@ jest.mock('@/lib/api/dotabuff/teams', () => ({
 
 const mockFetchDotabuffTeam = fetchDotabuffTeam as jest.MockedFunction<typeof fetchDotabuffTeam>;
 
-// Mock data
-const mockTeam = {
+const mockTeam: DotabuffTeam = {
   id: '9517508',
   name: 'Team Spirit',
-  matches: [
-    {
-      matchId: '8054301932',
-      result: 'won' as const,
+  matches: {
+    8054301932: {
+      matchId: 8054301932,
+      result: 'won',
       duration: 2400,
       opponentName: 'Team Liquid',
       leagueId: '16435',
       startTime: 1640995200
     }
-  ]
+  }
 };
 
 describe('Teams API', () => {

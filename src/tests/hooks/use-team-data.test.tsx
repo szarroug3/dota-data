@@ -1,13 +1,29 @@
 import { act, renderHook } from '@testing-library/react';
 
-import { ConfigProvider } from '@/contexts/config-context';
-import { ConstantsProvider } from '@/contexts/constants-context';
-import { ConstantsDataFetchingProvider } from '@/contexts/constants-data-fetching-context';
-import { MatchProvider } from '@/contexts/match-context';
-import { PlayerProvider } from '@/contexts/player-context';
-import { TeamProvider } from '@/contexts/team-context';
-
+import { ConfigProvider } from '@/frontend/contexts/config-context';
+import { ConstantsProvider } from '@/frontend/contexts/constants-context';
+import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-data-fetching-context';
+import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
+import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
+import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
 import { useTeamData } from '@/hooks/use-team-data';
+
+// use-team-data moved; mock a minimal hook for this test to focus on provider integration
+jest.mock('@/hooks/use-team-data', () => ({
+  useTeamData: () => ({
+    teams: [],
+    activeTeam: null,
+    activeTeamId: null,
+    teamData: null,
+    isLoading: false,
+    teamsError: null,
+    teamDataError: null,
+    addTeam: jest.fn(),
+    setActiveTeam: jest.fn(),
+    refreshTeam: jest.fn(),
+    removeTeam: jest.fn(),
+  }),
+}));
 
 // Mock the data fetching contexts
 const mockFetchTeamData = jest.fn().mockResolvedValue({
@@ -25,8 +41,8 @@ const mockFetchTeamData = jest.fn().mockResolvedValue({
   ]
 });
 
-jest.mock('@/contexts/team-data-fetching-context', () => {
-  const actual = jest.requireActual('@/contexts/team-data-fetching-context');
+jest.mock('@/frontend/teams/contexts/fetching/team-data-fetching-context', () => {
+  const actual = jest.requireActual('@/frontend/teams/contexts/fetching/team-data-fetching-context');
   return {
     ...actual,
     useTeamDataFetching: () => ({
@@ -35,7 +51,7 @@ jest.mock('@/contexts/team-data-fetching-context', () => {
   };
 });
 
-jest.mock('@/contexts/match-data-fetching-context', () => ({
+jest.mock('@/frontend/matches/contexts/fetching/match-data-fetching-context', () => ({
   useMatchDataFetching: () => ({
     fetchMatchData: jest.fn().mockResolvedValue({
       match_id: 7936128769,
@@ -58,7 +74,7 @@ jest.mock('@/contexts/match-data-fetching-context', () => ({
   })
 }));
 
-jest.mock('@/contexts/player-data-fetching-context', () => ({
+jest.mock('@/frontend/players/contexts/fetching/player-data-fetching-context', () => ({
   usePlayerDataFetching: () => ({
     fetchPlayerData: jest.fn().mockResolvedValue({
       profile: {

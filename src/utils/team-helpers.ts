@@ -34,6 +34,8 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
     },
     timeAdded: new Date().toISOString(),
     matches: {},
+    manualMatches: {},
+    manualPlayers: [],
     players: [],
     performance: {
       totalMatches: 0,
@@ -77,12 +79,21 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
  * Determine team side from match data
  */
 export function determineTeamSideFromMatch(match: Match, teamId: number): 'radiant' | 'dire' {
-  if (match.radiant.id === teamId) {
-    return 'radiant';
-  } else if (match.dire.id === teamId) {
-    return 'dire';
+  // Support extended shape that may include top-level team ids (used in tests)
+  type MatchWithTeamIds = Match & { radiantTeamId?: number; direTeamId?: number };
+  const extended = match as MatchWithTeamIds;
+
+  const candidates: Array<{ id: number | undefined; side: 'radiant' | 'dire' }> = [
+    { id: extended.radiantTeamId ?? match.radiant?.id, side: 'radiant' },
+    { id: extended.direTeamId ?? match.dire?.id, side: 'dire' }
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate.id === 'number' && candidate.id === teamId) {
+      return candidate.side;
+    }
   }
-  
+
   // If we can't determine the side, throw an error
   throw new Error(`Could not determine team side for team ${teamId} in match ${match.id}`);
 }

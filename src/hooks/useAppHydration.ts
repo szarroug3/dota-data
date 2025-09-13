@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useConfigContext } from '@/contexts/config-context';
-import { useConstantsContext } from '@/contexts/constants-context';
-import { useMatchContext } from '@/contexts/match-context';
-import { useTeamContext } from '@/contexts/team-context';
+import { useConfigContext } from '@/frontend/contexts/config-context';
+import { useConstantsContext } from '@/frontend/contexts/constants-context';
+import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
+import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 
 /**
  * Hook for app-wide data hydration

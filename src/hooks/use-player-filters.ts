@@ -8,6 +8,53 @@ export interface PlayerFilters {
   sortDirection: 'asc' | 'desc';
 }
 
+const compareNumbers = (a: number, b: number) => a - b;
+const compareStrings = (a: string, b: string) => a.localeCompare(b);
+
+function buildComparator(filters: PlayerFilters) {
+  const flip = (cmp: number) => (filters.sortDirection === 'asc' ? cmp : -cmp);
+  switch (filters.sortBy) {
+    case 'name':
+      return (a: Player, b: Player) => {
+        const av = a.profile.profile.personaname.toLowerCase();
+        const bv = b.profile.profile.personaname.toLowerCase();
+        return flip(compareStrings(av, bv));
+      };
+    case 'rank':
+      return (a: Player, b: Player) => {
+        const av = a.profile.rank_tier || 0;
+        const bv = b.profile.rank_tier || 0;
+        return flip(compareNumbers(av, bv));
+      };
+    case 'games':
+      return (a: Player, b: Player) => {
+        const av = (a.wl.win + a.wl.lose) || 0;
+        const bv = (b.wl.win + b.wl.lose) || 0;
+        return flip(compareNumbers(av, bv));
+      };
+    case 'winRate':
+      return (a: Player, b: Player) => {
+        const aGames = (a.wl.win + a.wl.lose) || 1;
+        const bGames = (b.wl.win + b.wl.lose) || 1;
+        const av = (a.wl.win / aGames) * 100;
+        const bv = (b.wl.win / bGames) * 100;
+        return flip(compareNumbers(av, bv));
+      };
+    case 'heroes':
+      return (a: Player, b: Player) => {
+        const av = a.heroes?.length || 0;
+        const bv = b.heroes?.length || 0;
+        return flip(compareNumbers(av, bv));
+      };
+    default:
+      return (a: Player, b: Player) => {
+        const av = (a.profile.profile.personaname || '').toLowerCase();
+        const bv = (b.profile.profile.personaname || '').toLowerCase();
+        return flip(compareStrings(av, bv));
+      };
+  }
+}
+
 export function usePlayerFilters(players: Player[]) {
   const [filters, setFilters] = useState<PlayerFilters>({
     search: '',
@@ -20,66 +67,17 @@ export function usePlayerFilters(players: Player[]) {
   }, []);
 
   const filteredAndSortedPlayers = useMemo(() => {
-    let filtered = players;
+    const searchTerm = filters.search.trim().toLowerCase();
+    const filtered = searchTerm
+      ? players.filter((player) => {
+          const persona = player.profile.profile.personaname?.toLowerCase?.() || '';
+          const realName = player.profile.profile.name ? player.profile.profile.name.toLowerCase() : '';
+          return persona.includes(searchTerm) || realName.includes(searchTerm);
+        })
+      : players;
 
-    // Apply search filter
-    if (filters.search.trim()) {
-      const searchTerm = filters.search.toLowerCase().trim();
-      filtered = filtered.filter(player => 
-        player.profile.profile.personaname.toLowerCase().includes(searchTerm) ||
-        player.profile.profile.name.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (filters.sortBy) {
-        case 'name': {
-          aValue = a.profile.profile.personaname.toLowerCase();
-          bValue = b.profile.profile.personaname.toLowerCase();
-          break;
-        }
-        case 'rank': {
-          aValue = a.rank_tier || 0;
-          bValue = b.rank_tier || 0;
-          break;
-        }
-        case 'games': {
-          aValue = (a.wl.win + a.wl.lose) || 0;
-          bValue = (b.wl.win + b.wl.lose) || 0;
-          break;
-        }
-        case 'winRate': {
-          const aGames = (a.wl.win + a.wl.lose) || 1;
-          const bGames = (b.wl.win + b.wl.lose) || 1;
-          aValue = (a.wl.win / aGames) * 100;
-          bValue = (b.wl.win / bGames) * 100;
-          break;
-        }
-        case 'heroes': {
-          aValue = a.heroes?.length || 0;
-          bValue = b.heroes?.length || 0;
-          break;
-        }
-        default: {
-          aValue = a.profile.profile.personaname.toLowerCase();
-          bValue = b.profile.profile.personaname.toLowerCase();
-        }
-      }
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        const comparison = aValue.localeCompare(bValue);
-        return filters.sortDirection === 'asc' ? comparison : -comparison;
-      } else {
-        const comparison = (aValue as number) - (bValue as number);
-        return filters.sortDirection === 'asc' ? comparison : -comparison;
-      }
-    });
-
-    return sorted;
+    const comparator = buildComparator(filters);
+    return [...filtered].sort(comparator);
   }, [players, filters]);
 
   const filterStats = useMemo(() => {

@@ -11,11 +11,11 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  { ignores: [".next/**", ".backup/**", "coverage/**"] },
+  { ignores: [".next/**", ".backup/**", "coverage/**", "src/components/ui/**"] },
   // Only lint source files, never .next or build output
   {
     files: ["src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**"],
+    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**", "src/components/ui/**"],
     plugins: { js },
     extends: ["js/recommended"],
     settings: {
@@ -31,7 +31,7 @@ export default defineConfig([
   },
   {
     files: ["src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**"],
+    ignores: ["node_modules/**", "dist/**", "build/**", "out/**", ".next/**", ".backup/**", "coverage/**", "src/components/ui/**"],
     languageOptions: { globals: {...globals.browser, ...globals.node} }
   },
   tseslint.configs.recommended,
@@ -103,6 +103,35 @@ export default defineConfig([
       ],
       'import/no-unresolved': 'error',
       'import/no-duplicates': 'error',
+      // Enforce frontend layering boundaries
+      'import/no-restricted-paths': [
+        'error',
+        {
+          zones: [
+            // Frontend must not import backend code
+            { target: 'src/frontend', from: 'src/backend' },
+            { target: 'src/frontend', from: 'src/app/api' },
+
+            // Stateless components: forbid importing contexts or API
+            { target: 'src/frontend/**/components/stateless', from: 'src/frontend/**/contexts' },
+            { target: 'src/frontend/**/components/stateless', from: 'src/frontend/**/api' },
+            { target: 'src/frontend/**/components/stateless', from: 'src/frontend/lib/api-client' },
+
+            // Containers: allow state contexts only (block fetching and api)
+            { target: 'src/frontend/**/components/containers', from: 'src/frontend/**/contexts/fetching' },
+            { target: 'src/frontend/**/components/containers', from: 'src/frontend/**/api' },
+            { target: 'src/frontend/**/components/containers', from: 'src/frontend/lib/api-client' },
+
+            // State contexts: forbid direct API access
+            { target: 'src/frontend/**/contexts/state', from: 'src/frontend/**/api' },
+            { target: 'src/frontend/**/contexts/state', from: 'src/frontend/lib/api-client' },
+
+            // Fetching contexts: forbid importing UI
+            { target: 'src/frontend/**/contexts/fetching', from: 'src/frontend/**/components' },
+            { target: 'src/frontend/**/contexts/fetching', from: 'src/app' },
+          ],
+        },
+      ],
       
       // General rules
       'prefer-const': 'warn',

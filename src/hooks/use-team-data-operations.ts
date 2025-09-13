@@ -7,7 +7,7 @@
 
 import { useCallback } from 'react';
 
-import type { TeamDataFetchingContextValue } from '@/contexts/team-data-fetching-context';
+import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
 import {
   createTeamLeagueOperationKey,
   useAbortController
@@ -88,8 +88,6 @@ function handleTeamOperationError(
 function checkForOngoingOperation(
   abortController: ReturnType<typeof useAbortController>,
   operationKey: string,
-  teamId: number,
-  leagueId: number
 ): boolean {
   if (abortController.hasOngoingOperation(operationKey)) {
     return true;
@@ -165,7 +163,7 @@ export function useProcessTeamData(
     const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
     
     // Check for ongoing operations
-    if (checkForOngoingOperation(abortController, operationKey, teamId, leagueId)) {
+    if (checkForOngoingOperation(abortController, operationKey)) {
       return;
     }
     

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { usePlayerContext } from '@/contexts/player-context';
+import { usePlayerContext } from '@/frontend/players/contexts/state/player-context';
 
 export function usePlayersArray() {
   const { players, isLoading } = usePlayerContext();

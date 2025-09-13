@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { AddTeamForm } from '@/components/dashboard/AddTeamForm';
+import { AddTeamForm } from '@/frontend/teams/components/stateless/AddTeamForm';
 
 describe('AddTeamForm', () => {
   const mockOnAddTeam = jest.fn();

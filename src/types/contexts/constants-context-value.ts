@@ -49,8 +49,10 @@ export interface ConstantsContextValue {
   // Hero data - mapped by hero name for easier lookup
   heroesByName: Record<string, Hero>; // Key is hero name (e.g., "npc_dota_hero_lion")
   
-  // Item data - mapped by item ID for easier lookup
-  items: Record<number, Item>; // Key is item ID as number
+  // Item data exposed for UI/tests - keyed by canonical item name (e.g., 'item_blink')
+  items: Record<string, Item>;
+  // Item data keyed by numeric ID for match data lookup
+  itemsById: Record<number, Item>;
   
   // Loading states
   isLoadingHeroes: boolean;
@@ -66,7 +68,7 @@ export interface ConstantsContextValue {
   clearErrors: () => void;
   
   // Utility functions
-  getItemById: (itemId: number) => Item | undefined;
+  getItemById: (itemId: number | string) => Item | undefined;
   getHeroById: (heroId: string) => Hero | undefined;
   getHeroByName: (heroName: string) => Hero | undefined;
 }

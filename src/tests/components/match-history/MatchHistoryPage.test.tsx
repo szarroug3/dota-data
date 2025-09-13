@@ -5,21 +5,24 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import { MatchHistoryPage } from '@/components/match-history/MatchHistoryPage';
-import { ConfigProvider } from '@/contexts/config-context';
-import { MatchProvider } from '@/contexts/match-context';
-import { MatchDataFetchingProvider } from '@/contexts/match-data-fetching-context';
-import { PlayerProvider } from '@/contexts/player-context';
-import { PlayerDataFetchingProvider } from '@/contexts/player-data-fetching-context';
-import { TeamProvider } from '@/contexts/team-context';
-import { TeamDataFetchingProvider } from '@/contexts/team-data-fetching-context';
+import { ConfigProvider } from '@/frontend/contexts/config-context';
+import { MatchHistoryPage } from '@/frontend/matches/components/containers/MatchHistoryPage';
+import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
+import { PlayerDataFetchingProvider } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
+import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
+import { TeamDataFetchingProvider } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
+import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
 
-import { DataCoordinatorProvider } from '@/contexts/data-coordinator-context';
-import { HeroProvider } from '@/contexts/hero-context';
-import { HeroDataFetchingProvider } from '@/contexts/hero-data-fetching-context';
+// Remove data coordinator dependency (no longer used)
+const DataCoordinatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
+
+// Remove hero contexts from test since not required by the page after split
+const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
+const HeroDataFetchingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
 // Mock the match history components
-jest.mock('@/components/match-history/list/MatchListView', () => ({
+jest.mock('@/frontend/matches/components/list/MatchListView', () => ({
   MatchListView: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
     <div data-testid="match-list-view">
       <div data-testid="current-view-mode">{viewMode}</div>
@@ -46,23 +49,41 @@ jest.mock('@/components/match-history/list/MatchListView', () => ({
   MatchListViewMode: 'list' as const
 }));
 
+// Mock config context to provide an active team so the page renders main layout
+jest.mock('@/frontend/contexts/config-context', () => ({
+  useConfigContext: () => ({
+    activeTeam: { teamId: 'team1', leagueId: 'league1' },
+    getTeams: () => new Map(),
+    isLoading: false,
+    config: { preferredMatchlistView: 'list' },
+    setTeams: jest.fn(),
+    setActiveTeam: jest.fn(),
+    updateConfig: jest.fn(),
+    resetConfig: jest.fn(),
+    clearErrors: jest.fn(),
+    error: null,
+    isSaving: false,
+  }),
+  ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock other components to simplify the test
-jest.mock('@/components/match-history/common/EmptyState', () => ({
+jest.mock('@/frontend/matches/components/stateless/common/EmptyState', () => ({
   EmptyState: () => <div data-testid="empty-state">Empty State</div>
 }));
 
-jest.mock('@/components/match-history/common/ErrorState', () => ({
+jest.mock('@/frontend/matches/components/stateless/common/ErrorState', () => ({
   ErrorState: () => <div data-testid="error-state">Error State</div>
 }));
 
 
 
-jest.mock('@/components/match-history/list/HiddenMatchesModal', () => ({
+jest.mock('@/frontend/matches/components/stateless/HiddenMatchesModal', () => ({
   HiddenMatchesModal: () => <div data-testid="hidden-matches-modal">Hidden Modal</div>
 }));
 
 // Mock the ResizableMatchLayout component to avoid the react-resizable-panels issue
-jest.mock('@/components/match-history/ResizableMatchLayout', () => ({
+jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () => ({
   ResizableMatchLayout: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
     <div data-testid="resizable-match-layout">
       <div data-testid="current-view-mode">{viewMode}</div>
@@ -88,33 +109,24 @@ jest.mock('@/components/match-history/ResizableMatchLayout', () => ({
   ),
 }));
 
-// Mock the hero context to prevent API calls during tests
-jest.mock('@/contexts/hero-context', () => ({
-  useHeroContext: () => ({
-    heroes: [],
+// Mock constants context expected by HeroSummaryTable
+jest.mock('@/frontend/contexts/constants-context', () => ({
+  useConstantsContext: () => ({
+    heroes: { 1: { id: 1, name: 'Hero' } },
+    items: { 1: { id: 1, name: 'Item' } },
+    fetchHeroes: jest.fn(),
+    fetchItems: jest.fn(),
     isLoading: false,
     error: null,
-    refreshHeroes: jest.fn(),
-    clearError: jest.fn(),
   }),
-  HeroProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ConstantsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock the hero data fetching context
-jest.mock('@/contexts/hero-data-fetching-context', () => ({
-  useHeroDataFetching: () => ({
-    heroes: new Map(),
-    isLoading: false,
-    errors: new Map(),
-    fetchHero: jest.fn(),
-    refreshHero: jest.fn(),
-    clearError: jest.fn(),
-  }),
-  HeroDataFetchingProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
+// Mock the hero context to prevent API calls during tests
+// No hero contexts needed in this test
 
 // Mock the team context to provide some teams for testing
-jest.mock('@/contexts/team-context', () => ({
+jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
   useTeamContext: () => ({
     teamDataList: [
       {
@@ -128,6 +140,17 @@ jest.mock('@/contexts/team-context', () => ({
       }
     ],
     activeTeam: { teamId: 'team1', leagueId: 'league1' },
+    selectedTeamId: { teamId: 1, leagueId: 1 },
+    teams: new Map<string, any>([
+      ['1-1', {
+        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
+        league: { id: 'league1', name: 'Test League' },
+        matches: { 123: { side: 'radiant', pickOrder: 'first' } },
+        players: [],
+        manualMatches: {},
+        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
+      }]
+    ]),
     isLoading: false,
     error: null,
     addTeam: jest.fn(),
@@ -138,12 +161,33 @@ jest.mock('@/contexts/team-context', () => ({
     getTeamPlayersForLeague: jest.fn(),
     teamExists: jest.fn(),
     clearError: jest.fn(),
+    getSelectedTeam: () => ({
+      team: { id: 'team1', name: 'Test Team' },
+      league: { id: 'league1', name: 'Test League' },
+      matches: { 123: { side: 'radiant', pickOrder: 'first' } },
+      manualMatches: {},
+      manualPlayers: [],
+      players: [],
+      performance: {} as any,
+    }),
+    addMatchToTeam: jest.fn().mockResolvedValue(undefined),
+    getAllTeams: () => ([
+      {
+        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
+        league: { id: 'league1', name: 'Test League' },
+        matches: [
+          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
+        ],
+        players: [],
+        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
+      }
+    ]),
   }),
   TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock the match context to provide matches
-jest.mock('@/contexts/match-context', () => ({
+jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
   useMatchContext: () => ({
     matches: [
       { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
@@ -171,6 +215,7 @@ jest.mock('@/contexts/match-context', () => ({
     refreshHeroStats: jest.fn(),
     clearErrors: jest.fn(),
     updatePreferences: jest.fn(),
+    getMatch: (id: number) => ({ id, teamId: 'team1', leagueId: 'league1' }),
   }),
   MatchProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

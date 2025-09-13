@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import type { PlayerDataFetchingContextValue } from '@/contexts/player-data-fetching-context';
+import type { PlayerDataFetchingContextValue } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
 import { abortPlayerOperations, createPlayerOperationKey, useAbortController, type AbortControllerManager } from '@/hooks/use-abort-controller';
 import type { Player, PlayerProcessing, PlayerState } from '@/types/contexts/player-context-value';
 import { handleOperationError, updateMapItemError } from '@/utils/error-handling';

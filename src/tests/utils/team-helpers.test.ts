@@ -19,12 +19,21 @@ import {
 // MOCK DATA
 // ============================================================================
 
-const mockMatch: Match = {
+type MatchWithTeamIds = Match & { radiantTeamId?: number; direTeamId?: number };
+const mockMatch: MatchWithTeamIds = {
   id: 123,
   date: '2024-01-01T00:00:00.000Z',
   duration: 1800,
   radiantTeamId: 12345,
   direTeamId: 67890,
+  radiant: {
+    id: 12345,
+    name: 'Radiant Team'
+  },
+  dire: {
+    id: 67890,
+    name: 'Dire Team'
+  },
   draft: {
     radiantPicks: [],
     direPicks: [],
@@ -37,7 +46,7 @@ const mockMatch: Match = {
         accountId: 111111111,
         playerName: 'Player 1',
         hero: { id: '1', name: 'Anti-Mage', localizedName: 'Anti-Mage', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape'], imageUrl: '/heroes/anti-mage.png' },
-        role: 'carry',
+        role: 'Carry',
         stats: {
           kills: 10,
           deaths: 2,
@@ -60,7 +69,7 @@ const mockMatch: Match = {
         accountId: 222222222,
         playerName: 'Player 2',
         hero: { id: '2', name: 'Axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'durable'], imageUrl: '/heroes/axe.png' },
-        role: 'support',
+        role: 'Support',
         stats: {
           kills: 2,
           deaths: 8,
@@ -83,7 +92,7 @@ const mockMatch: Match = {
         accountId: 333333333,
         playerName: 'Player 3',
         hero: { id: '3', name: 'Crystal Maiden', localizedName: 'Crystal Maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/crystal-maiden.png' },
-        role: 'mid',
+        role: 'Mid',
         stats: {
           kills: 15,
           deaths: 5,
@@ -106,7 +115,7 @@ const mockMatch: Match = {
         accountId: 444444444,
         playerName: 'Player 4',
         hero: { id: '4', name: 'Lina', localizedName: 'Lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['carry', 'support'], imageUrl: '/heroes/lina.png' },
-        role: 'offlane',
+        role: 'Offlane',
         stats: {
           kills: 8,
           deaths: 6,
@@ -129,7 +138,7 @@ const mockMatch: Match = {
         accountId: 555555555,
         playerName: 'Player 5',
         hero: { id: '5', name: 'Lion', localizedName: 'Lion', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/lion.png' },
-        role: 'support',
+        role: 'Support',
         stats: {
           kills: 1,
           deaths: 10,
@@ -154,7 +163,7 @@ const mockMatch: Match = {
         accountId: 666666666,
         playerName: 'Player 6',
         hero: { id: '6', name: 'Phantom Assassin', localizedName: 'Phantom Assassin', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape'], imageUrl: '/heroes/phantom-assassin.png' },
-        role: 'carry',
+        role: 'Carry',
         stats: {
           kills: 12,
           deaths: 4,
@@ -177,7 +186,7 @@ const mockMatch: Match = {
         accountId: 777777777,
         playerName: 'Player 7',
         hero: { id: '7', name: 'Witch Doctor', localizedName: 'Witch Doctor', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/witch-doctor.png' },
-        role: 'support',
+        role: 'Support',
         stats: {
           kills: 3,
           deaths: 9,
@@ -200,7 +209,7 @@ const mockMatch: Match = {
         accountId: 888888888,
         playerName: 'Player 8',
         hero: { id: '8', name: 'Storm Spirit', localizedName: 'Storm Spirit', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['carry', 'escape'], imageUrl: '/heroes/storm-spirit.png' },
-        role: 'mid',
+        role: 'Mid',
         stats: {
           kills: 18,
           deaths: 7,
@@ -223,7 +232,7 @@ const mockMatch: Match = {
         accountId: 999999999,
         playerName: 'Player 9',
         hero: { id: '9', name: 'Tidehunter', localizedName: 'Tidehunter', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'durable'], imageUrl: '/heroes/tidehunter.png' },
-        role: 'offlane',
+        role: 'Offlane',
         stats: {
           kills: 6,
           deaths: 8,
@@ -246,7 +255,7 @@ const mockMatch: Match = {
         accountId: 101010101,
         playerName: 'Player 10',
         hero: { id: '10', name: 'Shadow Shaman', localizedName: 'Shadow Shaman', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/shadow-shaman.png' },
-        role: 'support',
+        role: 'Support',
         stats: {
           kills: 2,
           deaths: 12,
@@ -358,7 +367,9 @@ describe('Team Helpers', () => {
         team: { id: 12345, name: 'Test Team' },
         league: { id: 67890, name: 'Test League' },
         timeAdded: new Date().toISOString(),
-        matches: [],
+        matches: {},
+        manualMatches: {},
+        manualPlayers: [],
         players: [],
         performance: {
           totalMatches: 0,
@@ -378,16 +389,16 @@ describe('Team Helpers', () => {
       };
 
       const matchesWithCorrectSides: Record<number, TeamMatchParticipation> = {
-        1: { matchId: 1, side: 'radiant', pickOrder: 'first' },
-        2: { matchId: 2, side: 'dire', pickOrder: 'second' },
-        3: { matchId: 3, side: 'radiant', pickOrder: 'first' }
+        1: { matchId: 1, side: 'radiant', pickOrder: 'first', result: 'won', duration: 0, opponentName: '', leagueId: '0', startTime: 0 },
+        2: { matchId: 2, side: 'dire', pickOrder: 'second', result: 'lost', duration: 0, opponentName: '', leagueId: '0', startTime: 0 },
+        3: { matchId: 3, side: 'radiant', pickOrder: 'first', result: 'won', duration: 0, opponentName: '', leagueId: '0', startTime: 0 }
       };
 
       const originalTeamData = {
         matches: [
-          { matchId: 123, result: 'radiant' },
-          { matchId: 456, result: 'dire' },
-          { matchId: 789, result: 'radiant' }
+          { matchId: 1, result: 'won' },
+          { matchId: 2, result: 'lost' },
+          { matchId: 3, result: 'won' }
         ]
       };
 
@@ -396,8 +407,8 @@ describe('Team Helpers', () => {
 
       expect(result.matches).toEqual(matchesWithCorrectSides);
       expect(result.performance.totalMatches).toBe(3);
-      expect(result.performance.totalWins).toBe(0);
-      expect(result.performance.totalLosses).toBe(0);
+      expect(result.performance.totalWins).toBe(2);
+      expect(result.performance.totalLosses).toBe(1);
     });
 
     it('should handle empty matches array', () => {
@@ -405,7 +416,9 @@ describe('Team Helpers', () => {
         team: { id: 12345, name: 'Test Team' },
         league: { id: 67890, name: 'Test League' },
         timeAdded: new Date().toISOString(),
-        matches: [],
+        matches: {},
+        manualMatches: {},
+        manualPlayers: [],
         players: [],
         performance: {
           totalMatches: 5,

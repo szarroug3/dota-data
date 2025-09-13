@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Component } from 'react';
 
-import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
+import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 
 // Helpers
 class ThrowError extends Component<{ shouldThrow?: boolean }> {
@@ -213,7 +213,7 @@ describe('ErrorBoundary - Dark mode support', () => {
       </ErrorBoundary>
     );
     const heading = screen.getByText('Something went wrong');
-    const description = screen.getByText(/We encountered an unexpected error/);
+    const description = screen.getByText(/Uhhhh complain to @FatSloth/);
     expect(heading).toHaveClass('text-foreground');
     expect(description).toHaveClass('text-muted-foreground');
     consoleSpy.mockRestore();

@@ -2,13 +2,15 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
-import { ConfigProvider } from '@/contexts/config-context';
-import { MatchProvider } from '@/contexts/match-context';
-import { PlayerProvider } from '@/contexts/player-context';
-import { TeamProvider } from '@/contexts/team-context';
-import { ThemeContextProvider } from '@/contexts/theme-context';
+import { ConfigProvider } from '@/frontend/contexts/config-context';
+import { ThemeContextProvider } from '@/frontend/contexts/theme-context';
+import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
+import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
+import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
 
-import { HeroProvider } from '@/contexts/hero-context';
+// In tests we don't need hero context wiring here; keep wrapper lean
+const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
 // Mock window.matchMedia for next-themes
 Object.defineProperty(window, 'matchMedia', {
@@ -55,19 +57,21 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       defaultTheme="system"
       enableSystem
     >
-      <ThemeContextProvider>
-        <ConfigProvider>
+      <ConfigProvider>
+        <ThemeContextProvider>
           <TeamProvider>
-            <MatchProvider>
-              <PlayerProvider>
-                <HeroProvider>
-                  {children}
-                </HeroProvider>
-              </PlayerProvider>
-            </MatchProvider>
+            <MatchDataFetchingProvider>
+              <MatchProvider>
+                <PlayerProvider>
+                  <HeroProvider>
+                    {children}
+                  </HeroProvider>
+                </PlayerProvider>
+              </MatchProvider>
+            </MatchDataFetchingProvider>
           </TeamProvider>
-        </ConfigProvider>
-      </ThemeContextProvider>
+        </ThemeContextProvider>
+      </ConfigProvider>
     </ThemeProvider>
   );
 };

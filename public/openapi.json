@@ -1372,8 +1372,8 @@
     },
     "/api/heroes": {
       "get": {
-        "summary": "Fetch and process Dota 2 heroes data",
-        "description": "Retrieves all Dota 2 heroes with optional filtering by complexity, role, primary attribute, and tier. Supports caching and rate limiting.",
+        "summary": "Fetch Dota 2 heroes data from OpenDota API",
+        "description": "Retrieves raw heroes data from OpenDota API including hero attributes, roles, and statistics.",
         "tags": [
           "Heroes"
         ],
@@ -1386,56 +1386,6 @@
               "default": false
             },
             "description": "Force refresh of cached data"
-          },
-          {
-            "in": "query",
-            "name": "complexity",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "beginner",
-                "intermediate",
-                "advanced"
-              ]
-            },
-            "description": "Filter heroes by complexity level"
-          },
-          {
-            "in": "query",
-            "name": "role",
-            "schema": {
-              "type": "string"
-            },
-            "description": "Filter heroes by role (partial match)"
-          },
-          {
-            "in": "query",
-            "name": "primaryAttribute",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "strength",
-                "agility",
-                "intelligence",
-                "universal"
-              ]
-            },
-            "description": "Filter heroes by primary attribute"
-          },
-          {
-            "in": "query",
-            "name": "tier",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "S",
-                "A",
-                "B",
-                "C",
-                "D"
-              ]
-            },
-            "description": "Filter heroes by tier ranking"
           }
         ],
         "responses": {
@@ -1444,118 +1394,145 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "localizedName": {
-                            "type": "string"
-                          },
-                          "primaryAttribute": {
-                            "type": "string"
-                          },
-                          "attackType": {
-                            "type": "string"
-                          },
-                          "roles": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "complexity": {
-                            "type": "string"
-                          },
-                          "tier": {
-                            "type": "string"
-                          },
-                          "image": {
-                            "type": "string"
-                          },
-                          "icon": {
-                            "type": "string"
-                          }
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "localized_name": {
+                        "type": "string"
+                      },
+                      "primary_attr": {
+                        "type": "string"
+                      },
+                      "attack_type": {
+                        "type": "string"
+                      },
+                      "roles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
                         }
-                      }
-                    },
-                    "count": {
-                      "type": "integer",
-                      "description": "Number of heroes in filtered results"
-                    },
-                    "totalCount": {
-                      "type": "integer",
-                      "description": "Total number of heroes available"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "filters": {
-                      "type": "object",
-                      "properties": {
-                        "complexity": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "role": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "primaryAttribute": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "tier": {
-                          "type": "string",
-                          "nullable": true
-                        }
+                      },
+                      "img": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "base_health": {
+                        "type": "integer"
+                      },
+                      "base_mana": {
+                        "type": "integer"
+                      },
+                      "base_armor": {
+                        "type": "integer"
+                      },
+                      "base_attack_min": {
+                        "type": "integer"
+                      },
+                      "base_attack_max": {
+                        "type": "integer"
+                      },
+                      "move_speed": {
+                        "type": "integer"
+                      },
+                      "base_attack_time": {
+                        "type": "number"
+                      },
+                      "attack_point": {
+                        "type": "number"
+                      },
+                      "attack_range": {
+                        "type": "integer"
+                      },
+                      "projectile_speed": {
+                        "type": "integer"
+                      },
+                      "turn_rate": {
+                        "type": "number"
+                      },
+                      "cm_enabled": {
+                        "type": "boolean"
+                      },
+                      "legs": {
+                        "type": "integer"
+                      },
+                      "day_vision": {
+                        "type": "integer"
+                      },
+                      "night_vision": {
+                        "type": "integer"
+                      },
+                      "hero_id": {
+                        "type": "integer"
+                      },
+                      "turbo_picks": {
+                        "type": "integer"
+                      },
+                      "turbo_wins": {
+                        "type": "integer"
+                      },
+                      "pro_ban": {
+                        "type": "integer"
+                      },
+                      "pro_win": {
+                        "type": "integer"
+                      },
+                      "pro_pick": {
+                        "type": "integer"
                       }
                     }
-                  }
-                },
-                "example": {
-                  "data": [
+                  },
+                  "example": [
                     {
                       "id": 1,
-                      "name": "npc_dota_hero_antimage",
-                      "localizedName": "Anti-Mage",
-                      "primaryAttribute": "agility",
-                      "attackType": "Melee",
+                      "name": "antimage",
+                      "localized_name": "Anti-Mage",
+                      "primary_attr": "agi",
+                      "attack_type": "Melee",
                       "roles": [
                         "Carry",
                         "Escape",
                         "Nuker"
                       ],
-                      "complexity": "intermediate",
-                      "tier": "A",
-                      "image": "https://cdn.dota2.com/apps/dota2/images/heroes/antimage_full.png",
-                      "icon": "https://cdn.dota2.com/apps/dota2/images/heroes/antimage_icon.png"
+                      "img": "/apps/dota2/images/dota_react/heroes/antimage.png",
+                      "icon": "/apps/dota2/images/dota_react/heroes/icons/antimage.png",
+                      "base_health": 200,
+                      "base_mana": 75,
+                      "base_armor": 0,
+                      "base_attack_min": 29,
+                      "base_attack_max": 33,
+                      "move_speed": 310,
+                      "base_attack_time": 1.4,
+                      "attack_point": 0.3,
+                      "attack_range": 150,
+                      "projectile_speed": 0,
+                      "turn_rate": 0.8,
+                      "cm_enabled": true,
+                      "legs": 2,
+                      "day_vision": 1800,
+                      "night_vision": 800,
+                      "hero_id": 1,
+                      "turbo_picks": 12345,
+                      "turbo_wins": 6789,
+                      "pro_ban": 123,
+                      "pro_win": 45,
+                      "pro_pick": 67
                     }
-                  ],
-                  "count": 1,
-                  "totalCount": 123,
-                  "timestamp": "2024-01-01T00:00:00.000Z",
-                  "filters": {
-                    "complexity": null,
-                    "role": null,
-                    "primaryAttribute": null,
-                    "tier": null
-                  }
+                  ]
                 }
               }
             }
           },
-          "404": {
-            "description": "Heroes data not found",
+          "422": {
+            "description": "Invalid heroes data",
             "content": {
               "application/json": {
                 "schema": {
@@ -1573,9 +1550,9 @@
                   }
                 },
                 "example": {
-                  "error": "Data Not Found",
-                  "status": 404,
-                  "details": "Heroes data could not be found or loaded."
+                  "error": "Invalid heroes data",
+                  "status": 422,
+                  "details": "Heroes data is invalid or corrupted."
                 }
               }
             }
@@ -1625,7 +1602,339 @@
                   }
                 },
                 "example": {
-                  "error": "Failed to process heroes",
+                  "error": "Failed to fetch heroes",
+                  "status": 500,
+                  "details": "Unknown error occurred"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/items": {
+      "get": {
+        "summary": "Fetch Dota 2 items data from OpenDota API",
+        "description": "Retrieves raw items data from OpenDota API including item attributes, abilities, and statistics.",
+        "tags": [
+          "Items"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached data"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved items data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer"
+                      },
+                      "img": {
+                        "type": "string"
+                      },
+                      "dname": {
+                        "type": "string"
+                      },
+                      "qual": {
+                        "type": "string"
+                      },
+                      "cost": {
+                        "type": "integer"
+                      },
+                      "behavior": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "target_team": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      },
+                      "target_type": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      },
+                      "notes": {
+                        "type": "string"
+                      },
+                      "attrib": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ]
+                            },
+                            "display": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "mc": {
+                        "oneOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "hc": {
+                        "oneOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "cd": {
+                        "oneOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "lore": {
+                        "type": "string"
+                      },
+                      "components": {
+                        "oneOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          {
+                            "type": null
+                          }
+                        ]
+                      },
+                      "created": {
+                        "type": "boolean"
+                      },
+                      "charges": {
+                        "oneOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      },
+                      "abilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "hint": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "dispellable": {
+                        "type": "string"
+                      },
+                      "dmg_type": {
+                        "type": "string"
+                      },
+                      "bkbpierce": {
+                        "type": "string"
+                      },
+                      "tier": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "blink": {
+                    "id": 1,
+                    "img": "/apps/dota2/images/dota_react/items/blink.png?t=1593393829403",
+                    "dname": "Blink Dagger",
+                    "qual": "component",
+                    "cost": 2250,
+                    "behavior": "Point Target",
+                    "notes": "Self-casting will cause you to teleport in the direction of your team's fountain.",
+                    "attrib": [
+                      {
+                        "key": "blink_range",
+                        "value": "1200"
+                      },
+                      {
+                        "key": "blink_damage_cooldown",
+                        "value": "3.0"
+                      },
+                      {
+                        "key": "blink_range_clamp",
+                        "value": "960"
+                      }
+                    ],
+                    "mc": false,
+                    "hc": false,
+                    "cd": 15,
+                    "lore": "The fabled dagger used by the fastest assassin ever to walk the lands.",
+                    "components": null,
+                    "created": false,
+                    "charges": false,
+                    "abilities": [
+                      {
+                        "type": "active",
+                        "title": "Blink",
+                        "description": "Teleport to a target point up to 1200 units away. \n\nBlink Dagger cannot be used for 3 seconds after taking damage from an enemy hero or Roshan."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid items data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Invalid items data",
+                  "status": 422,
+                  "details": "Items data is invalid or corrupted."
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited by OpenDota API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Rate limited by OpenDota API",
+                  "status": 429,
+                  "details": "Too many requests to OpenDota API. Please try again later."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Failed to fetch items",
                   "status": 500,
                   "details": "Unknown error occurred"
                 }
@@ -1637,7 +1946,7 @@
     },
     "/api/leagues/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 league data",
+        "summary": "Fetch and process Dota 2 league data for Dota Scout Assistant",
         "description": "Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.",
         "tags": [
           "Leagues"
@@ -1952,7 +2261,7 @@
     "/api/matches/{id}/parse": {
       "post": {
         "summary": "Parse a Dota 2 match",
-        "description": "Initiates match parsing through a background job queue. Returns immediately with job status and polls for completion within the timeout period. Supports both QStash and in-memory queue backends.",
+        "description": "Initiates match parsing through OpenDota API and polls for completion. Returns parsed match data when complete.",
         "tags": [
           "Matches"
         ],
@@ -1965,20 +2274,6 @@
               "type": "string"
             },
             "description": "Match ID (numeric string)"
-          },
-          {
-            "in": "query",
-            "name": "priority",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "low",
-                "normal",
-                "high"
-              ],
-              "default": "normal"
-            },
-            "description": "Job priority in the queue"
           },
           {
             "in": "query",
@@ -1997,148 +2292,45 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "jobId": {
-                      "type": "string",
-                      "description": "Unique job identifier"
-                    },
-                    "status": {
-                      "type": "string",
-                      "enum": [
-                        "completed",
-                        "failed",
-                        "timeout"
-                      ],
-                      "description": "Final job status"
-                    },
-                    "matchId": {
-                      "type": "integer",
-                      "description": "Match ID that was parsed"
-                    },
-                    "parsed": {
-                      "type": "boolean",
-                      "description": "Whether the match was successfully parsed"
-                    },
-                    "data": {
-                      "type": "object",
-                      "description": "Parsed match data (when status is completed)"
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "processingTime": {
-                      "type": "integer",
-                      "description": "Time taken to complete parsing (in milliseconds)"
-                    },
-                    "backend": {
-                      "type": "string",
-                      "enum": [
-                        "qstash",
-                        "memory"
-                      ],
-                      "description": "Queue backend used for processing"
-                    },
-                    "error": {
-                      "type": "string",
-                      "description": "Error message (when status is failed or timeout)"
-                    },
-                    "mockMode": {
-                      "type": "boolean",
-                      "description": "Whether mock mode was used for processing"
-                    }
+                  "description": "Parsed match data from OpenDota API",
+                  "example": {
+                    "match_id": 8054301932,
+                    "radiant_win": true,
+                    "duration": 2150,
+                    "start_time": 1640995200,
+                    "game_mode": 1,
+                    "lobby_type": 7,
+                    "players": [
+                      {
+                        "account_id": 123456789,
+                        "hero_id": 1,
+                        "kills": 8,
+                        "deaths": 2,
+                        "assists": 12,
+                        "last_hits": 185,
+                        "denies": 15,
+                        "gold_per_min": 650,
+                        "xp_per_min": 720
+                      }
+                    ],
+                    "teamfights": [
+                      {
+                        "start": 600,
+                        "end": 900,
+                        "last_death": 850,
+                        "deaths": 3,
+                        "players": []
+                      }
+                    ],
+                    "picks_bans": [
+                      {
+                        "is_pick": true,
+                        "hero_id": 1,
+                        "team": 0,
+                        "order": 0
+                      }
+                    ]
                   }
-                },
-                "examples": {
-                  "completed": {
-                    "summary": "Successfully parsed match",
-                    "value": {
-                      "jobId": "match-parse-8054301932-1640995200000",
-                      "status": "completed",
-                      "matchId": 8054301932,
-                      "parsed": true,
-                      "data": {
-                        "matchId": "8054301932",
-                        "startTime": "2024-01-01T00:00:00.000Z",
-                        "duration": 2150,
-                        "radiantWin": true,
-                        "gameMode": "All Pick",
-                        "statistics": {
-                          "totalKills": 45,
-                          "radiantScore": 28,
-                          "direScore": 17
-                        }
-                      },
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "processingTime": 5000,
-                      "backend": "qstash"
-                    }
-                  },
-                  "failed": {
-                    "summary": "Failed to parse match",
-                    "value": {
-                      "jobId": "match-parse-8054301932-1640995200000",
-                      "status": "failed",
-                      "matchId": 8054301932,
-                      "error": "Match parsing failed",
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "processingTime": 15000
-                    }
-                  },
-                  "timeout": {
-                    "summary": "Parsing timed out",
-                    "value": {
-                      "jobId": "match-parse-8054301932-1640995200000",
-                      "status": "timeout",
-                      "matchId": 8054301932,
-                      "error": "Match parsing timed out",
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "processingTime": 60000
-                    }
-                  },
-                  "mock": {
-                    "summary": "Mock mode processing",
-                    "value": {
-                      "jobId": "match-parse-8054301932-1640995200000",
-                      "status": "completed",
-                      "matchId": 8054301932,
-                      "parsed": true,
-                      "mockMode": true,
-                      "data": {
-                        "matchId": "8054301932",
-                        "startTime": "2024-01-01T00:00:00.000Z",
-                        "duration": 2150
-                      },
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "processingTime": 0
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid match ID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "error": "Invalid match ID",
-                  "status": 400,
-                  "details": "Match ID must be a valid number"
                 }
               }
             }
@@ -2162,9 +2354,35 @@
                   }
                 },
                 "example": {
-                  "error": "Data Not Found",
+                  "error": "Match not found",
                   "status": 404,
                   "details": "Match with ID 8054301932 could not be found for parsing."
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Match parsing timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Match parsing timed out",
+                  "status": 408,
+                  "details": "Match parsing took too long to complete. Please try again later."
                 }
               }
             }
@@ -2252,8 +2470,8 @@
     },
     "/api/matches/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 match data",
-        "description": "Retrieves detailed match information including players, teams, statistics, and game events. Supports both parsed and unparsed match data with different view modes for optimized data delivery.",
+        "summary": "Fetch Dota 2 match data from OpenDota API",
+        "description": "Retrieves raw match data from OpenDota API including players, teams, and game statistics.",
         "tags": [
           "Matches"
         ],
@@ -2275,30 +2493,6 @@
               "default": false
             },
             "description": "Force refresh of cached data"
-          },
-          {
-            "in": "query",
-            "name": "parsed",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Return parsed match data with detailed statistics"
-          },
-          {
-            "in": "query",
-            "name": "view",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "full",
-                "summary",
-                "players",
-                "teams"
-              ],
-              "default": "full"
-            },
-            "description": "Data view mode (full=all data, summary=basic info, players=player focus, teams=team focus)"
           }
         ],
         "responses": {
@@ -2308,242 +2502,28 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "matchId": {
-                          "type": "string"
-                        },
-                        "startTime": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "duration": {
-                          "type": "integer"
-                        },
-                        "radiantWin": {
-                          "type": "boolean"
-                        },
-                        "gameMode": {
-                          "type": "string"
-                        },
-                        "lobbyType": {
-                          "type": "string"
-                        },
-                        "averageRank": {
-                          "type": "integer"
-                        },
-                        "statistics": {
-                          "type": "object",
-                          "properties": {
-                            "totalKills": {
-                              "type": "integer"
-                            },
-                            "radiantScore": {
-                              "type": "integer"
-                            },
-                            "direScore": {
-                              "type": "integer"
-                            },
-                            "firstBlood": {
-                              "type": "integer"
-                            },
-                            "avgGPM": {
-                              "type": "number"
-                            },
-                            "avgXPM": {
-                              "type": "number"
-                            }
-                          }
-                        },
-                        "teams": {
-                          "type": "object",
-                          "properties": {
-                            "radiant": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "accountId": {
-                                    "type": "string"
-                                  },
-                                  "heroId": {
-                                    "type": "integer"
-                                  },
-                                  "kills": {
-                                    "type": "integer"
-                                  },
-                                  "deaths": {
-                                    "type": "integer"
-                                  },
-                                  "assists": {
-                                    "type": "integer"
-                                  },
-                                  "lastHits": {
-                                    "type": "integer"
-                                  },
-                                  "denies": {
-                                    "type": "integer"
-                                  },
-                                  "gpm": {
-                                    "type": "number"
-                                  },
-                                  "xpm": {
-                                    "type": "number"
-                                  }
-                                }
-                              }
-                            },
-                            "dire": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "accountId": {
-                                    "type": "string"
-                                  },
-                                  "heroId": {
-                                    "type": "integer"
-                                  },
-                                  "kills": {
-                                    "type": "integer"
-                                  },
-                                  "deaths": {
-                                    "type": "integer"
-                                  },
-                                  "assists": {
-                                    "type": "integer"
-                                  },
-                                  "lastHits": {
-                                    "type": "integer"
-                                  },
-                                  "denies": {
-                                    "type": "integer"
-                                  },
-                                  "gpm": {
-                                    "type": "number"
-                                  },
-                                  "xpm": {
-                                    "type": "number"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "processed": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "string"
-                            },
-                            "dataQuality": {
-                              "type": "string"
-                            },
-                            "completeness": {
-                              "type": "number"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "view": {
-                      "type": "string"
-                    },
-                    "parsed": {
-                      "type": "boolean"
-                    },
-                    "cached": {
-                      "type": "boolean"
-                    }
-                  }
-                },
-                "example": {
-                  "data": {
-                    "matchId": "8054301932",
-                    "startTime": "2024-01-01T00:00:00.000Z",
+                  "description": "Raw match data from OpenDota API",
+                  "example": {
+                    "match_id": 8054301932,
+                    "radiant_win": true,
                     "duration": 2150,
-                    "radiantWin": true,
-                    "gameMode": "All Pick",
-                    "lobbyType": "Ranked",
-                    "averageRank": 75,
-                    "statistics": {
-                      "totalKills": 45,
-                      "radiantScore": 28,
-                      "direScore": 17,
-                      "firstBlood": 120,
-                      "avgGPM": 520,
-                      "avgXPM": 580
-                    },
-                    "teams": {
-                      "radiant": [
-                        {
-                          "accountId": "123456789",
-                          "heroId": 1,
-                          "kills": 8,
-                          "deaths": 2,
-                          "assists": 12,
-                          "lastHits": 185,
-                          "denies": 15,
-                          "gpm": 650,
-                          "xpm": 720
-                        }
-                      ],
-                      "dire": [
-                        {
-                          "accountId": "987654321",
-                          "heroId": 2,
-                          "kills": 3,
-                          "deaths": 6,
-                          "assists": 8,
-                          "lastHits": 125,
-                          "denies": 8,
-                          "gpm": 420,
-                          "xpm": 480
-                        }
-                      ]
-                    },
-                    "processed": {
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "dataQuality": "high",
-                      "completeness": 0.95
-                    }
-                  },
-                  "timestamp": "2024-01-01T00:00:00.000Z",
-                  "view": "full",
-                  "parsed": false,
-                  "cached": true
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid match ID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
+                    "start_time": 1640995200,
+                    "game_mode": 1,
+                    "lobby_type": 7,
+                    "players": [
+                      {
+                        "account_id": 123456789,
+                        "hero_id": 1,
+                        "kills": 8,
+                        "deaths": 2,
+                        "assists": 12,
+                        "last_hits": 185,
+                        "denies": 15,
+                        "gold_per_min": 650,
+                        "xp_per_min": 720
+                      }
+                    ]
                   }
-                },
-                "example": {
-                  "error": "Invalid match ID",
-                  "status": 400,
-                  "details": "Match ID must be a valid number"
                 }
               }
             }
@@ -2567,35 +2547,9 @@
                   }
                 },
                 "example": {
-                  "error": "Data Not Found",
+                  "error": "Match not found",
                   "status": 404,
                   "details": "Match with ID 8054301932 could not be found."
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Invalid match data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "error": "Invalid match data",
-                  "status": 422,
-                  "details": "Match data is invalid or corrupted."
                 }
               }
             }
@@ -2645,7 +2599,7 @@
                   }
                 },
                 "example": {
-                  "error": "Failed to process match",
+                  "error": "Failed to fetch match",
                   "status": 500,
                   "details": "Unknown error occurred"
                 }
@@ -2657,8 +2611,8 @@
     },
     "/api/players/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 player data",
-        "description": "Retrieves comprehensive player data including profile, statistics, performance metrics, and recent activity. Supports different view modes for optimized data delivery.",
+        "summary": "Fetch comprehensive Dota 2 player data from all OpenDota endpoints",
+        "description": "Retrieves complete player data including profile, statistics, heroes, counts, totals, win/loss, recent matches, rankings, ratings, and ward map. Includes rate limiting with delays between API calls.",
         "tags": [
           "Players"
         ],
@@ -2680,274 +2634,16 @@
               "default": false
             },
             "description": "Force refresh of cached data"
-          },
-          {
-            "in": "query",
-            "name": "view",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "full",
-                "profile",
-                "stats",
-                "recent"
-              ],
-              "default": "full"
-            },
-            "description": "Data view mode (full=all data, profile=basic info, stats=statistics, recent=recent activity)"
-          },
-          {
-            "in": "query",
-            "name": "includeMatches",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include recent matches data"
-          },
-          {
-            "in": "query",
-            "name": "includeHeroes",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include hero performance data"
-          },
-          {
-            "in": "query",
-            "name": "includeRecent",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include recent activity data"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved player data",
+            "description": "Successfully retrieved comprehensive player data",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "accountId": {
-                          "type": "string"
-                        },
-                        "profile": {
-                          "type": "object",
-                          "properties": {
-                            "accountId": {
-                              "type": "string"
-                            },
-                            "personaName": {
-                              "type": "string"
-                            },
-                            "avatar": {
-                              "type": "string"
-                            },
-                            "rankTier": {
-                              "type": "integer"
-                            },
-                            "leaderboardRank": {
-                              "type": "integer"
-                            },
-                            "mmrEstimate": {
-                              "type": "object"
-                            },
-                            "plus": {
-                              "type": "boolean"
-                            }
-                          }
-                        },
-                        "statistics": {
-                          "type": "object",
-                          "properties": {
-                            "winRate": {
-                              "type": "number"
-                            },
-                            "totalMatches": {
-                              "type": "integer"
-                            },
-                            "totalWins": {
-                              "type": "integer"
-                            },
-                            "totalLosses": {
-                              "type": "integer"
-                            },
-                            "avgKDA": {
-                              "type": "number"
-                            },
-                            "avgLastHits": {
-                              "type": "number"
-                            },
-                            "avgDenies": {
-                              "type": "number"
-                            },
-                            "avgGPM": {
-                              "type": "number"
-                            },
-                            "avgXPM": {
-                              "type": "number"
-                            }
-                          }
-                        },
-                        "performance": {
-                          "type": "object",
-                          "properties": {
-                            "recentPerformance": {
-                              "type": "string"
-                            },
-                            "skillLevel": {
-                              "type": "string"
-                            },
-                            "consistency": {
-                              "type": "string"
-                            },
-                            "impact": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "processed": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "string"
-                            },
-                            "dataQuality": {
-                              "type": "string"
-                            },
-                            "completeness": {
-                              "type": "number"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "view": {
-                      "type": "string"
-                    },
-                    "options": {
-                      "type": "object",
-                      "properties": {
-                        "includeMatches": {
-                          "type": "boolean"
-                        },
-                        "includeHeroes": {
-                          "type": "boolean"
-                        },
-                        "includeRecent": {
-                          "type": "boolean"
-                        }
-                      }
-                    }
-                  }
-                },
-                "example": {
-                  "data": {
-                    "accountId": "12345678",
-                    "profile": {
-                      "accountId": "12345678",
-                      "personaName": "Example Player",
-                      "avatar": "https://avatars.cloudflare.steamstatic.com/abc123.jpg",
-                      "rankTier": 75,
-                      "leaderboardRank": 1500,
-                      "mmrEstimate": {
-                        "estimate": 5500
-                      },
-                      "plus": true
-                    },
-                    "statistics": {
-                      "winRate": 0.62,
-                      "totalMatches": 1250,
-                      "totalWins": 775,
-                      "totalLosses": 475,
-                      "avgKDA": 2.8,
-                      "avgLastHits": 185,
-                      "avgDenies": 12,
-                      "avgGPM": 520,
-                      "avgXPM": 580
-                    },
-                    "performance": {
-                      "recentPerformance": "improving",
-                      "skillLevel": "high",
-                      "consistency": "stable",
-                      "impact": "high"
-                    },
-                    "processed": {
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "dataQuality": "high",
-                      "completeness": 0.95
-                    }
-                  },
-                  "timestamp": "2024-01-01T00:00:00.000Z",
-                  "view": "full",
-                  "options": {
-                    "includeMatches": false,
-                    "includeHeroes": false,
-                    "includeRecent": false
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid player ID",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "error": "Invalid player ID",
-                  "status": 400,
-                  "details": "Player ID must be a valid number"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Private profile",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "error": "Private profile",
-                  "status": 403,
-                  "details": "Player profile is private and cannot be accessed."
+                  "description": "Comprehensive player data from OpenDota API"
                 }
               }
             }
@@ -2973,33 +2669,7 @@
                 "example": {
                   "error": "Data Not Found",
                   "status": 404,
-                  "details": "Player with ID 12345678 could not be found."
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Invalid player data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "integer"
-                    },
-                    "details": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "error": "Invalid player data",
-                  "status": 422,
-                  "details": "Player data is invalid or corrupted."
+                  "details": "Player with ID 40927904 could not be found."
                 }
               }
             }
@@ -3049,7 +2719,7 @@
                   }
                 },
                 "example": {
-                  "error": "Failed to process player",
+                  "error": "Failed to fetch player",
                   "status": 500,
                   "details": "Unknown error occurred"
                 }
@@ -3061,7 +2731,7 @@
     },
     "/api/teams/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 team data",
+        "summary": "Fetch and process Dota 2 team data for Dota Scout Assistant",
         "description": "Retrieves comprehensive team data including statistics, performance metrics, and roster information from Dotabuff. Supports different view modes for optimized data delivery.",
         "tags": [
           "Teams"

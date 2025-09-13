@@ -23,16 +23,7 @@ describe('fetchDotabuffTeam', () => {
       const mockTeamData = {
         id: '9517508',
         name: 'Maple Syrup',
-        matches: [
-          {
-            matchId: '7936128769',
-            result: 'lost' as const,
-            duration: 2100,
-            opponentName: 'Filthy Casuals',
-            leagueId: '16435',
-            startTime: 1725926427
-          }
-        ]
+        matches: {}
       };
 
       mockRequest.mockResolvedValue(mockTeamData);
@@ -60,7 +51,7 @@ describe('fetchDotabuffTeam', () => {
     });
 
     it('should use force parameter when provided', async () => {
-      const mockTeamData = { id: '9517508', name: 'Test Team', matches: [] };
+      const mockTeamData = { id: '9517508', name: 'Test Team', matches: {} };
       mockRequest.mockResolvedValue(mockTeamData);
 
       await fetchDotabuffTeam('9517508', true);
@@ -140,7 +131,7 @@ describe('fetchDotabuffTeam', () => {
       expect(result).toEqual({
         id: '9517508',
         name: 'Maple Syrup',
-        matches: []
+        matches: {}
       });
     });
 
@@ -165,7 +156,7 @@ describe('fetchDotabuffTeam', () => {
       expect(result).toEqual({
         id: '9517508',
         name: 'Test Team',
-        matches: []
+        matches: {}
       });
     });
 
@@ -229,24 +220,24 @@ describe('fetchDotabuffTeam', () => {
       expect(result).toEqual({
         id: '9517508',
         name: 'Test Team',
-        matches: [
-          {
-            matchId: '7936128769',
+        matches: {
+          7936128769: {
+            matchId: 7936128769,
             result: 'lost',
-            duration: 2096, // 34:56 in seconds
+            duration: 2096,
             opponentName: 'Filthy Casuals',
             leagueId: '16435',
             startTime: 0
           },
-          {
-            matchId: '7936128770',
+          7936128770: {
+            matchId: 7936128770,
             result: 'won',
-            duration: 2712, // 45:12 in seconds
+            duration: 2712,
             opponentName: 'Another Team',
             leagueId: '16435',
             startTime: 0
           }
-        ]
+        }
       });
     });
   });

@@ -10,6 +10,7 @@ module.exports = {
     '**/tests/**/*.test.tsx'
   ],
   moduleNameMapper: {
+    '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   transform: {
@@ -37,6 +38,7 @@ module.exports = {
       ],
       testEnvironment: 'node',
       moduleNameMapper: {
+        '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
         '^@/(.*)$': '<rootDir>/src/$1'
       },
       transform: {
@@ -75,6 +77,7 @@ module.exports = {
       ],
       testEnvironment: 'jsdom',
       moduleNameMapper: {
+        '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
         '^@/(.*)$': '<rootDir>/src/$1'
       },
       transform: {

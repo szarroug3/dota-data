@@ -24,45 +24,7 @@ const mockRawMatch: OpenDotaMatch = {
   dire_team_id: 9517509,
   radiant_score: 25,
   dire_score: 20,
-  players: [
-    {
-      account_id: 40927904,
-      player_slot: 0,
-      hero_id: 1,
-      item_0: 29,
-      item_1: 42,
-      item_2: 44,
-      item_3: 50,
-      item_4: 52,
-      item_5: 53,
-      backpack_0: 0,
-      backpack_1: 0,
-      backpack_2: 0,
-      item_neutral: 0,
-      kills: 8,
-      deaths: 3,
-      assists: 12,
-      leaver_status: 0,
-      last_hits: 200,
-      denies: 15,
-      gold_per_min: 650,
-      xp_per_min: 750,
-      level: 25,
-      gold: 25000,
-      gold_spent: 20000,
-      hero_damage: 25000,
-      tower_damage: 5000,
-      hero_healing: 0,
-      isRadiant: true,
-      win: 1,
-      lose: 0,
-      total_gold: 25000,
-      total_xp: 18000,
-      kills_per_min: 0.2,
-      kda: 6.67,
-      abandons: 0
-    }
-  ]
+  players: []
 };
 
 interface ApiErrorResponse {

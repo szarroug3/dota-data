@@ -1,7 +1,78 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useMemo, useState } from 'react';
 
-import { EditTeamSheet } from '@/components/dashboard/EditTeamModal';
+import { EditTeamSheet } from '@/frontend/teams/components/stateless/EditTeamSheet';
+
+// Controlled harness to adapt stateless EditTeamSheet to previous stateful test expectations
+const ControlledEditTeamHarness = ({
+  isOpen,
+  onClose,
+  currentTeamId,
+  currentLeagueId,
+  onSave,
+  teamExists,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  currentTeamId: string;
+  currentLeagueId: string;
+  onSave: (oldTeamId: string, oldLeagueId: string, newTeamId: string, newLeagueId: string) => Promise<void>;
+  teamExists: (teamId: string, leagueId: string) => boolean;
+}) => {
+  const [newTeamId, setNewTeamId] = useState(currentTeamId);
+  const [newLeagueId, setNewLeagueId] = useState(currentLeagueId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  const { buttonText, buttonDisabled } = useMemo(() => {
+    if (!newTeamId.trim() || !newLeagueId.trim()) {
+      return { buttonText: 'Save Changes', buttonDisabled: true };
+    }
+    if (newTeamId !== currentTeamId || newLeagueId !== currentLeagueId) {
+      if (teamExists(newTeamId.trim(), newLeagueId.trim())) {
+        return { buttonText: 'Team already imported', buttonDisabled: true };
+      }
+    }
+    return { buttonText: isSubmitting ? 'Saving...' : 'Save Changes', buttonDisabled: isSubmitting };
+  }, [newTeamId, newLeagueId, currentTeamId, currentLeagueId, teamExists, isSubmitting]);
+
+  const handleSubmit = async () => {
+    if (buttonDisabled) return;
+    setIsSubmitting(true);
+    setError(undefined);
+    try {
+      await onSave(currentTeamId, currentLeagueId, newTeamId, newLeagueId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update team');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const teamIdError = newTeamId.trim().length > 0 ? undefined : undefined;
+  const leagueIdError = newLeagueId.trim().length > 0 ? undefined : undefined;
+
+  return (
+    <EditTeamSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      currentTeamId={currentTeamId}
+      currentLeagueId={currentLeagueId}
+      newTeamId={newTeamId}
+      newLeagueId={newLeagueId}
+      onChangeTeamId={setNewTeamId}
+      onChangeLeagueId={setNewLeagueId}
+      onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
+      error={error}
+      teamIdError={teamIdError}
+      leagueIdError={leagueIdError}
+      buttonText={buttonText}
+      buttonDisabled={buttonDisabled}
+    />
+  );
+};
 
 describe('EditTeamSheet', () => {
   const mockOnClose = jest.fn();
@@ -23,7 +94,7 @@ describe('EditTeamSheet', () => {
   });
 
   it('should render sheet when isOpen is true', () => {
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     expect(screen.getByText('Edit Team')).toBeInTheDocument();
     expect(screen.getByLabelText('Team ID *')).toBeInTheDocument();
@@ -33,13 +104,13 @@ describe('EditTeamSheet', () => {
   });
 
   it('should not render sheet when isOpen is false', () => {
-    render(<EditTeamSheet {...defaultProps} isOpen={false} />);
+    render(<ControlledEditTeamHarness {...defaultProps} isOpen={false} />);
     
     expect(screen.queryByText('Edit Team')).not.toBeInTheDocument();
   });
 
   it('should populate form with current team and league IDs', () => {
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *') as HTMLInputElement;
     const leagueIdInput = screen.getByLabelText('League ID *') as HTMLInputElement;
@@ -50,7 +121,7 @@ describe('EditTeamSheet', () => {
 
   it('should call onSave with correct parameters when save is clicked', async () => {
     const user = userEvent.setup();
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
@@ -60,7 +131,7 @@ describe('EditTeamSheet', () => {
 
   it('should call onClose when cancel is clicked', async () => {
     const user = userEvent.setup();
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const cancelButton = screen.getByText('Cancel');
     await user.click(cancelButton);
@@ -70,7 +141,7 @@ describe('EditTeamSheet', () => {
 
   it('should disable save button when team ID is empty', async () => {
     const user = userEvent.setup();
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *');
     const saveButton = screen.getByText('Save Changes');
@@ -83,7 +154,7 @@ describe('EditTeamSheet', () => {
 
   it('should disable save button when league ID is empty', async () => {
     const user = userEvent.setup();
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const leagueIdInput = screen.getByLabelText('League ID *');
     const saveButton = screen.getByText('Save Changes');
@@ -97,7 +168,7 @@ describe('EditTeamSheet', () => {
   it('should disable save button when team already exists', async () => {
     const user = userEvent.setup();
     mockTeamExists.mockReturnValue(true);
-    render(<EditTeamSheet {...defaultProps} />);
+    render(<ControlledEditTeamHarness {...defaultProps} />);
     
     const teamIdInput = screen.getByLabelText('Team ID *');
     const leagueIdInput = screen.getByLabelText('League ID *');
@@ -121,7 +192,7 @@ describe('EditTeamSheet', () => {
     const user = userEvent.setup();
     const mockOnSaveWithError = jest.fn().mockRejectedValue(new Error('Failed to update team'));
     
-    render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithError} />);
+    render(<ControlledEditTeamHarness {...defaultProps} onSave={mockOnSaveWithError} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
@@ -140,7 +211,7 @@ describe('EditTeamSheet', () => {
       new Promise(resolve => setTimeout(resolve, 100))
     );
     
-    render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithDelay} />);
+    render(<ControlledEditTeamHarness {...defaultProps} onSave={mockOnSaveWithDelay} />);
     
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
@@ -154,7 +225,7 @@ describe('EditTeamSheet', () => {
     const user = userEvent.setup();
     const mockOnSaveWithError = jest.fn().mockRejectedValue(new Error('Failed to update team'));
     
-    const { unmount } = render(<EditTeamSheet {...defaultProps} onSave={mockOnSaveWithError} />);
+    const { unmount } = render(<ControlledEditTeamHarness {...defaultProps} onSave={mockOnSaveWithError} />);
     
     // Trigger an error
     const saveButton = screen.getByText('Save Changes');
@@ -170,7 +241,7 @@ describe('EditTeamSheet', () => {
     
     // Unmount and remount to simulate reopening
     unmount();
-    render(<EditTeamSheet {...defaultProps} onSave={mockOnSave} />);
+    render(<ControlledEditTeamHarness {...defaultProps} onSave={mockOnSave} />);
     
     // Error should be cleared
     expect(screen.queryByText('Failed to update team')).not.toBeInTheDocument();

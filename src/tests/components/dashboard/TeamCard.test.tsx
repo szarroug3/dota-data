@@ -1,8 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { TeamCard } from '@/components/dashboard/TeamCard';
-
-import type { TeamData } from '@/types/contexts/team-types';
+import { TeamCard } from '@/frontend/teams/components/stateless/TeamCard';
+import type { TeamData } from '@/types/contexts/team-context-value';
 
 const mockTeamData: TeamData = {
   team: {
@@ -14,7 +13,9 @@ const mockTeamData: TeamData = {
     name: 'ESL Pro League',
   },
   timeAdded: '2024-01-01T00:00:00Z',
-  matches: [],
+  matches: {},
+  manualMatches: {},
+  manualPlayers: [],
   players: [],
   performance: {
     totalMatches: 5,
@@ -343,7 +344,7 @@ describe('TeamCard', () => {
       ...mockTeamData,
       league: {
         ...mockTeamData.league,
-        name: undefined
+        name: ''
       }
     };
 

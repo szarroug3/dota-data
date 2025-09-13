@@ -1,23 +1,23 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import { AppLoader } from '@/components/layout/AppLoader';
-import { ConfigProvider, useConfigContext } from '@/contexts/config-context';
-import { TeamProvider, useTeamContext } from '@/contexts/team-context';
-import { ThemeContextProvider, useThemeContext } from '@/contexts/theme-context';
+import { ConfigProvider, useConfigContext } from '@/frontend/contexts/config-context';
+import { ThemeContextProvider, useThemeContext } from '@/frontend/contexts/theme-context';
+import { AppLoader } from '@/frontend/shared/layout/AppLoader';
+import { TeamProvider, useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 
 // Mock the contexts
-jest.mock('@/contexts/theme-context', () => ({
+jest.mock('@/frontend/contexts/theme-context', () => ({
   useThemeContext: jest.fn(),
   ThemeContextProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>
 }));
 
-jest.mock('@/contexts/config-context', () => ({
+jest.mock('@/frontend/contexts/config-context', () => ({
   useConfigContext: jest.fn(),
   ConfigProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="config-provider">{children}</div>
 }));
 
-jest.mock('@/contexts/team-context', () => ({
+jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
   useTeamContext: jest.fn(),
   TeamProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="team-provider">{children}</div>
 }));

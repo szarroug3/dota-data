@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { Header } from '@/components/layout/Header';
+import { Header } from '@/frontend/shared/layout/Header';
 
 // Basic rendering
 describe('Header - Basic rendering', () => {

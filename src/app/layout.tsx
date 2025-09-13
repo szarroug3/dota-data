@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 
-import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 
 import { ClientRoot } from "./ClientRoot";
 import './globals.css';
