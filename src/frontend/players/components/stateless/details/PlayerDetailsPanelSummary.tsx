@@ -15,10 +15,7 @@ interface PlayerDetailsPanelSummaryProps {
 
 const renderHeroWithAvatar = (hero: ConstantsHero) => (
   <div className="flex items-center space-x-2 min-w-0 w-full">
-    <HeroAvatar 
-      hero={hero}
-      avatarSize={{ width: 'w-8', height: 'h-8' }}
-    />
+    <HeroAvatar hero={hero} avatarSize={{ width: 'w-8', height: 'h-8' }} />
     <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">
       {hero.localizedName}
     </span>
@@ -29,7 +26,7 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
   const topHeroes = player.heroes
     .sort((a, b) => b.games - a.games)
     .slice(0, 5)
-    .map(hero => {
+    .map((hero) => {
       const heroData = heroes[hero.hero_id.toString()];
       return {
         hero: heroData || {
@@ -39,11 +36,11 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
           primaryAttribute: 'strength',
           attackType: 'melee',
           roles: [],
-          imageUrl: ''
+          imageUrl: '',
         },
         games: hero.games,
         wins: hero.win,
-        winRate: hero.games > 0 ? (hero.win / hero.games) * 100 : 0
+        winRate: hero.games > 0 ? (hero.win / hero.games) * 100 : 0,
       };
     });
 
@@ -56,20 +53,22 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
         <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Basic Information</h3>
         <p className="text-sm text-muted-foreground dark:text-muted-foreground @[190px]:block hidden truncate">
           <span className="text-foreground dark:text-foreground">{totalGames}</span>
-          <span className="@[350px]:inline hidden">{' '}Games</span>
+          <span className="@[350px]:inline hidden"> Games</span>
           <span className="mx-1">•</span>
           <span className="text-foreground dark:text-foreground">{player.wl.win}</span>
-          <span className="@[350px]:inline hidden">{' '}Wins</span>
+          <span className="@[350px]:inline hidden"> Wins</span>
           <span className="mx-1">•</span>
           <span className="text-foreground dark:text-foreground">{winRate.toFixed(1)}%</span>
-          <span className="@[350px]:inline hidden">{' '}Win Rate</span>
+          <span className="@[350px]:inline hidden"> Win Rate</span>
         </p>
         <div className="@[190px]:hidden block h-5" aria-hidden="true" />
       </div>
 
       <Card>
         <CardHeader className="min-w-0">
-          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">Top Heroes</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">
+            Top Heroes
+          </CardTitle>
         </CardHeader>
         <CardContent className="min-w-0">
           <Table className="table-fixed w-full">
@@ -84,8 +83,12 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
               {topHeroes.map((hero) => (
                 <TableRow key={hero.hero.id}>
                   <TableCell className="min-w-0">{renderHeroWithAvatar(hero.hero)}</TableCell>
-                  <TableCell className="text-center @[315px]:table-cell hidden w-[72px]"><div className="font-semibold text-foreground dark:text-foreground">{hero.games}</div></TableCell>
-                  <TableCell className="text-center @[245px]:table-cell hidden w-[96px]"><div className="font-semibold text-foreground dark:text-foreground">{hero.winRate.toFixed(1)}%</div></TableCell>
+                  <TableCell className="text-center @[315px]:table-cell hidden w-[72px]">
+                    <div className="font-semibold text-foreground dark:text-foreground">{hero.games}</div>
+                  </TableCell>
+                  <TableCell className="text-center @[245px]:table-cell hidden w-[96px]">
+                    <div className="font-semibold text-foreground dark:text-foreground">{hero.winRate.toFixed(1)}%</div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -97,5 +100,3 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
 });
 
 PlayerDetailsPanelSummary.displayName = 'PlayerDetailsPanelSummary';
-
-

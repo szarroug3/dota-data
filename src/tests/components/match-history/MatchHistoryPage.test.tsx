@@ -26,27 +26,18 @@ jest.mock('@/frontend/matches/components/list/MatchListView', () => ({
   MatchListView: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
     <div data-testid="match-list-view">
       <div data-testid="current-view-mode">{viewMode}</div>
-      <button 
-        data-testid="set-list-view" 
-        onClick={() => setViewMode('list')}
-      >
+      <button data-testid="set-list-view" onClick={() => setViewMode('list')}>
         List View
       </button>
-      <button 
-        data-testid="set-card-view" 
-        onClick={() => setViewMode('card')}
-      >
+      <button data-testid="set-card-view" onClick={() => setViewMode('card')}>
         Card View
       </button>
-      <button 
-        data-testid="set-grid-view" 
-        onClick={() => setViewMode('grid')}
-      >
+      <button data-testid="set-grid-view" onClick={() => setViewMode('grid')}>
         Grid View
       </button>
     </div>
   ),
-  MatchListViewMode: 'list' as const
+  MatchListViewMode: 'list' as const,
 }));
 
 // Mock config context to provide an active team so the page renders main layout
@@ -69,17 +60,15 @@ jest.mock('@/frontend/contexts/config-context', () => ({
 
 // Mock other components to simplify the test
 jest.mock('@/frontend/matches/components/stateless/common/EmptyState', () => ({
-  EmptyState: () => <div data-testid="empty-state">Empty State</div>
+  EmptyState: () => <div data-testid="empty-state">Empty State</div>,
 }));
 
 jest.mock('@/frontend/matches/components/stateless/common/ErrorState', () => ({
-  ErrorState: () => <div data-testid="error-state">Error State</div>
+  ErrorState: () => <div data-testid="error-state">Error State</div>,
 }));
 
-
-
 jest.mock('@/frontend/matches/components/stateless/HiddenMatchesModal', () => ({
-  HiddenMatchesModal: () => <div data-testid="hidden-matches-modal">Hidden Modal</div>
+  HiddenMatchesModal: () => <div data-testid="hidden-matches-modal">Hidden Modal</div>,
 }));
 
 // Mock the ResizableMatchLayout component to avoid the react-resizable-panels issue
@@ -87,22 +76,13 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
   ResizableMatchLayout: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
     <div data-testid="resizable-match-layout">
       <div data-testid="current-view-mode">{viewMode}</div>
-      <button 
-        data-testid="set-list-view" 
-        onClick={() => setViewMode('list')}
-      >
+      <button data-testid="set-list-view" onClick={() => setViewMode('list')}>
         List View
       </button>
-      <button 
-        data-testid="set-card-view" 
-        onClick={() => setViewMode('card')}
-      >
+      <button data-testid="set-card-view" onClick={() => setViewMode('card')}>
         Card View
       </button>
-      <button 
-        data-testid="set-grid-view" 
-        onClick={() => setViewMode('grid')}
-      >
+      <button data-testid="set-grid-view" onClick={() => setViewMode('grid')}>
         Grid View
       </button>
     </div>
@@ -133,23 +113,54 @@ jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
         team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
         league: { id: 'league1', name: 'Test League' },
         matches: [
-          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
+          {
+            id: 'match1',
+            teamId: 'team1',
+            leagueId: 'league1',
+            opponent: 'Opponent',
+            result: 'win',
+            date: '2024-01-01',
+            duration: 1800,
+            teamSide: 'radiant',
+            pickOrder: 'first',
+            players: [],
+            heroes: [],
+          },
         ],
         players: [],
-        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
-      }
+        summary: {
+          totalMatches: 1,
+          totalWins: 1,
+          totalLosses: 0,
+          overallWinRate: 100,
+          lastMatchDate: '2024-01-01',
+          averageMatchDuration: 1800,
+          totalPlayers: 0,
+        },
+      },
     ],
     activeTeam: { teamId: 'team1', leagueId: 'league1' },
     selectedTeamId: { teamId: 1, leagueId: 1 },
     teams: new Map<string, any>([
-      ['1-1', {
-        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
-        league: { id: 'league1', name: 'Test League' },
-        matches: { 123: { side: 'radiant', pickOrder: 'first' } },
-        players: [],
-        manualMatches: {},
-        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
-      }]
+      [
+        '1-1',
+        {
+          team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
+          league: { id: 'league1', name: 'Test League' },
+          matches: { 123: { side: 'radiant', pickOrder: 'first' } },
+          players: [],
+          manualMatches: {},
+          summary: {
+            totalMatches: 1,
+            totalWins: 1,
+            totalLosses: 0,
+            overallWinRate: 100,
+            lastMatchDate: '2024-01-01',
+            averageMatchDuration: 1800,
+            totalPlayers: 0,
+          },
+        },
+      ],
     ]),
     isLoading: false,
     error: null,
@@ -171,17 +182,37 @@ jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
       performance: {} as any,
     }),
     addMatchToTeam: jest.fn().mockResolvedValue(undefined),
-    getAllTeams: () => ([
+    getAllTeams: () => [
       {
         team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
         league: { id: 'league1', name: 'Test League' },
         matches: [
-          { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
+          {
+            id: 'match1',
+            teamId: 'team1',
+            leagueId: 'league1',
+            opponent: 'Opponent',
+            result: 'win',
+            date: '2024-01-01',
+            duration: 1800,
+            teamSide: 'radiant',
+            pickOrder: 'first',
+            players: [],
+            heroes: [],
+          },
         ],
         players: [],
-        summary: { totalMatches: 1, totalWins: 1, totalLosses: 0, overallWinRate: 100, lastMatchDate: '2024-01-01', averageMatchDuration: 1800, totalPlayers: 0 }
-      }
-    ]),
+        summary: {
+          totalMatches: 1,
+          totalWins: 1,
+          totalLosses: 0,
+          overallWinRate: 100,
+          lastMatchDate: '2024-01-01',
+          averageMatchDuration: 1800,
+          totalPlayers: 0,
+        },
+      },
+    ],
   }),
   TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -190,15 +221,40 @@ jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
 jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
   useMatchContext: () => ({
     matches: [
-      { id: 'match1', teamId: 'team1', leagueId: 'league1', opponent: 'Opponent', result: 'win', date: '2024-01-01', duration: 1800, teamSide: 'radiant', pickOrder: 'first', players: [], heroes: [] }
+      {
+        id: 'match1',
+        teamId: 'team1',
+        leagueId: 'league1',
+        opponent: 'Opponent',
+        result: 'win',
+        date: '2024-01-01',
+        duration: 1800,
+        teamSide: 'radiant',
+        pickOrder: 'first',
+        players: [],
+        heroes: [],
+      },
     ],
     filteredMatches: [],
     selectedMatchId: null,
     selectedMatch: null,
     hiddenMatchIds: [],
-    filters: { dateRange: { start: null, end: null }, result: 'all', opponent: '', heroes: [], players: [], duration: { min: null, max: null } },
+    filters: {
+      dateRange: { start: null, end: null },
+      result: 'all',
+      opponent: '',
+      heroes: [],
+      players: [],
+      duration: { min: null, max: null },
+    },
     heroStatsGrid: {},
-    preferences: { defaultView: 'list', showHiddenMatches: false, autoRefresh: false, refreshInterval: 30, showAdvancedStats: false },
+    preferences: {
+      defaultView: 'list',
+      showHiddenMatches: false,
+      autoRefresh: false,
+      refreshInterval: 30,
+      showAdvancedStats: false,
+    },
     isLoadingMatches: false,
     isLoadingMatchDetails: false,
     isLoadingHeroStats: false,
@@ -259,9 +315,7 @@ const renderWithProviders = (component: React.ReactElement) => {
                 <MatchProvider>
                   <PlayerProvider>
                     <HeroProvider>
-                      <DataCoordinatorProvider>
-                        {component}
-                      </DataCoordinatorProvider>
+                      <DataCoordinatorProvider>{component}</DataCoordinatorProvider>
                     </HeroProvider>
                   </PlayerProvider>
                 </MatchProvider>
@@ -270,7 +324,7 @@ const renderWithProviders = (component: React.ReactElement) => {
           </PlayerDataFetchingProvider>
         </MatchDataFetchingProvider>
       </TeamDataFetchingProvider>
-    </ConfigProvider>
+    </ConfigProvider>,
   );
 };
 
@@ -287,17 +341,17 @@ describe('MatchHistoryPage', () => {
 
   it('should initialize with default view mode from config', () => {
     renderWithProviders(<MatchHistoryPage />);
-    
+
     // Should show the default view mode (list)
     expect(screen.getByTestId('current-view-mode')).toHaveTextContent('list');
   });
 
   it('should persist view mode changes to localStorage', async () => {
     renderWithProviders(<MatchHistoryPage />);
-    
+
     // Change to card view
     fireEvent.click(screen.getByTestId('set-card-view'));
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('current-view-mode')).toHaveTextContent('card');
     });
@@ -316,23 +370,23 @@ describe('MatchHistoryPage', () => {
         defaultFilters: {
           dateRange: 30,
           result: 'all',
-          heroes: []
+          heroes: [],
         },
         sortBy: 'date',
-        sortDirection: 'desc'
-      }
+        sortDirection: 'desc',
+      },
     };
     localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(savedPreferences));
 
     renderWithProviders(<MatchHistoryPage />);
-    
+
     // Should load the saved view mode
     expect(screen.getByTestId('current-view-mode')).toHaveTextContent('grid');
   });
 
   it('should handle all view mode changes', async () => {
     renderWithProviders(<MatchHistoryPage />);
-    
+
     // Test list view
     fireEvent.click(screen.getByTestId('set-list-view'));
     await waitFor(() => {
@@ -351,4 +405,4 @@ describe('MatchHistoryPage', () => {
       expect(screen.getByTestId('current-view-mode')).toHaveTextContent('grid');
     });
   });
-}); 
+});

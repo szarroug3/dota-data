@@ -17,7 +17,7 @@ function analyzePlayer(player: OpenDotaMatchPlayer): PlayerAnalysisResult {
 
 function groupPlayersByLaneRole(playerAnalysis: PlayerAnalysisResult[]) {
   const playersByLaneRole: Record<number, PlayerAnalysisResult[]> = {};
-  playerAnalysis.forEach(analysis => {
+  playerAnalysis.forEach((analysis) => {
     const laneRole = analysis.player.lane_role || 0;
     if (!playersByLaneRole[laneRole]) {
       playersByLaneRole[laneRole] = [];
@@ -27,14 +27,20 @@ function groupPlayersByLaneRole(playerAnalysis: PlayerAnalysisResult[]) {
   return playersByLaneRole;
 }
 
-function assignMidRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
+function assignMidRoles(
+  playersByLaneRole: Record<number, PlayerAnalysisResult[]>,
+  roleMap: Record<string, PlayerRole>,
+) {
   const midPlayers = playersByLaneRole[2] || [];
   if (midPlayers.length > 0) {
     roleMap[midPlayers[0].player.account_id.toString()] = 'Mid';
   }
 }
 
-function assignSafeLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
+function assignSafeLaneRoles(
+  playersByLaneRole: Record<number, PlayerAnalysisResult[]>,
+  roleMap: Record<string, PlayerRole>,
+) {
   const safeLanePlayers = playersByLaneRole[1] || [];
   if (safeLanePlayers.length === 0) return;
   const sortedPlayers = [...safeLanePlayers].sort((a, b) => a.supportScore - b.supportScore);
@@ -46,7 +52,10 @@ function assignSafeLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisRes
   }
 }
 
-function assignOffLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResult[]>, roleMap: Record<string, PlayerRole>) {
+function assignOffLaneRoles(
+  playersByLaneRole: Record<number, PlayerAnalysisResult[]>,
+  roleMap: Record<string, PlayerRole>,
+) {
   const offLanePlayers = playersByLaneRole[3] || [];
   if (offLanePlayers.length === 0) return;
   const sortedPlayers = [...offLanePlayers].sort((a, b) => a.supportScore - b.supportScore);
@@ -63,8 +72,8 @@ function assignOffLaneRoles(playersByLaneRole: Record<number, PlayerAnalysisResu
 }
 
 function assignRemainingRoles(playerAnalysis: PlayerAnalysisResult[], roleMap: Record<string, PlayerRole>) {
-  const unassigned = playerAnalysis.filter(analysis => !roleMap[analysis.player.account_id.toString()]);
-  unassigned.forEach(analysis => {
+  const unassigned = playerAnalysis.filter((analysis) => !roleMap[analysis.player.account_id.toString()]);
+  unassigned.forEach((analysis) => {
     if (analysis.player.is_roaming) {
       roleMap[analysis.player.account_id.toString()] = 'Roaming';
     }
@@ -82,5 +91,3 @@ export function detectTeamRoles(teamPlayers: OpenDotaMatchPlayer[]): Record<stri
   assignRemainingRoles(playerAnalysis, roleMap);
   return roleMap;
 }
-
-

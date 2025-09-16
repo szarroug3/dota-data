@@ -31,7 +31,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   teamMatches,
   hiddenMatchIds = new Set(),
   allMatches = [],
-  onScrollToMatch
+  onScrollToMatch,
 }) => {
   if (viewMode === 'list') {
     return (
@@ -70,5 +70,3 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
     </div>
   );
 };
-
-

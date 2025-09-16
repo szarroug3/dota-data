@@ -53,7 +53,11 @@ function onCardClick(hasError: boolean, onSelect: (id: number) => void, matchId:
   }
 }
 
-function isDuplicateInFormTeam(teamMatch: TeamMatchParticipation | undefined, currentMatchId: number, newMatchId: number): boolean {
+function isDuplicateInFormTeam(
+  teamMatch: TeamMatchParticipation | undefined,
+  currentMatchId: number,
+  newMatchId: number,
+): boolean {
   if (!teamMatch) return false;
   const map = { [currentMatchId]: teamMatch } as Record<number, TeamMatchParticipation>;
   return newMatchId in map;
@@ -67,7 +71,12 @@ function isDuplicateInMatches(selectedTeam: TeamData | undefined, newMatchId: nu
   return Boolean(selectedTeam?.matches && newMatchId in (selectedTeam.matches || {}));
 }
 
-function computeDuplicateError(newMatchId: number, currentMatchId: number, teamMatch: TeamMatchParticipation | undefined, selectedTeam: TeamData | undefined): string | undefined {
+function computeDuplicateError(
+  newMatchId: number,
+  currentMatchId: number,
+  teamMatch: TeamMatchParticipation | undefined,
+  selectedTeam: TeamData | undefined,
+): string | undefined {
   if (!Number.isFinite(newMatchId) || newMatchId === currentMatchId) return undefined;
   const duplicate =
     isDuplicateInFormTeam(teamMatch, currentMatchId, newMatchId) ||
@@ -97,7 +106,11 @@ interface MatchCardProps {
   onScrollToMatch?: (matchId: number) => void;
 }
 
-function useEditManualMatchForm(matchId: number, teamMatch: TeamMatchParticipation | undefined, selectedTeam: TeamData | undefined) {
+function useEditManualMatchForm(
+  matchId: number,
+  teamMatch: TeamMatchParticipation | undefined,
+  selectedTeam: TeamData | undefined,
+) {
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -149,7 +162,7 @@ function MatchCard({
   onHideMatch,
   onRefreshMatch,
   teamMatch,
-  onScrollToMatch
+  onScrollToMatch,
 }: MatchCardProps) {
   const { config } = useConfigContext();
   const { getSelectedTeam, removeManualMatch, editManualMatch } = useTeamContext();
@@ -159,14 +172,15 @@ function MatchCard({
   const hasError = Boolean(match.error);
   const isLoading = Boolean(match.isLoading);
 
-  const isManualMatch = useMemo(() => Boolean(selectedTeam?.manualMatches && (match.id in selectedTeam.manualMatches)), [match.id, selectedTeam]);
+  const isManualMatch = useMemo(
+    () => Boolean(selectedTeam?.manualMatches && match.id in selectedTeam.manualMatches),
+    [match.id, selectedTeam],
+  );
 
   const matchHeroes = useMemo(() => {
     if (!teamMatch?.side) return [];
     const teamPlayers = match.players[teamMatch.side] || [];
-    return teamPlayers
-      .map(player => player.hero)
-      .filter((hero): hero is Hero => hero !== undefined && hero !== null);
+    return teamPlayers.map((player) => player.hero).filter((hero): hero is Hero => hero !== undefined && hero !== null);
   }, [match, teamMatch]);
 
   const handleRemoveManualMatch = () => {
@@ -204,7 +218,11 @@ function MatchCard({
       aria-label={getCardAriaLabel(hasError, match.id, match.error, teamMatch?.opponentName ?? `Match ${match.id}`)}
     >
       <CardContent className="p-4 h-[140px] relative">
-        <MatchCardHeader isLoading={isLoading} hasError={hasError} title={teamMatch?.opponentName ?? `Match ${match.id}`} />
+        <MatchCardHeader
+          isLoading={isLoading}
+          hasError={hasError}
+          title={teamMatch?.opponentName ?? `Match ${match.id}`}
+        />
         <MatchCenter isLoading={isLoading} hasError={hasError} heroes={matchHeroes} />
 
         <ActionButtonsRow
@@ -240,9 +258,7 @@ function MatchCard({
 function MatchCardHeader({ isLoading, hasError, title }: { isLoading: boolean; hasError: boolean; title: string }) {
   return (
     <div className="absolute top-4 left-0 right-0 text-center @[100px]:flex hidden h-5 items-center justify-center">
-      <h3 className="font-medium text-sm truncate">
-        {isLoading && !hasError ? 'Loading...' : title}
-      </h3>
+      <h3 className="font-medium text-sm truncate">{isLoading && !hasError ? 'Loading...' : title}</h3>
     </div>
   );
 }
@@ -259,7 +275,15 @@ function MatchCenter({ isLoading, hasError, heroes }: { isLoading: boolean; hasE
   );
 }
 
-function HeroAvatars({ heroes, avatarSize = { width: 'w-8', height: 'h-8' }, className = '' }: { heroes: Hero[]; avatarSize?: { width: string; height: string }; className?: string }) {
+function HeroAvatars({
+  heroes,
+  avatarSize = { width: 'w-8', height: 'h-8' },
+  className = '',
+}: {
+  heroes: Hero[];
+  avatarSize?: { width: string; height: string };
+  className?: string;
+}) {
   const totalHeroes = heroes.length;
   return (
     <div className={`-space-x-1 @[100px]:flex hidden ${className}`}>
@@ -272,33 +296,25 @@ function HeroAvatars({ heroes, avatarSize = { width: 'w-8', height: 'h-8' }, cla
         {heroes.slice(0, 3).map((hero) => (
           <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
         ))}
-        {totalHeroes > 3 && (
-          <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />
-        )}
+        {totalHeroes > 3 && <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />}
       </div>
       <div className="@[200px]:flex @[250px]:hidden hidden">
         {heroes.slice(0, 2).map((hero) => (
           <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
         ))}
-        {totalHeroes > 2 && (
-          <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />
-        )}
+        {totalHeroes > 2 && <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />}
       </div>
       <div className="@[100px]:flex @[200px]:hidden hidden">
         {heroes.slice(0, 1).map((hero) => (
           <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
         ))}
-        {totalHeroes > 1 && (
-          <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
-        )}
+        {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
       </div>
       <div className="@[100px]:hidden flex">
         {heroes.slice(0, 1).map((hero) => (
           <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
         ))}
-        {totalHeroes > 1 && (
-          <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />
-        )}
+        {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
       </div>
     </div>
   );
@@ -307,10 +323,10 @@ function HeroAvatars({ heroes, avatarSize = { width: 'w-8', height: 'h-8' }, cla
 function HeroIndicator({ count, avatarSize }: { count: number; avatarSize: { width: string; height: string } }) {
   const { width, height } = avatarSize;
   return (
-    <div className={`${width} ${height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
-      <span className="text-xs font-medium text-muted-foreground">
-        +{count}
-      </span>
+    <div
+      className={`${width} ${height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}
+    >
+      <span className="text-xs font-medium text-muted-foreground">+{count}</span>
     </div>
   );
 }
@@ -323,7 +339,7 @@ function ActionButtonsRow({
   onRefreshMatch,
   onHideMatch,
   onOpenEdit,
-  onRemoveManual
+  onRemoveManual,
 }: {
   isManualMatch: boolean;
   matchId: number;
@@ -335,7 +351,10 @@ function ActionButtonsRow({
   onRemoveManual: () => void;
 }) {
   return (
-    <div className="absolute bottom-4 left-0 right-0 @[200px]:flex hidden h-8 items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="absolute bottom-4 left-0 right-0 @[200px]:flex hidden h-8 items-center justify-center gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
       <ExternalSiteButton matchId={matchId} preferredSite={preferredSite} size="sm" />
       <RefreshButton onClick={() => onRefreshMatch(matchId)} ariaLabel={`Refresh match vs ${opponentName}`} />
       {isManualMatch ? (
@@ -358,12 +377,12 @@ const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   onRefreshMatch,
   className = '',
   teamMatches = {},
-  onScrollToMatch
+  onScrollToMatch,
 }) => {
   const { containerRef, columns } = useResponsiveGrid();
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`grid gap-2 ${className}`}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
@@ -386,4 +405,3 @@ const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
 };
 
 export { MatchListViewCard };
-

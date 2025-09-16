@@ -25,7 +25,7 @@ const formatDate = (dateString: string): string => {
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
   });
 };
 
@@ -46,23 +46,30 @@ const getHeroesFromMatch = (match: Match, teamMatch: TeamMatchParticipation | un
     return [];
   }
   const teamPlayers = match.players[teamMatch.side] || [];
-  let heroes = teamPlayers.map(player => player.hero).filter((hero): hero is Hero => hero !== undefined && hero !== null);
+  let heroes = teamPlayers
+    .map((player) => player.hero)
+    .filter((hero): hero is Hero => hero !== undefined && hero !== null);
   if (heroes.length === 0 && match.draft) {
     const draftPicks = teamMatch.side === 'radiant' ? match.draft.radiantPicks : match.draft.direPicks;
-    heroes = draftPicks?.map(pick => pick.hero).slice(0, 5) || [];
+    heroes = draftPicks?.map((pick) => pick.hero).slice(0, 5) || [];
   }
   return heroes;
 };
 
-const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Record<number, TeamMatchParticipation>, hiddenMatchIds: Set<number>): boolean => {
+const isHighPerformingHero = (
+  hero: Hero,
+  allMatches: Match[],
+  teamMatches: Record<number, TeamMatchParticipation>,
+  hiddenMatchIds: Set<number>,
+): boolean => {
   const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
-  allMatches.forEach(matchData => {
+  allMatches.forEach((matchData) => {
     if (hiddenMatchIds.has(matchData.id)) return;
     const matchTeamData = teamMatches[matchData.id];
     if (!matchTeamData?.side) return;
     const teamPlayers = matchData.players[matchTeamData.side] || [];
     const isWin = matchTeamData.result === 'won';
-    teamPlayers.forEach(player => {
+    teamPlayers.forEach((player) => {
       if (player.hero?.id === hero.id) {
         heroStats.count++;
         heroStats.totalGames++;
@@ -72,10 +79,15 @@ const isHighPerformingHero = (hero: Hero, allMatches: Match[], teamMatches: Reco
       }
     });
   });
-  return heroStats.count >= 5 && (heroStats.wins / heroStats.count) >= 0.6;
+  return heroStats.count >= 5 && heroStats.wins / heroStats.count >= 0.6;
 };
 
-export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({ hiddenMatches, onUnhide, onClose, teamMatches }) => {
+export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({
+  hiddenMatches,
+  onUnhide,
+  onClose,
+  teamMatches,
+}) => {
   useEffect(() => {
     if (hiddenMatches.length === 0) {
       onClose();
@@ -88,21 +100,25 @@ export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({ hiddenMa
       onClick={onClose}
       aria-modal="true"
       role="dialog"
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onClose();
+      }}
     >
       <div
         className="bg-card dark:bg-card rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Hidden Matches</h2>
-          <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground">
+            ✕
+          </button>
         </div>
         {hiddenMatches.length === 0 ? (
           <div className="text-muted-foreground text-center py-8">No hidden matches.</div>
         ) : (
           <div className="space-y-3">
-            {hiddenMatches.map(match => (
+            {hiddenMatches.map((match) => (
               <HiddenMatchCard
                 key={match.id}
                 match={match}
@@ -119,7 +135,19 @@ export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({ hiddenMa
   );
 };
 
-function HiddenMatchCard({ match, teamMatch, onUnhide, teamMatches, hiddenMatches }: { match: Match; teamMatch?: TeamMatchParticipation; onUnhide: (id: number) => void; teamMatches: Record<number, TeamMatchParticipation>; hiddenMatches: Match[] }) {
+function HiddenMatchCard({
+  match,
+  teamMatch,
+  onUnhide,
+  teamMatches,
+  hiddenMatches,
+}: {
+  match: Match;
+  teamMatch?: TeamMatchParticipation;
+  onUnhide: (id: number) => void;
+  teamMatches: Record<number, TeamMatchParticipation>;
+  hiddenMatches: Match[];
+}) {
   const opponentName = teamMatch?.opponentName || `Match ${match.id}`;
   const teamWon = didActiveTeamWin(teamMatch);
   const pickOrder = getPickOrder(teamMatch);
@@ -138,9 +166,9 @@ function HiddenMatchCard({ match, teamMatch, onUnhide, teamMatches, hiddenMatche
             </div>
             <div className="flex -space-x-1">
               {matchHeroes.slice(0, 5).map((hero, index) => (
-                <HeroAvatar 
-                  key={index} 
-                  hero={hero} 
+                <HeroAvatar
+                  key={index}
+                  hero={hero}
                   avatarSize={{ width: 'w-8', height: 'h-8' }}
                   isHighPerforming={isHighPerformingHero(hero, hiddenMatches, teamMatches, new Set())}
                 />
@@ -149,10 +177,16 @@ function HiddenMatchCard({ match, teamMatch, onUnhide, teamMatches, hiddenMatche
           </div>
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2">
-              <Badge variant={teamWon ? 'success' : 'default'} className="text-xs">{teamWon ? 'Victory' : 'Defeat'}</Badge>
-              <Badge variant="outline" className="text-xs">{teamSide === 'radiant' ? 'Radiant' : 'Dire'}</Badge>
+              <Badge variant={teamWon ? 'success' : 'default'} className="text-xs">
+                {teamWon ? 'Victory' : 'Defeat'}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                {teamSide === 'radiant' ? 'Radiant' : 'Dire'}
+              </Badge>
               {pickOrder && (
-                <Badge variant="secondary" className="text-xs">{pickOrder}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {pickOrder}
+                </Badge>
               )}
             </div>
             <button
@@ -167,5 +201,3 @@ function HiddenMatchCard({ match, teamMatch, onUnhide, teamMatches, hiddenMatche
     </Card>
   );
 }
-
-

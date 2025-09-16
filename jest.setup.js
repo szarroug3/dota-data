@@ -4,7 +4,7 @@ require('@testing-library/jest-dom');
 // Mock window.matchMedia for next-themes compatibility
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -34,7 +34,9 @@ const mockRedisInstance = {
   flushall: jest.fn(),
 };
 
-const MockRedis = function() { return mockRedisInstance; };
+const MockRedis = function () {
+  return mockRedisInstance;
+};
 MockRedis.fromEnv = () => mockRedisInstance;
 
 jest.mock('@upstash/redis', () => ({
@@ -49,7 +51,9 @@ jest.mock('next/server', () => {
       this.status = init?.status;
       this.headers = new Map();
     }
-    json() { return Promise.resolve(this.body); }
+    json() {
+      return Promise.resolve(this.body);
+    }
     static json(data, init) {
       return new NextResponse(data, init);
     }

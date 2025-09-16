@@ -14,12 +14,12 @@ const mockLocalStorage = {
   removeItem: jest.fn(),
   clear: jest.fn(),
   length: 0,
-  key: jest.fn()
+  key: jest.fn(),
 };
 
 Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
-  writable: true
+  writable: true,
 });
 
 // ============================================================================
@@ -27,14 +27,7 @@ Object.defineProperty(window, 'localStorage', {
 // ============================================================================
 
 const StateDisplay: React.FC = () => {
-  const {
-    config,
-    activeTeam,
-    getTeams,
-    isLoading,
-    isSaving,
-    error
-  } = useConfigContext();
+  const { config, activeTeam, getTeams, isLoading, isSaving, error } = useConfigContext();
 
   const renderConfigState = () => (
     <>
@@ -53,9 +46,7 @@ const StateDisplay: React.FC = () => {
     </>
   );
 
-  const renderErrorState = () => (
-    <div data-testid="error">{error || 'none'}</div>
-  );
+  const renderErrorState = () => <div data-testid="error">{error || 'none'}</div>;
 
   return (
     <div>
@@ -67,36 +58,20 @@ const StateDisplay: React.FC = () => {
 };
 
 const ActionButtons: React.FC = () => {
-  const {
-    updateConfig,
-    resetConfig,
-    clearErrors
-  } = useConfigContext();
+  const { updateConfig, resetConfig, clearErrors } = useConfigContext();
 
   return (
     <div>
-      <button 
-        onClick={() => updateConfig({ preferredExternalSite: 'dotabuff' })} 
-        data-testid="update-site-btn"
-      >
+      <button onClick={() => updateConfig({ preferredExternalSite: 'dotabuff' })} data-testid="update-site-btn">
         Update Site
       </button>
-      <button 
-        onClick={() => updateConfig({ preferredMatchlistView: 'grid' })} 
-        data-testid="update-matchlist-btn"
-      >
+      <button onClick={() => updateConfig({ preferredMatchlistView: 'grid' })} data-testid="update-matchlist-btn">
         Update Matchlist View
       </button>
-      <button 
-        onClick={() => resetConfig()} 
-        data-testid="reset-config-btn"
-      >
+      <button onClick={() => resetConfig()} data-testid="reset-config-btn">
         Reset Config
       </button>
-      <button 
-        onClick={() => clearErrors()} 
-        data-testid="clear-errors-btn"
-      >
+      <button onClick={() => clearErrors()} data-testid="clear-errors-btn">
         Clear Errors
       </button>
     </div>
@@ -164,7 +139,7 @@ describe('ConfigProvider', () => {
     it('should load configuration from localStorage on mount', async () => {
       const storedConfig = {
         preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid'
+        preferredMatchlistView: 'grid',
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
@@ -254,11 +229,11 @@ describe('ConfigProvider', () => {
       await waitForInitialLoad();
 
       clickButton('update-site-btn');
-      
+
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
           'dota-scout-assistant-config',
-          expect.stringContaining('"preferredExternalSite":"dotabuff"')
+          expect.stringContaining('"preferredExternalSite":"dotabuff"'),
         );
       });
     });
@@ -266,7 +241,7 @@ describe('ConfigProvider', () => {
     it('should load config from localStorage on mount', async () => {
       const storedConfig = {
         preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid'
+        preferredMatchlistView: 'grid',
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
@@ -296,4 +271,4 @@ describe('ConfigProvider', () => {
       expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
     });
   });
-}); 
+});

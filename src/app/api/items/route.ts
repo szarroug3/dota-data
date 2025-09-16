@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaItems } from '@/lib/api/opendota/items';
-import { ApiErrorResponse } from '@/types/api';
+import { ApiErrorResponse, ApiItemSummary } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle items API errors
@@ -11,7 +12,7 @@ function handleItemsError(error: Error): ApiErrorResponse {
     return {
       error: 'Rate limited by OpenDota API',
       status: 429,
-      details: 'Too many requests to OpenDota API. Please try again later.'
+      details: 'Too many requests to OpenDota API. Please try again later.',
     };
   }
 
@@ -19,14 +20,14 @@ function handleItemsError(error: Error): ApiErrorResponse {
     return {
       error: 'Invalid items data',
       status: 422,
-      details: 'Items data is invalid or corrupted.'
+      details: 'Items data is invalid or corrupted.',
     };
   }
 
   return {
     error: 'Failed to fetch items',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -227,9 +228,7 @@ function handleItemsError(error: Error): ApiErrorResponse {
  *               status: 500
  *               details: "Unknown error occurred"
  */
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Extract query parameters
     const { searchParams } = new URL(request.url);
@@ -238,11 +237,30 @@ export async function GET(
     // Fetch raw items data (handles caching, rate limiting, mock mode)
     const items = await fetchOpenDotaItems(force);
 
-    // Return successful response
-    return NextResponse.json(items);
+    // Wrap in response envelope, trim payload to only required fields, and validate
+    try {
+      // Create a minimal map of only the fields the frontend uses
+      const minimalItems = Object.entries(items || {}).reduce<Record<string, ApiItemSummary>>(
+        (acc, [key, value]) => {
+          if (value && typeof value === 'object') {
+            const v = value as { id?: number; img?: string; dname?: string };
+            acc[key] = { id: v.id, image: v.img, displayName: v.dname };
+          }
+          return acc;
+        },
+        {},
+      );
+
+      const response = { data: minimalItems, timestamp: new Date().toISOString() };
+      const validated = schemas.getApiItems.parse(response);
+      return NextResponse.json(validated);
+    } catch {
+      // Normalize validation errors to our 422 handler branch
+      throw new Error('Failed to parse items data');
+    }
   } catch (error) {
     console.error('Items API Error:', error);
-    
+
     if (error instanceof Error) {
       const errorResponse = handleItemsError(error);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
@@ -251,8 +269,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to fetch items',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

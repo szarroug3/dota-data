@@ -15,7 +15,7 @@ const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 // Mock window.matchMedia for next-themes
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -52,20 +52,14 @@ Object.defineProperty(window, 'localStorage', {
 // Test wrapper component with all necessary providers
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-    >
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <ConfigProvider>
         <ThemeContextProvider>
           <TeamProvider>
             <MatchDataFetchingProvider>
               <MatchProvider>
                 <PlayerProvider>
-                  <HeroProvider>
-                    {children}
-                  </HeroProvider>
+                  <HeroProvider>{children}</HeroProvider>
                 </PlayerProvider>
               </MatchProvider>
             </MatchDataFetchingProvider>
@@ -77,10 +71,8 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 // Custom render function that includes the test wrapper
-const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: TestWrapper, ...options });
+const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: TestWrapper, ...options });
 
 // Export the custom render function as renderWithProviders for better naming
 export const renderWithProviders = customRender;

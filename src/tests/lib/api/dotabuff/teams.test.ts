@@ -23,7 +23,7 @@ describe('fetchDotabuffTeam', () => {
       const mockTeamData = {
         id: '9517508',
         name: 'Maple Syrup',
-        matches: {}
+        matches: {},
       };
 
       mockRequest.mockResolvedValue(mockTeamData);
@@ -38,16 +38,14 @@ describe('fetchDotabuffTeam', () => {
         expect.stringMatching(/.*dotabuff-team-9517508\.html$/),
         false,
         60 * 60 * 6, // 6 hours
-        'dotabuff:team:9517508'
+        'dotabuff:team:9517508',
       );
     });
 
     it('should throw error when request fails', async () => {
       mockRequest.mockResolvedValue(null);
 
-      await expect(fetchDotabuffTeam('9517508')).rejects.toThrow(
-        'Failed to fetch team data for team 9517508'
-      );
+      await expect(fetchDotabuffTeam('9517508')).rejects.toThrow('Failed to fetch team data for team 9517508');
     });
 
     it('should use force parameter when provided', async () => {
@@ -63,7 +61,7 @@ describe('fetchDotabuffTeam', () => {
         expect.stringMatching(/.*dotabuff-team-9517508\.html$/),
         true, // force parameter
         60 * 60 * 6,
-        'dotabuff:team:9517508'
+        'dotabuff:team:9517508',
       );
     });
   });
@@ -92,7 +90,7 @@ describe('fetchDotabuffTeam', () => {
 
       expect(mockScrapeHtmlFromUrl).toHaveBeenCalledWith(
         'https://www.dotabuff.com/esports/teams/9517508/matches',
-        'table.table'
+        'table.table',
       );
     });
 
@@ -105,7 +103,7 @@ describe('fetchDotabuffTeam', () => {
       });
 
       await expect(fetchDotabuffTeam('9517508')).rejects.toThrow(
-        'Failed to fetch Dotabuff team 9517508: Error: Playwright error'
+        'Failed to fetch Dotabuff team 9517508: Error: Playwright error',
       );
     });
   });
@@ -131,7 +129,7 @@ describe('fetchDotabuffTeam', () => {
       expect(result).toEqual({
         id: '9517508',
         name: 'Maple Syrup',
-        matches: {}
+        matches: {},
       });
     });
 
@@ -156,7 +154,7 @@ describe('fetchDotabuffTeam', () => {
       expect(result).toEqual({
         id: '9517508',
         name: 'Test Team',
-        matches: {}
+        matches: {},
       });
     });
 
@@ -175,9 +173,7 @@ describe('fetchDotabuffTeam', () => {
         return parser(mockHtml);
       });
 
-      await expect(fetchDotabuffTeam('9517508')).rejects.toThrow(
-        'Could not parse team name from Dotabuff HTML'
-      );
+      await expect(fetchDotabuffTeam('9517508')).rejects.toThrow('Could not parse team name from Dotabuff HTML');
     });
 
     it('should parse matches from table rows', async () => {
@@ -227,7 +223,7 @@ describe('fetchDotabuffTeam', () => {
             duration: 2096,
             opponentName: 'Filthy Casuals',
             leagueId: '16435',
-            startTime: 0
+            startTime: 0,
           },
           7936128770: {
             matchId: 7936128770,
@@ -235,10 +231,10 @@ describe('fetchDotabuffTeam', () => {
             duration: 2712,
             opponentName: 'Another Team',
             leagueId: '16435',
-            startTime: 0
-          }
-        }
+            startTime: 0,
+          },
+        },
       });
     });
   });
-}); 
+});

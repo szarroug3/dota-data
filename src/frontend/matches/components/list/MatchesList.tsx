@@ -12,29 +12,32 @@ import { MatchListView, type MatchListViewMode } from './MatchListView';
 const useScrollToMatch = (cardContentRef: React.RefObject<HTMLDivElement | null>) => {
   const [scrolledMatchId, setScrolledMatchId] = useState<number | null>(null);
 
-  const handleScrollToMatch = useCallback((matchId: number) => {
-    if (!cardContentRef.current) return;
-    if (scrolledMatchId === matchId) return;
+  const handleScrollToMatch = useCallback(
+    (matchId: number) => {
+      if (!cardContentRef.current) return;
+      if (scrolledMatchId === matchId) return;
 
-    const container = cardContentRef.current;
-    const matchElement = container.querySelector(`[data-match-id="${matchId}"]`) as HTMLElement | null;
-    if (!matchElement) return;
+      const container = cardContentRef.current;
+      const matchElement = container.querySelector(`[data-match-id="${matchId}"]`) as HTMLElement | null;
+      if (!matchElement) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = matchElement.getBoundingClientRect();
-    const padding = 12;
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = matchElement.getBoundingClientRect();
+      const padding = 12;
 
-    const isFullyVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
-    if (isFullyVisible) {
+      const isFullyVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+      if (isFullyVisible) {
+        setScrolledMatchId(matchId);
+        return;
+      }
+
+      const scrollOffset = elementRect.top - containerRect.top - padding;
+      const targetScrollTop = container.scrollTop + scrollOffset;
+      container.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
       setScrolledMatchId(matchId);
-      return;
-    }
-
-    const scrollOffset = elementRect.top - containerRect.top - padding;
-    const targetScrollTop = container.scrollTop + scrollOffset;
-    container.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-    setScrolledMatchId(matchId);
-  }, [cardContentRef, scrolledMatchId]);
+    },
+    [cardContentRef, scrolledMatchId],
+  );
 
   return { handleScrollToMatch };
 };
@@ -118,26 +121,38 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
   hiddenMatchesCount = 0,
   onShowHiddenMatches,
   setViewMode,
-  cardContentRef
+  cardContentRef,
 }) => {
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
       <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
         <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
           <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Match History</h3>
-          <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">{matches.length} matches found</p>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
+            {matches.length} matches found
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="@[260px]:flex hidden w-[60px]">
             {hiddenMatchesCount > 0 && onShowHiddenMatches && (
-              <Button variant="outline" size="sm" onClick={onShowHiddenMatches} className="flex items-center gap-2 w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowHiddenMatches}
+                className="flex items-center gap-2 w-full"
+              >
                 <Eye className="h-4 w-4" />
                 <span>{hiddenMatchesCount}</span>
               </Button>
             )}
           </div>
           {onAddMatch && (
-            <Button onClick={onAddMatch} variant="outline" size="sm" className="flex items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex hidden">
+            <Button
+              onClick={onAddMatch}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex hidden"
+            >
               <Plus className="h-3 w-3" />
               <span className="@[420px]:block hidden">Add Match</span>
             </Button>
@@ -167,34 +182,53 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
   );
 };
 
-const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(({ matches, onHideMatch, onRefreshMatch, viewMode, setViewMode, selectedMatchId, onSelectMatch, hiddenMatchesCount = 0, onShowHiddenMatches, teamMatches = {}, hiddenMatchIds = new Set(), allMatches = [], onScrollToMatch, onAddMatch }, ref) => {
-  const cardContentRef = React.useRef<HTMLDivElement>(null);
-  const { handleScrollToMatch } = useScrollToMatch(cardContentRef);
+const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
+  (
+    {
+      matches,
+      onHideMatch,
+      onRefreshMatch,
+      viewMode,
+      setViewMode,
+      selectedMatchId,
+      onSelectMatch,
+      hiddenMatchesCount = 0,
+      onShowHiddenMatches,
+      teamMatches = {},
+      hiddenMatchIds = new Set(),
+      allMatches = [],
+      onScrollToMatch,
+      onAddMatch,
+    },
+    ref,
+  ) => {
+    const cardContentRef = React.useRef<HTMLDivElement>(null);
+    const { handleScrollToMatch } = useScrollToMatch(cardContentRef);
 
-  useImperativeHandle(ref, () => ({ scrollToMatch: handleScrollToMatch }));
+    useImperativeHandle(ref, () => ({ scrollToMatch: handleScrollToMatch }));
 
-  return (
-    <MatchesListContent
-      matches={matches}
-      selectedMatchId={selectedMatchId}
-      onSelectMatch={onSelectMatch}
-      onHideMatch={onHideMatch}
-      onRefreshMatch={onRefreshMatch}
-      viewMode={viewMode}
-      teamMatches={teamMatches}
-      hiddenMatchIds={hiddenMatchIds}
-      allMatches={allMatches}
-      onScrollToMatch={onScrollToMatch}
-      onAddMatch={onAddMatch}
-      hiddenMatchesCount={hiddenMatchesCount}
-      onShowHiddenMatches={onShowHiddenMatches}
-      setViewMode={setViewMode}
-      cardContentRef={cardContentRef}
-    />
-  );
-});
+    return (
+      <MatchesListContent
+        matches={matches}
+        selectedMatchId={selectedMatchId}
+        onSelectMatch={onSelectMatch}
+        onHideMatch={onHideMatch}
+        onRefreshMatch={onRefreshMatch}
+        viewMode={viewMode}
+        teamMatches={teamMatches}
+        hiddenMatchIds={hiddenMatchIds}
+        allMatches={allMatches}
+        onScrollToMatch={onScrollToMatch}
+        onAddMatch={onAddMatch}
+        hiddenMatchesCount={hiddenMatchesCount}
+        onShowHiddenMatches={onShowHiddenMatches}
+        setViewMode={setViewMode}
+        cardContentRef={cardContentRef}
+      />
+    );
+  },
+);
 
 MatchesList.displayName = 'MatchesList';
 
 export default MatchesList;
-

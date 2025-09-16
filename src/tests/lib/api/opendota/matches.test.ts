@@ -4,16 +4,15 @@ import {
   fetchParsedOpenDotaMatch,
   initiateOpenDotaMatchParse,
   parseOpenDotaMatchWithJobPolling,
-  parseOpenDotaMatchWithPolling
+  parseOpenDotaMatchWithPolling,
 } from '@/lib/api/opendota/matches';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
 // Mock the request utilities
 jest.mock('@/lib/utils/request', () => ({
   request: jest.fn(),
-  requestWithRetry: jest.fn()
+  requestWithRetry: jest.fn(),
 }));
-
 
 describe('OpenDota Matches API', () => {
   beforeEach(() => {
@@ -27,7 +26,7 @@ describe('OpenDota Matches API', () => {
         radiant_win: true,
         duration: 2400,
         start_time: 1640995200,
-        players: []
+        players: [],
       };
 
       jest.mocked(request).mockResolvedValue(mockMatch);
@@ -42,7 +41,7 @@ describe('OpenDota Matches API', () => {
         expect.any(String),
         false,
         60 * 60 * 24 * 14,
-        'opendota:match:1234567890'
+        'opendota:match:1234567890',
       );
     });
   });
@@ -55,7 +54,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify(mockParseResponse))
+        text: () => Promise.resolve(JSON.stringify(mockParseResponse)),
       } as Response);
 
       const result = await initiateOpenDotaMatchParse('1234567890');
@@ -65,28 +64,26 @@ describe('OpenDota Matches API', () => {
     });
 
     it('should handle parse request failure', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       } as Response);
 
-      await expect(initiateOpenDotaMatchParse('1234567890'))
-        .rejects.toThrow('Match not found');
+      await expect(initiateOpenDotaMatchParse('1234567890')).rejects.toThrow('Match not found');
     });
 
     it('should handle invalid parse response', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve('{}') // Empty response without jobId
+        text: () => Promise.resolve('{}'), // Empty response without jobId
       } as Response);
 
-      await expect(initiateOpenDotaMatchParse('1234567890'))
-        .rejects.toThrow('Invalid parse response for match 1234567890');
+      await expect(initiateOpenDotaMatchParse('1234567890')).rejects.toThrow(
+        'Invalid parse response for match 1234567890',
+      );
     });
   });
 
@@ -98,7 +95,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify(mockStatusResponse))
+        text: () => Promise.resolve(JSON.stringify(mockStatusResponse)),
       } as Response);
 
       const result = await checkOpenDotaParseStatus('test-job-123');
@@ -108,15 +105,13 @@ describe('OpenDota Matches API', () => {
     });
 
     it('should handle parse status failure', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       } as Response);
 
-      await expect(checkOpenDotaParseStatus('test-job-123'))
-        .rejects.toThrow('Parse job not found');
+      await expect(checkOpenDotaParseStatus('test-job-123')).rejects.toThrow('Parse job not found');
     });
   });
 
@@ -129,7 +124,7 @@ describe('OpenDota Matches API', () => {
         start_time: 1640995200,
         players: [],
         teamfights: [{ start: 600, end: 900, deaths: 3, players: [] }],
-        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }]
+        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }],
       };
 
       jest.mocked(request).mockResolvedValue(mockParsedMatch);
@@ -144,7 +139,7 @@ describe('OpenDota Matches API', () => {
         expect.any(String),
         true,
         60 * 60 * 24 * 14,
-        'opendota:parsed-match:1234567890'
+        'opendota:parsed-match:1234567890',
       );
     });
   });
@@ -158,7 +153,7 @@ describe('OpenDota Matches API', () => {
         start_time: 1640995200,
         players: [],
         teamfights: [{ start: 600, end: 900, deaths: 3, players: [] }],
-        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }]
+        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }],
       };
 
       // Mock the initiate parse request (POST to /request/{matchId})
@@ -166,7 +161,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' }))
+        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
       } as Response);
 
       // Mock the status check (GET to /request/{jobId}) - returns empty object when complete
@@ -174,7 +169,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve('{}')
+        text: () => Promise.resolve('{}'),
       } as Response);
 
       // Mock the fetch parsed match data
@@ -188,25 +183,22 @@ describe('OpenDota Matches API', () => {
     });
 
     it('should handle parse initiation failure', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       } as Response);
 
-      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 5000))
-        .rejects.toThrow('Match not found');
+      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 5000)).rejects.toThrow('Match not found');
     });
 
     it('should timeout if parsing takes too long', async () => {
-      
       // Mock successful parse initiation
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' }))
+        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
       } as Response);
 
       // Mock status check that returns pending status (not empty object)
@@ -214,32 +206,29 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ status: 'pending' }))
+        text: () => Promise.resolve(JSON.stringify({ status: 'pending' })),
       } as Response);
 
-      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 100))
-        .rejects.toThrow('Match parsing timed out');
+      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 100)).rejects.toThrow('Match parsing timed out');
     });
 
     it('should continue polling when parse job not found during polling', async () => {
-      
       // Mock successful parse initiation
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' }))
+        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
       } as Response);
 
       // Mock status check that returns job not found (should continue polling)
       jest.mocked(requestWithRetry).mockResolvedValue({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       } as Response);
 
-      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 100))
-        .rejects.toThrow('Match parsing timed out');
+      await expect(parseOpenDotaMatchWithJobPolling('1234567890', 100)).rejects.toThrow('Match parsing timed out');
     });
   });
 
@@ -252,14 +241,14 @@ describe('OpenDota Matches API', () => {
         start_time: 1640995200,
         players: [],
         teamfights: [{ start: 600, end: 900, deaths: 3, players: [] }],
-        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }]
+        picks_bans: [{ is_pick: true, hero_id: 1, team: 0, order: 0 }],
       };
 
       // Mock the parse request (POST to /request/{matchId})
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        statusText: 'OK'
+        statusText: 'OK',
       } as Response);
 
       // Mock the match fetch (GET to /matches/{matchId})
@@ -267,7 +256,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify(mockParsedMatch))
+        text: () => Promise.resolve(JSON.stringify(mockParsedMatch)),
       } as Response);
 
       const result = await parseOpenDotaMatchWithPolling('1234567890', 5000);
@@ -277,36 +266,31 @@ describe('OpenDota Matches API', () => {
     });
 
     it('should handle parse request failure', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
       } as Response);
 
-      await expect(parseOpenDotaMatchWithPolling('1234567890', 5000))
-        .rejects.toThrow('Match not found');
+      await expect(parseOpenDotaMatchWithPolling('1234567890', 5000)).rejects.toThrow('Match not found');
     });
 
     it('should handle rate limiting', async () => {
-      
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: false,
         status: 429,
-        statusText: 'Too Many Requests'
+        statusText: 'Too Many Requests',
       } as Response);
 
-      await expect(parseOpenDotaMatchWithPolling('1234567890', 5000))
-        .rejects.toThrow('Rate limited');
+      await expect(parseOpenDotaMatchWithPolling('1234567890', 5000)).rejects.toThrow('Rate limited');
     });
 
     it('should timeout if parsing takes too long', async () => {
-      
       // Mock successful parse request
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
         status: 200,
-        statusText: 'OK'
+        statusText: 'OK',
       } as Response);
 
       // Mock match fetch that returns unparsed data (no teamfights, picks_bans, etc.)
@@ -315,7 +299,7 @@ describe('OpenDota Matches API', () => {
         radiant_win: true,
         duration: 2400,
         start_time: 1640995200,
-        players: []
+        players: [],
         // No teamfights, picks_bans, or draft_timings
       };
 
@@ -323,11 +307,10 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify(unparsedMatch))
+        text: () => Promise.resolve(JSON.stringify(unparsedMatch)),
       } as Response);
 
-      await expect(parseOpenDotaMatchWithPolling('1234567890', 100))
-        .rejects.toThrow('Match parsing timed out');
+      await expect(parseOpenDotaMatchWithPolling('1234567890', 100)).rejects.toThrow('Match parsing timed out');
     });
   });
-}); 
+});

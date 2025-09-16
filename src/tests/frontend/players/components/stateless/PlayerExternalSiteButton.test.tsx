@@ -15,12 +15,7 @@ describe('PlayerExternalSiteButton', () => {
   });
 
   it('renders with dotabuff configuration', () => {
-    render(
-      <PlayerExternalSiteButton
-        playerId={123456789}
-        preferredSite="dotabuff"
-      />
-    );
+    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
 
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
@@ -29,12 +24,7 @@ describe('PlayerExternalSiteButton', () => {
   });
 
   it('renders with opendota configuration', () => {
-    render(
-      <PlayerExternalSiteButton
-        playerId={123456789}
-        preferredSite="opendota"
-      />
-    );
+    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="opendota" />);
 
     const button = screen.getByRole('button');
     expect(button).toBeInTheDocument();
@@ -43,12 +33,7 @@ describe('PlayerExternalSiteButton', () => {
   });
 
   it('opens correct URL when clicked for dotabuff', () => {
-    render(
-      <PlayerExternalSiteButton
-        playerId={123456789}
-        preferredSite="dotabuff"
-      />
-    );
+    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
 
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -56,17 +41,12 @@ describe('PlayerExternalSiteButton', () => {
     expect(mockOpen).toHaveBeenCalledWith(
       'https://www.dotabuff.com/players/123456789',
       '_blank',
-      'noopener,noreferrer'
+      'noopener,noreferrer',
     );
   });
 
   it('opens correct URL when clicked for opendota', () => {
-    render(
-      <PlayerExternalSiteButton
-        playerId={123456789}
-        preferredSite="opendota"
-      />
-    );
+    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="opendota" />);
 
     const button = screen.getByRole('button');
     fireEvent.click(button);
@@ -74,23 +54,18 @@ describe('PlayerExternalSiteButton', () => {
     expect(mockOpen).toHaveBeenCalledWith(
       'https://www.opendota.com/players/123456789',
       '_blank',
-      'noopener,noreferrer'
+      'noopener,noreferrer',
     );
   });
 
   it('prevents event propagation when clicked', () => {
     const mockStopPropagation = jest.fn();
-    
-    render(
-      <PlayerExternalSiteButton
-        playerId={123456789}
-        preferredSite="dotabuff"
-      />
-    );
+
+    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
 
     const button = screen.getByRole('button');
     fireEvent.click(button, { stopPropagation: mockStopPropagation });
 
     expect(mockOpen).toHaveBeenCalled();
   });
-}); 
+});

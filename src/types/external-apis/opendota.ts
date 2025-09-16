@@ -194,10 +194,13 @@ export interface OpenDotaMatchPlayer {
     item_type_name: string | null;
     used_by_heroes: string | null;
   }>;
-  benchmarks: Record<string, {
-    raw: number;
-    pct: number;
-  }>;
+  benchmarks: Record<
+    string,
+    {
+      raw: number;
+      pct: number;
+    }
+  >;
   times: number[];
   gold_t: number[];
   lh_t: number[];
@@ -484,5 +487,3 @@ export interface OpenDotaItem {
   bkbpierce?: string;
   tier?: number;
 }
-
-

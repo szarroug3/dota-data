@@ -1,6 +1,6 @@
 /**
  * Constants Data Fetching Context Tests
- * 
+ *
  * Tests for the constants data fetching context functionality including
  * hero and item data fetching, caching, and error handling.
  */
@@ -10,7 +10,10 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 
-import { ConstantsDataFetchingProvider, useConstantsDataFetching } from '@/frontend/contexts/constants-data-fetching-context';
+import {
+  ConstantsDataFetchingProvider,
+  useConstantsDataFetching,
+} from '@/frontend/contexts/constants-data-fetching-context';
 
 // Mock fetch
 const mockFetch = jest.fn();
@@ -28,7 +31,7 @@ const TestComponent: React.FC = () => {
     isHeroesCached,
     isItemsCached,
     getHeroesError,
-    getItemsError
+    getItemsError,
   } = useConstantsDataFetching();
 
   const [heroesResult, setHeroesResult] = React.useState<string>('none');
@@ -54,8 +57,8 @@ const TestComponent: React.FC = () => {
       <div data-testid="items-cached">{itemsCached.toString()}</div>
       <div data-testid="heroes-error">{heroesError}</div>
       <div data-testid="items-error">{itemsError}</div>
-      
-      <button 
+
+      <button
         onClick={async () => {
           const result = await fetchHeroesData();
           if ('error' in result) {
@@ -68,8 +71,8 @@ const TestComponent: React.FC = () => {
       >
         Fetch Heroes
       </button>
-      
-      <button 
+
+      <button
         onClick={async () => {
           const result = await fetchItemsData();
           if ('error' in result) {
@@ -82,8 +85,8 @@ const TestComponent: React.FC = () => {
       >
         Fetch Items
       </button>
-      
-      <button 
+
+      <button
         onClick={() => {
           clearHeroesCache();
           setHeroesCached(isHeroesCached());
@@ -92,8 +95,8 @@ const TestComponent: React.FC = () => {
       >
         Clear Heroes Cache
       </button>
-      
-      <button 
+
+      <button
         onClick={() => {
           clearItemsCache();
           setItemsCached(isItemsCached());
@@ -102,8 +105,8 @@ const TestComponent: React.FC = () => {
       >
         Clear Items Cache
       </button>
-      
-      <button 
+
+      <button
         onClick={() => {
           clearAllCache();
           setHeroesCached(isHeroesCached());
@@ -113,8 +116,8 @@ const TestComponent: React.FC = () => {
       >
         Clear All Cache
       </button>
-      
-      <button 
+
+      <button
         onClick={() => {
           clearAllErrors();
         }}
@@ -128,9 +131,7 @@ const TestComponent: React.FC = () => {
 
 // Wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ConstantsDataFetchingProvider>
-    {children}
-  </ConstantsDataFetchingProvider>
+  <ConstantsDataFetchingProvider>{children}</ConstantsDataFetchingProvider>
 );
 
 describe('ConstantsDataFetchingContext', () => {
@@ -144,7 +145,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId('heroes-result')).toHaveTextContent('none');
@@ -160,18 +161,18 @@ describe('ConstantsDataFetchingContext', () => {
     it('should fetch heroes successfully', async () => {
       const mockHeroes = [
         { id: 1, name: 'Anti-Mage', localized_name: 'Anti-Mage' },
-        { id: 2, name: 'Axe', localized_name: 'Axe' }
+        { id: 2, name: 'Axe', localized_name: 'Axe' },
       ];
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockHeroes)
+        json: () => Promise.resolve(mockHeroes),
       });
 
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const fetchHeroesButton = screen.getByTestId('fetch-heroes-btn');
@@ -194,7 +195,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const fetchHeroesButton = screen.getByTestId('fetch-heroes-btn');
@@ -212,18 +213,18 @@ describe('ConstantsDataFetchingContext', () => {
     it('should fetch items successfully', async () => {
       const mockItems = {
         '1': { id: 1, name: 'Blink Dagger', localized_name: 'Blink Dagger' },
-        '2': { id: 2, name: 'Force Staff', localized_name: 'Force Staff' }
+        '2': { id: 2, name: 'Force Staff', localized_name: 'Force Staff' },
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockItems)
+        json: () => Promise.resolve(mockItems),
       });
 
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const fetchItemsButton = screen.getByTestId('fetch-items-btn');
@@ -246,7 +247,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const fetchItemsButton = screen.getByTestId('fetch-items-btn');
@@ -265,7 +266,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const clearHeroesCacheButton = screen.getByTestId('clear-heroes-cache-btn');
@@ -283,7 +284,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const clearItemsCacheButton = screen.getByTestId('clear-items-cache-btn');
@@ -301,7 +302,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const clearAllCacheButton = screen.getByTestId('clear-all-cache-btn');
@@ -325,7 +326,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const fetchHeroesButton = screen.getByTestId('fetch-heroes-btn');
@@ -354,7 +355,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Initially not cached
@@ -364,7 +365,7 @@ describe('ConstantsDataFetchingContext', () => {
       const mockHeroes = [{ id: 1, name: 'Anti-Mage', localized_name: 'Anti-Mage' }];
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockHeroes)
+        json: () => Promise.resolve(mockHeroes),
       });
 
       const fetchHeroesButton = screen.getByTestId('fetch-heroes-btn');
@@ -381,7 +382,7 @@ describe('ConstantsDataFetchingContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Initially not cached
@@ -391,7 +392,7 @@ describe('ConstantsDataFetchingContext', () => {
       const mockItems = { '1': { id: 1, name: 'Blink Dagger', localized_name: 'Blink Dagger' } };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockItems)
+        json: () => Promise.resolve(mockItems),
       });
 
       const fetchItemsButton = screen.getByTestId('fetch-items-btn');
@@ -404,4 +405,4 @@ describe('ConstantsDataFetchingContext', () => {
       });
     });
   });
-}); 
+});

@@ -32,18 +32,21 @@ function useAddTeamForm(teamContext: ReturnType<typeof useTeamContext>) {
     setLeagueId('');
   }, []);
 
-  const handleSubmit = useCallback(async (newTeamId: string, newLeagueId: string) => {
-    try {
-      setIsSubmitting(true);
-      const { teamId: tId, leagueId: lId } = convertTeamIds(newTeamId, newLeagueId);
-      await teamContext.addTeam(tId, lId);
-      reset();
-    } catch (error) {
-      console.error('Failed to add team:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [teamContext, reset]);
+  const handleSubmit = useCallback(
+    async (newTeamId: string, newLeagueId: string) => {
+      try {
+        setIsSubmitting(true);
+        const { teamId: tId, leagueId: lId } = convertTeamIds(newTeamId, newLeagueId);
+        await teamContext.addTeam(tId, lId);
+        reset();
+      } catch (error) {
+        console.error('Failed to add team:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [teamContext, reset],
+  );
 
   const checkTeamExists = useCallback(() => {
     const key = `${teamId}-${leagueId}`;
@@ -72,16 +75,19 @@ function useEditTeamSheet(teamContext: ReturnType<typeof useTeamContext>) {
 
   const handleEditTeam = useCallback((tId: number, lId: number) => open(String(tId), String(lId)), [open]);
 
-  const handleSave = useCallback(async (newTeamId: string, newLeagueId: string) => {
-    try {
-      const { teamId: newT, leagueId: newL } = convertTeamIds(newTeamId, newLeagueId);
-      const { teamId: curT, leagueId: curL } = convertTeamIds(editingTeamId, editingLeagueId);
-      await teamContext.editTeam(curT, curL, newT, newL);
-      close();
-    } catch (error) {
-      console.error('Failed to save edited team:', error);
-    }
-  }, [teamContext, editingTeamId, editingLeagueId, close]);
+  const handleSave = useCallback(
+    async (newTeamId: string, newLeagueId: string) => {
+      try {
+        const { teamId: newT, leagueId: newL } = convertTeamIds(newTeamId, newLeagueId);
+        const { teamId: curT, leagueId: curL } = convertTeamIds(editingTeamId, editingLeagueId);
+        await teamContext.editTeam(curT, curL, newT, newL);
+        close();
+      } catch (error) {
+        console.error('Failed to save edited team:', error);
+      }
+    },
+    [teamContext, editingTeamId, editingLeagueId, close],
+  );
 
   const teamExistsFor = useCallback((t: string, l: string) => teamContext.teams.has(`${t}-${l}`), [teamContext.teams]);
 
@@ -113,9 +119,12 @@ function useActiveTeam(teamContext: ReturnType<typeof useTeamContext>) {
     ? { teamId: teamContext.selectedTeamId.teamId, leagueId: teamContext.selectedTeamId.leagueId }
     : null;
 
-  const handleSetActiveTeam = useCallback(async (t: number, l: number) => {
-    teamContext.setSelectedTeamId(t, l);
-  }, [teamContext]);
+  const handleSetActiveTeam = useCallback(
+    async (t: number, l: number) => {
+      teamContext.setSelectedTeamId(t, l);
+    },
+    [teamContext],
+  );
 
   return { activeTeam, handleSetActiveTeam };
 }
@@ -169,5 +178,3 @@ export function DashboardPageContainer(): React.ReactElement {
     </>
   );
 }
-
-

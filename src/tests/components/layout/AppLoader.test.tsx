@@ -9,19 +9,20 @@ import { TeamProvider, useTeamContext } from '@/frontend/teams/contexts/state/te
 // Mock the contexts
 jest.mock('@/frontend/contexts/theme-context', () => ({
   useThemeContext: jest.fn(),
-  ThemeContextProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>
+  ThemeContextProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
 }));
 
 jest.mock('@/frontend/contexts/config-context', () => ({
   useConfigContext: jest.fn(),
-  ConfigProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="config-provider">{children}</div>
+  ConfigProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="config-provider">{children}</div>,
 }));
 
 jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
   useTeamContext: jest.fn(),
-  TeamProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="team-provider">{children}</div>
+  TeamProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="team-provider">{children}</div>,
 }));
-
 
 describe('AppLoader', () => {
   it('should show blank screen while loading', () => {
@@ -38,7 +39,7 @@ describe('AppLoader', () => {
             </AppLoader>
           </TeamProvider>
         </ConfigProvider>
-      </ThemeContextProvider>
+      </ThemeContextProvider>,
     );
 
     // Should show blank screen (no content)
@@ -60,14 +61,17 @@ describe('AppLoader', () => {
             </AppLoader>
           </TeamProvider>
         </ConfigProvider>
-      </ThemeContextProvider>
+      </ThemeContextProvider>,
     );
 
     // Should render app content after loading
-    await waitFor(() => {
-      expect(screen.getAllByTestId('app-content')).toHaveLength(2);
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(screen.getAllByTestId('app-content')).toHaveLength(2);
+      },
+      { timeout: 2000 },
+    );
 
     expect(screen.getByText('App Content')).toBeInTheDocument();
   });
-}); 
+});

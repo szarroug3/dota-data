@@ -1,6 +1,6 @@
 /**
  * Theme Context Tests
- * 
+ *
  * Tests for the centralized theme context to ensure it properly manages theme state
  * and provides smooth transitions.
  */
@@ -18,25 +18,33 @@ jest.mock('next-themes', () => ({
     theme: 'light',
     setTheme: jest.fn(),
     resolvedTheme: 'light',
-    systemTheme: 'light'
+    systemTheme: 'light',
   }),
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
 }));
 
 // Test component that uses the theme context
 const TestComponent: React.FC = () => {
   const { theme, resolvedTheme, setTheme, toggleTheme, isThemeLoading, isTransitioning } = useThemeContext();
-  
+
   return (
     <div>
       <div data-testid="current-theme">{theme}</div>
       <div data-testid="resolved-theme">{resolvedTheme}</div>
       <div data-testid="is-loading">{isThemeLoading.toString()}</div>
       <div data-testid="is-transitioning">{isTransitioning.toString()}</div>
-      <button data-testid="set-light" onClick={() => setTheme('light')}>Set Light</button>
-      <button data-testid="set-dark" onClick={() => setTheme('dark')}>Set Dark</button>
-      <button data-testid="set-system" onClick={() => setTheme('system')}>Set System</button>
-      <button data-testid="toggle-theme" onClick={toggleTheme}>Toggle Theme</button>
+      <button data-testid="set-light" onClick={() => setTheme('light')}>
+        Set Light
+      </button>
+      <button data-testid="set-dark" onClick={() => setTheme('dark')}>
+        Set Dark
+      </button>
+      <button data-testid="set-system" onClick={() => setTheme('system')}>
+        Set System
+      </button>
+      <button data-testid="toggle-theme" onClick={toggleTheme}>
+        Toggle Theme
+      </button>
     </div>
   );
 };
@@ -55,7 +63,7 @@ const TestWrapper: React.FC = () => (
 describe('ThemeContext', () => {
   it('should provide theme context values', () => {
     render(<TestWrapper />);
-    
+
     expect(screen.getByTestId('current-theme')).toHaveTextContent('light');
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('light');
     expect(screen.getByTestId('is-loading')).toHaveTextContent('false');
@@ -64,7 +72,7 @@ describe('ThemeContext', () => {
 
   it('should provide theme change functions', () => {
     render(<TestWrapper />);
-    
+
     expect(screen.getByTestId('set-light')).toBeInTheDocument();
     expect(screen.getByTestId('set-dark')).toBeInTheDocument();
     expect(screen.getByTestId('set-system')).toBeInTheDocument();
@@ -73,16 +81,16 @@ describe('ThemeContext', () => {
 
   it('should handle theme changes', async () => {
     render(<TestWrapper />);
-    
+
     const setLightButton = screen.getByTestId('set-light');
     const setDarkButton = screen.getByTestId('set-dark');
     const setSystemButton = screen.getByTestId('set-system');
-    
+
     // Test setting different themes
     fireEvent.click(setLightButton);
     fireEvent.click(setDarkButton);
     fireEvent.click(setSystemButton);
-    
+
     // Verify buttons are clickable
     expect(setLightButton).toBeInTheDocument();
     expect(setDarkButton).toBeInTheDocument();
@@ -91,18 +99,18 @@ describe('ThemeContext', () => {
 
   it('should handle theme toggle', async () => {
     render(<TestWrapper />);
-    
+
     const toggleButton = screen.getByTestId('toggle-theme');
     fireEvent.click(toggleButton);
-    
+
     // Verify toggle button is clickable
     expect(toggleButton).toBeInTheDocument();
   });
 
   it('should provide transition state', () => {
     render(<TestWrapper />);
-    
+
     const isTransitioning = screen.getByTestId('is-transitioning');
     expect(isTransitioning).toHaveTextContent('false');
   });
-}); 
+});

@@ -1,6 +1,6 @@
 /**
  * Constants context value types
- * 
+ *
  * Defines the structure for constants-related state and data management
  * in the frontend application. Includes heroes and items.
  */
@@ -45,28 +45,28 @@ export interface Item {
 export interface ConstantsContextValue {
   // Hero data - mapped by hero ID for easier lookup
   heroes: Record<string, Hero>; // Key is hero ID as string
-  
+
   // Hero data - mapped by hero name for easier lookup
   heroesByName: Record<string, Hero>; // Key is hero name (e.g., "npc_dota_hero_lion")
-  
+
   // Item data exposed for UI/tests - keyed by canonical item name (e.g., 'item_blink')
   items: Record<string, Item>;
   // Item data keyed by numeric ID for match data lookup
   itemsById: Record<number, Item>;
-  
+
   // Loading states
   isLoadingHeroes: boolean;
   isLoadingItems: boolean;
-  
+
   // Error states
   heroesError: string | null;
   itemsError: string | null;
-  
+
   // Actions
   fetchHeroes: (force?: boolean) => Promise<void>;
   fetchItems: (force?: boolean) => Promise<void>;
   clearErrors: () => void;
-  
+
   // Utility functions
   getItemById: (itemId: number | string) => Item | undefined;
   getHeroById: (heroId: string) => Hero | undefined;
@@ -78,4 +78,4 @@ export interface ConstantsContextValue {
  */
 export interface ConstantsContextProviderProps {
   children: React.ReactNode;
-} 
+}

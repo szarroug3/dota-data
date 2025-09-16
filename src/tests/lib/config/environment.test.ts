@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Environment Configuration Tests
- * 
+ *
  * Tests for the environment configuration system to ensure proper
  * validation, parsing, and type safety.
  */
@@ -40,11 +40,11 @@ describe('Environment Configuration', () => {
       (process.env as any).USE_MOCK_API = 'true';
       (process.env as any).USE_REDIS = 'false';
       (process.env as any).DEBUG_LOGGING = 'true';
-      
+
       // Re-import to get fresh config
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
-      
+
       expect(freshEnv.USE_MOCK_API).toBe(true);
       expect(freshEnv.USE_REDIS).toBe(false);
       expect(freshEnv.DEBUG_LOGGING).toBe(true);
@@ -53,10 +53,10 @@ describe('Environment Configuration', () => {
     it('should parse numeric environment variables correctly', () => {
       (process.env as any).OPENDOTA_API_TIMEOUT = '5000';
       (process.env as any).DOTABUFF_REQUEST_DELAY = '2000';
-      
+
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
-      
+
       expect(freshEnv.OPENDOTA_API_TIMEOUT).toBe(5000);
       expect(freshEnv.DOTABUFF_REQUEST_DELAY).toBe(2000);
     });
@@ -65,29 +65,29 @@ describe('Environment Configuration', () => {
       // Clear specific env vars
       delete (process.env as any).OPENDOTA_API_BASE_URL;
       delete (process.env as any).DOTABUFF_BASE_URL;
-      
+
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
-      
+
       expect(freshEnv.OPENDOTA_API_BASE_URL).toBe('https://api.opendota.com/api');
       expect(freshEnv.DOTABUFF_BASE_URL).toBe('https://www.dotabuff.com');
     });
 
     it('should parse NODE_ENV correctly', () => {
       (process.env as any).NODE_ENV = 'production';
-      
+
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
-      
+
       expect(freshEnv.NODE_ENV).toBe('production');
     });
 
     it('should default NODE_ENV to development', () => {
       delete (process.env as any).NODE_ENV;
-      
+
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
-      
+
       expect(freshEnv.NODE_ENV).toBe('development');
     });
   });
@@ -95,7 +95,7 @@ describe('Environment Configuration', () => {
   describe('Environment Variable Validation', () => {
     it('should throw error for invalid NODE_ENV', () => {
       (process.env as any).NODE_ENV = 'invalid';
-      
+
       expect(() => {
         jest.resetModules();
         require('../../../lib/config/environment');
@@ -105,7 +105,7 @@ describe('Environment Configuration', () => {
     it('should throw error for invalid LOG_LEVEL', () => {
       (process.env as any).NODE_ENV = 'development';
       (process.env as any).LOG_LEVEL = 'invalid';
-      
+
       expect(() => {
         jest.resetModules();
         require('../../../lib/config/environment');
@@ -115,7 +115,7 @@ describe('Environment Configuration', () => {
     it('should throw error for invalid URLs', () => {
       (process.env as any).NODE_ENV = 'development';
       (process.env as any).OPENDOTA_API_BASE_URL = 'not-a-url';
-      
+
       expect(() => {
         jest.resetModules();
         require('../../../lib/config/environment');
@@ -125,7 +125,7 @@ describe('Environment Configuration', () => {
     it('should not validate in test environment', () => {
       (process.env as any).NODE_ENV = 'test';
       (process.env as any).LOG_LEVEL = 'invalid';
-      
+
       expect(() => {
         jest.resetModules();
         require('../../../lib/config/environment');
@@ -156,7 +156,7 @@ describe('Environment Configuration', () => {
       jest.resetModules();
       const { generateEnvironmentDocs } = require('../../../lib/config/environment');
       const docs = generateEnvironmentDocs();
-      
+
       expect(docs).toContain('# Environment Variables Documentation');
       expect(docs).toContain('## Core Configuration');
       expect(docs).toContain('## Mock Mode Settings');
@@ -173,7 +173,7 @@ describe('Environment Configuration', () => {
       jest.resetModules();
       const { generateEnvironmentDocs } = require('../../../lib/config/environment');
       const docs = generateEnvironmentDocs();
-      
+
       // Check for key variables
       expect(docs).toContain('### NODE_ENV');
       expect(docs).toContain('### USE_MOCK_API');
@@ -187,8 +187,8 @@ describe('Environment Configuration', () => {
       jest.resetModules();
       const { generateEnvironmentDocs } = require('../../../lib/config/environment');
       const docs = generateEnvironmentDocs();
-      
-      expect(docs).toContain('- **Type**: \'development\' | \'production\' | \'test\'');
+
+      expect(docs).toContain("- **Type**: 'development' | 'production' | 'test'");
       expect(docs).toContain('- **Type**: boolean');
       expect(docs).toContain('- **Type**: number');
       expect(docs).toContain('- **Type**: string');
@@ -198,11 +198,11 @@ describe('Environment Configuration', () => {
       jest.resetModules();
       const { generateEnvironmentDocs } = require('../../../lib/config/environment');
       const docs = generateEnvironmentDocs();
-      
-      expect(docs).toContain('- **Default**: \'development\'');
+
+      expect(docs).toContain("- **Default**: 'development'");
       expect(docs).toContain('- **Default**: false');
       expect(docs).toContain('- **Default**: 60');
-      expect(docs).toContain('- **Default**: \'https://api.opendota.com/api\'');
+      expect(docs).toContain("- **Default**: 'https://api.opendota.com/api'");
     });
   });
 
@@ -248,4 +248,4 @@ describe('Environment Configuration', () => {
       expect(env).toHaveProperty('CI');
     });
   });
-}); 
+});

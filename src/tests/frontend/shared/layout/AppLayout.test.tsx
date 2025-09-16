@@ -16,7 +16,9 @@ jest.mock('@/frontend/shared/layout/ErrorBoundary', () => ({
 // Mock the SidebarInset component
 jest.mock('@/components/ui/sidebar', () => ({
   SidebarInset: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="sidebar-inset" className={className}>{children}</div>
+    <div data-testid="sidebar-inset" className={className}>
+      {children}
+    </div>
   ),
 }));
 
@@ -25,9 +27,9 @@ describe('AppLayout', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
-      </AppLayout>
+      </AppLayout>,
     );
-    
+
     expect(screen.getByTestId('error-boundary')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-inset')).toBeInTheDocument();
@@ -38,9 +40,9 @@ describe('AppLayout', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
-      </AppLayout>
+      </AppLayout>,
     );
-    
+
     // Check that the sidebar inset has the correct classes
     const sidebarInset = screen.getByTestId('sidebar-inset');
     expect(sidebarInset).toHaveClass('p-6');
@@ -50,9 +52,9 @@ describe('AppLayout', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
-      </AppLayout>
+      </AppLayout>,
     );
-    
+
     // The main content area should be present
     expect(screen.getByTestId('test-content')).toBeInTheDocument();
   });
@@ -61,12 +63,12 @@ describe('AppLayout', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
-      </AppLayout>
+      </AppLayout>,
     );
-    
+
     // The content should be rendered directly without a grid wrapper
     const content = screen.getByTestId('test-content');
     const sidebarInset = screen.getByTestId('sidebar-inset');
     expect(sidebarInset).toContainElement(content);
   });
-}); 
+});

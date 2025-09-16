@@ -46,15 +46,7 @@ interface FormFieldInputProps {
   isValid: boolean;
 }
 
-const FormFieldInput: React.FC<FormFieldInputProps> = ({
-  id,
-  label,
-  placeholder,
-  value,
-  onChange,
-  error,
-  isValid
-}) => {
+const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder, value, onChange, error, isValid }) => {
   const hasError = Boolean(error);
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
 
@@ -106,19 +98,16 @@ export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
   teamIdError,
   leagueIdError,
   buttonText,
-  buttonDisabled
+  buttonDisabled,
 }) => {
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="p-6">
         <SheetHeader>
           <SheetTitle>Edit Team</SheetTitle>
-          <SheetDescription>
-            Update team and league information
-          </SheetDescription>
+          <SheetDescription>Update team and league information</SheetDescription>
         </SheetHeader>
-        
+
         <EditTeamSheetContent
           error={error}
           newTeamId={newTeamId}
@@ -130,10 +119,10 @@ export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
           onSubmit={onSubmit}
           buttonDisabled={buttonDisabled}
         />
-        
+
         <SheetFooter className="flex flex-col gap-2 w-full">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             onClick={onSubmit}
             disabled={buttonDisabled || isSubmitting}
             aria-busy={isSubmitting}
@@ -174,7 +163,7 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
   shouldShowTeamError,
   shouldShowLeagueError,
   onSubmit,
-  buttonDisabled
+  buttonDisabled,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -188,35 +177,33 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
   return (
     <div className="grid flex-1 auto-rows-min gap-6 py-4">
       <div className="grid gap-4" onKeyDown={handleKeyDown}>
-      {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm text-destructive">{error}</p>
+        {error && (
+          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4">
+          <FormFieldInput
+            id="teamId"
+            label="Team ID"
+            placeholder="e.g., 9517508"
+            value={newTeamId}
+            onChange={setNewTeamId}
+            error={shouldShowTeamError}
+            isValid={!shouldShowTeamError}
+          />
+          <FormFieldInput
+            id="leagueId"
+            label="League ID"
+            placeholder="e.g., 16435"
+            value={newLeagueId}
+            onChange={setNewLeagueId}
+            error={shouldShowLeagueError}
+            isValid={!shouldShowLeagueError}
+          />
         </div>
-      )}
-      
-      <div className="grid grid-cols-1 gap-4">
-        <FormFieldInput
-          id="teamId"
-          label="Team ID"
-          placeholder="e.g., 9517508"
-          value={newTeamId}
-          onChange={setNewTeamId}
-          error={shouldShowTeamError}
-          isValid={!shouldShowTeamError}
-        />
-        <FormFieldInput
-          id="leagueId"
-          label="League ID"
-          placeholder="e.g., 16435"
-          value={newLeagueId}
-          onChange={setNewLeagueId}
-          error={shouldShowLeagueError}
-          isValid={!shouldShowLeagueError}
-        />
       </div>
     </div>
-  </div>
   );
 };
-
-

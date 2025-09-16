@@ -36,9 +36,9 @@ const mockFetchTeamData = jest.fn().mockResolvedValue({
       duration: 2100,
       opponentName: 'Opponent Team',
       leagueId: 'l1',
-      startTime: 1725926427
-    }
-  ]
+      startTime: 1725926427,
+    },
+  ],
 });
 
 jest.mock('@/frontend/teams/contexts/fetching/team-data-fetching-context', () => {
@@ -46,8 +46,8 @@ jest.mock('@/frontend/teams/contexts/fetching/team-data-fetching-context', () =>
   return {
     ...actual,
     useTeamDataFetching: () => ({
-      fetchTeamData: mockFetchTeamData
-    })
+      fetchTeamData: mockFetchTeamData,
+    }),
   };
 });
 
@@ -67,11 +67,11 @@ jest.mock('@/frontend/matches/contexts/fetching/match-data-fetching-context', ()
           deaths: 2,
           assists: 12,
           personaname: 'Test Player 1',
-          win: 1
-        }
-      ]
-    })
-  })
+          win: 1,
+        },
+      ],
+    }),
+  }),
 }));
 
 jest.mock('@/frontend/players/contexts/fetching/player-data-fetching-context', () => ({
@@ -79,10 +79,10 @@ jest.mock('@/frontend/players/contexts/fetching/player-data-fetching-context', (
     fetchPlayerData: jest.fn().mockResolvedValue({
       profile: {
         account_id: 123456789,
-        personaname: 'Test Player'
-      }
-    })
-  })
+        personaname: 'Test Player',
+      },
+    }),
+  }),
 }));
 
 describe('useTeamData', () => {
@@ -100,7 +100,7 @@ describe('useTeamData', () => {
             leagueId: 'l1',
             isActive: false,
             isLoading: false,
-            error: undefined
+            error: undefined,
           },
           league: { id: 'l1', name: 'League 1' },
           matches: [],
@@ -112,8 +112,8 @@ describe('useTeamData', () => {
             overallWinRate: 0,
             lastMatchDate: null,
             averageMatchDuration: 0,
-            totalPlayers: 0
-          }
+            totalPlayers: 0,
+          },
         },
         {
           team: {
@@ -122,7 +122,7 @@ describe('useTeamData', () => {
             leagueId: 'l2',
             isActive: false,
             isLoading: false,
-            error: undefined
+            error: undefined,
           },
           league: { id: 'l2', name: 'League 2' },
           matches: [],
@@ -134,9 +134,9 @@ describe('useTeamData', () => {
             overallWinRate: 0,
             lastMatchDate: null,
             averageMatchDuration: 0,
-            totalPlayers: 0
-          }
-        }
+            totalPlayers: 0,
+          },
+        },
       ];
       localStorage.setItem('dota-scout-assistant-team-list', JSON.stringify(initialTeams));
     }
@@ -149,9 +149,7 @@ describe('useTeamData', () => {
           <ConstantsProvider>
             <MatchProvider>
               <PlayerProvider>
-                <TeamProvider>
-                  {children}
-                </TeamProvider>
+                <TeamProvider>{children}</TeamProvider>
               </PlayerProvider>
             </MatchProvider>
           </ConstantsProvider>
@@ -174,37 +172,37 @@ describe('useTeamData', () => {
 
   it('can add, set, refresh, and remove a team', async () => {
     const { result } = renderHook(() => useTeamData(), { wrapper });
-    
+
     // Wait for initial data to load
     await act(async () => {
       // Wait a bit for initial teams to load
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    
+
     // Test that the hook provides the expected interface
     expect(result.current.teams).toBeInstanceOf(Array);
     expect(typeof result.current.addTeam).toBe('function');
     expect(typeof result.current.setActiveTeam).toBe('function');
     expect(typeof result.current.refreshTeam).toBe('function');
     expect(typeof result.current.removeTeam).toBe('function');
-    
+
     // Test that we can call the functions without errors
     await act(async () => {
       await result.current.addTeam('t3', 'l3');
     });
-    
+
     act(() => {
       result.current.setActiveTeam('1', 'l1');
     });
-    
+
     await act(async () => {
       await result.current.refreshTeam('1', 'l1');
     });
-    
+
     act(() => {
       result.current.removeTeam('1', 'l1');
     });
-    
+
     // Verify the hook still works after operations
     expect(result.current.teams).toBeInstanceOf(Array);
     expect(result.current.isLoading).toBe(false);
@@ -212,16 +210,16 @@ describe('useTeamData', () => {
 
   it('handles team operations correctly', async () => {
     const { result } = renderHook(() => useTeamData(), { wrapper });
-    
+
     // Wait for initial data to load
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    
+
     // Test that we can access the hook without errors
     expect(result.current.teams).toBeInstanceOf(Array);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.teamsError).toBeNull();
     expect(result.current.teamDataError).toBeNull();
   });
-}); 
+});

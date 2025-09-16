@@ -1,6 +1,6 @@
 /**
  * Match helper functions
- * 
+ *
  * Utility functions for match data processing and error handling
  */
 
@@ -19,19 +19,19 @@ export function updateMatchError(
   state: {
     matches: Map<number, Match>;
     setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
-  }
+  },
 ) {
   const existingMatch = state.matches.get(matchId);
-  
+
   if (existingMatch) {
     // Update existing match with error
     const updatedMatch: Match = {
       ...existingMatch,
       error: errorMessage,
-      isLoading: false
+      isLoading: false,
     };
-    
-    state.setMatches(prev => {
+
+    state.setMatches((prev) => {
       const newMatches = new Map(prev);
       newMatches.set(matchId, updatedMatch);
       return newMatches;
@@ -41,10 +41,10 @@ export function updateMatchError(
     const errorMatch: Match = {
       ...createInitialMatchData(matchId),
       error: errorMessage,
-      isLoading: false
+      isLoading: false,
     };
-    
-    state.setMatches(prev => {
+
+    state.setMatches((prev) => {
       const newMatches = new Map(prev);
       newMatches.set(matchId, errorMatch);
       return newMatches;
@@ -61,18 +61,18 @@ export function setMatchLoading(
   state: {
     matches: Map<number, Match>;
     setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
-  }
+  },
 ) {
   const existingMatch = state.matches.get(matchId);
-  
+
   if (existingMatch) {
     // Update existing match with loading state
     const updatedMatch: Match = {
       ...existingMatch,
-      isLoading
+      isLoading,
     };
-    
-    state.setMatches(prev => {
+
+    state.setMatches((prev) => {
       const newMatches = new Map(prev);
       newMatches.set(matchId, updatedMatch);
       return newMatches;
@@ -94,21 +94,22 @@ export function createInitialMatchData(matchId: number): Match {
     duration: 0,
     radiant: {
       id: 0,
-      name: undefined
+      name: undefined,
     },
     dire: {
       id: 0,
-      name: undefined
+      name: undefined,
     },
     draft: { radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] },
     players: { radiant: [], dire: [] },
     statistics: {
-      radiantScore: 0, direScore: 0,
+      radiantScore: 0,
+      direScore: 0,
       goldAdvantage: { times: [], radiantGold: [], direGold: [] },
-      experienceAdvantage: { times: [], radiantExperience: [], direExperience: [] }
+      experienceAdvantage: { times: [], radiantExperience: [], direExperience: [] },
     },
     events: [],
     result: 'radiant',
-    isLoading: true
+    isLoading: true,
   };
-} 
+}

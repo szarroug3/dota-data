@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
 import { MatchDetailsPanelEvents } from '@/frontend/matches/components/details/MatchDetailsPanelEvents';
@@ -23,7 +22,15 @@ interface MatchDetailsPanelProps {
   hiddenMatchIds?: Set<number>;
 }
 
-export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({ match, teamMatch, viewMode, onViewModeChange, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set(), }) => {
+export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
+  match,
+  teamMatch,
+  viewMode,
+  onViewModeChange,
+  allMatches = [],
+  teamMatches = {},
+  hiddenMatchIds = new Set(),
+}) => {
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)] @container">
@@ -33,12 +40,26 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({ match, tea
       <CardContent className="flex-1 overflow-y-auto min-h-0 @[90px]:block hidden">
         {viewMode === 'draft' && (
           <div className="space-y-4">
-            <MatchDetailsPanelDraft match={match} teamMatch={teamMatch} filter={draftFilter} onFilterChange={setDraftFilter} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
+            <MatchDetailsPanelDraft
+              match={match}
+              teamMatch={teamMatch}
+              filter={draftFilter}
+              onFilterChange={setDraftFilter}
+              allMatches={allMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+            />
           </div>
         )}
         {viewMode === 'players' && (
           <div className="space-y-4" data-testid="players-panel">
-            <MatchDetailsPanelPlayers match={match} teamMatch={teamMatch} allMatches={allMatches} teamMatches={teamMatches} hiddenMatchIds={hiddenMatchIds} />
+            <MatchDetailsPanelPlayers
+              match={match}
+              teamMatch={teamMatch}
+              allMatches={allMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+            />
           </div>
         )}
         {viewMode === 'events' && (
@@ -50,5 +71,3 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({ match, tea
     </Card>
   );
 };
-
-

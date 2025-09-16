@@ -32,7 +32,7 @@ export const MatchListViewListWrapper: React.FC<MatchListViewListWrapperProps> =
   forceVirtualization,
   virtualizationThreshold = 50,
   virtualizedHeight = 600,
-  virtualizedItemHeight = 120
+  virtualizedItemHeight = 120,
 }) => {
   const shouldVirtualize = useShouldVirtualize(matches.length, virtualizationThreshold);
   const useVirtualization = forceVirtualization ?? shouldVirtualize;
@@ -65,5 +65,3 @@ export const MatchListViewListWrapper: React.FC<MatchListViewListWrapperProps> =
     />
   );
 };
-
-

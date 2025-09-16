@@ -6,7 +6,7 @@ import { DotabuffTeam } from '@/types/external-apis';
 
 // Mock external dependencies
 jest.mock('@/lib/api/dotabuff/teams', () => ({
-  fetchDotabuffTeam: jest.fn()
+  fetchDotabuffTeam: jest.fn(),
 }));
 
 const mockFetchDotabuffTeam = fetchDotabuffTeam as jest.MockedFunction<typeof fetchDotabuffTeam>;
@@ -21,9 +21,9 @@ const mockTeam: DotabuffTeam = {
       duration: 2400,
       opponentName: 'Team Liquid',
       leagueId: '16435',
-      startTime: 1640995200
-    }
-  }
+      startTime: 1640995200,
+    },
+  },
 };
 
 describe('Teams API', () => {
@@ -57,7 +57,7 @@ describe('Teams API', () => {
     describe('Error Cases', () => {
       it('should handle rate limiting errors', async () => {
         mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Rate limited by Dotabuff API'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
@@ -66,13 +66,13 @@ describe('Teams API', () => {
         expect(data).toEqual({
           error: 'Rate limited by Dotabuff API',
           status: 429,
-          details: 'Too many requests to Dotabuff API. Please try again later.'
+          details: 'Too many requests to Dotabuff API. Please try again later.',
         });
       });
 
       it('should handle data not found errors', async () => {
         mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Data Not Found'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
@@ -81,13 +81,13 @@ describe('Teams API', () => {
         expect(data).toEqual({
           error: 'Data Not Found',
           status: 404,
-          details: 'Team with ID 9517508 could not be found.'
+          details: 'Team with ID 9517508 could not be found.',
         });
       });
 
       it('should handle invalid team data errors', async () => {
         mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Invalid team data'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
@@ -96,13 +96,13 @@ describe('Teams API', () => {
         expect(data).toEqual({
           error: 'Invalid team data',
           status: 422,
-          details: 'Team data is invalid or corrupted.'
+          details: 'Team data is invalid or corrupted.',
         });
       });
 
       it('should handle unexpected errors', async () => {
         mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Unexpected error'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
@@ -111,13 +111,13 @@ describe('Teams API', () => {
         expect(data).toEqual({
           error: 'Failed to process team',
           status: 500,
-          details: 'Unexpected error'
+          details: 'Unexpected error',
         });
       });
 
       it('should handle non-Error exceptions', async () => {
         mockFetchDotabuffTeam.mockRejectedValueOnce('String error');
-        
+
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
@@ -126,9 +126,9 @@ describe('Teams API', () => {
         expect(data).toEqual({
           error: 'Failed to process team',
           status: 500,
-          details: 'Unknown error occurred'
+          details: 'Unknown error occurred',
         });
       });
     });
   });
-}); 
+});

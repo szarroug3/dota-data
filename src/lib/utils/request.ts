@@ -37,7 +37,7 @@ async function processData<T>(
   processingFn: (data: string) => T,
   cache: CacheService,
   cacheKey: string,
-  cacheTTL: number
+  cacheTTL: number,
 ): Promise<T> {
   const processed = await processingFn(data);
   // Ensure the processed data is compatible with CacheValue
@@ -52,10 +52,10 @@ export async function request<T>(
   mockFilename: string,
   force: boolean = false,
   cacheTTL: number = 60 * 60,
-  cacheKey: string
+  cacheKey: string,
 ): Promise<T | null> {
   const cache = new CacheService();
-  
+
   const cachedData = await getFromCache<T>(cache, cacheKey, force);
   if (cachedData) {
     return cachedData;
@@ -91,11 +91,10 @@ export async function requestWithRetry(
     }
 
     const delay = Number(response.headers.get('Retry-After')) || retryDelay;
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     status = response.status;
     statusText = response.statusText;
   }
 
   throw new Error(`Request failed: ${status} ${statusText}`);
 }
-

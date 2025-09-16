@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
 import { ApiErrorResponse } from '@/types/api';
-
-
-
-
-
-
-
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle league API errors
@@ -18,7 +12,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
     return {
       error: 'Rate limited by Dotabuff API',
       status: 429,
-      details: 'Too many requests to Dotabuff API. Please try again later.'
+      details: 'Too many requests to Dotabuff API. Please try again later.',
     };
   }
 
@@ -26,7 +20,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
     return {
       error: 'Data Not Found',
       status: 404,
-      details: `League with ID ${leagueId} could not be found.`
+      details: `League with ID ${leagueId} could not be found.`,
     };
   }
 
@@ -34,7 +28,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
     return {
       error: 'Invalid league data',
       status: 422,
-      details: 'League data is invalid or corrupted.'
+      details: 'League data is invalid or corrupted.',
     };
   }
 
@@ -42,14 +36,14 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
     return {
       error: 'Tournament not found',
       status: 404,
-      details: 'League tournament information could not be found.'
+      details: 'League tournament information could not be found.',
     };
   }
 
   return {
     error: 'Failed to process league',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -264,10 +258,10 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id: leagueId } = await params;
-  
+
   try {
     // Extract query parameters
     const { searchParams } = new URL(request.url);
@@ -276,12 +270,15 @@ export async function GET(
     // Fetch raw league data (handles caching, rate limiting, mock mode)
     const league = await fetchDotabuffLeague(leagueId, force);
 
-    // Return successful response
+    // Validate using schema but preserve original shape
+    const result = schemas.getApiLeaguesId.safeParse(league);
+    if (!result.success) {
+      throw new Error('Invalid league data');
+    }
     return NextResponse.json(league);
-
   } catch (error) {
     console.error('Leagues API Error:', error);
-    
+
     if (error instanceof Error) {
       const errorResponse = handleLeagueError(error, leagueId);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
@@ -290,8 +287,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to process league',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

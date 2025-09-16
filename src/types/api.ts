@@ -49,6 +49,72 @@ export interface ApiSuccessResponse<T> {
 }
 
 // ============================================================================
+// SHARED PAYLOAD TYPES
+// ============================================================================
+
+/**
+ * Minimal item payload used across backend response and frontend consumption
+ */
+export interface ApiItemSummary {
+  id?: number;
+  image?: string;
+  displayName?: string;
+}
+
+/**
+ * Minimal hero payload used across backend response and frontend consumption
+ */
+export interface ApiHeroSummary {
+  id?: number;
+  name?: string;
+  localized_name?: string;
+  primary_attr?: string;
+  attack_type?: string;
+  roles?: string[];
+}
+
+/**
+ * Minimal player payload for UI needs (e.g., avatar and display name)
+ */
+export interface ApiPlayerSummary {
+  account_id?: number;
+  personaname?: string;
+  avatar?: string;
+  avatarmedium?: string;
+  avatarfull?: string;
+}
+
+/**
+ * Minimal team payload for lists and badges
+ */
+export interface ApiTeamSummary {
+  team_id?: number;
+  name?: string;
+  tag?: string;
+  logo_url?: string;
+}
+
+/**
+ * Minimal match payload for list views
+ */
+export interface ApiMatchSummary {
+  match_id?: string | number;
+  duration?: number;
+  radiant_win?: boolean;
+  radiant_name?: string;
+  dire_name?: string;
+  start_time?: number;
+}
+
+/**
+ * Minimal league payload for pickers and headers
+ */
+export interface ApiLeagueSummary {
+  id?: string | number;
+  name?: string;
+}
+
+// ============================================================================
 // CACHE API TYPES
 // ============================================================================
 
@@ -299,4 +365,4 @@ export interface HealthCheckStatus {
   };
   version: string;
   environment: string;
-} 
+}

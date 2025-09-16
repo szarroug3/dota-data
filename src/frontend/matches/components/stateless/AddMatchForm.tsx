@@ -55,7 +55,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid
+  isValid,
 }) => {
   const hasError = Boolean(error);
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
@@ -74,7 +74,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           required
           disabled={disabled}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
           style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
           {...ariaAttributes}
@@ -88,9 +88,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           {error}
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          {helpText}
-        </p>
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       )}
     </FormField>
   );
@@ -105,7 +103,7 @@ function AddMatchFields({
   isDisabled,
   handleSubmit,
   shouldShowMatchError,
-  isValid
+  isValid,
 }: {
   matchId: string;
   teamSide: '' | 'radiant' | 'dire';
@@ -173,7 +171,7 @@ export function AddMatchForm({
   isSubmitting = false,
   error,
   validationError,
-  isValid
+  isValid,
 }: AddMatchFormProps): React.ReactElement {
   const isFormValid = isValid && teamSide !== '';
   const isDisabled = matchExists(matchId) || isSubmitting || !isFormValid;
@@ -199,11 +197,9 @@ export function AddMatchForm({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Add New Match</SheetTitle>
-          <SheetDescription>
-            Add a match to the active team&apos;s history
-          </SheetDescription>
+          <SheetDescription>Add a match to the active team&apos;s history</SheetDescription>
         </SheetHeader>
-        
+
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <Form onSubmit={handleSubmit}>
             <AddMatchFields
@@ -217,7 +213,7 @@ export function AddMatchForm({
               shouldShowMatchError={shouldShowMatchError}
               isValid={!validationError}
             />
-            
+
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -226,14 +222,9 @@ export function AddMatchForm({
             )}
           </Form>
         </div>
-        
+
         <SheetFooter>
-          <Button
-            type="submit"
-            disabled={isDisabled}
-            className="w-full"
-            onClick={handleSubmit}
-          >
+          <Button type="submit" disabled={isDisabled} className="w-full" onClick={handleSubmit}>
             {getButtonText()}
           </Button>
           <SheetClose asChild>
@@ -246,4 +237,3 @@ export function AddMatchForm({
     </Sheet>
   );
 }
-

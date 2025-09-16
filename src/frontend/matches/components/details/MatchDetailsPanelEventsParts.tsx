@@ -24,7 +24,13 @@ export const formatTime = (seconds: number): string => {
   return isNegative ? `-${timeString}` : timeString;
 };
 
-export type TooltipEntry = { dataKey?: string; value?: number | string | null | undefined; name?: string; color?: string; payload: ChartDataPoint; };
+export type TooltipEntry = {
+  dataKey?: string;
+  value?: number | string | null | undefined;
+  name?: string;
+  color?: string;
+  payload: ChartDataPoint;
+};
 
 export function TooltipHeader({ time }: { time: string }) {
   return (
@@ -69,10 +75,14 @@ export function FirstBloodDescription({ details }: { details?: EventDetails }) {
   return (
     <span className="flex items-center gap-2">
       <span>First Blood:</span>
-      {details?.killerHero && (<img src={details.killerHero.imageUrl} alt={details.killer} className="w-4 h-4 rounded" />)}
+      {details?.killerHero && (
+        <img src={details.killerHero.imageUrl} alt={details.killer} className="w-4 h-4 rounded" />
+      )}
       <span>{details?.killer || 'unknown player'}</span>
       <span>killed</span>
-      {details?.victimHero && (<img src={details.victimHero.imageUrl} alt={details.victim} className="w-4 h-4 rounded" />)}
+      {details?.victimHero && (
+        <img src={details.victimHero.imageUrl} alt={details.victim} className="w-4 h-4 rounded" />
+      )}
       <span>{details?.victim || 'unknown player'}</span>
     </span>
   );
@@ -82,7 +92,9 @@ export function AegisDescription({ details }: { details?: EventDetails }) {
   return (
     <span className="flex items-center gap-2">
       <span>Aegis picked up by</span>
-      {details?.aegisHolderHero && (<img src={details.aegisHolderHero.imageUrl} alt={details.aegisHolder} className="w-4 h-4 rounded" />)}
+      {details?.aegisHolderHero && (
+        <img src={details.aegisHolderHero.imageUrl} alt={details.aegisHolder} className="w-4 h-4 rounded" />
+      )}
       <span>{details?.aegisHolder || 'unknown player'}</span>
     </span>
   );
@@ -107,39 +119,77 @@ export function EventInfo({ event }: { event: GameEvent }) {
   );
 }
 
-export function TeamfightSummary({ radiantGoldTotal, radiantXpTotal, direGoldTotal, direXpTotal }: { radiantGoldTotal: number; radiantXpTotal: number; direGoldTotal: number; direXpTotal: number; }) {
+export function TeamfightSummary({
+  radiantGoldTotal,
+  radiantXpTotal,
+  direGoldTotal,
+  direXpTotal,
+}: {
+  radiantGoldTotal: number;
+  radiantXpTotal: number;
+  direGoldTotal: number;
+  direXpTotal: number;
+}) {
   const formatValue = (value: number) => (Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString());
   return (
     <div className="text-xs space-y-1 mb-2">
       <div className="flex justify-center">
         <div className="inline-block">
           <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto] gap-0">
-            <div className="col-span-3 text-center"><div className="font-medium text-primary">Radiant</div></div>
+            <div className="col-span-3 text-center">
+              <div className="font-medium text-primary">Radiant</div>
+            </div>
             <div className="col-span-1"></div>
-            <div className="col-span-3 text-center"><div className="font-medium text-blue-600">Dire</div></div>
+            <div className="col-span-3 text-center">
+              <div className="font-medium text-blue-600">Dire</div>
+            </div>
             <div className="flex flex-col justify-end items-end w-auto">
-              <div className="text-white flex justify-end pr-1"><Coins className="w-4 h-4" /></div>
-              <div className="text-white flex justify-end pr-1"><Zap className="w-4 h-4" /></div>
+              <div className="text-white flex justify-end pr-1">
+                <Coins className="w-4 h-4" />
+              </div>
+              <div className="text-white flex justify-end pr-1">
+                <Zap className="w-4 h-4" />
+              </div>
             </div>
             <div className="text-center w-auto">
-              <div className="text-white text-right"><span>{formatValue(radiantGoldTotal)}</span></div>
-              <div className="text-white text-right"><span>{formatValue(radiantXpTotal)}</span></div>
+              <div className="text-white text-right">
+                <span>{formatValue(radiantGoldTotal)}</span>
+              </div>
+              <div className="text-white text-right">
+                <span>{formatValue(radiantXpTotal)}</span>
+              </div>
             </div>
             <div className="flex flex-col justify-start items-start w-auto">
-              <div className="text-white pl-1"><span className={radiantGoldTotal >= 0 ? 'text-blue-600' : 'text-primary'}>{radiantGoldTotal >= 0 ? '▲' : '▼'}</span></div>
+              <div className="text-white pl-1">
+                <span className={radiantGoldTotal >= 0 ? 'text-blue-600' : 'text-primary'}>
+                  {radiantGoldTotal >= 0 ? '▲' : '▼'}
+                </span>
+              </div>
               <div className="text-white"></div>
             </div>
             <div className="w-8"></div>
             <div className="flex flex-col justify-end items-end w-auto">
-              <div className="text-white flex justify-end pr-1"><Coins className="w-4 h-4" /></div>
-              <div className="text-white flex justify-end pr-1"><Zap className="w-4 h-4" /></div>
+              <div className="text-white flex justify-end pr-1">
+                <Coins className="w-4 h-4" />
+              </div>
+              <div className="text-white flex justify-end pr-1">
+                <Zap className="w-4 h-4" />
+              </div>
             </div>
             <div className="text-center w-auto">
-              <div className="text-white text-right"><span>{formatValue(direGoldTotal)}</span></div>
-              <div className="text-white text-right"><span>{formatValue(direXpTotal)}</span></div>
+              <div className="text-white text-right">
+                <span>{formatValue(direGoldTotal)}</span>
+              </div>
+              <div className="text-white text-right">
+                <span>{formatValue(direXpTotal)}</span>
+              </div>
             </div>
             <div className="flex flex-col justify-start items-start w-auto">
-              <div className="text-white pl-1"><span className={direGoldTotal >= 0 ? 'text-blue-600' : 'text-primary'}>{direGoldTotal >= 0 ? '▲' : '▼'}</span></div>
+              <div className="text-white pl-1">
+                <span className={direGoldTotal >= 0 ? 'text-blue-600' : 'text-primary'}>
+                  {direGoldTotal >= 0 ? '▲' : '▼'}
+                </span>
+              </div>
               <div className="text-white"></div>
             </div>
           </div>
@@ -154,11 +204,21 @@ export function TeamfightPlayersTable({ details, match }: { details: NonNullable
     <div className="text-xs">
       <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr] gap-2 font-medium text-muted-foreground mb-1">
         <div></div>
-        <div className="text-center"><span className="inline-block w-12 text-left">Hero</span></div>
-        <div className="text-center"><span className="inline-block w-12 text-left">Status</span></div>
-        <div className="text-right"><span className="inline-block w-12 text-right">Damage</span></div>
-        <div className="text-center"><span className="inline-block w-12 text-right">Gold</span></div>
-        <div className="text-center"><span className="inline-block w-12 text-right">XP</span></div>
+        <div className="text-center">
+          <span className="inline-block w-12 text-left">Hero</span>
+        </div>
+        <div className="text-center">
+          <span className="inline-block w-12 text-left">Status</span>
+        </div>
+        <div className="text-right">
+          <span className="inline-block w-12 text-right">Damage</span>
+        </div>
+        <div className="text-center">
+          <span className="inline-block w-12 text-right">Gold</span>
+        </div>
+        <div className="text-center">
+          <span className="inline-block w-12 text-right">XP</span>
+        </div>
       </div>
       {details.playerDetails?.map((player, index) => {
         const data = deriveTeamfightRowData(player, match);
@@ -168,7 +228,15 @@ export function TeamfightPlayersTable({ details, match }: { details: NonNullable
   );
 }
 
-export function PerformanceTooltip({ active, payload, match }: { active?: boolean; payload?: TooltipEntry[]; match?: Match }) {
+export function PerformanceTooltip({
+  active,
+  payload,
+  match,
+}: {
+  active?: boolean;
+  payload?: TooltipEntry[];
+  match?: Match;
+}) {
   if (!active || !payload || payload.length === 0) return null;
   const dataPoint = payload[0].payload as ChartDataPoint;
   const time = formatTime(dataPoint.time);
@@ -179,9 +247,7 @@ export function PerformanceTooltip({ active, payload, match }: { active?: boolea
         <TooltipHeader time={time} />
         <AdvantagesList payload={payload} />
         {dataPoint.event && <EventInfo event={dataPoint.event} />}
-        {showTeamfight && (
-          <TeamfightDetailsSection details={dataPoint.event!.details!} match={match} />
-        )}
+        {showTeamfight && <TeamfightDetailsSection details={dataPoint.event!.details!} match={match} />}
       </div>
     </div>
   );
@@ -215,13 +281,27 @@ export function TeamfightDetailsSection({ details, match }: { details: NonNullab
   );
 }
 
-type TeamfightRowData = { heroImageUrl?: string; heroName: string; isDead: boolean; damageText: string | number; goldDelta: number; xpDelta: number; };
+type TeamfightRowData = {
+  heroImageUrl?: string;
+  heroName: string;
+  isDead: boolean;
+  damageText: string | number;
+  goldDelta: number;
+  xpDelta: number;
+};
 type TeamfightPlayerDetails = NonNullable<EventDetails['playerDetails']>[number];
 
 function deriveTeamfightRowData(player: TeamfightPlayerDetails, match?: Match): TeamfightRowData {
   const hero = getHeroForPlayer(match, player.playerIndex);
   const heroName = getHeroName(hero, player.playerIndex);
-  return { heroImageUrl: hero?.imageUrl, heroName, isDead: player.deaths > 0, damageText: typeof player.damage === 'number' ? (player.damage.toLocaleString?.() ?? player.damage) : 0, goldDelta: player.goldDelta, xpDelta: player.xpDelta };
+  return {
+    heroImageUrl: hero?.imageUrl,
+    heroName,
+    isDead: player.deaths > 0,
+    damageText: typeof player.damage === 'number' ? (player.damage.toLocaleString?.() ?? player.damage) : 0,
+    goldDelta: player.goldDelta,
+    xpDelta: player.xpDelta,
+  };
 }
 
 function getHeroForPlayer(match: Match | undefined, playerIndex: number) {
@@ -232,7 +312,9 @@ function getHeroForPlayer(match: Match | undefined, playerIndex: number) {
   return match.players.dire?.[direIndex]?.hero;
 }
 
-function getHeroName(hero: { localizedName?: string } | undefined, fallbackIndex: number): string { return hero?.localizedName ?? `Player ${fallbackIndex}`; }
+function getHeroName(hero: { localizedName?: string } | undefined, fallbackIndex: number): string {
+  return hero?.localizedName ?? `Player ${fallbackIndex}`;
+}
 
 function TeamfightPlayerRowSimple({ data }: { data: TeamfightRowData }) {
   return (
@@ -250,7 +332,11 @@ function TeamfightPlayerRowSimple({ data }: { data: TeamfightRowData }) {
 function HeroCell({ imageUrl, heroName }: { imageUrl?: string; heroName: string }) {
   return (
     <div className="flex items-center gap-1">
-      {imageUrl ? (<img src={imageUrl} alt={heroName} className="w-4 h-4 rounded" />) : (<div className="w-4 h-4 bg-muted rounded" />)}
+      {imageUrl ? (
+        <img src={imageUrl} alt={heroName} className="w-4 h-4 rounded" />
+      ) : (
+        <div className="w-4 h-4 bg-muted rounded" />
+      )}
     </div>
   );
 }
@@ -279,7 +365,9 @@ function DeltaCell({ value }: { value: number }) {
   const className = isPositive ? 'text-blue-600' : 'text-primary';
   return (
     <div className="text-center">
-      <span className={className}>{arrow} {abs}</span>
+      <span className={className}>
+        {arrow} {abs}
+      </span>
     </div>
   );
 }
@@ -298,4 +386,3 @@ export function formatYAxisTick(value: number): string {
   if (absValue >= 1000) return `${Math.round(value / 1000)}k`;
   return value.toString();
 }
-

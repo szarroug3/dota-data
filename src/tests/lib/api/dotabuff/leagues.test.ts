@@ -22,7 +22,7 @@ describe('fetchDotabuffLeague', () => {
     it('should fetch and parse league data successfully', async () => {
       const mockLeagueData = {
         id: '16435',
-        name: 'RD2L Season 33'
+        name: 'RD2L Season 33',
       };
 
       mockRequest.mockResolvedValue(mockLeagueData);
@@ -37,16 +37,14 @@ describe('fetchDotabuffLeague', () => {
         expect.stringMatching(/.*dotabuff-league-16435\.html$/),
         false,
         60 * 60 * 24 * 7, // 7 days
-        'dotabuff:league:16435'
+        'dotabuff:league:16435',
       );
     });
 
     it('should throw error when request fails', async () => {
       mockRequest.mockResolvedValue(null);
 
-      await expect(fetchDotabuffLeague('16435')).rejects.toThrow(
-        'Failed to fetch league data for league 16435'
-      );
+      await expect(fetchDotabuffLeague('16435')).rejects.toThrow('Failed to fetch league data for league 16435');
     });
 
     it('should use force parameter when provided', async () => {
@@ -62,7 +60,7 @@ describe('fetchDotabuffLeague', () => {
         expect.stringMatching(/.*dotabuff-league-16435\.html$/),
         true, // force parameter
         60 * 60 * 24 * 7,
-        'dotabuff:league:16435'
+        'dotabuff:league:16435',
       );
     });
   });
@@ -91,7 +89,7 @@ describe('fetchDotabuffLeague', () => {
 
       expect(mockScrapeHtmlFromUrl).toHaveBeenCalledWith(
         'https://www.dotabuff.com/esports/leagues/16435',
-        '.header-content-title'
+        '.header-content-title',
       );
     });
 
@@ -103,9 +101,7 @@ describe('fetchDotabuffLeague', () => {
         return null;
       });
 
-      await expect(fetchDotabuffLeague('16435')).rejects.toThrow(
-        'Playwright error'
-      );
+      await expect(fetchDotabuffLeague('16435')).rejects.toThrow('Playwright error');
     });
   });
 
@@ -129,7 +125,7 @@ describe('fetchDotabuffLeague', () => {
 
       expect(result).toEqual({
         id: '16435',
-        name: 'RD2L Season 33'
+        name: 'RD2L Season 33',
       });
     });
 
@@ -153,7 +149,7 @@ describe('fetchDotabuffLeague', () => {
 
       expect(result).toEqual({
         id: '16435',
-        name: 'Test League'
+        name: 'Test League',
       });
     });
 
@@ -172,9 +168,7 @@ describe('fetchDotabuffLeague', () => {
         return parser(mockHtml);
       });
 
-      await expect(fetchDotabuffLeague('16435')).rejects.toThrow(
-        'Could not parse league name from Dotabuff HTML'
-      );
+      await expect(fetchDotabuffLeague('16435')).rejects.toThrow('Could not parse league name from Dotabuff HTML');
     });
 
     it('should remove small elements from header', async () => {
@@ -196,8 +190,8 @@ describe('fetchDotabuffLeague', () => {
 
       expect(result).toEqual({
         id: '16435',
-        name: 'RD2L Season 33'
+        name: 'RD2L Season 33',
       });
     });
   });
-}); 
+});

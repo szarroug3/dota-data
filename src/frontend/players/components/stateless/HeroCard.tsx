@@ -17,7 +17,9 @@ export const HeroCard: React.FC<HeroCardProps> = ({ title, hero }) => (
     <div className="text-xs text-muted-foreground dark:text-muted-foreground">{hero.matches} Matches</div>
     <div className="text-xs text-muted-foreground dark:text-muted-foreground">{hero.winRate.toFixed(1)}% Win Rate</div>
     {hero.averageKDA !== undefined && (
-      <div className="text-xs text-muted-foreground dark:text-muted-foreground">Avg KDA: {hero.averageKDA.toFixed(2)}</div>
+      <div className="text-xs text-muted-foreground dark:text-muted-foreground">
+        Avg KDA: {hero.averageKDA.toFixed(2)}
+      </div>
     )}
   </div>
 );

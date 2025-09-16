@@ -19,30 +19,30 @@ export function useVirtualization(options: UseVirtualizationOptions = {}) {
     defaultEnabled = true,
     defaultItemHeight = 120,
     defaultContainerHeight = 600,
-    defaultOverscanCount = 5
+    defaultOverscanCount = 5,
   } = options;
 
   const [config, setConfig] = useState<VirtualizationConfig>({
     enabled: defaultEnabled,
     itemHeight: defaultItemHeight,
     containerHeight: defaultContainerHeight,
-    overscanCount: defaultOverscanCount
+    overscanCount: defaultOverscanCount,
   });
 
   const toggleVirtualization = useCallback(() => {
-    setConfig(prev => ({ ...prev, enabled: !prev.enabled }));
+    setConfig((prev) => ({ ...prev, enabled: !prev.enabled }));
   }, []);
 
   const updateItemHeight = useCallback((height: number) => {
-    setConfig(prev => ({ ...prev, itemHeight: height }));
+    setConfig((prev) => ({ ...prev, itemHeight: height }));
   }, []);
 
   const updateContainerHeight = useCallback((height: number) => {
-    setConfig(prev => ({ ...prev, containerHeight: height }));
+    setConfig((prev) => ({ ...prev, containerHeight: height }));
   }, []);
 
   const updateOverscanCount = useCallback((count: number) => {
-    setConfig(prev => ({ ...prev, overscanCount: count }));
+    setConfig((prev) => ({ ...prev, overscanCount: count }));
   }, []);
 
   const resetConfig = useCallback(() => {
@@ -50,7 +50,7 @@ export function useVirtualization(options: UseVirtualizationOptions = {}) {
       enabled: defaultEnabled,
       itemHeight: defaultItemHeight,
       containerHeight: defaultContainerHeight,
-      overscanCount: defaultOverscanCount
+      overscanCount: defaultOverscanCount,
     });
   }, [defaultEnabled, defaultItemHeight, defaultContainerHeight, defaultOverscanCount]);
 
@@ -60,7 +60,7 @@ export function useVirtualization(options: UseVirtualizationOptions = {}) {
     updateItemHeight,
     updateContainerHeight,
     updateOverscanCount,
-    resetConfig
+    resetConfig,
   };
 }
 
@@ -74,12 +74,9 @@ export function useOptimalItemHeight(
   containerHeight: number,
   itemCount: number,
   minItemHeight: number = 80,
-  maxItemHeight: number = 200
+  maxItemHeight: number = 200,
 ) {
-  const calculatedHeight = Math.max(
-    minItemHeight,
-    Math.min(maxItemHeight, containerHeight / Math.min(itemCount, 10))
-  );
-  
+  const calculatedHeight = Math.max(minItemHeight, Math.min(maxItemHeight, containerHeight / Math.min(itemCount, 10)));
+
   return Math.round(calculatedHeight);
-} 
+}

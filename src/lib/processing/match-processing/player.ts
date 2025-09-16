@@ -6,8 +6,8 @@ import type { OpenDotaMatchPlayer } from '@/types/external-apis';
 export function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>): Item[] {
   const itemIds = [player.item_0, player.item_1, player.item_2, player.item_3, player.item_4, player.item_5];
   return itemIds
-    .filter(itemId => itemId !== 0)
-    .map(itemId => {
+    .filter((itemId) => itemId !== 0)
+    .map((itemId) => {
       const item = items[itemId];
       return item;
     })
@@ -62,11 +62,14 @@ export function convertPlayer(
   const hero = heroes[player.hero_id.toString()];
   const playerHero = hero;
   // Convert string-keyed items to number-keyed for lookup
-  const numberKeyedItems: Record<number, Item> = Object.keys(items).reduce((acc, key) => {
-    const num = Number(key);
-    if (Number.isFinite(num)) acc[num] = items[key as keyof typeof items] as Item;
-    return acc;
-  }, {} as Record<number, Item>);
+  const numberKeyedItems: Record<number, Item> = Object.keys(items).reduce(
+    (acc, key) => {
+      const num = Number(key);
+      if (Number.isFinite(num)) acc[num] = items[key as keyof typeof items] as Item;
+      return acc;
+    },
+    {} as Record<number, Item>,
+  );
   const playerItems = getPlayerItems(player, numberKeyedItems);
   const stats = createPlayerStats(player);
   const heroStats = createHeroStats(player);
@@ -80,5 +83,3 @@ export function convertPlayer(
     heroStats,
   };
 }
-
-

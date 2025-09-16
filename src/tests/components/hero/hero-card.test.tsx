@@ -9,9 +9,15 @@ const HeroCard = ({ heroId, className, mode, isSelected, onSelect, onHide, onVie
       <div data-testid="hero-name">Hero {heroId}</div>
       <div data-testid="hero-id">{heroId}</div>
       <div data-testid="is-selected">{isSelected ? 'selected' : 'not-selected'}</div>
-      <button data-testid="select-button" onClick={() => onSelect?.(heroId)} tabIndex={0}>Select</button>
-      <button data-testid="hide-button" onClick={() => onHide?.(heroId)} tabIndex={0}>Hide</button>
-      <button data-testid="view-details-button" onClick={() => onViewDetails?.(heroId)} tabIndex={0}>View Details</button>
+      <button data-testid="select-button" onClick={() => onSelect?.(heroId)} tabIndex={0}>
+        Select
+      </button>
+      <button data-testid="hide-button" onClick={() => onHide?.(heroId)} tabIndex={0}>
+        Hide
+      </button>
+      <button data-testid="view-details-button" onClick={() => onViewDetails?.(heroId)} tabIndex={0}>
+        View Details
+      </button>
     </div>
   );
 };
@@ -19,7 +25,16 @@ const HeroCardSkeleton = ({ className, mode }: any) => {
   const testId = mode === 'list' ? 'list-hero-card' : mode === 'detailed' ? 'detailed-hero-card' : 'grid-hero-card';
   return <div data-testid={testId} className={`animate-pulse ${className || ''}`.trim()} />;
 };
-const HeroCardList = ({ heroIds, className, hiddenHeroIds = [], selectedHeroId, onSelectHero, onHideHero, onViewDetails, mode }: any) => {
+const HeroCardList = ({
+  heroIds,
+  className,
+  hiddenHeroIds = [],
+  selectedHeroId,
+  onSelectHero,
+  onHideHero,
+  onViewDetails,
+  mode,
+}: any) => {
   const ids = (heroIds || []).filter((id: string) => !hiddenHeroIds.includes(id));
   if (!heroIds || heroIds.length === 0) {
     return <div className={className}>No heroes found</div>;
@@ -56,14 +71,7 @@ describe('HeroCard', () => {
 
   describe('Basic Rendering', () => {
     it('should render hero card with default props', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
       expect(screen.getByTestId('hero-name')).toHaveTextContent('Hero 1');
@@ -78,7 +86,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('list-hero-card')).toBeInTheDocument();
@@ -92,7 +100,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('detailed-hero-card')).toBeInTheDocument();
@@ -106,7 +114,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toHaveClass('custom-hero-card');
@@ -120,7 +128,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.queryByTestId('grid-hero-card')).not.toBeInTheDocument();
@@ -136,7 +144,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('is-selected')).toHaveTextContent('selected');
@@ -150,7 +158,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('is-selected')).toHaveTextContent('not-selected');
@@ -159,14 +167,7 @@ describe('HeroCard', () => {
 
   describe('User Interactions', () => {
     it('should call onSelect when select button is clicked', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       fireEvent.click(screen.getByTestId('select-button'));
 
@@ -174,14 +175,7 @@ describe('HeroCard', () => {
     });
 
     it('should call onHide when hide button is clicked', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       fireEvent.click(screen.getByTestId('hide-button'));
 
@@ -189,14 +183,7 @@ describe('HeroCard', () => {
     });
 
     it('should call onViewDetails when view details button is clicked', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       fireEvent.click(screen.getByTestId('view-details-button'));
 
@@ -204,11 +191,7 @@ describe('HeroCard', () => {
     });
 
     it('should not call handlers when they are not provided', () => {
-      render(
-        <HeroCard
-          heroId="1"
-        />
-      );
+      render(<HeroCard heroId="1" />);
 
       fireEvent.click(screen.getByTestId('select-button'));
       fireEvent.click(screen.getByTestId('hide-button'));
@@ -221,14 +204,7 @@ describe('HeroCard', () => {
 
   describe('Accessibility', () => {
     it('should have proper button roles for interactions', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       expect(screen.getByTestId('select-button')).toBeInTheDocument();
       expect(screen.getByTestId('hide-button')).toBeInTheDocument();
@@ -236,14 +212,7 @@ describe('HeroCard', () => {
     });
 
     it('should be keyboard accessible', () => {
-      render(
-        <HeroCard
-          heroId="1"
-          onSelect={mockOnSelect}
-          onHide={mockOnHide}
-          onViewDetails={mockOnViewDetails}
-        />
-      );
+      render(<HeroCard heroId="1" onSelect={mockOnSelect} onHide={mockOnHide} onViewDetails={mockOnViewDetails} />);
 
       const hideButton = screen.getByRole('button', { name: /hide/i });
       const viewDetailsButton = screen.getByRole('button', { name: /view details/i });
@@ -262,7 +231,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
@@ -276,7 +245,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
@@ -290,7 +259,7 @@ describe('HeroCard', () => {
           onSelect={mockOnSelect}
           onHide={mockOnHide}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
@@ -356,7 +325,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getAllByTestId('grid-hero-card')).toHaveLength(3);
@@ -369,7 +338,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByText('No heroes found')).toBeInTheDocument();
@@ -382,7 +351,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByText('No heroes found')).toBeInTheDocument();
@@ -396,7 +365,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const listContainer = screen.getAllByTestId('grid-hero-card')[0].parentElement;
@@ -413,7 +382,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const heroCards = screen.getAllByTestId('is-selected');
@@ -432,7 +401,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const heroCards = screen.getAllByTestId('grid-hero-card');
@@ -448,7 +417,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const selectButtons = screen.getAllByTestId('select-button');
@@ -464,7 +433,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const hideButtons = screen.getAllByTestId('hide-button');
@@ -480,7 +449,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       const viewDetailsButtons = screen.getAllByTestId('view-details-button');
@@ -498,7 +467,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getAllByTestId('grid-hero-card')).toHaveLength(2);
@@ -512,7 +481,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getAllByTestId('list-hero-card')).toHaveLength(2);
@@ -526,7 +495,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getAllByTestId('detailed-hero-card')).toHaveLength(2);
@@ -542,7 +511,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
@@ -556,7 +525,7 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
@@ -570,10 +539,10 @@ describe('HeroCardList', () => {
           onSelectHero={mockOnSelectHero}
           onHideHero={mockOnHideHero}
           onViewDetails={mockOnViewDetails}
-        />
+        />,
       );
 
       expect(screen.getByTestId('grid-hero-card')).toBeInTheDocument();
     });
   });
-}); 
+});

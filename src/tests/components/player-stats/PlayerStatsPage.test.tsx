@@ -61,7 +61,9 @@ jest.mock('@/frontend/contexts/constants-context', () => {
 // Mock ResizablePlayerLayout to render a deterministic marker
 jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () => ({
   ResizablePlayerLayout: (props: any) => (
-    <div data-testid="player-layout" data-view-mode={props.viewMode}>layout</div>
+    <div data-testid="player-layout" data-view-mode={props.viewMode}>
+      layout
+    </div>
   ),
 }));
 
@@ -94,5 +96,3 @@ describe('PlayerStatsPage', () => {
     expect(layout).toHaveAttribute('data-view-mode', 'card');
   });
 });
-
-

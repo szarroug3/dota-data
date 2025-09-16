@@ -42,4 +42,3 @@ export const TeamCardSkeleton: React.FC = () => {
     </Card>
   );
 };
-

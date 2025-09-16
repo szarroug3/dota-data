@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle team API errors
@@ -11,7 +12,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
     return {
       error: 'Rate limited by Dotabuff API',
       status: 429,
-      details: 'Too many requests to Dotabuff API. Please try again later.'
+      details: 'Too many requests to Dotabuff API. Please try again later.',
     };
   }
 
@@ -19,7 +20,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
     return {
       error: 'Data Not Found',
       status: 404,
-      details: `Team with ID ${teamId} could not be found.`
+      details: `Team with ID ${teamId} could not be found.`,
     };
   }
 
@@ -27,14 +28,14 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
     return {
       error: 'Invalid team data',
       status: 422,
-      details: 'Team data is invalid or corrupted.'
+      details: 'Team data is invalid or corrupted.',
     };
   }
 
   return {
     error: 'Failed to process team',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -256,7 +257,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   try {
     const { id: teamId } = await params;
@@ -267,12 +268,15 @@ export async function GET(
 
     // Fetch raw team data (handles caching, rate limiting, mock mode)
     const team = await fetchDotabuffTeam(teamId, force);
-
-    // Return successful response
-    return NextResponse.json(team);
+    try {
+      const validated = schemas.getApiTeams.parse(team);
+      return NextResponse.json(validated);
+    } catch {
+      throw new Error('Invalid team data');
+    }
   } catch (error) {
     console.error('Teams API Error:', error);
-    
+
     if (error instanceof Error) {
       const { id } = await params;
       const errorResponse = handleTeamError(error, id);
@@ -282,8 +286,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to process team',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

@@ -15,12 +15,12 @@ export type PlayerStatsTimeRange = '7d' | '30d' | '90d' | '6m' | '1y' | 'all' | 
 /**
  * Statistical metric categories
  */
-export type PlayerStatsCategory = 
-  | 'general' 
-  | 'performance' 
-  | 'farming' 
-  | 'fighting' 
-  | 'supporting' 
+export type PlayerStatsCategory =
+  | 'general'
+  | 'performance'
+  | 'farming'
+  | 'fighting'
+  | 'supporting'
   | 'objective'
   | 'positioning'
   | 'economy';
@@ -28,15 +28,7 @@ export type PlayerStatsCategory =
 /**
  * Skill bracket classification
  */
-export type SkillBracket = 
-  | 'herald' 
-  | 'guardian' 
-  | 'crusader' 
-  | 'archon' 
-  | 'legend' 
-  | 'ancient' 
-  | 'divine' 
-  | 'immortal';
+export type SkillBracket = 'herald' | 'guardian' | 'crusader' | 'archon' | 'legend' | 'ancient' | 'divine' | 'immortal';
 
 /**
  * Aggregation period for statistics
@@ -261,12 +253,15 @@ export interface PlayerStatsData {
   /** Hero-specific performance */
   heroPerformance: HeroPerformance[];
   /** Role-specific statistics */
-  roleStats: Record<PlayerRole, {
-    matches: number;
-    winRate: number;
-    avgKDA: number;
-    preference: number; // 0-100 how much player prefers this role
-  }>;
+  roleStats: Record<
+    PlayerRole,
+    {
+      matches: number;
+      winRate: number;
+      avgKDA: number;
+      preference: number; // 0-100 how much player prefers this role
+    }
+  >;
   /** Recent match performance */
   recentMatches: Array<{
     matchId: string;
@@ -533,4 +528,4 @@ export interface PerformanceTrend {
   significance: boolean;
   /** Recommendations based on trend */
   recommendations?: string[];
-} 
+}

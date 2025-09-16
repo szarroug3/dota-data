@@ -12,5 +12,3 @@ export async function getTeam(teamId: number, force = false): Promise<DotabuffTe
   }
   return requestAndValidate<DotabuffTeam>(path, (d: JsonValue) => schema.parse(d));
 }
-
-

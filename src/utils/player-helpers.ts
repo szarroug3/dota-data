@@ -1,6 +1,6 @@
 /**
  * Player helper functions
- * 
+ *
  * Utility functions for player data processing and error handling
  */
 
@@ -19,19 +19,19 @@ export function updatePlayerError(
   state: {
     players: Map<number, Player>;
     setPlayers: React.Dispatch<React.SetStateAction<Map<number, Player>>>;
-  }
+  },
 ) {
   const existingPlayer = state.players.get(playerId);
-  
+
   if (existingPlayer) {
     // Update existing player with error
     const updatedPlayer: Player = {
       ...existingPlayer,
       error: errorMessage,
-      isLoading: false
+      isLoading: false,
     };
-    
-    state.setPlayers(prev => {
+
+    state.setPlayers((prev) => {
       const newPlayers = new Map(prev);
       newPlayers.set(playerId, updatedPlayer);
       return newPlayers;
@@ -41,10 +41,10 @@ export function updatePlayerError(
     const errorPlayer: Player = {
       ...createInitialPlayerData(playerId),
       error: errorMessage,
-      isLoading: false
+      isLoading: false,
     };
-    
-    state.setPlayers(prev => {
+
+    state.setPlayers((prev) => {
       const newPlayers = new Map(prev);
       newPlayers.set(playerId, errorPlayer);
       return newPlayers;
@@ -61,18 +61,18 @@ export function setPlayerLoading(
   state: {
     players: Map<number, Player>;
     setPlayers: React.Dispatch<React.SetStateAction<Map<number, Player>>>;
-  }
+  },
 ) {
   const existingPlayer = state.players.get(playerId);
-  
+
   if (existingPlayer) {
     // Update existing player with loading state
     const updatedPlayer: Player = {
       ...existingPlayer,
-      isLoading
+      isLoading,
     };
-    
-    state.setPlayers(prev => {
+
+    state.setPlayers((prev) => {
       const newPlayers = new Map(prev);
       newPlayers.set(playerId, updatedPlayer);
       return newPlayers;
@@ -106,10 +106,10 @@ export function createInitialPlayerData(playerId: number): Player {
         status: null,
         fh_unavailable: false,
         is_contributor: false,
-        is_subscriber: false
+        is_subscriber: false,
       },
       rank_tier: 0,
-      leaderboard_rank: 0
+      leaderboard_rank: 0,
     },
     counts: {
       leaver_status: {},
@@ -117,7 +117,7 @@ export function createInitialPlayerData(playerId: number): Player {
       lobby_type: {},
       lane_role: {},
       region: {},
-      patch: {}
+      patch: {},
     },
     heroes: [],
     rankings: [],
@@ -130,16 +130,16 @@ export function createInitialPlayerData(playerId: number): Player {
       all_time: 0,
       ranked: 0,
       turbo: 0,
-      matched: 0
+      matched: 0,
     },
     wl: {
       win: 0,
-      lose: 0
+      lose: 0,
     },
     wardMap: {
       obs: {},
-      sen: {}
+      sen: {},
     },
-    isLoading: true
+    isLoading: true,
   };
-} 
+}

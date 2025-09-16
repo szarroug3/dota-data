@@ -9,7 +9,7 @@ export function determinePickOrder(matchData: OpenDotaMatch): {
   if (!matchData.picks_bans || matchData.picks_bans.length === 0) {
     return { radiant: null, dire: null };
   }
-  const firstPick = matchData.picks_bans.find(pick => pick.is_pick);
+  const firstPick = matchData.picks_bans.find((pick) => pick.is_pick);
   if (!firstPick) {
     return { radiant: null, dire: null };
   }
@@ -26,7 +26,7 @@ export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string
   const radiantBans: string[] = [];
   const direBans: string[] = [];
   if (matchData.picks_bans) {
-    matchData.picks_bans.forEach(pickBan => {
+    matchData.picks_bans.forEach((pickBan) => {
       const hero = heroes[pickBan.hero_id.toString()];
       if (!hero) return;
       if (pickBan.is_pick) {
@@ -48,5 +48,3 @@ export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string
   }
   return { radiantPicks, direPicks, radiantBans, direBans };
 }
-
-

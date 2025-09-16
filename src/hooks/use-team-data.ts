@@ -18,8 +18,6 @@ export function useTeamData() {
       refreshTeam: async (_teamId: string, _leagueId: string) => {},
       removeTeam: (_teamId: string, _leagueId: string) => {},
     }),
-    []
+    [],
   );
 }
-
-

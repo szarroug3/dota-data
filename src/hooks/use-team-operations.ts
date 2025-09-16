@@ -9,15 +9,17 @@ import type { PlayerContextValue } from '@/types/contexts/player-context-value';
 import type { TeamData, TeamState } from '@/types/contexts/team-context-value';
 import { generateTeamKey } from '@/utils/team-helpers';
 
-
 function useTeamSelectionOperations(
   setSelectedTeamId: (team: { teamId: number; leagueId: number } | null) => void,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
-  const setSelectedTeam = useCallback((teamId: number, leagueId: number) => {
-    setSelectedTeamId({ teamId, leagueId });
-    configContext.setActiveTeam({ teamId, leagueId });
-  }, [setSelectedTeamId, configContext]);
+  const setSelectedTeam = useCallback(
+    (teamId: number, leagueId: number) => {
+      setSelectedTeamId({ teamId, leagueId });
+      configContext.setActiveTeam({ teamId, leagueId });
+    },
+    [setSelectedTeamId, configContext],
+  );
 
   const clearSelectedTeam = useCallback(() => {
     setSelectedTeamId(null);
@@ -29,12 +31,15 @@ function useTeamSelectionOperations(
 
 function useTeamDataAccessOperations(
   teams: Map<string, TeamData>,
-  selectedTeamId: { teamId: number; leagueId: number } | null
+  selectedTeamId: { teamId: number; leagueId: number } | null,
 ) {
-  const getTeam = useCallback((teamId: number, leagueId: number) => {
-    const key = generateTeamKey(teamId, leagueId);
-    return teams.get(key);
-  }, [teams]);
+  const getTeam = useCallback(
+    (teamId: number, leagueId: number) => {
+      const key = generateTeamKey(teamId, leagueId);
+      return teams.get(key);
+    },
+    [teams],
+  );
 
   const getSelectedTeam = useCallback(() => {
     if (!selectedTeamId) return undefined;
@@ -53,13 +58,25 @@ export function useTeamOperations(
   teamDataFetching: TeamDataFetchingContextValue,
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
   const { teams, setTeams, setTeamsForLoading, selectedTeamId, setSelectedTeamId } = state;
   const { setSelectedTeam, clearSelectedTeam } = useTeamSelectionOperations(setSelectedTeamId, configContext);
   const { getTeam, getSelectedTeam, getAllTeams } = useTeamDataAccessOperations(teams, selectedTeamId);
-  const { addMatchToTeam, addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamSpecificOperations(selectedTeamId, teams, setTeams, matchContext, playerContext);
-  const core = useTeamCoreOperations({ teams, setTeams, setTeamsForLoading, selectedTeamId }, teamDataFetching, matchContext, playerContext, configContext);
+  const { addMatchToTeam, addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamSpecificOperations(
+    selectedTeamId,
+    teams,
+    setTeams,
+    matchContext,
+    playerContext,
+  );
+  const core = useTeamCoreOperations(
+    { teams, setTeams, setTeamsForLoading, selectedTeamId },
+    teamDataFetching,
+    matchContext,
+    playerContext,
+    configContext,
+  );
 
   return {
     addTeam: core.addTeam,
@@ -82,4 +99,4 @@ export function useTeamOperations(
     getSelectedTeam,
     getAllTeams,
   };
-} 
+}

@@ -84,12 +84,7 @@ jest.mock('@/components/ui/sidebar', () => ({
     </ul>
   ),
   SidebarMenuButton: ({ children, onClick, tooltip, ...props }: any) => (
-    <button 
-      data-testid="sidebar-menu-button" 
-      onClick={onClick}
-      title={tooltip}
-      {...props}
-    >
+    <button data-testid="sidebar-menu-button" onClick={onClick} title={tooltip} {...props}>
       {children}
     </button>
   ),
@@ -109,12 +104,7 @@ jest.mock('@/components/ui/sidebar', () => ({
 // Mock the Switch component
 jest.mock('@/components/ui/switch', () => ({
   Switch: ({ checked, onCheckedChange, id, ...props }: any) => (
-    <button 
-      data-testid={`switch-${id}`}
-      onClick={() => onCheckedChange(!checked)}
-      aria-checked={checked}
-      {...props}
-    >
+    <button data-testid={`switch-${id}`} onClick={() => onCheckedChange(!checked)} aria-checked={checked} {...props}>
       {checked ? 'ON' : 'OFF'}
     </button>
   ),
@@ -162,7 +152,7 @@ describe('AppSidebar', () => {
 
   it('renders sidebar with all main sections', () => {
     render(<AppSidebar />);
-    
+
     // Check that main sidebar structure is rendered
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
@@ -172,11 +162,11 @@ describe('AppSidebar', () => {
 
   it('renders navigation section with all navigation items', () => {
     render(<AppSidebar />);
-    
+
     // Check that navigation group is rendered
     const navigationGroups = screen.getAllByTestId('sidebar-group');
     expect(navigationGroups.length).toBeGreaterThan(0);
-    
+
     // Check that navigation menu buttons are rendered
     const menuButtons = screen.getAllByTestId('sidebar-menu-button');
     expect(menuButtons.length).toBeGreaterThan(0);
@@ -184,19 +174,19 @@ describe('AppSidebar', () => {
 
   it('renders sidebar title', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByText('Dota Scouting Assistant')).toBeInTheDocument();
   });
 
   it('renders navigation group label', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByText('Navigation')).toBeInTheDocument();
   });
 
   it('does not render quick links when no active team', () => {
     render(<AppSidebar />);
-    
+
     // Quick Links should not be rendered when activeTeam is null
     expect(screen.queryByText('Quick Links')).not.toBeInTheDocument();
     expect(screen.queryByText('Team Page')).not.toBeInTheDocument();
@@ -205,19 +195,19 @@ describe('AppSidebar', () => {
 
   it('renders external sites group label', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByText('External Sites')).toBeInTheDocument();
   });
 
   it('renders settings group label', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
   it('renders navigation items with correct labels', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Match History')).toBeInTheDocument();
     expect(screen.getByText('Player Stats')).toBeInTheDocument();
@@ -226,7 +216,7 @@ describe('AppSidebar', () => {
 
   it('does not render quick links items when no active team', () => {
     render(<AppSidebar />);
-    
+
     // Quick Links should not be rendered when activeTeam is null
     expect(screen.queryByText('Team Page')).not.toBeInTheDocument();
     expect(screen.queryByText('League Page')).not.toBeInTheDocument();
@@ -234,7 +224,7 @@ describe('AppSidebar', () => {
 
   it('renders external sites with correct labels', () => {
     render(<AppSidebar />);
-    
+
     // Use getAllByText since there are multiple instances (icon and label)
     expect(screen.getAllByText('Dotabuff').length).toBeGreaterThan(0);
     expect(screen.getAllByText('OpenDota').length).toBeGreaterThan(0);
@@ -243,47 +233,47 @@ describe('AppSidebar', () => {
 
   it('renders theme switch in settings', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByTestId('switch-theme')).toBeInTheDocument();
   });
 
   it('renders preferred site switch in settings', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByTestId('switch-preferred-site')).toBeInTheDocument();
   });
 
   it('renders sidebar rail', () => {
     render(<AppSidebar />);
-    
+
     expect(screen.getByTestId('sidebar-rail')).toBeInTheDocument();
   });
 
   it('renders sidebar separators', () => {
     render(<AppSidebar />);
-    
+
     const separators = screen.getAllByTestId('sidebar-separator');
     expect(separators.length).toBeGreaterThan(0);
   });
 
   it('renders all required icons', () => {
     render(<AppSidebar />);
-    
+
     // Navigation icons
     expect(screen.getByTestId('building-icon')).toBeInTheDocument();
     expect(screen.getByTestId('clock-icon')).toBeInTheDocument();
     expect(screen.getByTestId('bar-chart-icon')).toBeInTheDocument();
     expect(screen.getByTestId('target-icon')).toBeInTheDocument();
-    
+
     // Quick links icons - these might not be rendered if no active team
     // expect(screen.getByTestId('users-icon')).toBeInTheDocument();
     // expect(screen.getByTestId('trophy-icon')).toBeInTheDocument();
-    
+
     // External site icons - use getAllByTestId since there are multiple instances
     expect(screen.getAllByTestId('dotabuff-icon').length).toBeGreaterThan(0);
     expect(screen.getAllByTestId('opendota-icon').length).toBeGreaterThan(0);
     expect(screen.getAllByTestId('dota2protracker-icon').length).toBeGreaterThan(0);
-    
+
     // Theme icons
     expect(screen.getByTestId('sun-icon')).toBeInTheDocument();
     expect(screen.getByTestId('moon-icon')).toBeInTheDocument();
@@ -291,14 +281,14 @@ describe('AppSidebar', () => {
 
   it('has proper accessibility structure', () => {
     render(<AppSidebar />);
-    
+
     // Check that sidebar has proper role
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-    
+
     // Check that navigation is properly structured
     expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-footer')).toBeInTheDocument();
-    
+
     // Check that menu items are properly structured
     const menuItems = screen.getAllByTestId('sidebar-menu-item');
     expect(menuItems.length).toBeGreaterThan(0);
@@ -306,13 +296,13 @@ describe('AppSidebar', () => {
 
   it('renders with correct sidebar structure', () => {
     render(<AppSidebar />);
-    
+
     // Verify the main sidebar structure
     const sidebar = screen.getByTestId('sidebar');
     expect(sidebar).toHaveAttribute('collapsible', 'icon');
-    
+
     // Verify content and footer are present
     expect(screen.getByTestId('sidebar-content')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar-footer')).toBeInTheDocument();
   });
-}); 
+});

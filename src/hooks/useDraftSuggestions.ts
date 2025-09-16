@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 
-
 export interface DraftPhase {
   picks: string[];
   bans: string[];
@@ -30,10 +29,26 @@ export interface MetaStats {
 
 const generateHeroSuggestions = (): HeroSuggestion[] => {
   const mockHeroes = [
-    'Pudge', 'Invoker', 'Crystal Maiden', 'Anti-Mage', 'Phantom Assassin',
-    'Shadow Fiend', 'Drow Ranger', 'Lion', 'Rubick', 'Ember Spirit',
-    'Storm Spirit', 'Queen of Pain', 'Mirana', 'Techies', 'Tinker',
-    'Nature\'s Prophet', 'Enigma', 'Chen', 'Enchantress', 'Visage'
+    'Pudge',
+    'Invoker',
+    'Crystal Maiden',
+    'Anti-Mage',
+    'Phantom Assassin',
+    'Shadow Fiend',
+    'Drow Ranger',
+    'Lion',
+    'Rubick',
+    'Ember Spirit',
+    'Storm Spirit',
+    'Queen of Pain',
+    'Mirana',
+    'Techies',
+    'Tinker',
+    "Nature's Prophet",
+    'Enigma',
+    'Chen',
+    'Enchantress',
+    'Visage',
   ];
 
   return mockHeroes.map((heroName, index) => ({
@@ -49,14 +64,14 @@ const generateHeroSuggestions = (): HeroSuggestion[] => {
       'Strong in current meta',
       'Good synergy with team',
       'Counters enemy picks',
-      'High win rate this patch'
+      'High win rate this patch',
     ].slice(0, Math.floor(Math.random() * 4) + 1),
     roles: [
       ['Carry', 'Mid'],
       ['Support', 'Roamer'],
       ['Offlane', 'Initiator'],
-      ['Jungle', 'Pusher']
-    ][index % 4]
+      ['Jungle', 'Pusher'],
+    ][index % 4],
   }));
 };
 
@@ -68,8 +83,8 @@ const generateMetaStats = (heroSuggestions: HeroSuggestion[]): MetaStats => {
   return {
     topPicks: sortedByPickRate.slice(0, 10),
     topBans: sortedByBanRate.slice(0, 10),
-    emergingHeroes: sortedByWinRate.filter(h => h.pickRate < 15).slice(0, 5),
-    counterPicks: heroSuggestions.filter(h => h.counter > 70).slice(0, 5)
+    emergingHeroes: sortedByWinRate.filter((h) => h.pickRate < 15).slice(0, 5),
+    counterPicks: heroSuggestions.filter((h) => h.counter > 70).slice(0, 5),
   };
 };
 
@@ -77,22 +92,20 @@ const getFilteredSuggestions = (
   heroSuggestions: HeroSuggestion[],
   showMetaOnly: boolean,
   roleFilter: string,
-  currentDraft: DraftPhase
+  currentDraft: DraftPhase,
 ): HeroSuggestion[] => {
   let filtered = heroSuggestions;
 
   if (showMetaOnly) {
-    filtered = filtered.filter(h => h.pickRate > 20 || h.banRate > 15);
+    filtered = filtered.filter((h) => h.pickRate > 20 || h.banRate > 15);
   }
 
   if (roleFilter !== 'all') {
-    filtered = filtered.filter(h => h.roles.some(role => 
-      role.toLowerCase().includes(roleFilter.toLowerCase())
-    ));
+    filtered = filtered.filter((h) => h.roles.some((role) => role.toLowerCase().includes(roleFilter.toLowerCase())));
   }
 
   const usedHeroes = [...currentDraft.picks, ...currentDraft.bans];
-  filtered = filtered.filter(h => !usedHeroes.includes(h.heroId));
+  filtered = filtered.filter((h) => !usedHeroes.includes(h.heroId));
 
   return filtered.sort((a, b) => {
     if (a.priority !== b.priority) {
@@ -110,7 +123,7 @@ const getFilteredSuggestions = (
 
 const getUpdatedDraft = (prevDraft: DraftPhase, heroId: string): DraftPhase => {
   const updated = { ...prevDraft };
-  
+
   if (prevDraft.currentTurn === 'pick') {
     updated.picks = [...prevDraft.picks, heroId];
   } else {
@@ -119,7 +132,7 @@ const getUpdatedDraft = (prevDraft: DraftPhase, heroId: string): DraftPhase => {
 
   if (updated.picks.length + updated.bans.length < 20) {
     updated.currentTeam = prevDraft.currentTeam === 'radiant' ? 'dire' : 'radiant';
-    
+
     const totalSelections = updated.picks.length + updated.bans.length;
     if (totalSelections < 6) {
       updated.currentTurn = 'ban';
@@ -139,7 +152,7 @@ const initialDraftState: DraftPhase = {
   picks: [],
   bans: [],
   currentTurn: 'ban',
-  currentTeam: 'radiant'
+  currentTeam: 'radiant',
 };
 
 export function useDraftSuggestions() {
@@ -156,7 +169,7 @@ export function useDraftSuggestions() {
   }, [heroSuggestions, showMetaOnly, roleFilter, currentDraft]);
 
   const handleHeroAction = useCallback((heroId: string) => {
-    setCurrentDraft(prev => getUpdatedDraft(prev, heroId));
+    setCurrentDraft((prev) => getUpdatedDraft(prev, heroId));
   }, []);
 
   const handleResetDraft = useCallback(() => {
@@ -187,6 +200,6 @@ export function useDraftSuggestions() {
     handleResetDraft,
     handleTeamSideChange,
     handleRoleFilterChange,
-    handleShowMetaOnlyChange
+    handleShowMetaOnlyChange,
   };
-} 
+}

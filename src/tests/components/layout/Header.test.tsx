@@ -139,4 +139,4 @@ describe('Header - Responsive design', () => {
     const actionsContainer = document.querySelector('.flex.items-center.space-x-3');
     expect(actionsContainer).toBeInTheDocument();
   });
-}); 
+});

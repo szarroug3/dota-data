@@ -1,7 +1,12 @@
 import { useCallback } from 'react';
 
 import type { PlayerDataFetchingContextValue } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
-import { abortPlayerOperations, createPlayerOperationKey, useAbortController, type AbortControllerManager } from '@/hooks/use-abort-controller';
+import {
+  abortPlayerOperations,
+  createPlayerOperationKey,
+  useAbortController,
+  type AbortControllerManager,
+} from '@/hooks/use-abort-controller';
 import type { Player, PlayerProcessing, PlayerState } from '@/types/contexts/player-context-value';
 import { handleOperationError, updateMapItemError } from '@/utils/error-handling';
 import { createInitialPlayerData } from '@/utils/player-helpers';
@@ -15,13 +20,13 @@ import { createInitialPlayerData } from '@/utils/player-helpers';
  */
 function createAndAddOptimisticPlayer(playerId: number, state: PlayerState): Player {
   const optimisticPlayer = createInitialPlayerData(playerId);
-  
-  state.setPlayers(prev => {
+
+  state.setPlayers((prev) => {
     const newPlayers = new Map(prev);
     newPlayers.set(playerId, optimisticPlayer);
     return newPlayers;
   });
-  
+
   return optimisticPlayer;
 }
 
@@ -29,12 +34,12 @@ function createAndAddOptimisticPlayer(playerId: number, state: PlayerState): Pla
  * Update state with processed player data
  */
 function updateStateWithProcessedPlayer(playerId: number, processedPlayer: Player, state: PlayerState): void {
-  state.setPlayers(prev => {
+  state.setPlayers((prev) => {
     // Only update if the player data has actually changed
     const existingPlayer = prev.get(playerId);
     if (existingPlayer) {
       // Compare only the relevant fields to avoid unnecessary updates
-      const hasChanged = 
+      const hasChanged =
         existingPlayer.profile.profile.personaname !== processedPlayer.profile.profile.personaname ||
         existingPlayer.profile.rank_tier !== processedPlayer.profile.rank_tier ||
         existingPlayer.profile.leaderboard_rank !== processedPlayer.profile.leaderboard_rank ||
@@ -42,12 +47,12 @@ function updateStateWithProcessedPlayer(playerId: number, processedPlayer: Playe
         existingPlayer.wl.lose !== processedPlayer.wl.lose ||
         JSON.stringify(existingPlayer.heroes) !== JSON.stringify(processedPlayer.heroes) ||
         JSON.stringify(existingPlayer.recentMatches) !== JSON.stringify(processedPlayer.recentMatches);
-      
+
       if (!hasChanged) {
         return prev;
       }
     }
-    
+
     const newPlayers = new Map(prev);
     newPlayers.set(playerId, processedPlayer);
     return newPlayers;
@@ -64,29 +69,29 @@ async function fetchAndProcessPlayer(
   optimisticPlayer: Player,
   playerDataFetching: PlayerDataFetchingContextValue,
   processing: PlayerProcessing,
-  state: PlayerState
+  state: PlayerState,
 ): Promise<Player | null> {
   // Fetch player data with force parameter
   const playerData = await playerDataFetching.fetchPlayerData(playerId, force);
-  
+
   // Check if operation was aborted during fetch
   if (abortController.signal.aborted) {
     return optimisticPlayer;
   }
-  
+
   if ('error' in playerData) {
     // Handle gracefully without throwing console errors
     console.warn('Player data fetch warning:', playerData.error);
     updateMapItemError(state.setPlayers, playerId, playerData.error);
     return null;
   }
-  
+
   // Process player data
   const processedPlayer = processing.processPlayerData(playerData);
-  
+
   // Update state with fetched data
   updateStateWithProcessedPlayer(playerId, processedPlayer, state);
-  
+
   return processedPlayer;
 }
 
@@ -100,7 +105,7 @@ async function handlePlayerOperation(
   abortController: AbortControllerManager,
   playerDataFetching: PlayerDataFetchingContextValue,
   processing: PlayerProcessing,
-  state: PlayerState
+  state: PlayerState,
 ): Promise<Player | null> {
   // Check if player already exists (skip if exists and not forcing)
   if (!force && state.players.has(playerId)) {
@@ -117,7 +122,7 @@ async function handlePlayerOperation(
 
   try {
     state.setIsLoading(true);
-    
+
     // Create optimistic player data and add to state
     const optimisticPlayer = createAndAddOptimisticPlayer(playerId, state);
 
@@ -125,7 +130,7 @@ async function handlePlayerOperation(
     if (controller.signal.aborted) {
       return optimisticPlayer;
     }
-    
+
     // Fetch and process player data
     return await fetchAndProcessPlayer(
       playerId,
@@ -134,9 +139,8 @@ async function handlePlayerOperation(
       optimisticPlayer,
       playerDataFetching,
       processing,
-      state
+      state,
     );
-    
   } catch (err) {
     // Handle gracefully without emitting console errors
     console.warn('Player operation warning:', err);
@@ -159,46 +163,66 @@ async function handlePlayerOperation(
 export function usePlayerOperations(
   state: PlayerState,
   processing: PlayerProcessing,
-  playerDataFetching: PlayerDataFetchingContextValue
+  playerDataFetching: PlayerDataFetchingContextValue,
 ) {
   const abortController = useAbortController();
 
   // Consolidated player operation with force parameter
-  const processPlayer = useCallback(async (playerId: number, force = false): Promise<Player | null> => {
-    const operationKey = createPlayerOperationKey(playerId);
-    return await handlePlayerOperation(playerId, force, operationKey, abortController, playerDataFetching, processing, state);
-  }, [state, processing, playerDataFetching, abortController]);
+  const processPlayer = useCallback(
+    async (playerId: number, force = false): Promise<Player | null> => {
+      const operationKey = createPlayerOperationKey(playerId);
+      return await handlePlayerOperation(
+        playerId,
+        force,
+        operationKey,
+        abortController,
+        playerDataFetching,
+        processing,
+        state,
+      );
+    },
+    [state, processing, playerDataFetching, abortController],
+  );
 
   // Add player (force = false)
-  const addPlayer = useCallback(async (playerId: number): Promise<Player | null> => {
-    return await processPlayer(playerId, false);
-  }, [processPlayer]);
+  const addPlayer = useCallback(
+    async (playerId: number): Promise<Player | null> => {
+      return await processPlayer(playerId, false);
+    },
+    [processPlayer],
+  );
 
   // Refresh player (force = true)
-  const refreshPlayer = useCallback(async (playerId: number): Promise<Player | null> => {
-    return await processPlayer(playerId, true);
-  }, [processPlayer]);
+  const refreshPlayer = useCallback(
+    async (playerId: number): Promise<Player | null> => {
+      return await processPlayer(playerId, true);
+    },
+    [processPlayer],
+  );
 
   // Remove player
-  const removePlayer = useCallback((playerId: number) => {
-    // ABORT ONGOING OPERATIONS: Abort any ongoing operations for this player
-    abortPlayerOperations(abortController, playerId);
-    
-    state.setPlayers(prev => {
-      const newPlayers = new Map(prev);
-      newPlayers.delete(playerId);
-      return newPlayers;
-    });
-    
-    // Clear selected player if it was the removed player
-    if (state.selectedPlayerId === playerId) {
-      state.setSelectedPlayerId(null);
-    }
-  }, [state, abortController]);
+  const removePlayer = useCallback(
+    (playerId: number) => {
+      // ABORT ONGOING OPERATIONS: Abort any ongoing operations for this player
+      abortPlayerOperations(abortController, playerId);
+
+      state.setPlayers((prev) => {
+        const newPlayers = new Map(prev);
+        newPlayers.delete(playerId);
+        return newPlayers;
+      });
+
+      // Clear selected player if it was the removed player
+      if (state.selectedPlayerId === playerId) {
+        state.setSelectedPlayerId(null);
+      }
+    },
+    [state, abortController],
+  );
 
   return {
     addPlayer,
     refreshPlayer,
-    removePlayer
+    removePlayer,
   };
-} 
+}

@@ -63,5 +63,3 @@ export const TeamList: React.FC<TeamListProps> = ({
     </Card>
   );
 };
-
-

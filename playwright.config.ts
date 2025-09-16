@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: [
     ['html', { open: 'never' }],
     ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/results.xml' }]
+    ['junit', { outputFile: 'test-results/results.xml' }],
   ],
   use: {
     baseURL: 'http://localhost:3000',
@@ -25,41 +25,41 @@ export default defineConfig({
     // Desktop browsers
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         // Additional Chrome-specific settings
         launchOptions: {
-          args: ['--disable-web-security', '--disable-features=VizDisplayCompositor']
-        }
+          args: ['--disable-web-security', '--disable-features=VizDisplayCompositor'],
+        },
       },
     },
     {
       name: 'firefox',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         // Additional Firefox-specific settings
         launchOptions: {
           firefoxUserPrefs: {
             'dom.webdriver.enabled': false,
-            'useAutomationExtension': false
-          }
-        }
+            useAutomationExtension: false,
+          },
+        },
       },
     },
     {
       name: 'webkit',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         // Additional Safari-specific settings
         launchOptions: {
-          args: ['--disable-web-security']
-        }
+          args: ['--disable-web-security'],
+        },
       },
     },
     // Mobile browsers
     {
       name: 'Mobile Chrome',
-      use: { 
+      use: {
         ...devices['Pixel 5'],
         // Mobile-specific settings
         viewport: { width: 375, height: 667 },
@@ -70,7 +70,7 @@ export default defineConfig({
     },
     {
       name: 'Mobile Safari',
-      use: { 
+      use: {
         ...devices['iPhone 12'],
         // Mobile-specific settings
         viewport: { width: 375, height: 667 },
@@ -82,7 +82,7 @@ export default defineConfig({
     // Tablet browsers
     {
       name: 'Tablet Chrome',
-      use: { 
+      use: {
         ...devices['iPad Pro 11 landscape'],
         // Tablet-specific settings
         viewport: { width: 1024, height: 768 },
@@ -109,4 +109,4 @@ export default defineConfig({
   expect: {
     timeout: 10000,
   },
-}); 
+});

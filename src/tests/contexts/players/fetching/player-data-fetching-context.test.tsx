@@ -1,7 +1,10 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import { PlayerDataFetchingProvider, usePlayerDataFetching } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
+import {
+  PlayerDataFetchingProvider,
+  usePlayerDataFetching,
+} from '@/frontend/players/contexts/fetching/player-data-fetching-context';
 
 jest.mock('@/frontend/players/api/players', () => {
   return {
@@ -38,7 +41,7 @@ describe('PlayerDataFetchingProvider cache integration', () => {
     render(
       <PlayerDataFetchingProvider>
         <TestComponent />
-      </PlayerDataFetchingProvider>
+      </PlayerDataFetchingProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('ok'));
     expect(getPlayer).toHaveBeenCalledTimes(1);
@@ -50,11 +53,9 @@ describe('PlayerDataFetchingProvider cache integration', () => {
     render(
       <PlayerDataFetchingProvider>
         <TestComponent />
-      </PlayerDataFetchingProvider>
+      </PlayerDataFetchingProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('ok'));
     expect(getPlayer).toHaveBeenCalledTimes(0);
   });
 });
-
-

@@ -1,5 +1,7 @@
 ## Architecture
+
 ### Overview & Principles
+
 - **Separation of concerns**: Frontend UI lives in `src/frontend/`; backend API routes live in `src/app/api/`. They interact only via HTTP.
 - **Shared contracts**: Cross-cutting types and schemas live in `src/types/`; shared utilities in `src/lib/`. Client code does not import server-only modules.
 - **Accessibility**: UI adheres to WCAG 2.1, semantic HTML, ARIA where appropriate, keyboard and screen reader support.
@@ -7,6 +9,7 @@
 - **No backend guessing**: API routes retrieve and organize data only; no inferred calculations beyond shaping responses.
 
 ### Directory Structure (high level)
+
 - **Backend**: `src/app/api/`
 - **Frontend**: `src/frontend/`
 - **Frontend libs**: `src/frontend/lib/api-client/`, `src/frontend/lib/cache/`
@@ -16,6 +19,7 @@
 - **Tests**: `src/tests/`
 
 ### Data Flow
+
 1. Frontend stateful pages consume state management contexts per family (Teams, Matches, Players, Constants).
 2. State contexts call their corresponding data fetching contexts to retrieve data.
 3. Fetching contexts call the frontend API client, which calls backend routes under `src/app/api/*`.
@@ -23,6 +27,7 @@
 5. Constants (heroes/items) are fetched via backend and cached; frontend uses them to translate IDs to names.
 
 ### Backend (`src/app/api/`)
+
 - **Responsibilities**
   - Single entry point for all external API calls.
   - Validate inputs/outputs (Zod schemas in `src/types/api-zod/`).
@@ -35,6 +40,7 @@
   - Keep route handlers thin; move reusable logic to `src/lib/`.
 
 ### Frontend (`src/frontend/`)
+
 - **Layering per family (Teams, Matches, Players, Constants)**
   - Data fetching context: orchestrates calls to the typed API client; never calls `fetch` or external APIs directly.
   - State management context: feature-scoped source of truth (derived data, selections, caches); calls the fetching context and exposes UI-ready state.
@@ -50,7 +56,9 @@
   - Use shadcn components and Tailwind theme tokens; ensure keyboard/screen reader support.
 
 ### Families
+
 #### Teams
+
 - **Location**: `src/frontend/teams/`
 - **Rules**: Manage roster aggregate and team-specific performance across matches; we do not track when a player was on the team, only that they were and which matches they played.
 - **Permanence heuristic (optional, frontend-derived; not implemented yet)**:
@@ -60,46 +68,56 @@
   - Thresholds are configurable via `config-context` so users can tune behavior.
 
 #### Matches
+
 - **Location**: `src/frontend/matches/`
 - **Rules**: Each match is 5v5; contains per-player stats and hero selections. Supports team participation metadata (side and pick order).
 
 #### Players
+
 - **Location**: `src/frontend/players/`
 - **Rules**: Player views aggregate per-player statistics within the active team context.
 
 #### Constants
+
 - **Location**: `src/frontend/constants/`
 - **Rules**: Hero and item metadata retrieved via backend, cached, and used to translate IDs to names.
 
 ### Types & Validation
+
 - **Types**: Swagger/OpenAPI-generated types live in `src/types/api.ts` (or split modules under `src/types/` if expanded). Domain/view types are colocated under `src/types/**`.
 - **Validation**: Zod schemas in `src/types/api-zod/`. Validate at backend boundaries; API clients validate responses before exposing to contexts.
 
 ### Caching
+
 - Centralized in `src/lib/cache-service.ts` with backends in `src/lib/cache-backends/`.
 - Family TTLs (current policy): players 24h; teams 24h; matches indefinite (manual refresh invalidation).
 - Cache keys follow `family:resource:params:v{CACHE_VERSION}`.
 
 ### Error Handling & Logging
+
 - Use helpers in `src/utils/error-handling.ts`. Provide meaningful error messages; no silent failures.
 - Distinguish user-facing errors from developer logs; surface errors via context error fields for the UI.
 
 ### Security & Configuration
+
 - Never store secrets in plaintext. Do not modify `.env` via code.
 - Frontend contexts do not call `localStorage` directly; use `src/frontend/contexts/config-context.tsx` abstraction.
 - Enforce server-only modules not importable by client via ESLint rules.
 
 ### Testing
+
 - Tests mirror source layout under `src/tests/` with one-to-one mapping.
 - Use `pnpm` for all scripts; run lint, type-check, and tests with zero warnings policy.
 
 ### Build & CI
+
 - Commands: `pnpm lint`, `pnpm type-check`, `pnpm test`, `pnpm dev`.
 - PR gates: all checks must pass; no dynamic imports; import boundaries respected.
 
 ### Pages
 
 #### Dashboard (`src/app/dashboard/page.tsx` → `DashboardPageContainer`)
+
 - **Responsibilities**
   - Add a team by team ID and league ID (validated inputs; ARIA attributes; duplicate prevention).
   - List teams with status (active, loading, error) and high-level stats (total matches, win rate).
@@ -112,6 +130,7 @@
   - `EditTeamSheet` (controlled inputs; Enter-to-submit; disabled state management).
 
 #### Match History (`src/app/match-history/page.tsx` → `MatchHistoryPageContainer`)
+
 - **Responsibilities**
   - Browse matches for the active team; filter/search; toggle list/card views.
   - Select a match and view details (Draft/Players/Events) with resizable layout.
@@ -129,6 +148,7 @@
   - `HiddenMatchesModal` (accessible dialog; summary per hidden match; Unhide action).
 
 #### Player Stats (`src/app/player-stats/page.tsx` → `PlayerStatsPageContainer`)
+
 - **Responsibilities**
   - View player data for the active team; filter/sort; select players; toggle list/card views.
   - Show player details (Summary, Details, Team context) with resizable layout.
@@ -144,6 +164,7 @@
   - `AddPlayerSheet` and `EditPlayerSheet`: sheets for adding/editing manual players with validation and disabled states.
 
 #### Home (`src/app/page.tsx`)
+
 - Redirects to `/dashboard`.
 
 ### Appendix: Data Map (UI inputs)
@@ -151,6 +172,7 @@
 This appendix enumerates data required by presentational components so contexts can reproduce all inputs without changing the UI.
 
 #### Teams family
+
 - Domain types used by UI
   - `TeamData` (from `src/types/contexts/team-context-value.ts`):
     - `team: { id: number; name: string }`
@@ -199,6 +221,7 @@ This appendix enumerates data required by presentational components so contexts 
   - Computed `highPerformingHeroes: Set<string>` (precomputed for performance)
 
 #### Matches family
+
 - Domain types used by UI (from `src/types/contexts/match-context-value.ts`)
   - `Match`:
     - `id: number`, `date: string`, `duration: number`

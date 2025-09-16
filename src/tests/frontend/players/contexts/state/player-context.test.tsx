@@ -1,6 +1,6 @@
 /**
  * Player Context Tests
- * 
+ *
  * Tests for the player context functionality including player operations,
  * data processing, and state management.
  */
@@ -19,7 +19,7 @@ const mockFetchPlayerData = jest.fn().mockResolvedValue({
     personaname: 'Test Player',
     avatarfull: 'https://example.com/avatar.jpg',
     loccountrycode: 'US',
-    last_login: '2024-01-01T00:00:00.000Z'
+    last_login: '2024-01-01T00:00:00.000Z',
   },
   competitive_rank: 5000,
   rank_tier: 70,
@@ -28,14 +28,14 @@ const mockFetchPlayerData = jest.fn().mockResolvedValue({
   mmr_estimate: {
     estimate: 5000,
     stdDev: 200,
-    n: 100
-  }
+    n: 100,
+  },
 });
 
 jest.mock('@/frontend/players/contexts/fetching/player-data-fetching-context', () => ({
   usePlayerDataFetching: () => ({
-    fetchPlayerData: mockFetchPlayerData
-  })
+    fetchPlayerData: mockFetchPlayerData,
+  }),
 }));
 
 // Mock use-player-operations to avoid relying on processed Player shape
@@ -84,53 +84,34 @@ jest.mock('@/hooks/use-player-operations', () => {
         if (state.selectedPlayerId === playerId) {
           state.setSelectedPlayerId(null);
         }
-      }
-    })
+      },
+    }),
   };
 });
 
 // Test component to access context
 const TestComponent: React.FC = () => {
-  const {
-    players,
-    selectedPlayerId,
-    setSelectedPlayerId,
-    isLoading,
-    addPlayer,
-    refreshPlayer,
-  } = usePlayerContext();
+  const { players, selectedPlayerId, setSelectedPlayerId, isLoading, addPlayer, refreshPlayer } = usePlayerContext();
 
   return (
     <div>
       <div data-testid="players-count">{players.size}</div>
       <div data-testid="selected-player-id">{selectedPlayerId || 'none'}</div>
       <div data-testid="is-loading">{isLoading.toString()}</div>
-      
-      <button 
-        data-testid="add-player-btn"
-        onClick={() => addPlayer(123456789)}
-      >
+
+      <button data-testid="add-player-btn" onClick={() => addPlayer(123456789)}>
         Add Player
       </button>
-      
-      <button 
-        data-testid="refresh-player-btn"
-        onClick={() => refreshPlayer(123456789)}
-      >
+
+      <button data-testid="refresh-player-btn" onClick={() => refreshPlayer(123456789)}>
         Refresh Player
       </button>
-      
-      <button 
-        data-testid="set-selected-player-btn"
-        onClick={() => setSelectedPlayerId(123456789)}
-      >
+
+      <button data-testid="set-selected-player-btn" onClick={() => setSelectedPlayerId(123456789)}>
         Set Selected Player
       </button>
-      
-      <button 
-        onClick={() => setSelectedPlayerId(null)}
-        data-testid="clear-selected-player-btn"
-      >
+
+      <button onClick={() => setSelectedPlayerId(null)} data-testid="clear-selected-player-btn">
         Clear Selected Player
       </button>
     </div>
@@ -139,9 +120,7 @@ const TestComponent: React.FC = () => {
 
 // Wrapper component
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <PlayerProvider>
-    {children}
-  </PlayerProvider>
+  <PlayerProvider>{children}</PlayerProvider>
 );
 
 describe('PlayerContext', () => {
@@ -154,7 +133,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByTestId('players-count')).toHaveTextContent('0');
@@ -168,7 +147,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const addPlayerButton = screen.getByTestId('add-player-btn');
@@ -183,11 +162,11 @@ describe('PlayerContext', () => {
 
     it('should handle errors when adding a player', async () => {
       mockFetchPlayerData.mockRejectedValueOnce(new Error('Failed to fetch player'));
-      
+
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const addPlayerButton = screen.getByTestId('add-player-btn');
@@ -206,7 +185,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add player first time
@@ -235,7 +214,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const refreshPlayerButton = screen.getByTestId('refresh-player-btn');
@@ -252,7 +231,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add player first
@@ -282,7 +261,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const setSelectedPlayerButton = screen.getByTestId('set-selected-player-btn');
@@ -299,7 +278,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // First set a selected player
@@ -329,7 +308,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add a player first
@@ -349,7 +328,7 @@ describe('PlayerContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Add a player first
@@ -367,11 +346,11 @@ describe('PlayerContext', () => {
   describe('Error Handling', () => {
     it('should handle network errors gracefully', async () => {
       mockFetchPlayerData.mockRejectedValueOnce(new Error('Network error'));
-      
+
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const addPlayerButton = screen.getByTestId('add-player-btn');
@@ -389,11 +368,11 @@ describe('PlayerContext', () => {
     it('should clear errors when operations succeed', async () => {
       // First cause an error
       mockFetchPlayerData.mockRejectedValueOnce(new Error('Network error'));
-      
+
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const addPlayerButton = screen.getByTestId('add-player-btn');
@@ -411,8 +390,8 @@ describe('PlayerContext', () => {
       mockFetchPlayerData.mockResolvedValueOnce({
         profile: {
           account_id: 123456789,
-          personaname: 'Test Player'
-        }
+          personaname: 'Test Player',
+        },
       });
 
       await act(async () => {
@@ -426,4 +405,4 @@ describe('PlayerContext', () => {
       });
     });
   });
-}); 
+});

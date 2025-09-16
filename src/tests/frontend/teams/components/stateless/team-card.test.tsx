@@ -18,7 +18,16 @@ const mockTeamData = {
     totalLosses: 32,
     overallWinRate: 68.1,
     heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-    draftStats: { firstPickCount: 0, secondPickCount: 0, firstPickWinRate: 0, secondPickWinRate: 0, uniqueHeroesPicked: 0, uniqueHeroesBanned: 0, mostPickedHero: '', mostBannedHero: '' },
+    draftStats: {
+      firstPickCount: 0,
+      secondPickCount: 0,
+      firstPickWinRate: 0,
+      secondPickWinRate: 0,
+      uniqueHeroesPicked: 0,
+      uniqueHeroesBanned: 0,
+      mostPickedHero: '',
+      mostBannedHero: '',
+    },
     currentWinStreak: 0,
     currentLoseStreak: 0,
     averageMatchDuration: 0,
@@ -37,7 +46,6 @@ const mockTeams = [
 ];
 
 describe('TeamCard', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -52,7 +60,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -68,7 +76,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -83,7 +91,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -98,7 +106,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -112,7 +120,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.queryByText('Team Alpha')).not.toBeInTheDocument();
@@ -129,7 +137,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Selected')).toBeInTheDocument();
@@ -144,7 +152,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Active')).toBeInTheDocument();
@@ -159,7 +167,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Active')).toBeInTheDocument();
@@ -177,7 +185,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -191,7 +199,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -205,7 +213,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -219,7 +227,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       // Should not throw errors when handlers are not provided
@@ -237,7 +245,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getByRole('button', { name: /activate team/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /view team details/i })).toBeInTheDocument();
@@ -253,7 +261,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       // Only check for actual buttons present
       expect(screen.getByRole('button', { name: /activate team/i })).toBeInTheDocument();
@@ -270,7 +278,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
       expect(screen.getByTestId('team-tag')).toHaveTextContent('Team Alpha');
@@ -287,7 +295,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -302,7 +310,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -317,7 +325,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -334,7 +342,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText(/32/)).toBeInTheDocument(); // Wins
@@ -350,7 +358,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -364,7 +372,7 @@ describe('TeamCard', () => {
           onRemoveTeam={jest.fn()}
           onRefreshTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText(/Form:/)).toBeInTheDocument();
@@ -409,7 +417,6 @@ describe('TeamCardSkeleton', () => {
 });
 
 describe('TeamCardList', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -424,7 +431,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
       expect(screen.getAllByText('Team Beta')[0]).toBeInTheDocument();
@@ -440,7 +447,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getByText('No teams found')).toBeInTheDocument();
     });
@@ -454,7 +461,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       // Find the container by its className
       const container = document.querySelector('.custom-list');
@@ -472,7 +479,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Selected')).toBeInTheDocument();
@@ -487,7 +494,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Active')).toBeInTheDocument();
@@ -504,7 +511,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -523,7 +530,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={onSetActive}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       const buttons = screen.getAllByRole('button');
       buttons[0].click();
@@ -538,7 +545,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -551,7 +558,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
@@ -567,7 +574,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -583,7 +590,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -599,7 +606,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -617,7 +624,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -632,7 +639,7 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
@@ -647,10 +654,10 @@ describe('TeamCardList', () => {
           onRefreshTeam={jest.fn()}
           onSetActiveTeam={jest.fn()}
           onEditTeam={jest.fn()}
-        />
+        />,
       );
 
       expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
     });
   });
-}); 
+});

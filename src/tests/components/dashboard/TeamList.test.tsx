@@ -38,7 +38,7 @@ describe('TeamList', () => {
           uniqueHeroesPicked: 0,
           uniqueHeroesBanned: 0,
           mostPickedHero: '',
-          mostBannedHero: ''
+          mostBannedHero: '',
         },
         currentWinStreak: 0,
         currentLoseStreak: 0,
@@ -46,8 +46,8 @@ describe('TeamList', () => {
         averageKills: 0,
         averageDeaths: 0,
         averageGold: 0,
-        averageExperience: 0
-      }
+        averageExperience: 0,
+      },
     },
     {
       team: {
@@ -77,7 +77,7 @@ describe('TeamList', () => {
           uniqueHeroesPicked: 0,
           uniqueHeroesBanned: 0,
           mostPickedHero: '',
-          mostBannedHero: ''
+          mostBannedHero: '',
         },
         currentWinStreak: 0,
         currentLoseStreak: 0,
@@ -85,9 +85,9 @@ describe('TeamList', () => {
         averageKills: 0,
         averageDeaths: 0,
         averageGold: 0,
-        averageExperience: 0
-      }
-    }
+        averageExperience: 0,
+      },
+    },
   ];
 
   beforeEach(() => {
@@ -96,115 +96,115 @@ describe('TeamList', () => {
 
   it('should render team list with multiple teams', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Your Teams')).toBeInTheDocument();
     expect(screen.getByText('Manage your tracked teams and view their performance')).toBeInTheDocument();
   });
 
   it('should render empty state when no teams', () => {
     render(
-      <TeamList 
-        teamDataList={[]} 
+      <TeamList
+        teamDataList={[]}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('No Teams Added')).toBeInTheDocument();
     expect(screen.getByText('Add your first team using the add team form to get started.')).toBeInTheDocument();
   });
 
   it('should display card header correctly', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Your Teams')).toBeInTheDocument();
     expect(screen.getByText('Manage your tracked teams and view their performance')).toBeInTheDocument();
   });
 
   it('should display team information correctly', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Team Liquid')).toBeInTheDocument();
     expect(screen.getByText('OG')).toBeInTheDocument();
   });
 
   it('should show active badge for active team', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={{ teamId: 9517508, leagueId: 16435 }}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
   it('should not show active badge for inactive team', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={{ teamId: 9517508, leagueId: 16435 }}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     const activeBadges = screen.getAllByText('Active');
     expect(activeBadges).toHaveLength(1);
   });
 
   it('should render action buttons for each team', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     const refreshButtons = screen.getAllByTitle('Refresh team data');
     const editButtons = screen.getAllByTitle('Edit team');
     const deleteButtons = screen.getAllByTitle('Delete team');
-    
+
     expect(refreshButtons).toHaveLength(2);
     expect(editButtons).toHaveLength(2);
     expect(deleteButtons).toHaveLength(2);
@@ -212,16 +212,16 @@ describe('TeamList', () => {
 
   it('should pass handlers to TeamCard components', () => {
     render(
-      <TeamList 
+      <TeamList
         teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Your Teams')).toBeInTheDocument();
     expect(screen.getByText('Team Liquid')).toBeInTheDocument();
     expect(screen.getByText('OG')).toBeInTheDocument();
@@ -229,31 +229,31 @@ describe('TeamList', () => {
 
   it('should render team cards with proper data', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Your Teams')).toBeInTheDocument();
   });
 
   it('should have proper card structure', () => {
     render(
-      <TeamList 
-        teamDataList={mockTeamDataList} 
+      <TeamList
+        teamDataList={mockTeamDataList}
         activeTeam={null}
         onRemoveTeam={mockOnRemoveTeam}
         onRefreshTeam={mockOnRefreshTeam}
         onEditTeam={mockOnEditTeam}
         onSetActiveTeam={mockOnSetActiveTeam}
-      />
+      />,
     );
-    
+
     expect(screen.getByText('Your Teams')).toBeInTheDocument();
   });
-}); 
+});

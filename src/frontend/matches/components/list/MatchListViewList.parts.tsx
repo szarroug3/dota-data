@@ -6,39 +6,70 @@ import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroA
 import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import type { Hero } from '@/types/contexts/constants-context-value';
 
-export interface HeroIndicatorProps { count: number; avatarSize: { width: string; height: string }; }
+export interface HeroIndicatorProps {
+  count: number;
+  avatarSize: { width: string; height: string };
+}
 export const HeroIndicator: React.FC<HeroIndicatorProps> = ({ count, avatarSize }) => {
   const { width, height } = avatarSize;
   return (
-    <div className={`${width} ${height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
+    <div
+      className={`${width} ${height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}
+    >
       <span className="text-xs font-medium text-muted-foreground">+{count}</span>
     </div>
   );
 };
 
-export interface HeroAvatarsProps { heroes: Hero[]; avatarSize?: { width: string; height: string }; className?: string; }
-export const HeroAvatars: React.FC<HeroAvatarsProps> = ({ heroes, avatarSize = { width: 'w-8', height: 'h-8' }, className = '' }) => {
+export interface HeroAvatarsProps {
+  heroes: Hero[];
+  avatarSize?: { width: string; height: string };
+  className?: string;
+}
+export const HeroAvatars: React.FC<HeroAvatarsProps> = ({
+  heroes,
+  avatarSize = { width: 'w-8', height: 'h-8' },
+  className = '',
+}) => {
   const { highPerformingHeroes } = useTeamContext();
   const totalHeroes = heroes.length;
   const renderLargeContainer = () => (
     <div className="@[400px]:flex hidden">
       {heroes.slice(0, 5).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} isHighPerforming={highPerformingHeroes.has(hero.id.toString())} />
+        <HeroAvatar
+          key={index}
+          hero={hero}
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
     </div>
   );
   const renderMediumContainer = () => (
     <div className="@[350px]:flex @[400px]:hidden hidden">
-      {heroes.slice(0, 3).filter(Boolean).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero as Hero} avatarSize={avatarSize} isHighPerforming={highPerformingHeroes.has((hero as Hero).id.toString())} />
-      ))}
+      {heroes
+        .slice(0, 3)
+        .filter(Boolean)
+        .map((hero, index) => (
+          <HeroAvatar
+            key={index}
+            hero={hero as Hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has((hero as Hero).id.toString())}
+          />
+        ))}
       {totalHeroes > 3 && <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />}
     </div>
   );
   const renderSmallContainer = () => (
     <div className="@[290px]:flex @[350px]:hidden hidden">
       {heroes.slice(0, 2).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} isHighPerforming={highPerformingHeroes.has(hero.id.toString())} />
+        <HeroAvatar
+          key={index}
+          hero={hero}
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 2 && <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />}
     </div>
@@ -46,7 +77,12 @@ export const HeroAvatars: React.FC<HeroAvatarsProps> = ({ heroes, avatarSize = {
   const renderVerySmallContainer = () => (
     <div className="@[270px]:flex @[290px]:hidden hidden">
       {heroes.slice(0, 1).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} isHighPerforming={highPerformingHeroes.has(hero.id.toString())} />
+        <HeroAvatar
+          key={index}
+          hero={hero}
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
     </div>
@@ -54,7 +90,12 @@ export const HeroAvatars: React.FC<HeroAvatarsProps> = ({ heroes, avatarSize = {
   const renderDefaultFallback = () => (
     <div className="@[270px]:hidden flex">
       {heroes.slice(0, 1).map((hero, index) => (
-        <HeroAvatar key={index} hero={hero} avatarSize={avatarSize} isHighPerforming={highPerformingHeroes.has(hero.id.toString())} />
+        <HeroAvatar
+          key={index}
+          hero={hero}
+          avatarSize={avatarSize}
+          isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+        />
       ))}
       {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
     </div>
@@ -91,8 +132,8 @@ export const TeamSideBadge: React.FC<{ teamSide: 'radiant' | 'dire' | undefined 
 export const PickOrderBadge: React.FC<{ pickOrder: string | null }> = ({ pickOrder }) => (
   <Badge variant="secondary" className="text-xs w-fit @[300px]:block hidden">
     <span className="@[450px]:block hidden">{pickOrder}</span>
-    <span className="@[450px]:hidden block">{pickOrder === 'First Pick' ? '1P' : pickOrder === 'Second Pick' ? '2P' : 'PO'}</span>
+    <span className="@[450px]:hidden block">
+      {pickOrder === 'First Pick' ? '1P' : pickOrder === 'Second Pick' ? '2P' : 'PO'}
+    </span>
   </Badge>
 );
-
-

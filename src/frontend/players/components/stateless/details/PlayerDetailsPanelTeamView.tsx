@@ -19,10 +19,21 @@ interface PlayerDetailsPanelTeamProps {
   selectedTeam: TeamData | null | undefined;
 }
 
-type PlayerTeamStats = { totalGames: number; totalWins: number; winRate: number; averageKDA: number; averageGPM: number; averageXPM: number; };
+type PlayerTeamStats = {
+  totalGames: number;
+  totalWins: number;
+  winRate: number;
+  averageKDA: number;
+  averageGPM: number;
+  averageXPM: number;
+};
 
-function getPlayerParticipatedMatches(matchesArray: Match[], teamMatches: Record<number, TeamMatchParticipation>, accountId: number) {
-  return matchesArray.filter(match => {
+function getPlayerParticipatedMatches(
+  matchesArray: Match[],
+  teamMatches: Record<number, TeamMatchParticipation>,
+  accountId: number,
+) {
+  return matchesArray.filter((match) => {
     if (!match.players || !match.players.radiant || !match.players.dire) return false;
     const teamMatch = teamMatches[match.id];
     if (!teamMatch || !teamMatch.side) return false;
@@ -31,10 +42,14 @@ function getPlayerParticipatedMatches(matchesArray: Match[], teamMatches: Record
   });
 }
 
-function computePlayerTeamStats(selectedTeam: TeamData | undefined | null, playerParticipatedMatches: Match[], accountId: number): PlayerTeamStats | null {
+function computePlayerTeamStats(
+  selectedTeam: TeamData | undefined | null,
+  playerParticipatedMatches: Match[],
+  accountId: number,
+): PlayerTeamStats | null {
   if (!selectedTeam || playerParticipatedMatches.length === 0) return null;
   const totalGames = playerParticipatedMatches.length;
-  const totalWins = playerParticipatedMatches.filter(match => {
+  const totalWins = playerParticipatedMatches.filter((match) => {
     if (!match.players) return false;
     const isRadiant = match.players.radiant?.some((p: { accountId: number }) => p.accountId === accountId);
     const playerTeamSide = isRadiant ? 'radiant' : 'dire';
@@ -72,18 +87,36 @@ function PlayerOverviewMetrics({ stats }: { stats: PlayerTeamStats }) {
   );
 }
 
-function TeamRolesSection({ teamStatsLocal }: { teamStatsLocal: { teamRoles: Array<{ role: string; games: number; winRate: number }> } | null }) {
+function TeamRolesSection({
+  teamStatsLocal,
+}: {
+  teamStatsLocal: { teamRoles: Array<{ role: string; games: number; winRate: number }> } | null;
+}) {
   if (!teamStatsLocal || teamStatsLocal.teamRoles.length === 0) return null;
   return (
     <div className="space-y-4 min-w-0 @container">
-      <h3 className="@[35px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">Team Roles</h3>
+      <h3 className="@[35px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">
+        Team Roles
+      </h3>
       <ul role="list" className="space-y-2">
         {teamStatsLocal.teamRoles.slice(0, 5).map((role, index) => (
           <li key={index} className="text-sm text-foreground dark:text-foreground flex items-center min-w-0">
             <span className="@[35px]:inline hidden font-semibold truncate flex-1 min-w-0">{role.role}</span>
             <span className="@[165px]:inline hidden ml-2 text-muted-foreground dark:text-muted-foreground flex-shrink-0">
-              <span className="@[280px]:inline hidden">{role.games} Games <span className="mx-1" aria-hidden="true">•</span> {role.winRate.toFixed(1)}% Win Rate</span>
-              <span className="@[280px]:hidden inline">{role.games} <span className="mx-1" aria-hidden="true">•</span> {role.winRate.toFixed(1)}%</span>
+              <span className="@[280px]:inline hidden">
+                {role.games} Games{' '}
+                <span className="mx-1" aria-hidden="true">
+                  •
+                </span>{' '}
+                {role.winRate.toFixed(1)}% Win Rate
+              </span>
+              <span className="@[280px]:hidden inline">
+                {role.games}{' '}
+                <span className="mx-1" aria-hidden="true">
+                  •
+                </span>{' '}
+                {role.winRate.toFixed(1)}%
+              </span>
             </span>
           </li>
         ))}
@@ -97,7 +130,9 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
   return (
     <Card className="@container">
       <CardHeader className="min-w-0">
-        <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">Team Heroes</CardTitle>
+        <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">
+          Team Heroes
+        </CardTitle>
       </CardHeader>
       <CardContent className="min-w-0">
         <Table className="table-fixed w-full">
@@ -116,20 +151,32 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
                 const current = roleCounts.get(r) || 0;
                 roleCounts.set(r, current + 1);
               });
-              const entries = Array.from(roleCounts.entries()).map(([role, count]) => ({ label: `${role} (${count})`, key: role }));
+              const entries = Array.from(roleCounts.entries()).map(([role, count]) => ({
+                label: `${role} (${count})`,
+                key: role,
+              }));
               return (
                 <TableRow key={`${hero.hero.id}-${index}`}>
                   <TableCell className="min-w-0">
                     <div className="flex items-center space-x-2 min-w-0 w-full">
                       <HeroAvatar hero={hero.hero} avatarSize={{ width: 'w-6', height: 'h-6' }} />
-                      <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">{hero.hero.localizedName}</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">
+                        {hero.hero.localizedName}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-center @[340px]:table-cell hidden">
                     <div className="flex flex-wrap items-center justify-center gap-1 max-w-full min-w-0">
-                      {entries.length > 0 ? entries.map(({ label, key }) => (
-                        <span key={key} className="inline-flex items-center whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground dark:text-foreground">{label}</span>
-                      )) : (
+                      {entries.length > 0 ? (
+                        entries.map(({ label, key }) => (
+                          <span
+                            key={key}
+                            className="inline-flex items-center whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground dark:text-foreground"
+                          >
+                            {label}
+                          </span>
+                        ))
+                      ) : (
                         <span className="text-muted-foreground dark:text-muted-foreground text-xs">—</span>
                       )}
                     </div>
@@ -155,37 +202,41 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
   );
 }
 
-export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = React.memo(({ player, heroes, matchesArray, selectedTeam }) => {
-  const teamMatches = selectedTeam?.matches || {};
-  const teamStats = selectedTeam ? processPlayerDetailedStats(player, selectedTeam, matchesArray, heroes) : null;
-  const accountId = player.profile.profile.account_id;
-  const playerParticipatedMatches = getPlayerParticipatedMatches(matchesArray, teamMatches, accountId);
-  const playerTeamStats = computePlayerTeamStats(selectedTeam, playerParticipatedMatches, accountId);
-  const sortedTeamHeroes: TeamHeroStats[] = useMemo(() => { if (!teamStats) return [] as TeamHeroStats[]; return [...teamStats.teamHeroes].sort((a, b) => a.games - b.games); }, [teamStats]);
-  console.log('sortedTeamHeroes', sortedTeamHeroes);
+export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = React.memo(
+  ({ player, heroes, matchesArray, selectedTeam }) => {
+    const teamMatches = selectedTeam?.matches || {};
+    const teamStats = selectedTeam ? processPlayerDetailedStats(player, selectedTeam, matchesArray, heroes) : null;
+    const accountId = player.profile.profile.account_id;
+    const playerParticipatedMatches = getPlayerParticipatedMatches(matchesArray, teamMatches, accountId);
+    const playerTeamStats = computePlayerTeamStats(selectedTeam, playerParticipatedMatches, accountId);
+    const sortedTeamHeroes: TeamHeroStats[] = useMemo(() => {
+      if (!teamStats) return [] as TeamHeroStats[];
+      return [...teamStats.teamHeroes].sort((a, b) => a.games - b.games);
+    }, [teamStats]);
 
-  return (
-    <div className="space-y-6">
-      <div className="space-y-4 min-w-0 @container">
-        <h3 className="@[110px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">Team Overview</h3>
-        {playerTeamStats ? (
-          <>
-            <div className="@[110px]:hidden block h-[28px]" aria-hidden="true" />
-            <PlayerOverviewMetrics stats={playerTeamStats} />
-          </>
-        ) : (
-          <div className="text-center p-6 bg-muted dark:bg-muted rounded-lg">
-            <p className="text-muted-foreground dark:text-muted-foreground">No team statistics available.</p>
-          </div>
-        )}
+    return (
+      <div className="space-y-6">
+        <div className="space-y-4 min-w-0 @container">
+          <h3 className="@[110px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">
+            Team Overview
+          </h3>
+          {playerTeamStats ? (
+            <>
+              <div className="@[110px]:hidden block h-[28px]" aria-hidden="true" />
+              <PlayerOverviewMetrics stats={playerTeamStats} />
+            </>
+          ) : (
+            <div className="text-center p-6 bg-muted dark:bg-muted rounded-lg">
+              <p className="text-muted-foreground dark:text-muted-foreground">No team statistics available.</p>
+            </div>
+          )}
+        </div>
+
+        <TeamRolesSection teamStatsLocal={teamStats} />
+        <TeamHeroesSection heroesData={sortedTeamHeroes} />
       </div>
-
-      <TeamRolesSection teamStatsLocal={teamStats} />
-      <TeamHeroesSection heroesData={sortedTeamHeroes} />
-    </div>
-  );
-});
+    );
+  },
+);
 
 PlayerDetailsPanelTeam.displayName = 'PlayerDetailsPanelTeam';
-
-

@@ -27,7 +27,7 @@ export async function fetchDotabuffLeague(leagueId: string, force = false): Prom
     mockFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -44,7 +44,7 @@ async function fetchLeagueFromDotabuff(leagueId: string): Promise<string> {
 
 function parseDotabuffLeagueHtml(html: string, leagueId: string): DotabuffLeague {
   const $ = cheerio.load(html);
-  
+
   // Get the h1 element and extract text excluding the small element
   const h1Element = $('.header-content-title h1').first();
   h1Element.find('small').remove(); // Remove the small element

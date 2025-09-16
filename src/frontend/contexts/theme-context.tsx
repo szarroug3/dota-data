@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Theme Context Provider
@@ -22,11 +22,11 @@ export interface ThemeContextValue {
   // Theme state
   theme: Theme;
   resolvedTheme: 'light' | 'dark' | null;
-  
+
   // Actions
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
-  
+
   // Loading states
   isThemeLoading: boolean;
   isTransitioning: boolean;
@@ -60,23 +60,26 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
   }, [resolvedTheme]);
 
   // Enhanced setTheme with transition state and config persistence
-  const handleSetTheme = useCallback((newTheme: Theme) => {
-    setIsTransitioning(true);
-    setTheme(newTheme);
-    
-    // Update config context with the new theme
-    configContext.updateConfig({ theme: newTheme });
-    
-    // Reset transition state after a brief delay
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 300);
-  }, [setTheme, configContext]);
+  const handleSetTheme = useCallback(
+    (newTheme: Theme) => {
+      setIsTransitioning(true);
+      setTheme(newTheme);
+
+      // Update config context with the new theme
+      configContext.updateConfig({ theme: newTheme });
+
+      // Reset transition state after a brief delay
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    },
+    [setTheme, configContext],
+  );
 
   // Toggle between light and dark themes
   const toggleTheme = useCallback(() => {
     setIsTransitioning(true);
-    
+
     if (theme === 'system') {
       // If system theme is active, switch to the opposite of current resolved theme
       const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
@@ -105,14 +108,10 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
     setTheme: handleSetTheme,
     toggleTheme,
     isThemeLoading,
-    isTransitioning
+    isTransitioning,
   };
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 };
 
 // ============================================================================
@@ -121,10 +120,10 @@ export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({ chil
 
 export const useThemeContext = (): ThemeContextValue => {
   const context = useContext(ThemeContext);
-  
+
   if (context === undefined) {
     throw new Error('useThemeContext must be used within a ThemeContextProvider');
   }
-  
+
   return context;
-}; 
+};

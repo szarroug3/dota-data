@@ -10,46 +10,46 @@ import type { Player } from '@/types/contexts/player-context-value';
 
 import { PlayerListView, type PlayerListViewMode } from './PlayerListView';
 
-
 // Custom hook for scroll functionality
 const useScrollToPlayer = (cardContentRef: React.RefObject<HTMLDivElement | null>) => {
   const [scrolledPlayerId, setScrolledPlayerId] = useState<number | null>(null);
 
-  const handleScrollToPlayer = useCallback((playerId: number) => {
-    if (!cardContentRef.current) return;
-    if (scrolledPlayerId === playerId) return;
+  const handleScrollToPlayer = useCallback(
+    (playerId: number) => {
+      if (!cardContentRef.current) return;
+      if (scrolledPlayerId === playerId) return;
 
-    const container = cardContentRef.current;
-    const playerElement = container.querySelector(`[data-player-id="${playerId}"]`) as HTMLElement | null;
+      const container = cardContentRef.current;
+      const playerElement = container.querySelector(`[data-player-id="${playerId}"]`) as HTMLElement | null;
 
-    if (!playerElement) return;
+      if (!playerElement) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = playerElement.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = playerElement.getBoundingClientRect();
 
-    const padding = 12;
+      const padding = 12;
 
-    // Check if the element is fully visible
-    const isFullyVisible =
-      elementRect.top >= containerRect.top &&
-      elementRect.bottom <= containerRect.bottom;
+      // Check if the element is fully visible
+      const isFullyVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
 
-    if (isFullyVisible) {
+      if (isFullyVisible) {
+        setScrolledPlayerId(playerId);
+        return;
+      }
+
+      // Calculate how much to scroll by
+      const scrollOffset = elementRect.top - containerRect.top - padding;
+      const targetScrollTop = container.scrollTop + scrollOffset;
+
+      // Use smooth scrolling
+      container.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth',
+      });
       setScrolledPlayerId(playerId);
-      return;
-    }
-
-    // Calculate how much to scroll by
-    const scrollOffset = elementRect.top - containerRect.top - padding;
-    const targetScrollTop = container.scrollTop + scrollOffset;
-
-    // Use smooth scrolling
-    container.scrollTo({
-      top: targetScrollTop,
-      behavior: 'smooth'
-    });
-    setScrolledPlayerId(playerId);
-  }, [cardContentRef, scrolledPlayerId]);
+    },
+    [cardContentRef, scrolledPlayerId],
+  );
 
   return { handleScrollToPlayer };
 };
@@ -84,10 +84,7 @@ interface PlayerListLayoutButtonsProps {
   setViewMode: (mode: PlayerListViewMode) => void;
 }
 
-const PlayerListLayoutButtons: React.FC<PlayerListLayoutButtonsProps> = ({
-  viewMode,
-  setViewMode,
-}) => (
+const PlayerListLayoutButtons: React.FC<PlayerListLayoutButtonsProps> = ({ viewMode, setViewMode }) => (
   <>
     <div className="@[120px]:flex hidden flex-shrink-0">
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as PlayerListViewMode)}>
@@ -103,9 +100,7 @@ const PlayerListLayoutButtons: React.FC<PlayerListLayoutButtonsProps> = ({
         </TabsList>
       </Tabs>
     </div>
-    <div className="@[120px]:hidden h-9 w-24">
-      {/* Invisible placeholder to maintain space when tabs are hidden */}
-    </div>
+    <div className="@[120px]:hidden h-9 w-24">{/* Invisible placeholder to maintain space when tabs are hidden */}</div>
   </>
 );
 
@@ -144,15 +139,16 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
   onRemovePlayer,
   hiddenPlayerIds,
   heroes,
-  preferredSite
+  preferredSite,
 }) => {
   return (
-    <Card className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)] @container" style={{ containerType: 'inline-size' }}>
+    <Card
+      className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)] @container"
+      style={{ containerType: 'inline-size' }}
+    >
       <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
         <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
-          <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">
-            Player Statistics
-          </h3>
+          <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Player Statistics</h3>
           <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
             {players.length} players found
           </p>
@@ -160,12 +156,7 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
         <div className="flex items-center gap-2 flex-shrink-0">
           {hiddenPlayersCount > 0 && onShowHiddenPlayers && (
             <div className="@[260px]:flex hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onShowHiddenPlayers}
-                className="flex items-center gap-2"
-              >
+              <Button variant="outline" size="sm" onClick={onShowHiddenPlayers} className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
                 <span>{hiddenPlayersCount}</span>
               </Button>
@@ -185,10 +176,7 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
             </div>
           )}
           <div className="ml-auto">
-            <PlayerListLayoutButtons
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-            />
+            <PlayerListLayoutButtons viewMode={viewMode} setViewMode={setViewMode} />
           </div>
         </div>
       </CardHeader>
@@ -213,52 +201,55 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
   );
 };
 
-export const PlayersList = forwardRef<PlayersListRef, PlayersListProps>(({ 
-  players,
-  onRefreshPlayer,
-  viewMode,
-  setViewMode,
-  selectedPlayerId,
-  onSelectPlayer,
-  hiddenPlayersCount = 0,
-  onShowHiddenPlayers,
-  onAddPlayer,
-  manualPlayerIds,
-  onEditPlayer,
-  onRemovePlayer,
-  hiddenPlayerIds,
-  heroes,
-  preferredSite,
-}, ref) => {
-  const cardContentRef = React.useRef<HTMLDivElement>(null);
-  const { handleScrollToPlayer } = useScrollToPlayer(cardContentRef);
+export const PlayersList = forwardRef<PlayersListRef, PlayersListProps>(
+  (
+    {
+      players,
+      onRefreshPlayer,
+      viewMode,
+      setViewMode,
+      selectedPlayerId,
+      onSelectPlayer,
+      hiddenPlayersCount = 0,
+      onShowHiddenPlayers,
+      onAddPlayer,
+      manualPlayerIds,
+      onEditPlayer,
+      onRemovePlayer,
+      hiddenPlayerIds,
+      heroes,
+      preferredSite,
+    },
+    ref,
+  ) => {
+    const cardContentRef = React.useRef<HTMLDivElement>(null);
+    const { handleScrollToPlayer } = useScrollToPlayer(cardContentRef);
 
-  useImperativeHandle(ref, () => ({
-    scrollToPlayer: handleScrollToPlayer
-  }));
+    useImperativeHandle(ref, () => ({
+      scrollToPlayer: handleScrollToPlayer,
+    }));
 
-  return (
-    <PlayersListContent
-      players={players}
-      selectedPlayerId={selectedPlayerId}
-      onSelectPlayer={onSelectPlayer}
-      onRefreshPlayer={onRefreshPlayer}
-      viewMode={viewMode}
-      setViewMode={setViewMode}
-      hiddenPlayersCount={hiddenPlayersCount}
-      onShowHiddenPlayers={onShowHiddenPlayers}
-      onAddPlayer={onAddPlayer}
-      cardContentRef={cardContentRef}
-      manualPlayerIds={manualPlayerIds}
-      onEditPlayer={onEditPlayer}
-      onRemovePlayer={onRemovePlayer}
-      hiddenPlayerIds={hiddenPlayerIds}
-      heroes={heroes}
-      preferredSite={preferredSite}
-    />
-  );
-});
+    return (
+      <PlayersListContent
+        players={players}
+        selectedPlayerId={selectedPlayerId}
+        onSelectPlayer={onSelectPlayer}
+        onRefreshPlayer={onRefreshPlayer}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        hiddenPlayersCount={hiddenPlayersCount}
+        onShowHiddenPlayers={onShowHiddenPlayers}
+        onAddPlayer={onAddPlayer}
+        cardContentRef={cardContentRef}
+        manualPlayerIds={manualPlayerIds}
+        onEditPlayer={onEditPlayer}
+        onRemovePlayer={onRemovePlayer}
+        hiddenPlayerIds={hiddenPlayerIds}
+        heroes={heroes}
+        preferredSite={preferredSite}
+      />
+    );
+  },
+);
 
 PlayersList.displayName = 'PlayersList';
-
-

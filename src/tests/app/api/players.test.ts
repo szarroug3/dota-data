@@ -28,18 +28,18 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
       status: 'online',
       fh_unavailable: false,
       is_contributor: false,
-      is_subscriber: false
+      is_subscriber: false,
     },
     rank_tier: 80,
-    leaderboard_rank: 4925
+    leaderboard_rank: 4925,
   },
   counts: {
-    leaver_status: { "0": { games: 100, win: 60 } },
-    game_mode: { "22": { games: 80, win: 50 } },
-    lobby_type: { "7": { games: 70, win: 40 } },
-    lane_role: { "1": { games: 60, win: 30 } },
-    region: { "2": { games: 50, win: 25 } },
-    patch: { "25": { games: 40, win: 20 } }
+    leaver_status: { '0': { games: 100, win: 60 } },
+    game_mode: { '22': { games: 80, win: 50 } },
+    lobby_type: { '7': { games: 70, win: 40 } },
+    lane_role: { '1': { games: 60, win: 30 } },
+    region: { '2': { games: 50, win: 25 } },
+    patch: { '25': { games: 40, win: 20 } },
   },
   heroes: [
     {
@@ -50,16 +50,16 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
       with_games: 60,
       with_win: 35,
       against_games: 70,
-      against_win: 40
-    }
+      against_win: 40,
+    },
   ],
   rankings: [
     {
       hero_id: 1,
       score: 7000.0,
       percent_rank: 0.95,
-      card: 1000000
-    }
+      card: 1000000,
+    },
   ],
   ratings: [
     {
@@ -67,8 +67,8 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
       match_id: 123456789,
       solo_competitive_rank: 5000,
       competitive_rank: null,
-      time: '2024-01-01T00:00:00.000Z'
-    }
+      time: '2024-01-01T00:00:00.000Z',
+    },
   ],
   recentMatches: [
     {
@@ -87,8 +87,8 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
       average_rank: 80,
       leaver_status: 0,
       party_size: 1,
-      hero_variant: null
-    }
+      hero_variant: null,
+    },
   ],
   totals: {
     np: 1000,
@@ -97,26 +97,26 @@ const mockComprehensivePlayerData: OpenDotaPlayerComprehensive = {
     all_time: 2000,
     ranked: 1500,
     turbo: 300,
-    matched: 1800
+    matched: 1800,
   },
   wl: {
     win: 60,
-    lose: 40
+    lose: 40,
   },
   wardMap: {
     obs: {
-      "80": {
-        "152": 10,
-        "154": 5
-      }
+      '80': {
+        '152': 10,
+        '154': 5,
+      },
     },
     sen: {
-      "80": {
-        "152": 8,
-        "154": 3
-      }
-    }
-  }
+      '80': {
+        '152': 8,
+        '154': 3,
+      },
+    },
+  },
 };
 
 describe('Players API Route', () => {
@@ -134,7 +134,7 @@ describe('Players API Route', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      
+
       expect(data).toEqual(mockComprehensivePlayerData);
       expect(mockFetchOpenDotaPlayer).toHaveBeenCalledWith('40927904', false);
     });
@@ -201,4 +201,4 @@ describe('Players API Route', () => {
       expect(data.error).toBe('Failed to fetch player');
     });
   });
-}); 
+});

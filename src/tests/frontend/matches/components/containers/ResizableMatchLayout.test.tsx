@@ -14,14 +14,19 @@ jest.mock('@/components/ui/resizable', () => ({
       {children}
     </div>
   ),
-  ResizablePanel: ({ children, defaultSize, minSize, maxSize }: { 
-    children: React.ReactNode; 
-    defaultSize?: number; 
-    minSize?: number; 
-    maxSize?: number; 
+  ResizablePanel: ({
+    children,
+    defaultSize,
+    minSize,
+    maxSize,
+  }: {
+    children: React.ReactNode;
+    defaultSize?: number;
+    minSize?: number;
+    maxSize?: number;
   }) => (
-    <div 
-      data-testid="resizable-panel" 
+    <div
+      data-testid="resizable-panel"
       data-default-size={defaultSize?.toString()}
       data-min-size={minSize?.toString()}
       data-max-size={maxSize?.toString()}
@@ -38,7 +43,11 @@ jest.mock('@/components/ui/resizable', () => ({
 
 // Mock child components
 jest.mock('@/frontend/matches/components/filters/MatchFilters', () => ({
-  MatchFilters: ({ filters, onFiltersChange, matches }: {
+  MatchFilters: ({
+    filters,
+    onFiltersChange,
+    matches,
+  }: {
     filters: MatchFiltersType;
     onFiltersChange: (filters: MatchFiltersType) => void;
     matches: Match[];
@@ -46,25 +55,23 @@ jest.mock('@/frontend/matches/components/filters/MatchFilters', () => ({
     <div data-testid="match-filters">
       <div>Filters: {JSON.stringify(filters)}</div>
       <div>Matches: {matches.length}</div>
-      <button onClick={() => onFiltersChange({ ...filters, result: 'wins' })}>
-        Change Filter
-      </button>
+      <button onClick={() => onFiltersChange({ ...filters, result: 'wins' })}>Change Filter</button>
     </div>
   ),
 }));
 
 jest.mock('@/frontend/matches/components/list/MatchesList', () => ({
   __esModule: true,
-  default: ({ 
-    matches, 
-    onHideMatch, 
-    viewMode, 
-    setViewMode, 
-    selectedMatchId, 
+  default: ({
+    matches,
+    onHideMatch,
+    viewMode,
+    setViewMode,
+    selectedMatchId,
     onSelectMatch,
     hiddenMatchesCount,
     onShowHiddenMatches,
-    hiddenMatchIds
+    hiddenMatchIds,
   }: {
     matches: Match[];
     onHideMatch: (id: string) => void;
@@ -83,26 +90,24 @@ jest.mock('@/frontend/matches/components/list/MatchesList', () => ({
       <div>Selected: {selectedMatchId || 'none'}</div>
       <div>Hidden: {hiddenMatchesCount || 0}</div>
       <div>Hidden IDs: {hiddenMatchIds?.size || 0}</div>
-      {matches.map(match => (
-        <button 
-          key={match.id} 
-          onClick={() => onSelectMatch?.(match.id.toString())}
-          data-testid={`match-${match.id}`}
-        >
+      {matches.map((match) => (
+        <button key={match.id} onClick={() => onSelectMatch?.(match.id.toString())} data-testid={`match-${match.id}`}>
           {match.radiant.name}
         </button>
       ))}
       <button onClick={() => onHideMatch('match1')}>Hide Match</button>
       <button onClick={() => setViewMode('card')}>Set Card View</button>
-      {onShowHiddenMatches && (
-        <button onClick={onShowHiddenMatches}>Show Hidden</button>
-      )}
+      {onShowHiddenMatches && <button onClick={onShowHiddenMatches}>Show Hidden</button>}
     </div>
   ),
 }));
 
 jest.mock('@/frontend/matches/components/details/MatchDetailsPanel', () => ({
-  MatchDetailsPanel: ({ match, viewMode, onViewModeChange }: {
+  MatchDetailsPanel: ({
+    match,
+    viewMode,
+    onViewModeChange,
+  }: {
     match: Match | null;
     viewMode: MatchDetailsPanelMode;
     onViewModeChange?: (mode: MatchDetailsPanelMode) => void;
@@ -129,21 +134,21 @@ const mockMatch: Match = {
   duration: 1800,
   radiant: {
     id: 1,
-    name: 'Team Alpha'
+    name: 'Team Alpha',
   },
   dire: {
     id: 2,
-    name: 'Team Beta'
+    name: 'Team Beta',
   },
   draft: {
     radiantPicks: [],
     direPicks: [],
     radiantBans: [],
-    direBans: []
+    direBans: [],
   },
   players: {
     radiant: [],
-    dire: []
+    dire: [],
   },
   statistics: {
     radiantScore: 25,
@@ -151,20 +156,20 @@ const mockMatch: Match = {
     goldAdvantage: {
       times: [],
       radiantGold: [],
-      direGold: []
+      direGold: [],
     },
     experienceAdvantage: {
       times: [],
       radiantExperience: [],
-      direExperience: []
-    }
+      direExperience: [],
+    },
   },
   events: [],
   result: 'radiant',
   pickOrder: {
     radiant: 'first',
-    dire: 'second'
-  }
+    dire: 'second',
+  },
 };
 
 const defaultProps = {
@@ -176,7 +181,7 @@ const defaultProps = {
     teamSide: 'all' as const,
     pickOrder: 'all' as const,
     heroesPlayed: [],
-    highPerformersOnly: false
+    highPerformersOnly: false,
   },
   onFiltersChange: jest.fn(),
   activeTeamMatches: [mockMatch],
@@ -205,7 +210,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders without crashing', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     expect(screen.getByTestId('resizable-panel-group')).toBeInTheDocument();
     expect(screen.getByTestId('match-filters')).toBeInTheDocument();
     expect(screen.getByTestId('matches-list')).toBeInTheDocument();
@@ -214,7 +219,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders with handle when match is selected', () => {
     render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatch} />);
-    
+
     const handle = screen.getByTestId('resizable-handle');
     expect(handle).toHaveAttribute('data-with-handle', 'true');
     expect(screen.getByTestId('handle-grip')).toBeInTheDocument();
@@ -222,14 +227,14 @@ describe('ResizableMatchLayout', () => {
 
   it('renders two panels with correct structure', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     const panels = screen.getAllByTestId('resizable-panel');
     expect(panels).toHaveLength(2);
-    
+
     // Check that both panels exist and have the correct structure
     expect(panels[0]).toBeInTheDocument();
     expect(panels[1]).toBeInTheDocument();
-    
+
     // Check panel constraints - both panels should be fully flexible
     expect(panels[0]).toHaveAttribute('data-min-size', '0');
     expect(panels[0]).toHaveAttribute('data-max-size', '100');
@@ -239,7 +244,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders match filters at the top', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     const filters = screen.getByTestId('match-filters');
     expect(filters).toBeInTheDocument();
     expect(filters.textContent).toContain('Filters:');
@@ -248,7 +253,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders matches list in left panel', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     const matchesList = screen.getByTestId('matches-list');
     expect(matchesList).toBeInTheDocument();
     expect(matchesList.textContent).toContain('View Mode: list');
@@ -257,7 +262,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders match details panel in right panel when match is selected', () => {
     render(<ResizableMatchLayout {...defaultProps} selectedMatch={mockMatch} />);
-    
+
     const detailsPanel = screen.getByTestId('match-details-panel');
     expect(detailsPanel).toBeInTheDocument();
     expect(detailsPanel.textContent).toContain('Match: Team Alpha');
@@ -265,7 +270,7 @@ describe('ResizableMatchLayout', () => {
 
   it('renders details panel with placeholder when no match is selected', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     // Details panel should be rendered but with placeholder content
     expect(screen.getByText('No Match Selected')).toBeInTheDocument();
     expect(screen.getByText('Select a match from the list to view details')).toBeInTheDocument();
@@ -277,7 +282,7 @@ describe('ResizableMatchLayout', () => {
     const setViewMode = jest.fn();
     const onSelectMatch = jest.fn();
     const setMatchDetailsViewMode = jest.fn();
-    
+
     render(
       <ResizableMatchLayout
         {...defaultProps}
@@ -286,63 +291,57 @@ describe('ResizableMatchLayout', () => {
         setViewMode={setViewMode}
         onSelectMatch={onSelectMatch}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
-      />
+      />,
     );
-    
+
     // Test filter change
     fireEvent.click(screen.getByText('Change Filter'));
     expect(onFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ result: 'wins' }));
-    
+
     // Test match selection
     fireEvent.click(screen.getByTestId('match-1'));
     expect(onSelectMatch).toHaveBeenCalledWith('1');
-    
+
     // Test view mode change
     fireEvent.click(screen.getByText('Set Card View'));
     expect(setViewMode).toHaveBeenCalledWith('card');
-    
+
     // Test hide match
     fireEvent.click(screen.getByText('Hide Match'));
     expect(onHideMatch).toHaveBeenCalledWith('match1');
   });
 
   it('handles hidden matches count and show hidden button', () => {
-    render(
-      <ResizableMatchLayout
-        {...defaultProps}
-        hiddenMatchesCount={3}
-        onShowHiddenMatches={jest.fn()}
-      />
-    );
-    
+    render(<ResizableMatchLayout {...defaultProps} hiddenMatchesCount={3} onShowHiddenMatches={jest.fn()} />);
+
     expect(screen.getByText('Hidden: 3')).toBeInTheDocument();
     expect(screen.getByText('Show Hidden')).toBeInTheDocument();
   });
 
   it('handles match details view mode changes', () => {
     const setMatchDetailsViewMode = jest.fn();
-    
+
     render(
       <ResizableMatchLayout
         {...defaultProps}
         selectedMatch={mockMatch}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
-      />
+      />,
     );
-    
+
     fireEvent.click(screen.getByText('Set Players'));
     expect(setMatchDetailsViewMode).toHaveBeenCalledWith('players');
   });
 
   it('renders with correct layout structure', () => {
     render(<ResizableMatchLayout {...defaultProps} />);
-    
+
     // Check that the layout has the correct structure
     const container = screen.getByTestId('resizable-panel-group').parentElement;
     expect(container).toHaveClass('h-fit');
-    
+
     // Check that filters are at the top
     const filtersContainer = screen.getByTestId('match-filters').parentElement;
     expect(filtersContainer).toHaveClass('flex-shrink-0');
   });
-}); 
+});

@@ -30,16 +30,26 @@ export const MatchListViewListVirtualized: React.FC<MatchListViewVirtualizedProp
   className,
   teamMatches,
   height = DEFAULT_HEIGHT,
-  itemHeight = DEFAULT_ITEM_HEIGHT
+  itemHeight = DEFAULT_ITEM_HEIGHT,
 }) => {
-  const renderMatchItem = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
-    const match = matches[index];
-    return (
-      <div style={style} className="px-2">
-        <MatchCard match={match} selectedMatchId={selectedMatchId} onSelectMatch={onSelectMatch} onHideMatch={onHideMatch} onRefreshMatch={onRefreshMatch} teamMatches={teamMatches} />
-      </div>
-    );
-  }, [matches, selectedMatchId, onSelectMatch, onHideMatch, onRefreshMatch, teamMatches]);
+  const renderMatchItem = useCallback(
+    ({ index, style }: { index: number; style: React.CSSProperties }) => {
+      const match = matches[index];
+      return (
+        <div style={style} className="px-2">
+          <MatchCard
+            match={match}
+            selectedMatchId={selectedMatchId}
+            onSelectMatch={onSelectMatch}
+            onHideMatch={onHideMatch}
+            onRefreshMatch={onRefreshMatch}
+            teamMatches={teamMatches}
+          />
+        </div>
+      );
+    },
+    [matches, selectedMatchId, onSelectMatch, onHideMatch, onRefreshMatch, teamMatches],
+  );
 
   if (matches.length === 0) {
     return (
@@ -54,11 +64,16 @@ export const MatchListViewListVirtualized: React.FC<MatchListViewVirtualizedProp
 
   return (
     <div className={className}>
-      <List height={height} itemCount={matches.length} itemSize={itemHeight} width="100%" overscanCount={5} itemData={matches}>
+      <List
+        height={height}
+        itemCount={matches.length}
+        itemSize={itemHeight}
+        width="100%"
+        overscanCount={5}
+        itemData={matches}
+      >
         {renderMatchItem}
       </List>
     </div>
   );
 };
-
-

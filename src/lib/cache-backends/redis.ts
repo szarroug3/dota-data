@@ -17,7 +17,7 @@ export class RedisCacheBackend implements CacheBackend {
     misses: 0,
     sets: 0,
     deletes: 0,
-    startTime: Date.now()
+    startTime: Date.now(),
   };
 
   constructor(private redisUrl: string) {
@@ -213,7 +213,7 @@ export class RedisCacheBackend implements CacheBackend {
       hitRate,
       missRate,
       uptime: Date.now() - this.stats.startTime,
-      backend: 'redis' as CacheBackendType
+      backend: 'redis' as CacheBackendType,
     };
   }
 
@@ -244,4 +244,4 @@ export class RedisCacheBackend implements CacheBackend {
       return false;
     }
   }
-} 
+}

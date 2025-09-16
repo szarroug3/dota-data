@@ -12,9 +12,7 @@ export const TeamsListSkeleton: React.FC<TeamsListSkeletonProps> = ({ teamsCount
     <Card>
       <CardHeader>
         <CardTitle>Your Teams</CardTitle>
-        <CardDescription>
-          Manage your tracked teams and view their performance
-        </CardDescription>
+        <CardDescription>Manage your tracked teams and view their performance</CardDescription>
       </CardHeader>
       <CardContent className="max-h-[calc(100vh-34rem)] min-h-[139px] overflow-y-auto px-4">
         <div>
@@ -26,4 +24,3 @@ export const TeamsListSkeleton: React.FC<TeamsListSkeletonProps> = ({ teamsCount
     </Card>
   );
 };
-

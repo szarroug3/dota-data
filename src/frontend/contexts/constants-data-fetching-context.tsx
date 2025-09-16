@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 /**
  * Constants Data Fetching Context
- * 
+ *
  * Responsible for fetching constants data (heroes, items) from APIs and external sources.
  * Provides raw API responses to the constants data management context.
  * Separates data fetching concerns from data management.
@@ -11,8 +11,9 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { requestAndValidate, type JsonValue } from '@/frontend/lib/api-client';
+import type { ApiItemSummary } from '@/types/api';
 import { schemas } from '@/types/api-zod';
-import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
+import type { OpenDotaHero } from '@/types/external-apis';
 
 // ============================================================================
 // TYPES
@@ -21,18 +22,18 @@ import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
 interface ConstantsDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
   fetchHeroesData: (force?: boolean) => Promise<OpenDotaHero[] | { error: string }>;
-  fetchItemsData: (force?: boolean) => Promise<Record<string, OpenDotaItem> | { error: string }>;
-  
+  fetchItemsData: (force?: boolean) => Promise<Record<string, ApiItemSummary> | { error: string }>;
+
   // Cache management (for explicit control)
   clearHeroesCache: () => void;
   clearItemsCache: () => void;
   clearAllCache: () => void;
-  
+
   // Error management
   clearHeroesError: () => void;
   clearItemsError: () => void;
   clearAllErrors: () => void;
-  
+
   // Status queries (for debugging/monitoring)
   isHeroesCached: () => boolean;
   isItemsCached: () => boolean;
@@ -56,7 +57,7 @@ const ConstantsDataFetchingContext = createContext<ConstantsDataFetchingContextV
 
 const useConstantsDataState = () => {
   const [heroesCache, setHeroesCache] = useState<OpenDotaHero[] | null>(null);
-  const [itemsCache, setItemsCache] = useState<Record<string, OpenDotaItem> | null>(null);
+  const [itemsCache, setItemsCache] = useState<Record<string, ApiItemSummary> | null>(null);
   const [heroesError, setHeroesError] = useState<string | null>(null);
   const [itemsError, setItemsError] = useState<string | null>(null);
 
@@ -68,13 +69,13 @@ const useConstantsDataState = () => {
     heroesError,
     setHeroesError,
     itemsError,
-    setItemsError
+    setItemsError,
   };
 };
 
 const useCacheManagement = (
   setHeroesCache: React.Dispatch<React.SetStateAction<OpenDotaHero[] | null>>,
-  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, OpenDotaItem> | null>>
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
 ) => {
   const clearHeroesCache = useCallback(() => {
     setHeroesCache(null);
@@ -93,7 +94,7 @@ const useCacheManagement = (
     return heroesCache !== null;
   }, []);
 
-  const isItemsCached = useCallback((itemsCache: Record<string, OpenDotaItem> | null) => {
+  const isItemsCached = useCallback((itemsCache: Record<string, ApiItemSummary> | null) => {
     return itemsCache !== null;
   }, []);
 
@@ -102,13 +103,13 @@ const useCacheManagement = (
     clearItemsCache,
     clearAllCache,
     isHeroesCached,
-    isItemsCached
+    isItemsCached,
   };
 };
 
 const useErrorManagement = (
   setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
-  setItemsError: React.Dispatch<React.SetStateAction<string | null>>
+  setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
 ) => {
   const clearHeroesError = useCallback(() => {
     setHeroesError(null);
@@ -136,109 +137,151 @@ const useErrorManagement = (
     clearItemsError,
     clearAllErrors,
     getHeroesError,
-    getItemsError
+    getItemsError,
   };
 };
 
-const useConstantsApiFetching = (
+function useHeroesApi(
   heroesCache: OpenDotaHero[] | null,
-  itemsCache: Record<string, OpenDotaItem> | null,
   setHeroesCache: React.Dispatch<React.SetStateAction<OpenDotaHero[] | null>>,
-  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, OpenDotaItem> | null>>,
   setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
-  setItemsError: React.Dispatch<React.SetStateAction<string | null>>
-) => {
-  // Use refs to access current cache values without causing function recreation
+) {
   const heroesCacheRef = useRef<OpenDotaHero[] | null>(null);
-  const itemsCacheRef = useRef<Record<string, OpenDotaItem> | null>(null);
-  
-  // Update refs when cache changes
   heroesCacheRef.current = heroesCache;
+
+  const handleError = useCallback(
+    (errorMsg: string) => {
+      setHeroesError(errorMsg);
+    },
+    [setHeroesError],
+  );
+
+  const handleSuccess = useCallback(
+    (heroes: OpenDotaHero[]) => {
+      setHeroesCache(heroes);
+      setHeroesError(null);
+    },
+    [setHeroesCache, setHeroesError],
+  );
+
+  const processResponse = useCallback(
+    async (path: string): Promise<OpenDotaHero[] | { error: string }> => {
+      try {
+        const heroes = await requestAndValidate<OpenDotaHero[]>(
+          path,
+          (d: JsonValue) => schemas.getApiHeroes.parse(d) as OpenDotaHero[],
+        );
+        handleSuccess(heroes);
+        return heroes;
+      } catch (err) {
+        const errorMsg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as Error).message)
+            : 'Failed to fetch heroes data';
+        handleError(errorMsg);
+        return { error: errorMsg };
+      }
+    },
+    [handleError, handleSuccess],
+  );
+
+  const fetchHeroesData = useCallback(
+    async (force = false): Promise<OpenDotaHero[] | { error: string }> => {
+      if (!force && heroesCacheRef.current !== null) {
+        return heroesCacheRef.current;
+      }
+      try {
+        const path = force ? '/api/heroes?force=true' : '/api/heroes';
+        return await processResponse(path);
+      } catch (error) {
+        const errorMsg = 'Failed to fetch heroes data';
+        console.error('Error fetching heroes data:', error);
+        handleError(errorMsg);
+        return { error: errorMsg };
+      }
+    },
+    [processResponse, handleError],
+  );
+
+  return { fetchHeroesData };
+}
+
+function useItemsApi(
+  itemsCache: Record<string, ApiItemSummary> | null,
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
+  setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
+) {
+  const itemsCacheRef = useRef<Record<string, ApiItemSummary> | null>(null);
   itemsCacheRef.current = itemsCache;
 
-  const handleHeroesError = useCallback((errorMsg: string) => {
-    setHeroesError(errorMsg);
-  }, [setHeroesError]);
+  const handleError = useCallback(
+    (errorMsg: string) => {
+      setItemsError(errorMsg);
+    },
+    [setItemsError],
+  );
 
-  const handleItemsError = useCallback((errorMsg: string) => {
-    setItemsError(errorMsg);
-  }, [setItemsError]);
+  const handleSuccess = useCallback(
+    (items: Record<string, ApiItemSummary>) => {
+      setItemsCache(items);
+      setItemsError(null);
+    },
+    [setItemsCache, setItemsError],
+  );
 
-  const handleHeroesSuccess = useCallback((heroes: OpenDotaHero[]) => {
-    setHeroesCache(heroes);
-    setHeroesError(null);
-  }, [setHeroesCache, setHeroesError]);
-
-  const handleItemsSuccess = useCallback((items: Record<string, OpenDotaItem>) => {
-    setItemsCache(items);
-    setItemsError(null);
-  }, [setItemsCache, setItemsError]);
-
-  const processHeroesResponse = useCallback(async (path: string): Promise<OpenDotaHero[] | { error: string }> => {
-    try {
-      const heroes = await requestAndValidate<OpenDotaHero[]>(path, (d: JsonValue) => schemas.getApiHeroes.parse(d) as OpenDotaHero[]);
-      handleHeroesSuccess(heroes);
-      return heroes;
-    } catch (err) {
-      const errorMsg = (err && typeof err === 'object' && 'message' in err) ? String((err as Error).message) : 'Failed to fetch heroes data';
-      handleHeroesError(errorMsg);
-      return { error: errorMsg };
-    }
-  }, [handleHeroesError, handleHeroesSuccess]);
-
-  const processItemsResponse = useCallback(async (path: string): Promise<Record<string, OpenDotaItem> | { error: string }> => {
-    try {
-      const validated = await requestAndValidate<{ data: Record<string, OpenDotaItem> }>(
-        path,
-        (d: JsonValue) => {
-          const parsed = schemas.getApiItems.parse(d) as { data?: Record<string, OpenDotaItem> };
+  const processResponse = useCallback(
+    async (path: string): Promise<Record<string, ApiItemSummary> | { error: string }> => {
+      try {
+        const validated = await requestAndValidate<{ data: Record<string, ApiItemSummary> }>(path, (d: JsonValue) => {
+          const parsed = schemas.getApiItems.parse(d) as { data?: Record<string, ApiItemSummary> };
           return { data: parsed.data ?? {} };
-        }
-      );
-      const items = validated.data;
-      handleItemsSuccess(items);
-      return items;
-    } catch (err) {
-      const errorMsg = (err && typeof err === 'object' && 'message' in err) ? String((err as Error).message) : 'Failed to fetch items data';
-      handleItemsError(errorMsg);
-      return { error: errorMsg };
-    }
-  }, [handleItemsError, handleItemsSuccess]);
+        });
+        const items = validated.data;
+        handleSuccess(items);
+        return items;
+      } catch (err) {
+        const errorMsg =
+          err && typeof err === 'object' && 'message' in err
+            ? String((err as Error).message)
+            : 'Failed to fetch items data';
+        handleError(errorMsg);
+        return { error: errorMsg };
+      }
+    },
+    [handleError, handleSuccess],
+  );
 
-  const fetchHeroesData = useCallback(async (force = false): Promise<OpenDotaHero[] | { error: string }> => {
-    // Check cache first (unless force=true)
-    if (!force && heroesCacheRef.current !== null) {
-      return heroesCacheRef.current;
-    }
+  const fetchItemsData = useCallback(
+    async (force = false): Promise<Record<string, ApiItemSummary> | { error: string }> => {
+      if (!force && itemsCacheRef.current !== null) {
+        return itemsCacheRef.current;
+      }
+      try {
+        const path = force ? '/api/items?force=true' : '/api/items';
+        return await processResponse(path);
+      } catch (error) {
+        const errorMsg = 'Failed to fetch items data';
+        console.error('Error fetching items data:', error);
+        handleError(errorMsg);
+        return { error: errorMsg };
+      }
+    },
+    [processResponse, handleError],
+  );
 
-    try {
-      const path = force ? '/api/heroes?force=true' : '/api/heroes';
-      return await processHeroesResponse(path);
-    } catch (error) {
-      const errorMsg = 'Failed to fetch heroes data';
-      console.error('Error fetching heroes data:', error);
-      handleHeroesError(errorMsg);
-      return { error: errorMsg };
-    }
-  }, [processHeroesResponse, handleHeroesError]);
+  return { fetchItemsData };
+}
 
-  const fetchItemsData = useCallback(async (force = false): Promise<Record<string, OpenDotaItem> | { error: string }> => {
-    // Check cache first (unless force=true)
-    if (!force && itemsCacheRef.current !== null) {
-      return itemsCacheRef.current;
-    }
-
-    try {
-      const path = force ? '/api/items?force=true' : '/api/items';
-      return await processItemsResponse(path);
-    } catch (error) {
-      const errorMsg = 'Failed to fetch items data';
-      console.error('Error fetching items data:', error);
-      handleItemsError(errorMsg);
-      return { error: errorMsg };
-    }
-  }, [processItemsResponse, handleItemsError]);
-
+const useConstantsApiFetching = (
+  heroesCache: OpenDotaHero[] | null,
+  itemsCache: Record<string, ApiItemSummary> | null,
+  setHeroesCache: React.Dispatch<React.SetStateAction<OpenDotaHero[] | null>>,
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
+  setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
+  setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
+) => {
+  const { fetchHeroesData } = useHeroesApi(heroesCache, setHeroesCache, setHeroesError);
+  const { fetchItemsData } = useItemsApi(itemsCache, setItemsCache, setItemsError);
   return { fetchHeroesData, fetchItemsData };
 };
 
@@ -255,81 +298,71 @@ export const ConstantsDataFetchingProvider: React.FC<ConstantsDataFetchingProvid
     heroesError,
     setHeroesError,
     itemsError,
-    setItemsError
+    setItemsError,
   } = useConstantsDataState();
 
-  const {
-    clearHeroesCache,
-    clearItemsCache,
-    clearAllCache,
-    isHeroesCached,
-    isItemsCached
-  } = useCacheManagement(setHeroesCache, setItemsCache);
+  const { clearHeroesCache, clearItemsCache, clearAllCache, isHeroesCached, isItemsCached } = useCacheManagement(
+    setHeroesCache,
+    setItemsCache,
+  );
 
-  const {
-    clearHeroesError,
-    clearItemsError,
-    clearAllErrors,
-    getHeroesError,
-    getItemsError
-  } = useErrorManagement(setHeroesError, setItemsError);
+  const { clearHeroesError, clearItemsError, clearAllErrors, getHeroesError, getItemsError } = useErrorManagement(
+    setHeroesError,
+    setItemsError,
+  );
 
-  const {
-    fetchHeroesData,
-    fetchItemsData
-  } = useConstantsApiFetching(
+  const { fetchHeroesData, fetchItemsData } = useConstantsApiFetching(
     heroesCache,
     itemsCache,
     setHeroesCache,
     setItemsCache,
     setHeroesError,
-    setItemsError
+    setItemsError,
   );
 
-  const contextValue: ConstantsDataFetchingContextValue = useMemo(() => ({
-    // Core data fetching
-    fetchHeroesData,
-    fetchItemsData,
-    
-    // Cache management
-    clearHeroesCache,
-    clearItemsCache,
-    clearAllCache,
-    
-    // Error management
-    clearHeroesError,
-    clearItemsError,
-    clearAllErrors,
-    
-    // Status queries
-    isHeroesCached: () => isHeroesCached(heroesCache),
-    isItemsCached: () => isItemsCached(itemsCache),
-    getHeroesError: () => getHeroesError(heroesError),
-    getItemsError: () => getItemsError(itemsError)
-  }), [
-    fetchHeroesData,
-    fetchItemsData,
-    clearHeroesCache,
-    clearItemsCache,
-    clearAllCache,
-    clearHeroesError,
-    clearItemsError,
-    clearAllErrors,
-    isHeroesCached,
-    isItemsCached,
-    heroesCache,
-    itemsCache,
-    heroesError,
-    itemsError,
-    getHeroesError,
-    getItemsError
-  ]);
+  const contextValue: ConstantsDataFetchingContextValue = useMemo(
+    () => ({
+      // Core data fetching
+      fetchHeroesData,
+      fetchItemsData,
 
-  return (
-    <ConstantsDataFetchingContext.Provider value={contextValue}>
-      {children}
-    </ConstantsDataFetchingContext.Provider>
+      // Cache management
+      clearHeroesCache,
+      clearItemsCache,
+      clearAllCache,
+
+      // Error management
+      clearHeroesError,
+      clearItemsError,
+      clearAllErrors,
+
+      // Status queries
+      isHeroesCached: () => isHeroesCached(heroesCache),
+      isItemsCached: () => isItemsCached(itemsCache),
+      getHeroesError: () => getHeroesError(heroesError),
+      getItemsError: () => getItemsError(itemsError),
+    }),
+    [
+      fetchHeroesData,
+      fetchItemsData,
+      clearHeroesCache,
+      clearItemsCache,
+      clearAllCache,
+      clearHeroesError,
+      clearItemsError,
+      clearAllErrors,
+      isHeroesCached,
+      isItemsCached,
+      heroesCache,
+      itemsCache,
+      heroesError,
+      itemsError,
+      getHeroesError,
+      getItemsError,
+    ],
   );
+
+  return <ConstantsDataFetchingContext.Provider value={contextValue}>{children}</ConstantsDataFetchingContext.Provider>;
 };
 
 // ============================================================================
@@ -338,10 +371,10 @@ export const ConstantsDataFetchingProvider: React.FC<ConstantsDataFetchingProvid
 
 export const useConstantsDataFetching = (): ConstantsDataFetchingContextValue => {
   const context = useContext(ConstantsDataFetchingContext);
-  
+
   if (context === undefined) {
     throw new Error('useConstantsDataFetching must be used within a ConstantsDataFetchingProvider');
   }
-  
+
   return context;
-}; 
+};

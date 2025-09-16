@@ -58,7 +58,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid
+  isValid,
 }) => {
   const hasError = Boolean(error);
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
@@ -77,7 +77,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           required
           disabled={disabled}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
           style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
           {...ariaAttributes}
@@ -91,15 +91,18 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           {error}
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          {helpText}
-        </p>
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       )}
     </FormField>
   );
 };
 
-function getButtonText(validationIsValid: boolean, teamSide: '' | 'radiant' | 'dire', isSubmitting: boolean, duplicateError?: string): string {
+function getButtonText(
+  validationIsValid: boolean,
+  teamSide: '' | 'radiant' | 'dire',
+  isSubmitting: boolean,
+  duplicateError?: string,
+): string {
   if (duplicateError) return 'Match Already Exists';
   if (!validationIsValid) return 'Invalid Match ID';
   if (teamSide === '') return 'Select Team Side';
@@ -116,7 +119,7 @@ function EditManualMatchForm({
   isDisabled,
   handleSubmit,
   validationError,
-  duplicateError
+  duplicateError,
 }: {
   matchIdString: string;
   setMatchIdString: (v: string) => void;
@@ -132,12 +135,15 @@ function EditManualMatchForm({
   const combinedError = duplicateError || shouldShowMatchError;
 
   return (
-    <div className="grid gap-4" onKeyDown={(e) => {
-      if (e.key === 'Enter' && !isDisabled) {
-        e.preventDefault();
-        void handleSubmit(e);
-      }
-    }}>
+    <div
+      className="grid gap-4"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && !isDisabled) {
+          e.preventDefault();
+          void handleSubmit(e);
+        }
+      }}
+    >
       <FormFieldInput
         id="match-id"
         label="Match ID"
@@ -167,9 +173,7 @@ function EditManualMatchForm({
             <SelectItem value="dire">Dire</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground mt-1">
-          Which side was the team on?
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">Which side was the team on?</p>
       </FormField>
     </div>
   );
@@ -187,7 +191,7 @@ export function EditManualMatchSheet({
   error: _error,
   validationError,
   duplicateError,
-  isFormValid
+  isFormValid,
 }: EditManualMatchSheetProps): React.ReactElement {
   const isDisabled = isSubmitting || !isFormValid;
 
@@ -204,11 +208,9 @@ export function EditManualMatchSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Edit Match</SheetTitle>
-          <SheetDescription>
-            Update the match ID or team side for this match
-          </SheetDescription>
+          <SheetDescription>Update the match ID or team side for this match</SheetDescription>
         </SheetHeader>
-        
+
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
           <EditManualMatchForm
             matchIdString={matchIdString}
@@ -222,14 +224,9 @@ export function EditManualMatchSheet({
             duplicateError={duplicateError}
           />
         </div>
-        
+
         <SheetFooter className="flex flex-col gap-2 w-full">
-          <Button 
-            type="button" 
-            onClick={handleSubmit}
-            disabled={isDisabled}
-            className="w-full"
-          >
+          <Button type="button" onClick={handleSubmit} disabled={isDisabled} className="w-full">
             {getButtonText(!validationError, teamSide, isSubmitting, duplicateError)}
           </Button>
           <SheetClose asChild>
@@ -242,5 +239,3 @@ export function EditManualMatchSheet({
     </Sheet>
   );
 }
-
-

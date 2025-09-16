@@ -1,6 +1,6 @@
 /**
  * Player context value types
- * 
+ *
  * Defines the structure for player-related state and data management
  * in the frontend application.
  */
@@ -28,12 +28,12 @@ export interface PlayerContextValue {
   selectedPlayerId: number | null;
   setSelectedPlayerId: (playerId: number | null) => void;
   isLoading: boolean;
-  
+
   // Core operations
   addPlayer: (playerId: number) => Promise<Player | null>;
   refreshPlayer: (playerId: number) => Promise<Player | null>;
   removePlayer: (playerId: number) => void;
-  
+
   // Data access
   getPlayer: (playerId: number) => Player | undefined;
   getPlayers: (playerIds: number[]) => Player[];
@@ -65,14 +65,14 @@ export interface PlayerActions {
   players: Map<number, Player>;
   selectedPlayerId: number | null;
   isLoading: boolean;
-  
+
   // Core operations
   addPlayer: (playerId: number) => Promise<Player | null>;
   refreshPlayer: (playerId: number) => Promise<Player | null>;
   removePlayer: (playerId: number) => void;
-  
+
   // Data access
   setSelectedPlayerId: (playerId: number | null) => void;
   getPlayer: (playerId: number) => Player | undefined;
   getPlayers: (playerIds: number[]) => Player[];
-} 
+}

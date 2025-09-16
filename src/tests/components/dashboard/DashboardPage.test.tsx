@@ -10,9 +10,7 @@ const TestDashboardPage = () => (
 );
 
 const renderComponent = () => {
-  return render(
-    <TestDashboardPage />
-  );
+  return render(<TestDashboardPage />);
 };
 
 describe('TeamManagementPage', () => {
@@ -26,7 +24,7 @@ describe('TeamManagementPage', () => {
 
   it('should render the main dashboard layout', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
     expect(screen.getByTestId('add-team-form')).toBeInTheDocument();
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
@@ -34,49 +32,49 @@ describe('TeamManagementPage', () => {
 
   it('should render the add team form', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('add-team-form')).toBeInTheDocument();
   });
 
   it('should render the team list', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
   });
 
   it('should render the edit team modal', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('edit-team-modal')).toBeInTheDocument();
   });
 
   it('should pass props to AddTeamForm component', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('add-team-form')).toBeInTheDocument();
   });
 
   it('should pass props to TeamList component', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
   });
 
   it('should handle active team display', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
   });
 
   it('should handle empty team list', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
   });
 
   it('should handle team list with multiple teams', () => {
     renderComponent();
-    
+
     expect(screen.getByTestId('team-list')).toBeInTheDocument();
   });
-}); 
+});

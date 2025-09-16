@@ -12,7 +12,7 @@ const mockFetchDotabuffLeague = fetchDotabuffLeague as jest.MockedFunction<typeo
 // Mock data
 const mockLeagueData: DotabuffLeague = {
   id: '16435',
-  name: 'The International 2024'
+  name: 'The International 2024',
 };
 
 describe('Leagues API Route', () => {
@@ -30,7 +30,7 @@ describe('Leagues API Route', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      
+
       expect(data).toEqual(mockLeagueData);
       expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('16435', false);
     });
@@ -185,4 +185,4 @@ describe('Leagues API Route', () => {
       expect(mockFetchDotabuffLeague).toHaveBeenCalledWith('12345', false);
     });
   });
-}); 
+});

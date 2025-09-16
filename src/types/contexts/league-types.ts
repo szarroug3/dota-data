@@ -1,6 +1,6 @@
 /**
  * League Context Types
- * 
+ *
  * Type definitions for the league context and related data structures.
  */
 
@@ -37,11 +37,11 @@ export interface Match {
   radiant: {
     id: number;
     name?: string;
-  }
+  };
   dire: {
     id: number;
     name?: string;
-  }
+  };
   startTime: number;
   duration: number;
   radiantWin: boolean;
@@ -84,14 +84,14 @@ export interface LeagueContextValue {
   activeLeague: string | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   addLeague: (leagueId: string) => Promise<void>;
   removeLeague: (leagueId: string) => Promise<void>;
   setActiveLeague: (leagueId: string | null) => Promise<void>;
   refreshLeague: (leagueId: string) => Promise<void>;
   clearError: () => void;
-  
+
   // Team operations
   getTeamsInLeague: (leagueId: string) => Team[];
   getTeamById: (leagueId: string, teamId: string) => Team | undefined;
@@ -99,4 +99,4 @@ export interface LeagueContextValue {
 
 export interface LeagueContextProviderProps {
   children: ReactNode;
-} 
+}

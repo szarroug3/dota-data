@@ -1,6 +1,6 @@
 /**
  * Match Processing Logic
- * 
+ *
  * Extracted from match-context.tsx to separate complex processing logic
  * from state management. This module handles all data transformation and
  * analysis for match data.
@@ -30,11 +30,11 @@ export function processMatchData(
   matchData: OpenDotaMatch,
   heroes: Record<string, Hero>,
   heroesByName: Record<string, Hero>,
-  items: Record<string, Item>
+  items: Record<string, Item>,
 ): Match {
   // Separate radiant and dire players
-  const radiantPlayers = matchData.players.filter(player => player.isRadiant);
-  const direPlayers = matchData.players.filter(player => !player.isRadiant);
+  const radiantPlayers = matchData.players.filter((player) => player.isRadiant);
+  const direPlayers = matchData.players.filter((player) => !player.isRadiant);
 
   // Calculate advantage data
   const { goldAdvantage, experienceAdvantage } = calculateAdvantageData(matchData);
@@ -54,7 +54,7 @@ export function processMatchData(
 
   // Update draft picks with correct roles
   radiantPicks.forEach((pick: HeroPick) => {
-    const player = radiantPlayers.find(p => p.hero_id.toString() === pick.hero.id);
+    const player = radiantPlayers.find((p) => p.hero_id.toString() === pick.hero.id);
     if (player) {
       const role = radiantRoleMap[player.account_id.toString()];
       if (role) {
@@ -70,7 +70,7 @@ export function processMatchData(
   });
 
   direPicks.forEach((pick: HeroPick) => {
-    const player = direPlayers.find(p => p.hero_id.toString() === pick.hero.id);
+    const player = direPlayers.find((p) => p.hero_id.toString() === pick.hero.id);
     if (player) {
       const role = direRoleMap[player.account_id.toString()];
       if (role) {
@@ -102,21 +102,21 @@ export function processMatchData(
       radiantPicks,
       direPicks,
       radiantBans,
-      direBans
+      direBans,
     },
     players: {
-      radiant: radiantPlayers.map(player => convertPlayer(player, radiantRoleMap, items, heroes)),
-      dire: direPlayers.map(player => convertPlayer(player, direRoleMap, items, heroes))
+      radiant: radiantPlayers.map((player) => convertPlayer(player, radiantRoleMap, items, heroes)),
+      dire: direPlayers.map((player) => convertPlayer(player, direRoleMap, items, heroes)),
     },
     events,
     statistics: {
       radiantScore: matchData.radiant_score || 0,
       direScore: matchData.dire_score || 0,
       goldAdvantage,
-      experienceAdvantage
+      experienceAdvantage,
     },
     result: matchData.radiant_win ? 'radiant' : 'dire',
-    pickOrder
+    pickOrder,
   };
 
   // Process additional data for components
@@ -128,6 +128,6 @@ export function processMatchData(
     ...match,
     processedDraft,
     processedEvents,
-    teamFightStats
+    teamFightStats,
   };
-} 
+}

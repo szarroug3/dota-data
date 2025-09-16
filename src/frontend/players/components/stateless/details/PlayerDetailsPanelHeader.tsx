@@ -22,10 +22,7 @@ interface PlayerDetailsLayoutButtonsProps {
   onViewModeChange: (mode: PlayerDetailsPanelMode) => void;
 }
 
-const PlayerDetailsLayoutButtons: React.FC<PlayerDetailsLayoutButtonsProps> = ({ 
-  viewMode, 
-  onViewModeChange,
-}) => (
+const PlayerDetailsLayoutButtons: React.FC<PlayerDetailsLayoutButtonsProps> = ({ viewMode, onViewModeChange }) => (
   <>
     <div className="@[165px]:flex hidden">
       <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as PlayerDetailsPanelMode)}>
@@ -45,11 +42,9 @@ const PlayerDetailsLayoutButtons: React.FC<PlayerDetailsLayoutButtonsProps> = ({
         </TabsList>
       </Tabs>
     </div>
-    <div className="@[150px]:hidden h-9">
-      {/* Invisible placeholder to maintain space when tabs are hidden */}
-    </div>
+    <div className="@[150px]:hidden h-9">{/* Invisible placeholder to maintain space when tabs are hidden */}</div>
   </>
-)
+);
 
 export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> = ({
   player,
@@ -76,11 +71,7 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
             </Button>
           </div>
           <div className="@[55px]:block hidden">
-            <PlayerAvatar 
-              player={player}
-              avatarSize={{ width: 'w-12', height: 'h-12' }}
-              showLink={true}
-            />
+            <PlayerAvatar player={player} avatarSize={{ width: 'w-12', height: 'h-12' }} showLink={true} />
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
             <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[190px]:block hidden">
@@ -92,7 +83,9 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
                 {!playerRank.isImmortal && playerRank.stars > 0 && (
                   <span aria-label={`Rank stars: ${playerRank.stars}`} className="inline-flex gap-0.5">
                     {Array.from({ length: playerRank.stars }, (_, i) => (
-                      <span key={i} className="text-yellow-500">★</span>
+                      <span key={i} className="text-yellow-500">
+                        ★
+                      </span>
                     ))}
                   </span>
                 )}
@@ -101,15 +94,10 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
           </div>
         </div>
       </div>
-      
+
       <div className="flex items_center gap-2 flex-shrink-0 justify-end">
-        <PlayerDetailsLayoutButtons 
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-        />
+        <PlayerDetailsLayoutButtons viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </div>
     </div>
   );
 };
-
-

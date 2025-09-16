@@ -1,6 +1,6 @@
 /**
  * Constants Context Tests
- * 
+ *
  * Tests for the constants context functionality including:
  * - Data loading and state management
  * - Error handling
@@ -26,8 +26,8 @@ const mockFetchItemsData = jest.fn();
 jest.mock('@/frontend/contexts/constants-data-fetching-context', () => ({
   useConstantsDataFetching: () => ({
     fetchHeroesData: mockFetchHeroesData,
-    fetchItemsData: mockFetchItemsData
-  })
+    fetchItemsData: mockFetchItemsData,
+  }),
 }));
 
 // ============================================================================
@@ -42,7 +42,7 @@ const mockOpenDotaHeroes: OpenDotaHero[] = [
     primary_attr: 'agility',
     attack_type: 'melee',
     roles: ['Carry', 'Escape', 'Nuker'],
-    legs: 2
+    legs: 2,
   },
   {
     id: 2,
@@ -51,26 +51,24 @@ const mockOpenDotaHeroes: OpenDotaHero[] = [
     primary_attr: 'strength',
     attack_type: 'melee',
     roles: ['Initiator', 'Durable', 'Disabler'],
-    legs: 2
-  }
+    legs: 2,
+  },
 ];
 
 const mockOpenDotaItems: Record<string, OpenDotaItem> = {
-  'item_blink': {
+  item_blink: {
     id: 1,
     dname: 'Blink Dagger',
     img: 'blink.png',
-    cost: 2250
+    cost: 2250,
   },
-  'item_force_staff': {
+  item_force_staff: {
     id: 2,
     dname: 'Force Staff',
     img: 'force_staff.png',
-    cost: 2200
-  }
+    cost: 2200,
+  },
 };
-
-
 
 // ============================================================================
 // TEST COMPONENT
@@ -78,10 +76,10 @@ const mockOpenDotaItems: Record<string, OpenDotaItem> = {
 
 const TestComponent: React.FC = () => {
   const context = useConstantsContext();
-  
+
   // Get the first hero from the heroes record
   const firstHero = Object.values(context.heroes)[0];
-  
+
   return (
     <div>
       <div data-testid="heroes-count">{Object.keys(context.heroes).length}</div>
@@ -93,25 +91,16 @@ const TestComponent: React.FC = () => {
       <div data-testid="first-hero-name">{firstHero?.localizedName || 'none'}</div>
       <div data-testid="first-item-name">{context.items['item_blink']?.name || 'none'}</div>
       <div data-testid="item-image-url">{context.getItemById('item_blink')?.imageUrl || 'none'}</div>
-      
-      <button 
-        data-testid="refresh-heroes-btn" 
-        onClick={() => context.fetchHeroes(true)}
-      >
+
+      <button data-testid="refresh-heroes-btn" onClick={() => context.fetchHeroes(true)}>
         Refresh Heroes
       </button>
-      
-      <button 
-        data-testid="refresh-items-btn" 
-        onClick={() => context.fetchItems(true)}
-      >
+
+      <button data-testid="refresh-items-btn" onClick={() => context.fetchItems(true)}>
         Refresh Items
       </button>
-      
-      <button 
-        data-testid="clear-errors-btn" 
-        onClick={() => context.clearErrors()}
-      >
+
+      <button data-testid="clear-errors-btn" onClick={() => context.clearErrors()}>
         Clear Errors
       </button>
     </div>
@@ -123,9 +112,7 @@ const TestComponent: React.FC = () => {
 // ============================================================================
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ConstantsProvider>
-    {children}
-  </ConstantsProvider>
+  <ConstantsProvider>{children}</ConstantsProvider>
 );
 
 // ============================================================================
@@ -135,7 +122,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 describe('ConstantsContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup default successful responses
     mockFetchHeroesData.mockResolvedValue(mockOpenDotaHeroes);
     mockFetchItemsData.mockResolvedValue(mockOpenDotaItems);
@@ -146,7 +133,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Wait for initial data loading to complete
@@ -167,7 +154,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -184,7 +171,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -201,7 +188,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -220,13 +207,13 @@ describe('ConstantsContext', () => {
       const heroesPromise = new Promise<OpenDotaHero[]>((resolve) => {
         resolvePromise = resolve;
       });
-      
+
       mockFetchHeroesData.mockReturnValue(heroesPromise);
 
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should be loading initially
@@ -246,13 +233,13 @@ describe('ConstantsContext', () => {
       const itemsPromise = new Promise<Record<string, OpenDotaItem>>((resolve) => {
         resolvePromise = resolve;
       });
-      
+
       mockFetchItemsData.mockReturnValue(itemsPromise);
 
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should be loading initially
@@ -275,7 +262,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -290,7 +277,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -305,7 +292,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -320,7 +307,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -334,7 +321,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const refreshButton = screen.getByTestId('refresh-heroes-btn');
@@ -349,7 +336,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const refreshButton = screen.getByTestId('refresh-items-btn');
@@ -367,7 +354,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -389,7 +376,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -404,7 +391,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -438,7 +425,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -454,7 +441,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -470,7 +457,7 @@ describe('ConstantsContext', () => {
       render(
         <TestWrapper>
           <TestComponent />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       await waitFor(() => {
@@ -482,4 +469,4 @@ describe('ConstantsContext', () => {
       expect(screen.getByTestId('heroes-count')).toHaveTextContent('2');
     });
   });
-}); 
+});

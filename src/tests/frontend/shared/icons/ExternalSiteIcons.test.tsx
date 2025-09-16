@@ -1,11 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import {
-  Dota2ProTrackerIcon,
-  DotabuffIcon,
-  OpenDotaIcon,
-  StratzIcon
-} from '@/frontend/shared/icons/ExternalSiteIcons';
+import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon, StratzIcon } from '@/frontend/shared/icons/ExternalSiteIcons';
 
 describe('ExternalSiteIcons', () => {
   describe('DotabuffIcon', () => {
@@ -232,7 +227,7 @@ describe('ExternalSiteIcons', () => {
         { Component: DotabuffIcon, name: 'Dotabuff icon' },
         { Component: OpenDotaIcon, name: 'OpenDota icon' },
         { Component: StratzIcon, name: 'Stratz icon' },
-        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' }
+        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' },
       ];
 
       icons.forEach(({ Component, name }) => {
@@ -248,7 +243,7 @@ describe('ExternalSiteIcons', () => {
         { Component: DotabuffIcon, name: 'Dotabuff icon' },
         { Component: OpenDotaIcon, name: 'OpenDota icon' },
         { Component: StratzIcon, name: 'Stratz icon' },
-        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' }
+        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' },
       ];
 
       icons.forEach(({ Component, name }) => {
@@ -265,7 +260,7 @@ describe('ExternalSiteIcons', () => {
         { Component: DotabuffIcon, name: 'Dotabuff icon' },
         { Component: OpenDotaIcon, name: 'OpenDota icon' },
         { Component: StratzIcon, name: 'Stratz icon' },
-        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' }
+        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' },
       ];
 
       icons.forEach(({ Component, name }) => {
@@ -281,7 +276,7 @@ describe('ExternalSiteIcons', () => {
         { Component: DotabuffIcon, name: 'Dotabuff icon' },
         { Component: OpenDotaIcon, name: 'OpenDota icon' },
         { Component: StratzIcon, name: 'Stratz icon' },
-        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' }
+        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' },
       ];
 
       icons.forEach(({ Component, name }) => {
@@ -321,7 +316,7 @@ describe('ExternalSiteIcons', () => {
         { Component: DotabuffIcon, name: 'Dotabuff icon' },
         { Component: OpenDotaIcon, name: 'OpenDota icon' },
         { Component: StratzIcon, name: 'Stratz icon' },
-        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' }
+        { Component: Dota2ProTrackerIcon, name: 'Dota2ProTracker icon' },
       ];
 
       icons.forEach(({ Component, name }) => {
@@ -352,4 +347,4 @@ describe('ExternalSiteIcons', () => {
       expect(circle).toHaveAttribute('stroke', '#000');
     });
   });
-}); 
+});

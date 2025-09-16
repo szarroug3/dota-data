@@ -33,7 +33,7 @@ export function useAppHydration() {
   // Run hydration on mount
   useEffect(() => {
     mountCountRef.current += 1;
-    
+
     // Create the hydrate function inside useEffect to avoid recreation issues
     const hydrate = async () => {
       // Prevent multiple runs
@@ -48,7 +48,7 @@ export function useAppHydration() {
         // Step 1: Fetch constants
         await Promise.all([
           contextsRef.current.constantsContext.fetchHeroes(),
-          contextsRef.current.constantsContext.fetchItems()
+          contextsRef.current.constantsContext.fetchItems(),
         ]);
 
         // Step 2: Wait for constants to be available in context state
@@ -56,11 +56,11 @@ export function useAppHydration() {
         let attempts = 0;
         const maxAttempts = 50; // 5 seconds max wait
         while (
-          attempts < maxAttempts && 
+          attempts < maxAttempts &&
           (Object.keys(contextsRef.current.constantsContext.heroes).length === 0 ||
-           Object.keys(contextsRef.current.constantsContext.items).length === 0)
+            Object.keys(contextsRef.current.constantsContext.items).length === 0)
         ) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
+          await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
           attempts++;
         }
 
@@ -80,7 +80,7 @@ export function useAppHydration() {
 
           // Refresh all team summaries in background
           // This will handle summary data for non-active teams and full data for active team
-          contextsRef.current.teamContext.refreshAllTeamSummaries().catch(error => {
+          contextsRef.current.teamContext.refreshAllTeamSummaries().catch((error) => {
             console.warn('Background team refresh failed:', error);
           });
         }
@@ -101,6 +101,6 @@ export function useAppHydration() {
   return {
     isHydrating,
     hydrationError,
-    hasHydrated
+    hasHydrated,
   };
-} 
+}

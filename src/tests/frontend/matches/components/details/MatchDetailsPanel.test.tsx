@@ -83,4 +83,4 @@ describe('MatchDetailsPanel', () => {
     render(<MatchDetailsPanel {...defaultProps} viewMode="players" />);
     expect(screen.getByTestId('players-panel')).toBeInTheDocument();
   });
-}); 
+});

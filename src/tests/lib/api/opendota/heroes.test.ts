@@ -52,16 +52,14 @@ describe('fetchOpenDotaHeroes', () => {
         expect.stringContaining('mock-data/heroes.json'),
         false,
         60 * 60 * 24 * 7, // 7 days
-        'opendota:heroes'
+        'opendota:heroes',
       );
     });
 
     it('should throw error when request fails', async () => {
       mockRequest.mockResolvedValue(null);
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to fetch heroes data'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('Failed to fetch heroes data');
     });
 
     it('should use force parameter when provided', async () => {
@@ -76,7 +74,7 @@ describe('fetchOpenDotaHeroes', () => {
         expect.stringContaining('mock-data/heroes.json'),
         true, // force parameter
         60 * 60 * 24 * 7,
-        'opendota:heroes'
+        'opendota:heroes',
       );
     });
 
@@ -119,17 +117,14 @@ describe('fetchOpenDotaHeroes', () => {
 
       await fetchOpenDotaHeroes();
 
-      expect(mockRequestWithRetry).toHaveBeenCalledWith(
-        'GET',
-        'https://api.opendota.com/api/heroes'
-      );
+      expect(mockRequestWithRetry).toHaveBeenCalledWith('GET', 'https://api.opendota.com/api/heroes');
     });
 
     it('should throw error when API response is not ok', async () => {
       const mockResponse = {
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error'
+        statusText: 'Internal Server Error',
       };
 
       mockRequestWithRetry.mockResolvedValue(mockResponse as Response);
@@ -139,9 +134,7 @@ describe('fetchOpenDotaHeroes', () => {
         return null;
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'OpenDota API error: 500 Internal Server Error'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('OpenDota API error: 500 Internal Server Error');
     });
 
     it('should throw error when fetch fails', async () => {
@@ -152,9 +145,7 @@ describe('fetchOpenDotaHeroes', () => {
         return null;
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to fetch heroes from OpenDota: Error: Network error'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('Failed to fetch heroes from OpenDota: Error: Network error');
     });
 
     it('should handle API timeout', async () => {
@@ -166,7 +157,7 @@ describe('fetchOpenDotaHeroes', () => {
       });
 
       await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to fetch heroes from OpenDota: Error: Request timeout'
+        'Failed to fetch heroes from OpenDota: Error: Request timeout',
       );
     });
   });
@@ -191,9 +182,7 @@ describe('fetchOpenDotaHeroes', () => {
         return parser(invalidJson);
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to parse OpenDota heroes data'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('Failed to parse OpenDota heroes data');
     });
 
     it('should handle JSON that is not an array', async () => {
@@ -211,7 +200,7 @@ describe('fetchOpenDotaHeroes', () => {
     it('should handle malformed hero data', async () => {
       const malformedHeroes = [
         { id: 1, name: 'hero1' }, // Missing required fields
-        { id: 2, name: 'hero2', localized_name: 'Hero 2' } // Partial data
+        { id: 2, name: 'hero2', localized_name: 'Hero 2' }, // Partial data
       ];
 
       mockRequest.mockImplementation(async (service, fetcher, parser) => {
@@ -238,9 +227,7 @@ describe('fetchOpenDotaHeroes', () => {
         return parser('null');
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to fetch heroes data'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('Failed to fetch heroes data');
     });
 
     it('should handle undefined JSON response', async () => {
@@ -248,9 +235,7 @@ describe('fetchOpenDotaHeroes', () => {
         return parser('undefined');
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'Failed to parse OpenDota heroes data'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('Failed to parse OpenDota heroes data');
     });
   });
 
@@ -272,10 +257,7 @@ describe('fetchOpenDotaHeroes', () => {
       const result = await fetchOpenDotaHeroes();
 
       expect(result).toEqual(mockHeroes);
-      expect(mockRequestWithRetry).toHaveBeenCalledWith(
-        'GET',
-        'https://api.opendota.com/api/heroes'
-      );
+      expect(mockRequestWithRetry).toHaveBeenCalledWith('GET', 'https://api.opendota.com/api/heroes');
     });
 
     it('should handle force refresh scenario', async () => {
@@ -302,7 +284,7 @@ describe('fetchOpenDotaHeroes', () => {
         expect.stringContaining('mock-data/heroes.json'),
         true,
         60 * 60 * 24 * 7,
-        'opendota:heroes'
+        'opendota:heroes',
       );
     });
 
@@ -310,7 +292,7 @@ describe('fetchOpenDotaHeroes', () => {
       const rateLimitResponse = {
         ok: false,
         status: 429,
-        statusText: 'Too Many Requests'
+        statusText: 'Too Many Requests',
       };
 
       mockRequestWithRetry.mockResolvedValue(rateLimitResponse as Response);
@@ -320,16 +302,14 @@ describe('fetchOpenDotaHeroes', () => {
         return null;
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'OpenDota API error: 429 Too Many Requests'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('OpenDota API error: 429 Too Many Requests');
     });
 
     it('should handle API authentication error', async () => {
       const authErrorResponse = {
         ok: false,
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       };
 
       mockRequestWithRetry.mockResolvedValue(authErrorResponse as Response);
@@ -339,9 +319,7 @@ describe('fetchOpenDotaHeroes', () => {
         return null;
       });
 
-      await expect(fetchOpenDotaHeroes()).rejects.toThrow(
-        'OpenDota API error: 401 Unauthorized'
-      );
+      await expect(fetchOpenDotaHeroes()).rejects.toThrow('OpenDota API error: 401 Unauthorized');
     });
   });
-}); 
+});

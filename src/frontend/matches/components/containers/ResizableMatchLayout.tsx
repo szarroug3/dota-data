@@ -97,13 +97,7 @@ function MatchListPane({
   onAddMatch?: () => void;
 }) {
   return (
-    <ResizablePanel
-      id="match-list"
-      defaultSize={50}
-      minSize={0}
-      maxSize={100}
-      className="overflow-visible"
-    >
+    <ResizablePanel id="match-list" defaultSize={50} minSize={0} maxSize={100} className="overflow-visible">
       <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>
         <MatchesList
           ref={matchesListRef}
@@ -143,13 +137,7 @@ function MatchDetailsPane({
   hiddenMatchIds?: Set<number>;
 }) {
   return (
-    <ResizablePanel
-      id="match-details"
-      defaultSize={50}
-      minSize={0}
-      maxSize={100}
-      className="overflow-hidden"
-    >
+    <ResizablePanel id="match-details" defaultSize={50} minSize={0} maxSize={100} className="overflow-hidden">
       <div className="h-fit pt-2 pl-3">
         {selectedMatch ? (
           (() => {
@@ -179,78 +167,81 @@ function MatchDetailsPane({
   );
 }
 
-export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, ResizableMatchLayoutProps>(({ 
-  filters,
-  onFiltersChange,
-  activeTeamMatches,
-  teamMatches,
-  visibleMatches,
-  unhiddenMatches,
-  onHideMatch,
-  onRefreshMatch,
-  viewMode,
-  setViewMode,
-  selectedMatchId,
-  onSelectMatch,
-  hiddenMatchesCount = 0,
-  onShowHiddenMatches,
-  hiddenMatchIds = new Set(),
-  selectedMatch,
-  matchDetailsViewMode,
-  setMatchDetailsViewMode,
-  onScrollToMatch,
-  onAddMatch,
-}, ref) => {
-  const matchesListRef = React.useRef<MatchesListRef | null>(null);
+export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, ResizableMatchLayoutProps>(
+  (
+    {
+      filters,
+      onFiltersChange,
+      activeTeamMatches,
+      teamMatches,
+      visibleMatches,
+      unhiddenMatches,
+      onHideMatch,
+      onRefreshMatch,
+      viewMode,
+      setViewMode,
+      selectedMatchId,
+      onSelectMatch,
+      hiddenMatchesCount = 0,
+      onShowHiddenMatches,
+      hiddenMatchIds = new Set(),
+      selectedMatch,
+      matchDetailsViewMode,
+      setMatchDetailsViewMode,
+      onScrollToMatch,
+      onAddMatch,
+    },
+    ref,
+  ) => {
+    const matchesListRef = React.useRef<MatchesListRef | null>(null);
 
-  useImperativeHandle(ref, () => ({
-    scrollToMatch: (matchId: number) => {
-      matchesListRef.current?.scrollToMatch(matchId);
-    }
-  }));
+    useImperativeHandle(ref, () => ({
+      scrollToMatch: (matchId: number) => {
+        matchesListRef.current?.scrollToMatch(matchId);
+      },
+    }));
 
-  return (
-    <div className="h-fit flex flex-col">
-      <FiltersSection
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        activeTeamMatches={activeTeamMatches}
-        teamMatches={teamMatches}
-      />
-      <div className="h-fit">
-        <ResizablePanelGroup direction="horizontal">
-          <MatchListPane
-            matchesListRef={matchesListRef}
-            visibleMatches={visibleMatches}
-            onHideMatch={onHideMatch}
-            onRefreshMatch={onRefreshMatch}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            selectedMatchId={selectedMatchId}
-            onSelectMatch={onSelectMatch}
-            hiddenMatchesCount={hiddenMatchesCount}
-            onShowHiddenMatches={onShowHiddenMatches}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
-            unhiddenMatches={unhiddenMatches}
-            onScrollToMatch={onScrollToMatch}
-            onAddMatch={onAddMatch}
-          />
-          <ResizableHandle withHandle className="after:w-4" />
-          <MatchDetailsPane
-            selectedMatch={selectedMatch}
-            teamMatches={teamMatches}
-            matchDetailsViewMode={matchDetailsViewMode}
-            setMatchDetailsViewMode={setMatchDetailsViewMode}
-            unhiddenMatches={unhiddenMatches}
-            hiddenMatchIds={hiddenMatchIds}
-          />
-        </ResizablePanelGroup>
+    return (
+      <div className="h-fit flex flex-col">
+        <FiltersSection
+          filters={filters}
+          onFiltersChange={onFiltersChange}
+          activeTeamMatches={activeTeamMatches}
+          teamMatches={teamMatches}
+        />
+        <div className="h-fit">
+          <ResizablePanelGroup direction="horizontal">
+            <MatchListPane
+              matchesListRef={matchesListRef}
+              visibleMatches={visibleMatches}
+              onHideMatch={onHideMatch}
+              onRefreshMatch={onRefreshMatch}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              selectedMatchId={selectedMatchId}
+              onSelectMatch={onSelectMatch}
+              hiddenMatchesCount={hiddenMatchesCount}
+              onShowHiddenMatches={onShowHiddenMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+              unhiddenMatches={unhiddenMatches}
+              onScrollToMatch={onScrollToMatch}
+              onAddMatch={onAddMatch}
+            />
+            <ResizableHandle withHandle className="after:w-4" />
+            <MatchDetailsPane
+              selectedMatch={selectedMatch}
+              teamMatches={teamMatches}
+              matchDetailsViewMode={matchDetailsViewMode}
+              setMatchDetailsViewMode={setMatchDetailsViewMode}
+              unhiddenMatches={unhiddenMatches}
+              hiddenMatchIds={hiddenMatchIds}
+            />
+          </ResizablePanelGroup>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 ResizableMatchLayout.displayName = 'ResizableMatchLayout';
-
-

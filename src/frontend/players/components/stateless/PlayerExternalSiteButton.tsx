@@ -15,7 +15,7 @@ export const PlayerExternalSiteButton: React.FC<PlayerExternalSiteButtonProps> =
   playerId,
   preferredSite,
   className = '',
-  size = 'default'
+  size = 'default',
 }) => {
   const getSiteConfig = (site: PreferredExternalSite) => {
     switch (site) {
@@ -24,21 +24,21 @@ export const PlayerExternalSiteButton: React.FC<PlayerExternalSiteButtonProps> =
           url: `https://www.dotabuff.com/players/${playerId}`,
           icon: DotabuffIcon,
           label: 'View on Dotabuff',
-          ariaLabel: 'Open player on Dotabuff'
+          ariaLabel: 'Open player on Dotabuff',
         };
       case 'opendota':
         return {
           url: `https://www.opendota.com/players/${playerId}`,
           icon: OpenDotaIcon,
           label: 'View on OpenDota',
-          ariaLabel: 'Open player on OpenDota'
+          ariaLabel: 'Open player on OpenDota',
         };
       default:
         return {
           url: `https://www.dotabuff.com/players/${playerId}`,
           icon: DotabuffIcon,
           label: 'View on Dotabuff',
-          ariaLabel: 'Open player on Dotabuff'
+          ariaLabel: 'Open player on Dotabuff',
         };
     }
   };
@@ -47,12 +47,7 @@ export const PlayerExternalSiteButton: React.FC<PlayerExternalSiteButtonProps> =
   const IconComponent = siteConfig.icon;
 
   return (
-    <Button
-      variant="ghost"
-      size={size}
-      className={className}
-      asChild
-    >
+    <Button variant="ghost" size={size} className={className} asChild>
       <a
         href={siteConfig.url}
         target="_blank"
@@ -66,5 +61,3 @@ export const PlayerExternalSiteButton: React.FC<PlayerExternalSiteButtonProps> =
     </Button>
   );
 };
-
-

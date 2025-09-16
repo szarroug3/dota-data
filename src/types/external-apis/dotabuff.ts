@@ -17,5 +17,3 @@ export interface DotabuffLeague {
   id: string;
   name: string;
 }
-
-

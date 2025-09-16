@@ -1,6 +1,6 @@
 /**
  * Team State Operations Hook
- * 
+ *
  * Handles team state management operations like remove and edit.
  * Extracted from use-team-operations.ts for better organization.
  */
@@ -31,94 +31,105 @@ export function useTeamStateOperations(
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
   configContext: ConfigContextValue,
-  fetchTeamAndLeagueData: FetchTeamAndLeagueDataFunction
+  fetchTeamAndLeagueData: FetchTeamAndLeagueDataFunction,
 ) {
   const abortController = useAbortController();
 
   /**
    * Persist teams to localStorage after state update
    */
-  const persistTeams = useCallback((
-    teams: Map<string, TeamData> | ((prev: Map<string, TeamData>) => Map<string, TeamData>)
-  ) => {
-    // Use functional update to ensure we calculate and persist from the latest state
-    state.setTeams(prev => {
-      const updatedTeams = typeof teams === 'function' ? teams(prev) : teams;
-      // Persist to localStorage with the calculated updated teams
+  const persistTeams = useCallback(
+    (teams: Map<string, TeamData> | ((prev: Map<string, TeamData>) => Map<string, TeamData>)) => {
+      // Use functional update to ensure we calculate and persist from the latest state
+      state.setTeams((prev) => {
+        const updatedTeams = typeof teams === 'function' ? teams(prev) : teams;
+        // Persist to localStorage with the calculated updated teams
+        try {
+          configContext.setTeams(updatedTeams);
+        } catch (error) {
+          console.warn('Failed to persist team data:', error);
+        }
+        return updatedTeams;
+      });
+    },
+    [state, configContext],
+  );
+
+  // Remove team
+  const removeTeam = useCallback(
+    async (teamId: number, leagueId: number): Promise<void> => {
+      const key = generateTeamKey(teamId, leagueId);
+      const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
+      const teamToRemove = state.teams.get(key);
+
+      // ABORT ONGOING OPERATIONS: Abort any ongoing operations for this team
+      abortController.cleanupAbortController(operationKey);
+
+      // Calculate the updated teams first
+      const updatedTeams = new Map(state.teams);
+      updatedTeams.delete(key);
+
+      // Update local state
+      state.setTeams((prev) => {
+        const newTeams = new Map(prev);
+        newTeams.delete(key);
+        return newTeams;
+      });
+
+      // PERSIST: Persist the updated state with the calculated teams
       try {
         configContext.setTeams(updatedTeams);
       } catch (error) {
-        console.warn('Failed to persist team data:', error);
+        console.warn('Failed to persist team removal:', error);
       }
-      return updatedTeams;
-    });
-  }, [state, configContext]);
 
-  // Remove team
-  const removeTeam = useCallback(async (teamId: number, leagueId: number): Promise<void> => {
-    const key = generateTeamKey(teamId, leagueId);
-    const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
-    const teamToRemove = state.teams.get(key);
-    
-    // ABORT ONGOING OPERATIONS: Abort any ongoing operations for this team
-    abortController.cleanupAbortController(operationKey);
-    
-    // Calculate the updated teams first
-    const updatedTeams = new Map(state.teams);
-    updatedTeams.delete(key);
-    
-    // Update local state
-    state.setTeams(prev => {
-      const newTeams = new Map(prev);
-      newTeams.delete(key);
-      return newTeams;
-    });
-    
-    // PERSIST: Persist the updated state with the calculated teams
-    try {
-      configContext.setTeams(updatedTeams);
-    } catch (error) {
-      console.warn('Failed to persist team removal:', error);
-    }
-    
-    // Clear selected team if it was the removed team
-    if (state.selectedTeamId && state.selectedTeamId.teamId === teamId && state.selectedTeamId.leagueId === leagueId) {
-      state.clearSelectedTeamId();
-      configContext.setActiveTeam(null);
-    }
-    
-    // Perform cleanup of matches and players if the team had data
-    if (teamToRemove) {
-      const remainingTeams = Array.from(state.teams.values());
-      cleanupUnusedData(teamToRemove, remainingTeams, matchContext, playerContext);
-    }
-  }, [state, matchContext, playerContext, configContext, abortController]);
+      // Clear selected team if it was the removed team
+      if (
+        state.selectedTeamId &&
+        state.selectedTeamId.teamId === teamId &&
+        state.selectedTeamId.leagueId === leagueId
+      ) {
+        state.clearSelectedTeamId();
+        configContext.setActiveTeam(null);
+      }
+
+      // Perform cleanup of matches and players if the team had data
+      if (teamToRemove) {
+        const remainingTeams = Array.from(state.teams.values());
+        cleanupUnusedData(teamToRemove, remainingTeams, matchContext, playerContext);
+      }
+    },
+    [state, matchContext, playerContext, configContext, abortController],
+  );
 
   // Edit team (update team ID and league ID)
-  const editTeam = useCallback(async (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number): Promise<void> => {
-    const currentKey = generateTeamKey(currentTeamId, currentLeagueId);
-    const operationKey = createTeamLeagueOperationKey(currentTeamId, currentLeagueId);
-    const existingTeam = state.teams.get(currentKey);
-    
-    // ABORT ONGOING OPERATIONS: Abort any ongoing operations for the old team
-    abortController.cleanupAbortController(operationKey);
-    
-    try {
-      await editTeamData(
-        currentTeamId,
-        currentLeagueId,
-        newTeamId,
-        newLeagueId,
-        existingTeam,
-        fetchTeamAndLeagueData,
-        state,
-        configContext
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to edit team';
-      updateTeamError(newTeamId, newLeagueId, errorMessage, state, configContext);
-    }
-  }, [state, configContext, fetchTeamAndLeagueData, abortController]);
+  const editTeam = useCallback(
+    async (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number): Promise<void> => {
+      const currentKey = generateTeamKey(currentTeamId, currentLeagueId);
+      const operationKey = createTeamLeagueOperationKey(currentTeamId, currentLeagueId);
+      const existingTeam = state.teams.get(currentKey);
+
+      // ABORT ONGOING OPERATIONS: Abort any ongoing operations for the old team
+      abortController.cleanupAbortController(operationKey);
+
+      try {
+        await editTeamData(
+          currentTeamId,
+          currentLeagueId,
+          newTeamId,
+          newLeagueId,
+          existingTeam,
+          fetchTeamAndLeagueData,
+          state,
+          configContext,
+        );
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to edit team';
+        updateTeamError(newTeamId, newLeagueId, errorMessage, state, configContext);
+      }
+    },
+    [state, configContext, fetchTeamAndLeagueData, abortController],
+  );
 
   return { removeTeam, editTeam, persistTeams };
-} 
+}

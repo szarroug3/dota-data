@@ -12,5 +12,3 @@ export async function getPlayer(playerId: number, force = false): Promise<OpenDo
   }
   return requestAndValidate<OpenDotaPlayerComprehensive>(path, (d: JsonValue) => schema.parse(d));
 }
-
-

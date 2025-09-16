@@ -6,7 +6,6 @@ import type { PlayerListViewMode } from '@/frontend/players/components/stateless
 import { ResizablePlayerLayout } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
 import type { Player } from '@/types/contexts/player-context-value';
 
-
 // Mock the Resizable components since they use browser APIs
 jest.mock('@/components/ui/resizable', () => ({
   ResizablePanelGroup: ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -14,7 +13,12 @@ jest.mock('@/components/ui/resizable', () => ({
       {children}
     </div>
   ),
-  ResizablePanel: ({ children, defaultSize, minSize, maxSize }: {
+  ResizablePanel: ({
+    children,
+    defaultSize,
+    minSize,
+    maxSize,
+  }: {
     children: React.ReactNode;
     defaultSize?: number;
     minSize?: number;
@@ -174,7 +178,7 @@ describe('ResizablePlayerLayout', () => {
         {...defaultProps}
         selectedPlayerId={mockPlayer.profile.profile.account_id}
         selectedPlayer={mockPlayer}
-      />
+      />,
     );
 
     const detailsPanel = screen.getByTestId('player-details-panel');
@@ -183,5 +187,3 @@ describe('ResizablePlayerLayout', () => {
     expect(detailsPanel.textContent).toContain('Player: Test Player');
   });
 });
-
-

@@ -1,6 +1,6 @@
 /**
  * Match Context Tests
- * 
+ *
  * Tests for the match context functionality including match operations,
  * data processing, and state management.
  */
@@ -11,7 +11,6 @@ import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-dat
 import { MatchProvider, useMatchContext } from '@/frontend/matches/contexts/state/match-context';
 import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
 import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
-
 
 describe('MatchContext', () => {
   describe('Import Test', () => {

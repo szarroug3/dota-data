@@ -22,7 +22,7 @@ export async function fetchOpenDotaItems(force = false): Promise<Record<string, 
     mockFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -37,14 +37,14 @@ export async function fetchOpenDotaItems(force = false): Promise<Record<string, 
  */
 async function fetchItemsFromOpenDota(): Promise<string> {
   const url = `https://api.opendota.com/api/constants/items`;
-  
+
   try {
     const response = await requestWithRetry('GET', url);
-    
+
     if (!response.ok) {
       throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
     }
-    
+
     return await response.text();
   } catch (err) {
     throw new Error(`Failed to fetch items from OpenDota: ${err}`);
@@ -56,9 +56,8 @@ async function fetchItemsFromOpenDota(): Promise<string> {
  */
 function parseOpenDotaItems(data: string): Record<string, OpenDotaItem> {
   try {
-    const items = JSON.parse(data) as Record<string, OpenDotaItem>;
-    return items;
+    return JSON.parse(data) as Record<string, OpenDotaItem>;
   } catch (err) {
     throw new Error(`Failed to parse OpenDota items data: ${err}`);
   }
-} 
+}

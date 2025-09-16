@@ -1,4 +1,3 @@
-
 import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/matches/[id]/route';
@@ -24,7 +23,7 @@ const mockRawMatch: OpenDotaMatch = {
   dire_team_id: 9517509,
   radiant_score: 25,
   dire_score: 20,
-  players: []
+  players: [],
 };
 
 interface ApiErrorResponse {
@@ -75,10 +74,10 @@ describe('Matches API', () => {
     describe('Error Cases', () => {
       it('should handle rate limiting errors', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce(new Error('Rate limited by OpenDota API'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/matches/8054301932');
         const response = await GET(request, { params: Promise.resolve({ id: '8054301932' }) });
-        const data = await response.json() as ApiErrorResponse;
+        const data = (await response.json()) as ApiErrorResponse;
 
         expect(response.status).toBe(429);
         expect(data.error).toBe('Rate limited by OpenDota API');
@@ -88,10 +87,10 @@ describe('Matches API', () => {
 
       it('should handle match not found errors', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce(new Error('Match not found'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/matches/999999');
         const response = await GET(request, { params: Promise.resolve({ id: '999999' }) });
-        const data = await response.json() as ApiErrorResponse;
+        const data = (await response.json()) as ApiErrorResponse;
 
         expect(response.status).toBe(404);
         expect(data.error).toBe('Match not found');
@@ -101,10 +100,10 @@ describe('Matches API', () => {
 
       it('should handle invalid match data errors', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce(new Error('Failed to parse match data'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/matches/8054301932');
         const response = await GET(request, { params: Promise.resolve({ id: '8054301932' }) });
-        const data = await response.json() as ApiErrorResponse;
+        const data = (await response.json()) as ApiErrorResponse;
 
         expect(response.status).toBe(422);
         expect(data.error).toBe('Invalid match data');
@@ -114,10 +113,10 @@ describe('Matches API', () => {
 
       it('should handle unknown errors', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce(new Error('Some unknown error'));
-        
+
         const request = new NextRequest('http://localhost:3000/api/matches/8054301932');
         const response = await GET(request, { params: Promise.resolve({ id: '8054301932' }) });
-        const data = await response.json() as ApiErrorResponse;
+        const data = (await response.json()) as ApiErrorResponse;
 
         expect(response.status).toBe(500);
         expect(data.error).toBe('Failed to fetch match');
@@ -127,10 +126,10 @@ describe('Matches API', () => {
 
       it('should handle non-Error exceptions', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce('String error');
-        
+
         const request = new NextRequest('http://localhost:3000/api/matches/8054301932');
         const response = await GET(request, { params: Promise.resolve({ id: '8054301932' }) });
-        const data = await response.json() as ApiErrorResponse;
+        const data = (await response.json()) as ApiErrorResponse;
 
         expect(response.status).toBe(500);
         expect(data.error).toBe('Failed to fetch match');
@@ -139,4 +138,4 @@ describe('Matches API', () => {
       });
     });
   });
-}); 
+});

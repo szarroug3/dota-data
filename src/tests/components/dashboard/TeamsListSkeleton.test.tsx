@@ -9,4 +9,3 @@ describe('TeamsListSkeleton', () => {
     expect(container.firstChild).toBeTruthy();
   });
 });
-

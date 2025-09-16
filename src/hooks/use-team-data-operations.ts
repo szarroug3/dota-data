@@ -1,6 +1,6 @@
 /**
  * Team Data Operations Hook
- * 
+ *
  * Handles adding and refreshing team data operations.
  * Extracted from use-team-operations.ts for better organization.
  */
@@ -8,10 +8,7 @@
 import { useCallback } from 'react';
 
 import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
-import {
-  createTeamLeagueOperationKey,
-  useAbortController
-} from '@/hooks/use-abort-controller';
+import { createTeamLeagueOperationKey, useAbortController } from '@/hooks/use-abort-controller';
 import { createInitialTeamData, generateTeamKey } from '@/lib/processing/team-processing';
 import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
@@ -29,9 +26,9 @@ function addNewTeamToState(
   newTeamData: TeamData,
   state: {
     setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
-  }
+  },
 ) {
-  state.setTeams(prev => {
+  state.setTeams((prev) => {
     const newTeams = new Map(prev);
     newTeams.set(teamKey, newTeamData);
     return newTeams;
@@ -43,9 +40,9 @@ function updateTeamInState(
   updatedTeamData: TeamData,
   state: {
     setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
-  }
+  },
 ) {
-  state.setTeams(prev => {
+  state.setTeams((prev) => {
     const newTeams = new Map(prev);
     newTeams.set(teamKey, updatedTeamData);
     return newTeams;
@@ -53,10 +50,10 @@ function updateTeamInState(
 }
 
 function persistTeamData(
-  teamKey: string, 
-  teamData: TeamData, 
-  state: Map<string, TeamData>, 
-  configContext: ConfigContextValue
+  teamKey: string,
+  teamData: TeamData,
+  state: Map<string, TeamData>,
+  configContext: ConfigContextValue,
 ): void {
   try {
     const updatedTeams = new Map(state);
@@ -73,15 +70,15 @@ function handleTeamOperationError(
   teamId: number,
   leagueId: number,
   state: { teams: Map<string, TeamData>; setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>> },
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ): TeamData {
   const fallbackData = state.teams.get(generateTeamKey(teamId, leagueId)) || createInitialTeamData(teamId, leagueId);
-  
+
   const errorMessage = handleOperationError(error, abortController, 'Team data operation failed');
   if (errorMessage) {
     updateTeamError(teamId, leagueId, errorMessage, state, configContext);
   }
-  
+
   return fallbackData;
 }
 
@@ -102,18 +99,18 @@ function handleApiErrors(
   teamId: number,
   leagueId: number,
   state: { teams: Map<string, TeamData>; setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>> },
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ): boolean {
   if ('error' in teamResult || 'error' in leagueResult) {
     const teamError = 'error' in teamResult ? teamResult.error : null;
     const leagueError = 'error' in leagueResult ? leagueResult.error : null;
     const error = teamError || leagueError || 'Failed to fetch team data';
-    
+
     const errorMessage = handleOperationError(error, controller, 'Failed to fetch team data');
     if (errorMessage) {
       updateTeamError(teamId, leagueId, errorMessage, state, configContext);
     }
-    
+
     return true;
   }
   return false;
@@ -125,21 +122,21 @@ function processSuccessfulResults(
   initialTeamData: TeamData,
   teamKey: string,
   state: { setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>> },
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ): void {
   const processedTeamData: TeamData = {
     ...initialTeamData,
     team: {
       id: parseInt(teamResult.id),
-      name: teamResult.name
+      name: teamResult.name,
     },
     league: {
       id: parseInt(leagueResult.id),
-      name: leagueResult.name
+      name: leagueResult.name,
     },
-    timeAdded: new Date().toISOString()
+    timeAdded: new Date().toISOString(),
   };
-  
+
   updateTeamInState(teamKey, processedTeamData, state);
   persistTeamData(teamKey, processedTeamData, new Map(), configContext);
 }
@@ -154,60 +151,76 @@ export function useProcessTeamData(
     setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
   },
   teamDataFetching: TeamDataFetchingContextValue,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
   const abortController = useAbortController();
 
-  return useCallback(async (teamId: number, leagueId: number, force: boolean = false): Promise<void> => {
-    const teamKey = generateTeamKey(teamId, leagueId);
-    const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
-    
-    // Check for ongoing operations
-    if (checkForOngoingOperation(abortController, operationKey)) {
-      return;
-    }
-    
-    const controller = abortController.getAbortController(operationKey);
-    
-    try {
-      // Create initial team data with loading state
-      const initialTeamData = createInitialTeamData(teamId, leagueId);
-      addNewTeamToState(teamKey, initialTeamData, state);
-      
-      // Set loading state using Map utility
-      setMapItemLoading(state.setTeams, teamKey);
-      
-      // Fetch team and league data
-      const [teamResult, leagueResult] = await Promise.all([
-        teamDataFetching.fetchTeamData(teamId, force),
-        teamDataFetching.fetchLeagueData(leagueId, force)
-      ]);
-      
-      // Check if operation was aborted
-      if (controller.signal.aborted) {
+  return useCallback(
+    async (teamId: number, leagueId: number, force: boolean = false): Promise<void> => {
+      const teamKey = generateTeamKey(teamId, leagueId);
+      const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
+
+      // Check for ongoing operations
+      if (checkForOngoingOperation(abortController, operationKey)) {
         return;
       }
-      
-      // Handle errors
-      if (handleApiErrors(teamResult, leagueResult, controller, teamId, leagueId, state, configContext)) {
-        return;
+
+      const controller = abortController.getAbortController(operationKey);
+
+      try {
+        // Create initial team data with loading state
+        const initialTeamData = createInitialTeamData(teamId, leagueId);
+        addNewTeamToState(teamKey, initialTeamData, state);
+
+        // Set loading state using Map utility
+        setMapItemLoading(state.setTeams, teamKey);
+
+        // Fetch team and league data
+        const [teamResult, leagueResult] = await Promise.all([
+          teamDataFetching.fetchTeamData(teamId, force),
+          teamDataFetching.fetchLeagueData(leagueId, force),
+        ]);
+
+        // Check if operation was aborted
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        // Handle errors
+        if (handleApiErrors(teamResult, leagueResult, controller, teamId, leagueId, state, configContext)) {
+          return;
+        }
+
+        // Process successful results - at this point we know both results are successful
+        const successfulTeamResult = teamResult as DotabuffTeam;
+        const successfulLeagueResult = leagueResult as DotabuffLeague;
+        processSuccessfulResults(
+          successfulTeamResult,
+          successfulLeagueResult,
+          initialTeamData,
+          teamKey,
+          state,
+          configContext,
+        );
+      } catch (error) {
+        const fallbackData = handleTeamOperationError(
+          error as Error | string | object,
+          controller,
+          teamId,
+          leagueId,
+          state,
+          configContext,
+        );
+        updateTeamInState(teamKey, fallbackData, state);
+      } finally {
+        // Clear loading state using Map utility
+        clearMapItemLoading(state.setTeams, teamKey);
+
+        abortController.cleanupAbortController(operationKey);
       }
-      
-      // Process successful results - at this point we know both results are successful
-      const successfulTeamResult = teamResult as DotabuffTeam;
-      const successfulLeagueResult = leagueResult as DotabuffLeague;
-      processSuccessfulResults(successfulTeamResult, successfulLeagueResult, initialTeamData, teamKey, state, configContext);
-      
-    } catch (error) {
-      const fallbackData = handleTeamOperationError(error as Error | string | object, controller, teamId, leagueId, state, configContext);
-      updateTeamInState(teamKey, fallbackData, state);
-    } finally {
-      // Clear loading state using Map utility
-      clearMapItemLoading(state.setTeams, teamKey);
-      
-      abortController.cleanupAbortController(operationKey);
-    }
-  }, [state, teamDataFetching, configContext, abortController]);
+    },
+    [state, teamDataFetching, configContext, abortController],
+  );
 }
 
 export function useTeamDataOperations(
@@ -216,11 +229,11 @@ export function useTeamDataOperations(
     setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
   },
   teamDataFetching: TeamDataFetchingContextValue,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
   const processTeamData = useProcessTeamData(state, teamDataFetching, configContext);
 
   return {
-    processTeamData
+    processTeamData,
   };
-} 
+}

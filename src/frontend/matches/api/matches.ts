@@ -12,5 +12,3 @@ export async function getMatch(matchId: number, force = false): Promise<OpenDota
   }
   return requestAndValidate<OpenDotaMatch>(path, (d: JsonValue) => schema.parse(d));
 }
-
-

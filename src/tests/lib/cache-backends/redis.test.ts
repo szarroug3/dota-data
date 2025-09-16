@@ -124,7 +124,7 @@ describe('RedisCacheBackend', () => {
       it('should set multiple values', async () => {
         const entries = [
           { key: 'key1', value: 'value1' },
-          { key: 'key2', value: 'value2', ttl: 300 }
+          { key: 'key2', value: 'value2', ttl: 300 },
         ];
         await expect(redisBackend.mset(entries)).resolves.not.toThrow();
       });
@@ -237,7 +237,7 @@ describe('RedisCacheBackend', () => {
   describe('error handling', () => {
     it('should handle Redis connection errors gracefully', async () => {
       const unavailableBackend = createUnavailableBackend();
-      
+
       await expect(unavailableBackend.get('key')).rejects.toThrow('Redis unavailable');
       await expect(unavailableBackend.set('key', 'value')).rejects.toThrow('Redis unavailable');
       await expect(unavailableBackend.delete('key')).rejects.toThrow('Redis unavailable');
@@ -249,4 +249,4 @@ describe('RedisCacheBackend', () => {
       await expect(unavailableBackend.clear()).rejects.toThrow('Redis clear error');
     });
   });
-}); 
+});

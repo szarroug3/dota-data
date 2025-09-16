@@ -30,7 +30,7 @@ interface PlayerListViewProps {
 function getTopHeroes(player: Player, heroes: Record<string, Hero>): Hero[] {
   if (!player.heroes) return [];
   const top = [...player.heroes].sort((a, b) => b.games - a.games).slice(0, 5);
-  return top.map(h => heroes[h.hero_id.toString()]).filter(Boolean) as Hero[];
+  return top.map((h) => heroes[h.hero_id.toString()]).filter(Boolean) as Hero[];
 }
 
 function renderRank(rankTier?: number | null, leaderboardRank?: number | null): React.ReactNode {
@@ -43,7 +43,9 @@ function renderRank(rankTier?: number | null, leaderboardRank?: number | null): 
       {stars > 0 && (
         <div className="flex gap-0.5 flex-shrink-0">
           {Array.from({ length: stars }).map((_, i) => (
-            <span key={i} className="text-yellow-500 text-xs">★</span>
+            <span key={i} className="text-yellow-500 text-xs">
+              ★
+            </span>
           ))}
         </div>
       )}
@@ -51,35 +53,55 @@ function renderRank(rankTier?: number | null, leaderboardRank?: number | null): 
   );
 }
 
-function PlayerTopHeroes({ heroes, align = 'justify-end' }: { heroes: Hero[]; align?: 'justify-end' | 'justify-center' }) {
+function PlayerTopHeroes({
+  heroes,
+  align = 'justify-end',
+}: {
+  heroes: Hero[];
+  align?: 'justify-end' | 'justify-center';
+}) {
   if (heroes.length === 0) return null;
   const size = { width: 'w-8', height: 'h-8' } as const;
   const totalHeroes = heroes.length;
   return (
     <div className={`-space-x-1 inline-flex ${align}`}>
       <div className="@[300px]:flex hidden">
-        {heroes.slice(0, 5).map(h => (<HeroAvatar key={h.id} hero={h} avatarSize={size} />))}
+        {heroes.slice(0, 5).map((h) => (
+          <HeroAvatar key={h.id} hero={h} avatarSize={size} />
+        ))}
       </div>
       <div className="@[250px]:flex @[300px]:hidden hidden">
-        {heroes.slice(0, 3).map(h => (<HeroAvatar key={h.id} hero={h} avatarSize={size} />))}
+        {heroes.slice(0, 3).map((h) => (
+          <HeroAvatar key={h.id} hero={h} avatarSize={size} />
+        ))}
         {totalHeroes > 3 && (
-          <div className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
+          <div
+            className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}
+          >
             <span className="text-xs font-medium text-muted-foreground">+{totalHeroes - 3}</span>
           </div>
         )}
       </div>
       <div className="@[200px]:flex @[250px]:hidden hidden">
-        {heroes.slice(0, 2).map(h => (<HeroAvatar key={h.id} hero={h} avatarSize={size} />))}
+        {heroes.slice(0, 2).map((h) => (
+          <HeroAvatar key={h.id} hero={h} avatarSize={size} />
+        ))}
         {totalHeroes > 2 && (
-          <div className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
+          <div
+            className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}
+          >
             <span className="text-xs font-medium text-muted-foreground">+{totalHeroes - 2}</span>
           </div>
         )}
       </div>
       <div className="@[120px]:flex @[200px]:hidden hidden">
-        {heroes.slice(0, 1).map(h => (<HeroAvatar key={h.id} hero={h} avatarSize={size} />))}
+        {heroes.slice(0, 1).map((h) => (
+          <HeroAvatar key={h.id} hero={h} avatarSize={size} />
+        ))}
         {totalHeroes > 1 && (
-          <div className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}>
+          <div
+            className={`${size.width} ${size.height} bg-muted rounded-full border-2 border-background flex items-center justify-center`}
+          >
             <span className="text-xs font-medium text-muted-foreground">+{totalHeroes - 1}</span>
           </div>
         )}
@@ -90,37 +112,89 @@ function PlayerTopHeroes({ heroes, align = 'justify-end' }: { heroes: Hero[]; al
   );
 }
 
-function PlayerActions({ player, onRefresh, preferredSite }: { player: Player; onRefresh?: (id: number) => void; preferredSite: PreferredExternalSite }) {
+function PlayerActions({
+  player,
+  onRefresh,
+  preferredSite,
+}: {
+  player: Player;
+  onRefresh?: (id: number) => void;
+  preferredSite: PreferredExternalSite;
+}) {
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <PlayerExternalSiteButton playerId={player.profile.profile.account_id} preferredSite={preferredSite} size="sm" />
       {onRefresh && !player.error && (
-        <RefreshButton onClick={() => onRefresh(player.profile.profile.account_id)} ariaLabel={`Refresh ${player.profile.profile.personaname}`} />
+        <RefreshButton
+          onClick={() => onRefresh(player.profile.profile.account_id)}
+          ariaLabel={`Refresh ${player.profile.profile.personaname}`}
+        />
       )}
     </div>
   );
 }
 
-const ListRow: React.FC<{ player: Player; isSelected: boolean; onSelect?: (id: number) => void; topHeroes: Hero[]; onRefresh?: (id: number) => void; isManual?: boolean; onEditPlayer?: (id: number) => void; onRemovePlayer?: (id: number) => void; preferredSite: PreferredExternalSite }>
-  = ({ player, isSelected, onSelect, topHeroes, onRefresh, isManual, onEditPlayer, onRemovePlayer, preferredSite }) => {
+const ListRow: React.FC<{
+  player: Player;
+  isSelected: boolean;
+  onSelect?: (id: number) => void;
+  topHeroes: Hero[];
+  onRefresh?: (id: number) => void;
+  isManual?: boolean;
+  onEditPlayer?: (id: number) => void;
+  onRemovePlayer?: (id: number) => void;
+  preferredSite: PreferredExternalSite;
+}> = ({
+  player,
+  isSelected,
+  onSelect,
+  topHeroes,
+  onRefresh,
+  isManual,
+  onEditPlayer,
+  onRemovePlayer,
+  preferredSite,
+}) => {
   const totalGames = player.wl.win + player.wl.lose;
   const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
-  const handleSelect = () => { if (!player.error) onSelect?.(player.profile.profile.account_id); };
+  const handleSelect = () => {
+    if (!player.error) onSelect?.(player.profile.profile.account_id);
+  };
   return (
     <Card
       className={`transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'} ${player.error ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer'}`}
       onClick={handleSelect}
       role="button"
       tabIndex={player.error ? -1 : 0}
-      aria-label={player.error ? `${player.profile.profile.personaname} - Error: ${player.error}` : `Select ${player.profile.profile.personaname}`}
+      aria-label={
+        player.error
+          ? `${player.profile.profile.personaname} - Error: ${player.error}`
+          : `Select ${player.profile.profile.personaname}`
+      }
     >
-      <CardHeader className="py-3 flex items-center justify-between @container" style={{ containerType: 'inline-size' }}>
+      <CardHeader
+        className="py-3 flex items-center justify-between @container"
+        style={{ containerType: 'inline-size' }}
+      >
         <div className="flex items-center gap-3 min-w-0">
-          <PlayerAvatar player={player} avatarSize={{ width: 'w-10', height: 'h-10' }} showLink={false} />
+          <PlayerAvatar
+            player={player}
+            avatarSize={{ width: 'w-10', height: 'h-10' }}
+            showLink={false}
+            preferredSite={preferredSite}
+          />
           <div className="min-w-0 @[120px]:block hidden">
             <div className="font-semibold truncate">{player.profile.profile.personaname}</div>
-            {!player.error && (<div className="text-sm text-muted-foreground truncate">{renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}</div>)}
-            {!player.error && (<div className="text-sm text-muted-foreground truncate">{totalGames} Games • {winRate.toFixed(1)}% Win Rate</div>)}
+            {!player.error && (
+              <div className="text-sm text-muted-foreground truncate">
+                {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}
+              </div>
+            )}
+            {!player.error && (
+              <div className="text-sm text-muted-foreground truncate">
+                {totalGames} Games • {winRate.toFixed(1)}% Win Rate
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-0">
@@ -137,7 +211,10 @@ const ListRow: React.FC<{ player: Player; isSelected: boolean; onSelect?: (id: n
                   type="button"
                   aria-label="Edit player"
                   className="p-1 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); onEditPlayer?.(player.profile.profile.account_id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditPlayer?.(player.profile.profile.account_id);
+                  }}
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
@@ -145,7 +222,10 @@ const ListRow: React.FC<{ player: Player; isSelected: boolean; onSelect?: (id: n
                   type="button"
                   aria-label="Remove player"
                   className="p-1 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); onRemovePlayer?.(player.profile.profile.account_id); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemovePlayer?.(player.profile.profile.account_id);
+                  }}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -159,12 +239,23 @@ const ListRow: React.FC<{ player: Player; isSelected: boolean; onSelect?: (id: n
   );
 };
 
-export const PlayerListView: React.FC<PlayerListViewProps> = ({ players, selectedPlayerId, onSelectPlayer, onRefreshPlayer, viewMode, manualPlayerIds, onEditPlayer, onRemovePlayer, heroes, preferredSite }) => {
+export const PlayerListView: React.FC<PlayerListViewProps> = ({
+  players,
+  selectedPlayerId,
+  onSelectPlayer,
+  onRefreshPlayer,
+  viewMode,
+  manualPlayerIds,
+  onEditPlayer,
+  onRemovePlayer,
+  heroes,
+  preferredSite,
+}) => {
   const processed = useMemo(() => {
-    return players.map(p => ({
+    return players.map((p) => ({
       player: p,
       rank: processPlayerRank(p.profile.rank_tier, p.profile.leaderboard_rank),
-      topHeroes: getTopHeroes(p, heroes)
+      topHeroes: getTopHeroes(p, heroes),
     }));
   }, [players, heroes]);
 
@@ -180,23 +271,43 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({ players, selecte
           const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
           const isSelected = selectedPlayerId === player.profile.profile.account_id;
           return (
-            <Card key={player.profile.profile.account_id} className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`} onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}>
+            <Card
+              key={player.profile.profile.account_id}
+              className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
+              onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}
+            >
               <CardContent className="p-4">
                 <div className="flex flex-col items-center space-y-3 mb-3">
-                  <PlayerAvatar player={player} avatarSize={{ width: 'w-16', height: 'h-16' }} showLink={false} />
+                  <PlayerAvatar
+                    player={player}
+                    avatarSize={{ width: 'w-16', height: 'h-16' }}
+                    showLink={false}
+                    preferredSite={preferredSite}
+                  />
                   <div className="text-center w-full min-w-0 overflow-hidden">
                     <div className="font-medium truncate">{player.profile.profile.personaname}</div>
-                    <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">{renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}</div>
+                    <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
+                      {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
+                    </div>
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground mb-2 text-center truncate">{totalGames} games • {winRate.toFixed(1)}%</div>
+                <div className="text-xs text-muted-foreground mb-2 text-center truncate">
+                  {totalGames} games • {winRate.toFixed(1)}%
+                </div>
                 <div className="flex flex-col items-center gap-2">
                   <div className="text-center overflow-hidden w-full">
                     <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
                   </div>
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <PlayerExternalSiteButton playerId={player.profile.profile.account_id} preferredSite={preferredSite} size="sm" />
-                    <RefreshButton onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)} ariaLabel={`Refresh ${player.profile.profile.personaname}`} />
+                    <PlayerExternalSiteButton
+                      playerId={player.profile.profile.account_id}
+                      preferredSite={preferredSite}
+                      size="sm"
+                    />
+                    <RefreshButton
+                      onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)}
+                      ariaLabel={`Refresh ${player.profile.profile.personaname}`}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -226,8 +337,6 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({ players, selecte
       ))}
     </div>
   );
-}
+};
 
 PlayerListView.displayName = 'PlayerListView';
-
-

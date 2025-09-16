@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 /**
  * Player Data Fetching Context Tests
- * 
+ *
  * Tests the player data fetching context functionality including:
  * - Cache management
  * - Error handling
@@ -18,7 +18,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import fetch from 'node-fetch';
 
-import { PlayerDataFetchingProvider, usePlayerDataFetching } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
+import {
+  PlayerDataFetchingProvider,
+  usePlayerDataFetching,
+} from '@/frontend/players/contexts/fetching/player-data-fetching-context';
 import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
 // @ts-expect-error - node-fetch v2 types are compatible with global fetch
@@ -50,10 +53,10 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
       status: 'online',
       fh_unavailable: false,
       is_contributor: false,
-      is_subscriber: false
+      is_subscriber: false,
     },
     rank_tier: 80,
-    leaderboard_rank: 1000
+    leaderboard_rank: 1000,
   },
   counts: {
     leaver_status: { 0: { games: 100, win: 60 } },
@@ -61,7 +64,7 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
     lobby_type: { 7: { games: 100, win: 60 } },
     lane_role: { 1: { games: 40, win: 24 }, 2: { games: 30, win: 18 }, 3: { games: 30, win: 18 } },
     region: { 1: { games: 100, win: 60 } },
-    patch: { 50: { games: 100, win: 60 } }
+    patch: { 50: { games: 100, win: 60 } },
   },
   heroes: [
     {
@@ -72,16 +75,16 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
       with_games: 5,
       with_win: 3,
       against_games: 5,
-      against_win: 2
-    }
+      against_win: 2,
+    },
   ],
   rankings: [
     {
       hero_id: 1,
       score: 85.5,
       percent_rank: 0.75,
-      card: 1
-    }
+      card: 1,
+    },
   ],
   ratings: [
     {
@@ -89,8 +92,8 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
       match_id: 8054301932,
       solo_competitive_rank: 5000,
       competitive_rank: 6000,
-      time: '2024-01-01T00:00:00.000Z'
-    }
+      time: '2024-01-01T00:00:00.000Z',
+    },
   ],
   recentMatches: [
     {
@@ -109,8 +112,8 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
       average_rank: null,
       leaver_status: 0,
       party_size: null,
-      hero_variant: null
-    }
+      hero_variant: null,
+    },
   ],
   totals: {
     np: 100,
@@ -119,16 +122,16 @@ const mockPlayer: OpenDotaPlayerComprehensive = {
     all_time: 1000,
     ranked: 800,
     turbo: 200,
-    matched: 1000
+    matched: 1000,
   },
   wl: {
     win: 600,
-    lose: 400
+    lose: 400,
   },
   wardMap: {
     obs: { '1': { '1': 10 } },
-    sen: { '1': { '1': 5 } }
-  }
+    sen: { '1': { '1': 5 } },
+  },
 };
 
 // ============================================================================
@@ -140,16 +143,16 @@ const server = setupServer(
   rest.get('/api/players/123456789', (req, res, ctx) => {
     return res(ctx.json(mockPlayer));
   }) as any,
-  
+
   // Player not found
   rest.get('/api/players/999999999', (req, res, ctx) => {
     return res(ctx.status(404), ctx.json({ error: 'Player not found' }));
   }) as any,
-  
+
   // Server error
   rest.get('/api/players/500000000', (req, res, ctx) => {
     return res(ctx.status(500), ctx.json({ error: 'Internal server error' }));
-  }) as any
+  }) as any,
 );
 
 beforeAll(() => server.listen());
@@ -161,48 +164,66 @@ afterAll(() => server.close());
 // ============================================================================
 
 const TestComponent = () => {
-  const { 
-    fetchPlayerData, 
-    clearPlayerCache, 
+  const {
+    fetchPlayerData,
+    clearPlayerCache,
     clearAllCache,
-    clearPlayerError, 
+    clearPlayerError,
     clearAllErrors,
-    isPlayerCached, 
-    getPlayerError
+    isPlayerCached,
+    getPlayerError,
   } = usePlayerDataFetching();
-  
+
   const handleFetchPlayer = async () => {
     const result = await fetchPlayerData(123456789);
     return result;
   };
-  
+
   const handleFetchPlayerForce = async () => {
     const result = await fetchPlayerData(123456789, true);
     return result;
   };
-  
+
   const handleFetchPlayerError = async () => {
     const result = await fetchPlayerData(999999999);
     return result;
   };
-  
+
   const handleFetchServerError = async () => {
     const result = await fetchPlayerData(500000000);
     return result;
   };
-  
+
   return (
     <div>
-      <div data-testid="player-error">{getPlayerError(123456789) || getPlayerError(999999999) || getPlayerError(500000000) || 'no-error'}</div>
+      <div data-testid="player-error">
+        {getPlayerError(123456789) || getPlayerError(999999999) || getPlayerError(500000000) || 'no-error'}
+      </div>
       <div data-testid="player-cached">{isPlayerCached(123456789).toString()}</div>
-      <button data-testid="fetch-player" onClick={handleFetchPlayer}>Fetch Player</button>
-      <button data-testid="fetch-player-force" onClick={handleFetchPlayerForce}>Force Fetch Player</button>
-      <button data-testid="fetch-player-error" onClick={handleFetchPlayerError}>Fetch Player Error</button>
-      <button data-testid="fetch-server-error" onClick={handleFetchServerError}>Fetch Server Error</button>
-      <button data-testid="clear-player-cache" onClick={() => clearPlayerCache(123456789)}>Clear Player Cache</button>
-      <button data-testid="clear-all-cache" onClick={clearAllCache}>Clear All Cache</button>
-      <button data-testid="clear-player-error" onClick={() => clearPlayerError(999999999)}>Clear Player Error</button>
-      <button data-testid="clear-all-errors" onClick={clearAllErrors}>Clear All Errors</button>
+      <button data-testid="fetch-player" onClick={handleFetchPlayer}>
+        Fetch Player
+      </button>
+      <button data-testid="fetch-player-force" onClick={handleFetchPlayerForce}>
+        Force Fetch Player
+      </button>
+      <button data-testid="fetch-player-error" onClick={handleFetchPlayerError}>
+        Fetch Player Error
+      </button>
+      <button data-testid="fetch-server-error" onClick={handleFetchServerError}>
+        Fetch Server Error
+      </button>
+      <button data-testid="clear-player-cache" onClick={() => clearPlayerCache(123456789)}>
+        Clear Player Cache
+      </button>
+      <button data-testid="clear-all-cache" onClick={clearAllCache}>
+        Clear All Cache
+      </button>
+      <button data-testid="clear-player-error" onClick={() => clearPlayerError(999999999)}>
+        Clear Player Error
+      </button>
+      <button data-testid="clear-all-errors" onClick={clearAllErrors}>
+        Clear All Errors
+      </button>
     </div>
   );
 };
@@ -216,7 +237,7 @@ describe('PlayerDataFetchingContext', () => {
     render(
       <PlayerDataFetchingProvider>
         <TestComponent />
-      </PlayerDataFetchingProvider>
+      </PlayerDataFetchingProvider>,
     );
   });
 
@@ -231,12 +252,12 @@ describe('PlayerDataFetchingContext', () => {
     it('should fetch player data successfully', async () => {
       const fetchButton = screen.getByTestId('fetch-player');
       await waitFor(() => fetchButton.click());
-      
+
       // Should complete successfully
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('no-error');
       });
-      
+
       // Should be cached after successful fetch
       expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
     });
@@ -245,14 +266,14 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch
       const fetchButton = screen.getByTestId('fetch-player');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('no-error');
       });
-      
+
       // Second fetch should use cache
       fetchButton.click();
-      
+
       // Should return immediately and still be cached
       expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
     });
@@ -261,15 +282,15 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-player');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
       });
-      
+
       // Force fetch should still work
       const forceFetchButton = screen.getByTestId('fetch-player-force');
       await waitFor(() => forceFetchButton.click());
-      
+
       // Should still be cached after force fetch
       expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
       expect(screen.getByTestId('player-error')).toHaveTextContent('no-error');
@@ -280,11 +301,11 @@ describe('PlayerDataFetchingContext', () => {
     it('should handle player not found errors', async () => {
       const fetchButton = screen.getByTestId('fetch-player-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('Player not found');
       });
-      
+
       // Should not be cached after error
       expect(screen.getByTestId('player-cached')).toHaveTextContent('false');
     });
@@ -292,11 +313,11 @@ describe('PlayerDataFetchingContext', () => {
     it('should handle server errors', async () => {
       const fetchButton = screen.getByTestId('fetch-server-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('Internal server error');
       });
-      
+
       // Should not be cached after error
       expect(screen.getByTestId('player-cached')).toHaveTextContent('false');
     });
@@ -307,15 +328,15 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-player');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
       });
-      
+
       // Clear specific cache
       const clearButton = screen.getByTestId('clear-player-cache');
       await waitFor(() => clearButton.click());
-      
+
       // Should not be cached anymore
       await waitFor(() => {
         expect(screen.getByTestId('player-cached')).toHaveTextContent('false');
@@ -326,15 +347,15 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-player');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-cached')).toHaveTextContent('true');
       });
-      
+
       // Clear all cache
       const clearAllButton = screen.getByTestId('clear-all-cache');
       await waitFor(() => clearAllButton.click());
-      
+
       // Should not be cached anymore
       await waitFor(() => {
         expect(screen.getByTestId('player-cached')).toHaveTextContent('false');
@@ -347,15 +368,15 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch to create error
       const fetchButton = screen.getByTestId('fetch-player-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('Player not found');
       });
-      
+
       // Clear specific error
       const clearErrorButton = screen.getByTestId('clear-player-error');
       await waitFor(() => clearErrorButton.click());
-      
+
       // Should not have error anymore
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('no-error');
@@ -366,15 +387,15 @@ describe('PlayerDataFetchingContext', () => {
       // First fetch to create error
       const fetchButton = screen.getByTestId('fetch-player-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('Player not found');
       });
-      
+
       // Clear all errors
       const clearAllErrorsButton = screen.getByTestId('clear-all-errors');
       await waitFor(() => clearAllErrorsButton.click());
-      
+
       // Should not have error anymore
       await waitFor(() => {
         expect(screen.getByTestId('player-error')).toHaveTextContent('no-error');
@@ -394,4 +415,4 @@ describe('PlayerDataFetchingContext', () => {
       consoleSpy.mockRestore();
     });
   });
-}); 
+});

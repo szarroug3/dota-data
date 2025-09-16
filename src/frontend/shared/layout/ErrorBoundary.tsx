@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -60,11 +60,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   />
                 </svg>
               </div>
-              
-              <h3 className="text-lg font-medium text-foreground dark:text-foreground mb-2">
-                Something went wrong
-              </h3>
-              
+
+              <h3 className="text-lg font-medium text-foreground dark:text-foreground mb-2">Something went wrong</h3>
+
               <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-6">
                 Uhhhh complain to @FatSloth on Discord. Tell him to buy me chocolate and I&#39;ll fix it.
               </p>
@@ -96,4 +94,4 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return this.props.children;
   }
-} 
+}

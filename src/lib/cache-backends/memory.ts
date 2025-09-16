@@ -24,7 +24,7 @@ export class MemoryCacheBackend implements CacheBackend {
     misses: 0,
     sets: 0,
     deletes: 0,
-    startTime: Date.now()
+    startTime: Date.now(),
   };
   private cleanupInterval?: NodeJS.Timeout;
 
@@ -66,7 +66,7 @@ export class MemoryCacheBackend implements CacheBackend {
    */
   async set(key: string, value: CacheValue, ttl?: number): Promise<void> {
     const now = Date.now();
-    const expiresAt = ttl ? now + (ttl * 1000) : now + (24 * 60 * 60 * 1000); // Default 24 hours
+    const expiresAt = ttl ? now + ttl * 1000 : now + 24 * 60 * 60 * 1000; // Default 24 hours
 
     const entry: MemoryCacheEntry<CacheValue> = {
       value,
@@ -74,7 +74,7 @@ export class MemoryCacheBackend implements CacheBackend {
       createdAt: now,
       accessedAt: now,
       accessCount: 0,
-      expiresAt
+      expiresAt,
     };
 
     this.cache.set(key, entry);
@@ -118,7 +118,7 @@ export class MemoryCacheBackend implements CacheBackend {
    */
   async mget(keys: string[]): Promise<(CacheValue | null)[]> {
     const results: (CacheValue | null)[] = [];
-    
+
     for (const key of keys) {
       const value = await this.get(key);
       results.push(value);
@@ -141,7 +141,7 @@ export class MemoryCacheBackend implements CacheBackend {
    */
   async mdelete(keys: string[]): Promise<number> {
     let deletedCount = 0;
-    
+
     for (const key of keys) {
       const deleted = await this.delete(key);
       if (deleted) {
@@ -190,7 +190,7 @@ export class MemoryCacheBackend implements CacheBackend {
       hitRate,
       missRate,
       uptime: Date.now() - this.stats.startTime,
-      backend: 'memory' as CacheBackendType
+      backend: 'memory' as CacheBackendType,
     };
   }
 
@@ -204,7 +204,7 @@ export class MemoryCacheBackend implements CacheBackend {
       misses: 0,
       sets: 0,
       deletes: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
   }
 
@@ -266,7 +266,7 @@ export class MemoryCacheBackend implements CacheBackend {
     const entries = Array.from(this.cache.entries()).map(([key, entry]) => ({
       key,
       entry,
-      size: this.estimateEntrySize(key, entry)
+      size: this.estimateEntrySize(key, entry),
     }));
 
     // Sort by access time (oldest first)
@@ -306,7 +306,7 @@ export class MemoryCacheBackend implements CacheBackend {
     const keySize = Buffer.byteLength(key, 'utf8');
     const valueSize = this.estimateValueSize(entry.value);
     const metadataSize = 64; // Approximate size for timestamps, counters, etc.
-    
+
     return keySize + valueSize + metadataSize;
   }
 
@@ -363,4 +363,4 @@ export class MemoryCacheBackend implements CacheBackend {
       clearInterval(this.cleanupInterval);
     }
   }
-} 
+}

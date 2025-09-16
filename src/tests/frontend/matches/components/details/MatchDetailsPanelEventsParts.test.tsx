@@ -1,6 +1,14 @@
 import { render } from '@testing-library/react';
 
-import { AdvantagesList, formatTime, formatYAxisTick, PerformanceTooltip, renderEventDescription, renderEventDot, type TooltipEntry } from '@/frontend/matches/components/details/MatchDetailsPanelEventsParts';
+import {
+  AdvantagesList,
+  formatTime,
+  formatYAxisTick,
+  PerformanceTooltip,
+  renderEventDescription,
+  renderEventDot,
+  type TooltipEntry,
+} from '@/frontend/matches/components/details/MatchDetailsPanelEventsParts';
 import type { GameEvent } from '@/types/contexts/match-context-value';
 
 describe('MatchDetailsPanelEventsParts helpers', () => {
@@ -19,8 +27,18 @@ describe('MatchDetailsPanelEventsParts helpers', () => {
 });
 
 describe('Event descriptions and tooltip items', () => {
-  const fbEvent: GameEvent = { type: 'CHAT_MESSAGE_FIRSTBLOOD', time: 10, description: 'First blood', details: { killer: 'A', victim: 'B' } as any };
-  const aegisEvent: GameEvent = { type: 'CHAT_MESSAGE_AEGIS', time: 20, description: 'Aegis', details: { aegisHolder: 'C' } as any };
+  const fbEvent: GameEvent = {
+    type: 'CHAT_MESSAGE_FIRSTBLOOD',
+    time: 10,
+    description: 'First blood',
+    details: { killer: 'A', victim: 'B' } as any,
+  };
+  const aegisEvent: GameEvent = {
+    type: 'CHAT_MESSAGE_AEGIS',
+    time: 20,
+    description: 'Aegis',
+    details: { aegisHolder: 'C' } as any,
+  };
   const otherEvent: GameEvent = { type: 'OTHER', time: 30, description: 'Other event' } as any;
 
   it('renderEventDescription returns specialized renderers or fallback', () => {
@@ -36,9 +54,27 @@ describe('Event descriptions and tooltip items', () => {
 
   it('AdvantagesList filters to advantage keys only', () => {
     const payload: TooltipEntry[] = [
-      { dataKey: 'goldAdvantage', value: 500, name: 'gold', color: '#000', payload: { time: 0, goldAdvantage: 500, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 } },
-      { dataKey: 'xpAdvantage', value: -200, name: 'xp', color: '#000', payload: { time: 0, goldAdvantage: 0, xpAdvantage: -200, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 } },
-      { dataKey: 'other', value: 1, name: 'other', color: '#000', payload: { time: 0, goldAdvantage: 0, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 } },
+      {
+        dataKey: 'goldAdvantage',
+        value: 500,
+        name: 'gold',
+        color: '#000',
+        payload: { time: 0, goldAdvantage: 500, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 },
+      },
+      {
+        dataKey: 'xpAdvantage',
+        value: -200,
+        name: 'xp',
+        color: '#000',
+        payload: { time: 0, goldAdvantage: 0, xpAdvantage: -200, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 },
+      },
+      {
+        dataKey: 'other',
+        value: 1,
+        name: 'other',
+        color: '#000',
+        payload: { time: 0, goldAdvantage: 0, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 },
+      },
     ];
     const { container } = render(<AdvantagesList payload={payload} />);
     expect(container.textContent).toContain('advantage');
@@ -47,7 +83,15 @@ describe('Event descriptions and tooltip items', () => {
 });
 
 describe('renderEventDot', () => {
-  const basePayload = { time: 100, goldAdvantage: 0, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 } as const;
+  const basePayload = {
+    time: 100,
+    goldAdvantage: 0,
+    xpAdvantage: 0,
+    radiantGold: 0,
+    direGold: 0,
+    radiantXP: 0,
+    direXP: 0,
+  } as const;
 
   it('renders transparent circle for missing coords or event', () => {
     const el1 = renderEventDot({ cx: undefined, cy: 10, payload: { ...basePayload } as any });
@@ -57,8 +101,16 @@ describe('renderEventDot', () => {
   });
 
   it('renders icon for known event types, circle for unknown', () => {
-    const known = renderEventDot({ cx: 10, cy: 10, payload: { ...basePayload, event: { type: 'CHAT_MESSAGE_AEGIS', time: 100 } as any } as any });
-    const unknown = renderEventDot({ cx: 10, cy: 10, payload: { ...basePayload, event: { type: 'SOMETHING_ELSE', time: 100 } as any } as any });
+    const known = renderEventDot({
+      cx: 10,
+      cy: 10,
+      payload: { ...basePayload, event: { type: 'CHAT_MESSAGE_AEGIS', time: 100 } as any } as any,
+    });
+    const unknown = renderEventDot({
+      cx: 10,
+      cy: 10,
+      payload: { ...basePayload, event: { type: 'SOMETHING_ELSE', time: 100 } as any } as any,
+    });
     expect(known).toBeTruthy();
     expect(unknown).toBeTruthy();
   });
@@ -72,5 +124,3 @@ describe('PerformanceTooltip rendering', () => {
     expect(c2.firstChild).toBeNull();
   });
 });
-
-

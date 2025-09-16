@@ -3,7 +3,11 @@ import React from 'react';
 
 import { Button } from '@/components/ui/button';
 
-export const RefreshButton: React.FC<{ onClick: () => void; className?: string; ariaLabel?: string }> = ({ onClick, className, ariaLabel }) => (
+export const RefreshButton: React.FC<{ onClick: () => void; className?: string; ariaLabel?: string }> = ({
+  onClick,
+  className,
+  ariaLabel,
+}) => (
   <Button
     type="button"
     variant="ghost"
@@ -15,5 +19,3 @@ export const RefreshButton: React.FC<{ onClick: () => void; className?: string; 
     <RefreshCw className="h-4 w-4" />
   </Button>
 );
-
-

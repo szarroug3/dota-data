@@ -1,10 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
-const postApiCacheInvalidateBody = z
-  .object({ pattern: z.string(), key: z.string() })
-  .partial()
-  .catchall(z.unknown());
+const postApiCacheInvalidateBody = z.object({ pattern: z.string(), key: z.string() }).partial().catchall(z.unknown());
 
 // Response schemas for clients that validate via schemas.* lookups (permissive)
 const getApiMatches = z.unknown();
@@ -22,29 +19,6 @@ const getApiHeroes = z.array(
       primary_attr: z.string(),
       attack_type: z.string(),
       roles: z.array(z.string()),
-      img: z.string(),
-      icon: z.string(),
-      base_health: z.number().int(),
-      base_mana: z.number().int(),
-      base_armor: z.number().int(),
-      base_attack_min: z.number().int(),
-      base_attack_max: z.number().int(),
-      move_speed: z.number().int(),
-      base_attack_time: z.number(),
-      attack_point: z.number(),
-      attack_range: z.number().int(),
-      projectile_speed: z.number().int(),
-      turn_rate: z.number(),
-      cm_enabled: z.boolean(),
-      legs: z.number().int(),
-      day_vision: z.number().int(),
-      night_vision: z.number().int(),
-      hero_id: z.number().int(),
-      turbo_picks: z.number().int(),
-      turbo_wins: z.number().int(),
-      pro_ban: z.number().int(),
-      pro_win: z.number().int(),
-      pro_pick: z.number().int(),
     })
     .partial()
     .catchall(z.unknown()),
@@ -57,35 +31,8 @@ const getApiItems = z
       z
         .object({
           id: z.number().int(),
-          img: z.string(),
-          dname: z.string(),
-          qual: z.string(),
-          cost: z.number().int(),
-          behavior: z.union([z.string(), z.array(z.string()), z.boolean()]),
-          target_team: z.union([z.string(), z.array(z.string())]),
-          target_type: z.union([z.string(), z.array(z.string())]),
-          notes: z.string(),
-          attrib: z.array(
-            z
-              .object({ key: z.string(), value: z.union([z.string(), z.number()]), display: z.string() })
-              .partial()
-              .catchall(z.unknown()),
-          ),
-          mc: z.union([z.number(), z.boolean()]),
-          hc: z.union([z.number(), z.boolean()]),
-          cd: z.union([z.number(), z.boolean()]),
-          lore: z.string(),
-          components: z.union([z.array(z.string()), z.unknown()]),
-          created: z.boolean(),
-          charges: z.union([z.number(), z.boolean()]),
-          abilities: z.array(
-            z.object({ type: z.string(), title: z.string(), description: z.string() }).partial().catchall(z.unknown()),
-          ),
-          hint: z.array(z.string()),
-          dispellable: z.string(),
-          dmg_type: z.string(),
-          bkbpierce: z.string(),
-          tier: z.number().int(),
+          image: z.string(),
+          displayName: z.string(),
         })
         .partial()
         .catchall(z.unknown()),
@@ -134,10 +81,7 @@ const endpoints = makeApi([
     ],
     response: z
       .object({
-        data: z
-          .object({ invalidated: z.number().int(), pattern: z.string() })
-          .partial()
-          .catchall(z.unknown()),
+        data: z.object({ invalidated: z.number().int(), pattern: z.string() }).partial().catchall(z.unknown()),
         timestamp: z.iso.datetime({ offset: true }),
         backend: z.enum(['redis', 'memory']),
         details: z
@@ -155,10 +99,38 @@ const endpoints = makeApi([
       .partial()
       .catchall(z.unknown()),
     errors: [
-      { status: 400, description: `Invalid request`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 403, description: `Permission denied`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 503, description: `Cache backend unavailable`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 400,
+        description: `Invalid request`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 403,
+        description: `Permission denied`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 503,
+        description: `Cache backend unavailable`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -211,7 +183,14 @@ const endpoints = makeApi([
       .partial()
       .catchall(z.unknown()),
     errors: [
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -220,7 +199,7 @@ const endpoints = makeApi([
     alias: 'getApiHeroes',
     description: `Retrieves raw heroes data from OpenDota API including hero attributes, roles, and statistics.`,
     requestFormat: 'json',
-    parameters: [ { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) } ],
+    parameters: [{ name: 'force', type: 'Query', schema: z.boolean().optional().default(false) }],
     response: z.array(
       z
         .object({
@@ -258,9 +237,30 @@ const endpoints = makeApi([
         .catchall(z.unknown()),
     ),
     errors: [
-      { status: 422, description: `Invalid heroes data`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 429, description: `Rate limited by OpenDota API`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 422,
+        description: `Invalid heroes data`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 429,
+        description: `Rate limited by OpenDota API`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -269,7 +269,7 @@ const endpoints = makeApi([
     alias: 'getApiItems',
     description: `Retrieves raw items data from OpenDota API including item attributes, abilities, and statistics.`,
     requestFormat: 'json',
-    parameters: [ { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) } ],
+    parameters: [{ name: 'force', type: 'Query', schema: z.boolean().optional().default(false) }],
     response: z
       .object({
         data: z.record(
@@ -286,7 +286,10 @@ const endpoints = makeApi([
               target_type: z.union([z.string(), z.array(z.string())]),
               notes: z.string(),
               attrib: z.array(
-                z.object({ key: z.string(), value: z.union([z.string(), z.number()]), display: z.string() }).partial().catchall(z.unknown())
+                z
+                  .object({ key: z.string(), value: z.union([z.string(), z.number()]), display: z.string() })
+                  .partial()
+                  .catchall(z.unknown()),
               ),
               mc: z.union([z.number(), z.boolean()]),
               hc: z.union([z.number(), z.boolean()]),
@@ -296,7 +299,10 @@ const endpoints = makeApi([
               created: z.boolean(),
               charges: z.union([z.number(), z.boolean()]),
               abilities: z.array(
-                z.object({ type: z.string(), title: z.string(), description: z.string() }).partial().catchall(z.unknown())
+                z
+                  .object({ type: z.string(), title: z.string(), description: z.string() })
+                  .partial()
+                  .catchall(z.unknown()),
               ),
               hint: z.array(z.string()),
               dispellable: z.string(),
@@ -312,9 +318,30 @@ const endpoints = makeApi([
       .partial()
       .catchall(z.unknown()),
     errors: [
-      { status: 422, description: `Invalid items data`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 429, description: `Rate limited by Dotabuff API`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 422,
+        description: `Invalid items data`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 429,
+        description: `Rate limited by Dotabuff API`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -337,8 +364,28 @@ const endpoints = makeApi([
             name: z.string(),
             description: z.string(),
             tournamentUrl: z.string(),
-            matches: z.array(z.object({ matchId: z.string(), duration: z.number().int(), radiant_win: z.boolean(), radiant_name: z.string(), dire_name: z.string() }).partial().catchall(z.unknown())),
-            statistics: z.object({ totalMatches: z.number().int(), averageDuration: z.number(), radiantWins: z.number().int(), direWins: z.number().int(), uniqueTeams: z.number().int() }).partial().catchall(z.unknown()),
+            matches: z.array(
+              z
+                .object({
+                  matchId: z.string(),
+                  duration: z.number().int(),
+                  radiant_win: z.boolean(),
+                  radiant_name: z.string(),
+                  dire_name: z.string(),
+                })
+                .partial()
+                .catchall(z.unknown()),
+            ),
+            statistics: z
+              .object({
+                totalMatches: z.number().int(),
+                averageDuration: z.number(),
+                radiantWins: z.number().int(),
+                direWins: z.number().int(),
+                uniqueTeams: z.number().int(),
+              })
+              .partial()
+              .catchall(z.unknown()),
             processed: z.object({ timestamp: z.string(), version: z.string() }).partial().catchall(z.unknown()),
           })
           .partial()
@@ -350,11 +397,46 @@ const endpoints = makeApi([
       .partial()
       .catchall(z.unknown()),
     errors: [
-      { status: 400, description: `Invalid league ID`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 404, description: `League not found`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 422, description: `Invalid league data`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 429, description: `Rate limited by Dotabuff API`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 400,
+        description: `Invalid league ID`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 404,
+        description: `League not found`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 422,
+        description: `Invalid league data`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 429,
+        description: `Rate limited by Dotabuff API`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -363,13 +445,44 @@ const endpoints = makeApi([
     alias: 'getApiMatches',
     description: `Retrieves raw match data from OpenDota API.`,
     requestFormat: 'json',
-    parameters: [ { name: 'id', type: 'Path', schema: z.string() }, { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) } ],
+    parameters: [
+      { name: 'id', type: 'Path', schema: z.string() },
+      { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) },
+    ],
     response: getApiMatches,
     errors: [
-      { status: 404, description: `Match not found`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 422, description: `Invalid match data`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 429, description: `Rate limited by OpenDota API`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 404,
+        description: `Match not found`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 422,
+        description: `Invalid match data`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 429,
+        description: `Rate limited by OpenDota API`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
   {
@@ -378,13 +491,44 @@ const endpoints = makeApi([
     alias: 'getApiPlayers',
     description: `Retrieves comprehensive player data from OpenDota API.`,
     requestFormat: 'json',
-    parameters: [ { name: 'id', type: 'Path', schema: z.string() }, { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) } ],
+    parameters: [
+      { name: 'id', type: 'Path', schema: z.string() },
+      { name: 'force', type: 'Query', schema: z.boolean().optional().default(false) },
+    ],
     response: getApiPlayers,
     errors: [
-      { status: 404, description: `Player not found`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 422, description: `Invalid player data`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 429, description: `Rate limited by OpenDota API`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
-      { status: 500, description: `Internal server error`, schema: z.object({ error: z.string(), status: z.number().int(), details: z.string() }).partial().catchall(z.unknown()) },
+      {
+        status: 404,
+        description: `Player not found`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 422,
+        description: `Invalid player data`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 429,
+        description: `Rate limited by OpenDota API`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
+      {
+        status: 500,
+        description: `Internal server error`,
+        schema: z
+          .object({ error: z.string(), status: z.number().int(), details: z.string() })
+          .partial()
+          .catchall(z.unknown()),
+      },
     ],
   },
 ]);
@@ -394,5 +538,3 @@ export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
 }
 
 export { schemas as apiSchemas, createApiClient as createZodApiClient };
-
-

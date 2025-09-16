@@ -6,16 +6,15 @@ interface LoadingSkeletonProps {
   className?: string;
 }
 
-export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
-  type = 'text',
-  lines = 3,
-  className = '',
-}) => {
+export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ type = 'text', lines = 3, className = '' }) => {
   const renderSkeleton = () => {
     switch (type) {
       case 'card':
         return (
-          <div className={`bg-card dark:bg-card rounded-lg border border-border dark:border-border p-4 ${className}`} data-testid="loading-skeleton">
+          <div
+            className={`bg-card dark:bg-card rounded-lg border border-border dark:border-border p-4 ${className}`}
+            data-testid="loading-skeleton"
+          >
             <div className="animate-pulse">
               <div className="h-4 bg-muted dark:bg-muted rounded w-3/4 mb-3"></div>
               <div className="h-3 bg-muted dark:bg-muted rounded w-1/2 mb-2"></div>
@@ -62,9 +61,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
           <div className={`space-y-2 ${className}`} data-testid="loading-skeleton">
             {Array.from({ length: lines }).map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className={`h-4 bg-muted dark:bg-muted rounded ${
-                  index === lines - 1 ? 'w-3/4' : 'w-full'
-                }`}></div>
+                <div className={`h-4 bg-muted dark:bg-muted rounded ${index === lines - 1 ? 'w-3/4' : 'w-full'}`}></div>
               </div>
             ))}
           </div>
@@ -90,4 +87,4 @@ export const TableSkeleton: React.FC<{ lines?: number; className?: string }> = (
 
 export const AvatarSkeleton: React.FC<{ className?: string }> = ({ className }) => (
   <LoadingSkeleton type="avatar" className={className} />
-); 
+);

@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 /**
  * Match Data Fetching Context Tests
- * 
+ *
  * Tests the match data fetching context functionality including:
  * - Cache management
  * - Error handling
@@ -18,7 +18,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import fetch from 'node-fetch';
 
-import { MatchDataFetchingProvider, useMatchDataFetching } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import {
+  MatchDataFetchingProvider,
+  useMatchDataFetching,
+} from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 // @ts-expect-error - node-fetch v2 types are compatible with global fetch
@@ -37,7 +40,7 @@ const mockMatch = {
   radiant_win: true,
   duration: 1800,
   start_time: 1640995200,
-  players: []
+  players: [],
 } as OpenDotaMatch;
 
 // ============================================================================
@@ -49,16 +52,16 @@ const server = setupServer(
   rest.get('/api/matches/12345', (req, res, ctx) => {
     return res(ctx.json(mockMatch));
   }) as any,
-  
+
   // Match not found
   rest.get('/api/matches/99999', (req, res, ctx) => {
     return res(ctx.status(404), ctx.json({ error: 'Match not found' }));
   }) as any,
-  
+
   // Server error
   rest.get('/api/matches/50000', (req, res, ctx) => {
     return res(ctx.status(500), ctx.json({ error: 'Internal server error' }));
-  }) as any
+  }) as any,
 );
 
 beforeAll(() => server.listen());
@@ -70,48 +73,66 @@ afterAll(() => server.close());
 // ============================================================================
 
 const TestComponent = () => {
-  const { 
-    fetchMatchData, 
-    clearMatchCache, 
+  const {
+    fetchMatchData,
+    clearMatchCache,
     clearAllCache,
-    clearMatchError, 
+    clearMatchError,
     clearAllErrors,
-    isMatchCached, 
-    getMatchError
+    isMatchCached,
+    getMatchError,
   } = useMatchDataFetching();
-  
+
   const handleFetchMatch = async () => {
     const result = await fetchMatchData(12345);
     return result;
   };
-  
+
   const handleFetchMatchForce = async () => {
     const result = await fetchMatchData(12345, true);
     return result;
   };
-  
+
   const handleFetchMatchError = async () => {
     const result = await fetchMatchData(99999);
     return result;
   };
-  
+
   const handleFetchServerError = async () => {
     const result = await fetchMatchData(50000);
     return result;
   };
-  
+
   return (
     <div>
-      <div data-testid="match-error">{getMatchError(12345) || getMatchError(99999) || getMatchError(50000) || 'no-error'}</div>
+      <div data-testid="match-error">
+        {getMatchError(12345) || getMatchError(99999) || getMatchError(50000) || 'no-error'}
+      </div>
       <div data-testid="match-cached">{isMatchCached(12345).toString()}</div>
-      <button data-testid="fetch-match" onClick={handleFetchMatch}>Fetch Match</button>
-      <button data-testid="fetch-match-force" onClick={handleFetchMatchForce}>Force Fetch Match</button>
-      <button data-testid="fetch-match-error" onClick={handleFetchMatchError}>Fetch Match Error</button>
-      <button data-testid="fetch-server-error" onClick={handleFetchServerError}>Fetch Server Error</button>
-      <button data-testid="clear-match-cache" onClick={() => clearMatchCache(12345)}>Clear Match Cache</button>
-      <button data-testid="clear-all-cache" onClick={clearAllCache}>Clear All Cache</button>
-      <button data-testid="clear-match-error" onClick={() => clearMatchError(99999)}>Clear Match Error</button>
-      <button data-testid="clear-all-errors" onClick={clearAllErrors}>Clear All Errors</button>
+      <button data-testid="fetch-match" onClick={handleFetchMatch}>
+        Fetch Match
+      </button>
+      <button data-testid="fetch-match-force" onClick={handleFetchMatchForce}>
+        Force Fetch Match
+      </button>
+      <button data-testid="fetch-match-error" onClick={handleFetchMatchError}>
+        Fetch Match Error
+      </button>
+      <button data-testid="fetch-server-error" onClick={handleFetchServerError}>
+        Fetch Server Error
+      </button>
+      <button data-testid="clear-match-cache" onClick={() => clearMatchCache(12345)}>
+        Clear Match Cache
+      </button>
+      <button data-testid="clear-all-cache" onClick={clearAllCache}>
+        Clear All Cache
+      </button>
+      <button data-testid="clear-match-error" onClick={() => clearMatchError(99999)}>
+        Clear Match Error
+      </button>
+      <button data-testid="clear-all-errors" onClick={clearAllErrors}>
+        Clear All Errors
+      </button>
     </div>
   );
 };
@@ -125,7 +146,7 @@ describe('MatchDataFetchingContext', () => {
     render(
       <MatchDataFetchingProvider>
         <TestComponent />
-      </MatchDataFetchingProvider>
+      </MatchDataFetchingProvider>,
     );
   });
 
@@ -140,12 +161,12 @@ describe('MatchDataFetchingContext', () => {
     it('should fetch match data successfully', async () => {
       const fetchButton = screen.getByTestId('fetch-match');
       await waitFor(() => fetchButton.click());
-      
+
       // Should complete successfully
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
       });
-      
+
       // Should be cached after successful fetch
       expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
     });
@@ -154,14 +175,14 @@ describe('MatchDataFetchingContext', () => {
       // First fetch
       const fetchButton = screen.getByTestId('fetch-match');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
       });
-      
+
       // Second fetch should use cache
       fetchButton.click();
-      
+
       // Should return immediately and still be cached
       expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
     });
@@ -170,15 +191,15 @@ describe('MatchDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-match');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
       });
-      
+
       // Force fetch should still work
       const forceFetchButton = screen.getByTestId('fetch-match-force');
       await waitFor(() => forceFetchButton.click());
-      
+
       // Should still be cached after force fetch
       expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
       expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
@@ -189,11 +210,11 @@ describe('MatchDataFetchingContext', () => {
     it('should handle match not found errors', async () => {
       const fetchButton = screen.getByTestId('fetch-match-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('Match not found');
       });
-      
+
       // Should not be cached after error
       expect(screen.getByTestId('match-cached')).toHaveTextContent('false');
     });
@@ -201,11 +222,11 @@ describe('MatchDataFetchingContext', () => {
     it('should handle server errors', async () => {
       const fetchButton = screen.getByTestId('fetch-server-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('Internal server error');
       });
-      
+
       // Should not be cached after error
       expect(screen.getByTestId('match-cached')).toHaveTextContent('false');
     });
@@ -216,15 +237,15 @@ describe('MatchDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-match');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
       });
-      
+
       // Clear specific cache
       const clearButton = screen.getByTestId('clear-match-cache');
       await waitFor(() => clearButton.click());
-      
+
       // Should not be cached anymore
       await waitFor(() => {
         expect(screen.getByTestId('match-cached')).toHaveTextContent('false');
@@ -235,15 +256,15 @@ describe('MatchDataFetchingContext', () => {
       // First fetch to populate cache
       const fetchButton = screen.getByTestId('fetch-match');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-cached')).toHaveTextContent('true');
       });
-      
+
       // Clear all cache
       const clearAllButton = screen.getByTestId('clear-all-cache');
       await waitFor(() => clearAllButton.click());
-      
+
       // Should not be cached anymore
       await waitFor(() => {
         expect(screen.getByTestId('match-cached')).toHaveTextContent('false');
@@ -256,15 +277,15 @@ describe('MatchDataFetchingContext', () => {
       // First fetch to create error
       const fetchButton = screen.getByTestId('fetch-match-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('Match not found');
       });
-      
+
       // Clear specific error
       const clearErrorButton = screen.getByTestId('clear-match-error');
       await waitFor(() => clearErrorButton.click());
-      
+
       // Should not have error anymore
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
@@ -275,15 +296,15 @@ describe('MatchDataFetchingContext', () => {
       // First fetch to create error
       const fetchButton = screen.getByTestId('fetch-match-error');
       await waitFor(() => fetchButton.click());
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('Match not found');
       });
-      
+
       // Clear all errors
       const clearAllErrorsButton = screen.getByTestId('clear-all-errors');
       await waitFor(() => clearAllErrorsButton.click());
-      
+
       // Should not have error anymore
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
@@ -303,4 +324,4 @@ describe('MatchDataFetchingContext', () => {
       consoleSpy.mockRestore();
     });
   });
-}); 
+});

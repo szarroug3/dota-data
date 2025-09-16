@@ -18,27 +18,40 @@ function getWinRateBarColor(winRate: number): string {
 const renderHeroWithAvatar = (hero: Hero) => (
   <div className="flex items-center space-x-2 min-w-0 w-full">
     <HeroAvatar hero={hero} avatarSize={{ width: 'w-6', height: 'h-6' }} />
-    <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">{hero.localizedName}</span>
+    <span className="text-muted-foreground dark:text-muted-foreground @[335px]:block hidden truncate flex-1">
+      {hero.localizedName}
+    </span>
   </div>
 );
 
-interface PlayerDetailsPanelDetailsProps { player: Player; _allPlayers?: Player[]; _hiddenPlayerIds?: Set<number>; heroes: Record<string, Hero>; }
+interface PlayerDetailsPanelDetailsProps {
+  player: Player;
+  _allPlayers?: Player[];
+  _hiddenPlayerIds?: Set<number>;
+  heroes: Record<string, Hero>;
+}
 
 export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player, heroes }) => {
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
 
   const rows = useMemo(() => {
-    const data = player.heroes.map(h => {
-      const hero = heroes[h.hero_id.toString()];
-      const winRate = h.games > 0 ? (h.win / h.games) * 100 : 0;
-      return hero ? { hero, games: h.games, winRate } : null;
-    }).filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>;
-    const by = (a: { hero: Hero; games: number; winRate: number }, b: { hero: Hero; games: number; winRate: number }) => (
-      sortKey === 'name' ? a.hero.localizedName.localeCompare(b.hero.localizedName) :
-      sortKey === 'games' ? b.games - a.games :
-      b.winRate - a.winRate
-    );
+    const data = player.heroes
+      .map((h) => {
+        const hero = heroes[h.hero_id.toString()];
+        const winRate = h.games > 0 ? (h.win / h.games) * 100 : 0;
+        return hero ? { hero, games: h.games, winRate } : null;
+      })
+      .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>;
+    const by = (
+      a: { hero: Hero; games: number; winRate: number },
+      b: { hero: Hero; games: number; winRate: number },
+    ) =>
+      sortKey === 'name'
+        ? a.hero.localizedName.localeCompare(b.hero.localizedName)
+        : sortKey === 'games'
+          ? b.games - a.games
+          : b.winRate - a.winRate;
     const sorted = [...data].sort(by);
     return sortDirection === 'asc' ? sorted.reverse() : sorted;
   }, [player.heroes, heroes, sortKey, sortDirection]);
@@ -47,13 +60,17 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
     <div className="space-y-6">
       <Card className="@container">
         <CardHeader className="min-w-0">
-          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">Hero Statistics</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">
+            Hero Statistics
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="truncate" role="columnheader">Hero</TableHead>
+                <TableHead className="truncate" role="columnheader">
+                  Hero
+                </TableHead>
                 <TableHead className="text-center @[260px]:table-cell hidden w-[72px]">Games</TableHead>
                 <TableHead className="text-right @[205px]:table-cell hidden w-[96px]">Win Rate</TableHead>
               </TableRow>
@@ -84,5 +101,3 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
 });
 
 PlayerDetailsPanelDetails.displayName = 'PlayerDetailsPanelDetails';
-
-

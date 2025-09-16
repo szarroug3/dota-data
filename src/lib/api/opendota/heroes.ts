@@ -22,7 +22,7 @@ export async function fetchOpenDotaHeroes(force = false): Promise<OpenDotaHero[]
     mockFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -37,14 +37,14 @@ export async function fetchOpenDotaHeroes(force = false): Promise<OpenDotaHero[]
  */
 async function fetchHeroesFromOpenDota(): Promise<string> {
   const url = `https://api.opendota.com/api/heroes`;
-  
+
   try {
     const response = await requestWithRetry('GET', url);
-    
+
     if (!response.ok) {
       throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
     }
-    
+
     return await response.text();
   } catch (err) {
     throw new Error(`Failed to fetch heroes from OpenDota: ${err}`);
@@ -61,4 +61,4 @@ function parseOpenDotaHeroes(data: string): OpenDotaHero[] {
   } catch (err) {
     throw new Error(`Failed to parse OpenDota heroes data: ${err}`);
   }
-} 
+}

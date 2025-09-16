@@ -9,14 +9,12 @@ export function calculateAdvantageData(matchData: OpenDotaMatch) {
     goldAdvantage: {
       times,
       radiantGold: goldAdvantage,
-      direGold: goldAdvantage.map(adv => -adv)
+      direGold: goldAdvantage.map((adv) => -adv),
     },
     experienceAdvantage: {
       times,
       radiantExperience: experienceAdvantage,
-      direExperience: experienceAdvantage.map(adv => -adv)
-    }
+      direExperience: experienceAdvantage.map((adv) => -adv),
+    },
   };
 }
-
-

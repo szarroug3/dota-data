@@ -4,13 +4,15 @@ describe('image-url utils', () => {
   describe('formatItemImageUrl', () => {
     it('should format item image URL correctly', () => {
       const itemImagePath = '/apps/dota2/images/dota_react/items/blink.png?t=1593393829403';
-      const expected = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink.png?t=1593393829403';
+      const expected =
+        'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink.png?t=1593393829403';
       expect(formatItemImageUrl(itemImagePath)).toBe(expected);
     });
 
     it('should preserve alphanumeric characters, slashes, periods, hyphens, and underscores', () => {
       const itemImagePath = '/apps/dota2/images/dota_react/items/blink-dagger_v2.png?t=1593393829403';
-      const expected = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink-dagger_v2.png?t=1593393829403';
+      const expected =
+        'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink-dagger_v2.png?t=1593393829403';
       expect(formatItemImageUrl(itemImagePath)).toBe(expected);
     });
   });
@@ -28,4 +30,4 @@ describe('image-url utils', () => {
       expect(formatHeroImageUrl(heroName)).toBe(expected);
     });
   });
-}); 
+});

@@ -7,12 +7,7 @@ interface HeaderProps {
   actions?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  title,
-  subtitle,
-  breadcrumbs,
-  actions,
-}) => {
+export const Header: React.FC<HeaderProps> = ({ title, subtitle, breadcrumbs, actions }) => {
   return (
     <header className="bg-background text-foreground border-b border-border dark:border-border px-6 py-4 transition-colors duration-300">
       <div className="flex items-center justify-between">
@@ -23,23 +18,11 @@ export const Header: React.FC<HeaderProps> = ({
               {breadcrumbs.map((crumb, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   )}
-                  <span className="hover:text-foreground dark:hover:text-foreground cursor-pointer">
-                    {crumb}
-                  </span>
+                  <span className="hover:text-foreground dark:hover:text-foreground cursor-pointer">{crumb}</span>
                 </React.Fragment>
               ))}
             </nav>
@@ -47,24 +30,14 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Title and Subtitle */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground dark:text-foreground">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">
-                {subtitle}
-              </p>
-            )}
+            <h1 className="text-2xl font-bold text-foreground dark:text-foreground">{title}</h1>
+            {subtitle && <p className="mt-1 text-sm text-muted-foreground dark:text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
 
         {/* Actions */}
-        {actions && (
-          <div className="flex items-center space-x-3">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex items-center space-x-3">{actions}</div>}
       </div>
     </header>
   );
-}; 
+};

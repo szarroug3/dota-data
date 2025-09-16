@@ -13,6 +13,14 @@ import { updateMapItemError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { generateTeamKey } from '@/utils/team-helpers';
 
+import {
+  createAddAllManualMatches,
+  createCollectManualMatches,
+  createEditManualMatch,
+  createEnsureOptimisticMatches,
+  createRemoveManualMatch,
+} from './use-team-manual-ops';
+
 // Type guards and helpers for error handling without using unknown/any
 type ErrorResult = { error: string };
 type TeamResult = DotabuffTeam | ErrorResult | null | undefined;
@@ -52,7 +60,7 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
         uniqueHeroesPicked: 0,
         uniqueHeroesBanned: 0,
         mostPickedHero: '',
-        mostBannedHero: ''
+        mostBannedHero: '',
       },
       currentWinStreak: 0,
       currentLoseStreak: 0,
@@ -60,12 +68,17 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
       averageKills: 0,
       averageDeaths: 0,
       averageGold: 0,
-      averageExperience: 0
-    }
+      averageExperience: 0,
+    },
   };
 }
 
-function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: DotabuffTeam, dotabuffLeague?: { name: string }): TeamData {
+function transformTeamData(
+  teamId: number,
+  leagueId: number,
+  dotabuffTeam: DotabuffTeam,
+  dotabuffLeague?: { name: string },
+): TeamData {
   const matchesArray = Object.values(dotabuffTeam.matches);
   return {
     team: { id: teamId, name: dotabuffTeam.name },
@@ -85,7 +98,8 @@ function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: Dotab
       totalMatches: matchesArray.length,
       totalWins: matchesArray.filter((m) => m.result === 'won').length,
       totalLosses: matchesArray.filter((m) => m.result === 'lost').length,
-      overallWinRate: matchesArray.length > 0 ? matchesArray.filter((m) => m.result === 'won').length / matchesArray.length : 0,
+      overallWinRate:
+        matchesArray.length > 0 ? matchesArray.filter((m) => m.result === 'won').length / matchesArray.length : 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -95,7 +109,7 @@ function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: Dotab
         uniqueHeroesPicked: 0,
         uniqueHeroesBanned: 0,
         mostPickedHero: '',
-        mostBannedHero: ''
+        mostBannedHero: '',
       },
       currentWinStreak: 0,
       currentLoseStreak: 0,
@@ -103,8 +117,8 @@ function transformTeamData(teamId: number, leagueId: number, dotabuffTeam: Dotab
       averageKills: 0,
       averageDeaths: 0,
       averageGold: 0,
-      averageExperience: 0
-    }
+      averageExperience: 0,
+    },
   };
 }
 
@@ -114,24 +128,36 @@ function handleTeamDataErrors(
   teamData: TeamResult,
   leagueData: LeagueResult,
   teamKey: string,
-  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
 ): boolean {
   const teamError = getErrorMessage(teamData, 'Failed to fetch team');
   const leagueError = getErrorMessage(leagueData, 'Failed to fetch league');
 
   if (teamError && leagueError) {
     const errorTeam = createErrorTeamData(teamId, leagueId, 'Failed to fetch team and league');
-    setTeams(prev => { const m = new Map(prev); m.set(teamKey, errorTeam); return m; });
+    setTeams((prev) => {
+      const m = new Map(prev);
+      m.set(teamKey, errorTeam);
+      return m;
+    });
     return true;
   } else if (teamError) {
     const errorTeam = createErrorTeamData(teamId, leagueId, 'Failed to fetch team');
     errorTeam.league.name = isErrorResult(leagueData) ? `League ${leagueId}` : (leagueData as DotabuffLeague).name;
-    setTeams(prev => { const m = new Map(prev); m.set(teamKey, errorTeam); return m; });
+    setTeams((prev) => {
+      const m = new Map(prev);
+      m.set(teamKey, errorTeam);
+      return m;
+    });
     return true;
   } else if (leagueError) {
     const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, undefined);
     transformedTeam.error = 'Failed to fetch league';
-    setTeams(prev => { const m = new Map(prev); m.set(teamKey, transformedTeam); return m; });
+    setTeams((prev) => {
+      const m = new Map(prev);
+      m.set(teamKey, transformedTeam);
+      return m;
+    });
     return true;
   }
   return false;
@@ -144,7 +170,7 @@ async function handleTeamSummaryOperation(
   operationKey: string,
   abortController: ReturnType<typeof useAbortController>,
   teamDataFetching: TeamDataFetchingContextValue,
-  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
 ): Promise<TeamData | null> {
   const teamKey = generateTeamKey(teamId, leagueId);
   if (abortController.hasOngoingOperation(operationKey)) return null;
@@ -152,12 +178,12 @@ async function handleTeamSummaryOperation(
   try {
     const [teamData, leagueData] = await Promise.all([
       teamDataFetching.fetchTeamData(teamId, force),
-      teamDataFetching.fetchLeagueData(leagueId, force)
+      teamDataFetching.fetchLeagueData(leagueId, force),
     ]);
     if (controller.signal.aborted) return null;
     if (handleTeamDataErrors(teamId, leagueId, teamData, leagueData, teamKey, setTeams)) return null;
     const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, leagueData as DotabuffLeague);
-    setTeams(prev => {
+    setTeams((prev) => {
       const newTeams = new Map(prev);
       const existingTeam = newTeams.get(teamKey);
       if (existingTeam?.manualMatches) {
@@ -173,17 +199,19 @@ async function handleTeamSummaryOperation(
               leagueId: transformedTeam.league.id.toString(),
               startTime: Date.now(),
               side: matchData.side,
-              pickOrder: null
+              pickOrder: null,
             };
           }
         });
       }
       if (existingTeam?.manualPlayers) {
-        const manualArray = coerceManualPlayersToArray(existingTeam.manualPlayers as number[] | Record<string, number | string> | undefined);
+        const manualArray = coerceManualPlayersToArray(
+          existingTeam.manualPlayers as number[] | Record<string, number | string> | undefined,
+        );
         transformedTeam.manualPlayers = [...manualArray];
         if (existingTeam.players?.length) {
           const manualPlayerIds = new Set(manualArray);
-          const manualPlayers = existingTeam.players.filter(p => manualPlayerIds.has(p.accountId));
+          const manualPlayers = existingTeam.players.filter((p) => manualPlayerIds.has(p.accountId));
           transformedTeam.players = mergePlayersUniqueByAccountId(transformedTeam.players, manualPlayers);
         }
       }
@@ -202,203 +230,155 @@ function useAddTeamCore(
   setTeamsForLoading: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
   teamDataFetching: TeamDataFetchingContextValue,
   matchContext: MatchContextValue,
-  playerContext: PlayerContextValue
+  playerContext: PlayerContextValue,
 ) {
   const abortController = useAbortController();
 
-  return useCallback(async (teamId: number, leagueId: number, force = false): Promise<void> => {
-    const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
-    const teamKey = generateTeamKey(teamId, leagueId);
-    if (!force && teams.has(teamKey)) return;
-    setMapItemLoading(setTeamsForLoading, teamKey);
-    try {
-      const transformedTeam = await handleTeamSummaryOperation(teamId, leagueId, false, operationKey, abortController, teamDataFetching, setTeams);
-      if (transformedTeam && !transformedTeam.error) {
-        const matchProcessingPromises = Object.values(transformedTeam.matches).map(match => {
-          const existing = teams.get(teamKey);
-          const isManualMatch = existing?.manualMatches?.[match.matchId];
-          const knownSide = isManualMatch?.side as ('radiant' | 'dire' | undefined);
-          return processMatchAndExtractPlayers(match.matchId, teamId, matchContext, playerContext, knownSide);
-        });
-        const processedMatches = await Promise.all(matchProcessingPromises);
-        setTeams(prev => {
-          const newTeams = new Map(prev);
-          const team = newTeams.get(teamKey);
-          if (team) {
-            const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
-            processedMatches.forEach((processedMatch, index) => {
-              if (processedMatch) {
-                const originalMatch = Object.values(transformedTeam.matches)[index];
-                updatedMatches[originalMatch.matchId] = processedMatch;
-              }
-            });
-            newTeams.set(teamKey, { ...team, matches: updatedMatches });
-          }
-          return newTeams;
-        });
+  return useCallback(
+    async (teamId: number, leagueId: number, force = false): Promise<void> => {
+      const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
+      const teamKey = generateTeamKey(teamId, leagueId);
+      if (!force && teams.has(teamKey)) return;
+      setMapItemLoading(setTeamsForLoading, teamKey);
+      try {
+        const transformedTeam = await handleTeamSummaryOperation(
+          teamId,
+          leagueId,
+          false,
+          operationKey,
+          abortController,
+          teamDataFetching,
+          setTeams,
+        );
+        if (transformedTeam && !transformedTeam.error) {
+          const matchProcessingPromises = Object.values(transformedTeam.matches).map((match) => {
+            const existing = teams.get(teamKey);
+            const isManualMatch = existing?.manualMatches?.[match.matchId];
+            const knownSide = isManualMatch?.side as 'radiant' | 'dire' | undefined;
+            return processMatchAndExtractPlayers(match.matchId, teamId, matchContext, playerContext, knownSide);
+          });
+          const processedMatches = await Promise.all(matchProcessingPromises);
+          setTeams((prev) => {
+            const newTeams = new Map(prev);
+            const team = newTeams.get(teamKey);
+            if (team) {
+              const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
+              processedMatches.forEach((processedMatch, index) => {
+                if (processedMatch) {
+                  const originalMatch = Object.values(transformedTeam.matches)[index];
+                  updatedMatches[originalMatch.matchId] = processedMatch;
+                }
+              });
+              newTeams.set(teamKey, { ...team, matches: updatedMatches });
+            }
+            return newTeams;
+          });
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to add team';
+        updateMapItemError(setTeams, teamKey, errorMessage);
+      } finally {
+        clearMapItemLoading(setTeamsForLoading, teamKey);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add team';
-      updateMapItemError(setTeams, teamKey, errorMessage);
-    } finally {
-      clearMapItemLoading(setTeamsForLoading, teamKey);
-    }
-  }, [teams, setTeams, setTeamsForLoading, teamDataFetching, matchContext, playerContext, abortController]);
+    },
+    [teams, setTeams, setTeamsForLoading, teamDataFetching, matchContext, playerContext, abortController],
+  );
 }
 
 function useRefreshTeamCore(
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
-  teamDataFetching: TeamDataFetchingContextValue
+  teamDataFetching: TeamDataFetchingContextValue,
 ) {
   const abortController = useAbortController();
-  return useCallback(async (teamId: number, leagueId: number): Promise<void> => {
-    const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
-    await handleTeamSummaryOperation(teamId, leagueId, true, operationKey, abortController, teamDataFetching, setTeams);
-  }, [teamDataFetching, setTeams, abortController]);
+  return useCallback(
+    async (teamId: number, leagueId: number): Promise<void> => {
+      const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
+      await handleTeamSummaryOperation(
+        teamId,
+        leagueId,
+        true,
+        operationKey,
+        abortController,
+        teamDataFetching,
+        setTeams,
+      );
+    },
+    [teamDataFetching, setTeams, abortController],
+  );
 }
 
 function useRemoveTeamCore(
   selectedTeamId: { teamId: number; leagueId: number } | null,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
   const abortController = useAbortController();
-  return useCallback((teamId: number, leagueId: number) => {
-    const teamKey = generateTeamKey(teamId, leagueId);
-    abortController.cleanupAbortController(createTeamLeagueOperationKey(teamId, leagueId));
-    setTeams(prev => { const m = new Map(prev); m.delete(teamKey); return m; });
-    if (selectedTeamId?.teamId === teamId && selectedTeamId?.leagueId === leagueId) {
-      configContext.setActiveTeam(null);
-    }
-  }, [selectedTeamId, setTeams, configContext, abortController]);
+  return useCallback(
+    (teamId: number, leagueId: number) => {
+      const teamKey = generateTeamKey(teamId, leagueId);
+      abortController.cleanupAbortController(createTeamLeagueOperationKey(teamId, leagueId));
+      setTeams((prev) => {
+        const m = new Map(prev);
+        m.delete(teamKey);
+        return m;
+      });
+      if (selectedTeamId?.teamId === teamId && selectedTeamId?.leagueId === leagueId) {
+        configContext.setActiveTeam(null);
+      }
+    },
+    [selectedTeamId, setTeams, configContext, abortController],
+  );
 }
 
 function useEditTeamCore(
   removeTeam: (teamId: number, leagueId: number) => void,
-  addTeam: (teamId: number, leagueId: number) => Promise<void>
+  addTeam: (teamId: number, leagueId: number) => Promise<void>,
 ) {
-  return useCallback(async (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number): Promise<void> => {
-    if (currentTeamId === newTeamId && currentLeagueId === newLeagueId) return;
-    removeTeam(currentTeamId, currentLeagueId);
-    await addTeam(newTeamId, newLeagueId);
-  }, [removeTeam, addTeam]);
+  return useCallback(
+    async (currentTeamId: number, currentLeagueId: number, newTeamId: number, newLeagueId: number): Promise<void> => {
+      if (currentTeamId === newTeamId && currentLeagueId === newLeagueId) return;
+      removeTeam(currentTeamId, currentLeagueId);
+      await addTeam(newTeamId, newLeagueId);
+    },
+    [removeTeam, addTeam],
+  );
 }
+
 
 function useManualMatchesOps(
   teams: Map<string, TeamData>,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
   matchContext: MatchContextValue,
-  selectedTeamId: { teamId: number; leagueId: number } | null
+  selectedTeamId: { teamId: number; leagueId: number } | null,
 ) {
+  const collectManualMatches = createCollectManualMatches(teams);
+  const ensureOptimisticMatches = createEnsureOptimisticMatches(setTeams);
+  const addAllManualMatches = createAddAllManualMatches(matchContext);
   const loadManualMatches = useCallback(async () => {
-    const manualMatches = new Set<number>();
-    teams.forEach((teamData, teamKey) => {
-      if (teamData.manualMatches) {
-        Object.entries(teamData.manualMatches).forEach(([matchId, manualMatch]) => {
-          const matchIdNum = parseInt(matchId, 10);
-          manualMatches.add(matchIdNum);
-          if (!teamData.matches[matchIdNum]) {
-            const optimisticMatch: TeamMatchParticipation = {
-              matchId: matchIdNum,
-              result: 'lost',
-              duration: 0,
-              opponentName: 'Loading...',
-              leagueId: teamData.league.id.toString(),
-              startTime: Date.now(),
-              side: manualMatch.side,
-              pickOrder: null
-            };
-            setTeams(prev => {
-              const newTeams = new Map(prev);
-              const team = newTeams.get(teamKey);
-              if (team) {
-                const nextMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
-                nextMatches[matchIdNum] = optimisticMatch;
-                newTeams.set(teamKey, { ...team, matches: nextMatches });
-              }
-              return newTeams;
-            });
-          }
-        });
-      }
-    });
-    for (const matchId of manualMatches) {
-      await matchContext.addMatch(matchId);
-    }
-  }, [teams, setTeams, matchContext]);
-
-  const removeManualMatch = useCallback((matchId: number) => {
-    if (!selectedTeamId) return;
-    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
-    setTeams(prev => {
-      const newTeams = new Map(prev);
-      const team = newTeams.get(teamKey);
-      if (team) {
-        const nextManual = { ...(team.manualMatches || {}) };
-        delete nextManual[matchId];
-        const nextMatches = { ...(team.matches || {}) } as Record<number, TeamMatchParticipation>;
-        delete nextMatches[matchId];
-        newTeams.set(teamKey, { ...team, manualMatches: nextManual, matches: nextMatches });
-      }
-      return newTeams;
-    });
-  }, [selectedTeamId, setTeams]);
-
-  const editManualMatch = useCallback(async (oldMatchId: number, newMatchId: number, teamSide: 'radiant' | 'dire') => {
-    if (!selectedTeamId) return;
-    const teamKey = generateTeamKey(selectedTeamId.teamId, selectedTeamId.leagueId);
-    const team = teams.get(teamKey);
-    if (!team) return;
-    if (oldMatchId !== newMatchId) {
-      if (team.manualMatches && newMatchId in team.manualMatches) {
-        throw new Error(`Match ${newMatchId} is already added as a manual match`);
-      }
-      if (team.matches && newMatchId in team.matches) {
-        throw new Error(`Match ${newMatchId} is already in the team's match history`);
-      }
-    }
-    setTeams(prev => {
-      const newTeams = new Map(prev);
-      const cur = newTeams.get(teamKey);
-      if (cur) {
-        const nextManual = { ...(cur.manualMatches || {}) };
-        delete nextManual[oldMatchId];
-        nextManual[newMatchId] = { side: teamSide };
-        const nextMatches: Record<number, TeamMatchParticipation> = { ...(cur.matches || {}) };
-        delete nextMatches[oldMatchId];
-        nextMatches[newMatchId] = {
-          matchId: newMatchId,
-          result: 'lost',
-          duration: 0,
-          opponentName: 'Loading...',
-          leagueId: cur.league.id.toString(),
-          startTime: Date.now(),
-          side: teamSide,
-          pickOrder: null
-        };
-        newTeams.set(teamKey, { ...cur, manualMatches: nextManual, matches: nextMatches });
-      }
-      return newTeams;
-    });
-    if (oldMatchId !== newMatchId) {
-      matchContext.removeMatch(oldMatchId);
-    }
-  }, [selectedTeamId, teams, setTeams, matchContext]);
-
+    const entries = collectManualMatches();
+    ensureOptimisticMatches(entries);
+    await addAllManualMatches(entries);
+  }, [collectManualMatches, ensureOptimisticMatches, addAllManualMatches]);
+  const removeManualMatch = useCallback(
+    (matchId: number) => createRemoveManualMatch(selectedTeamId, setTeams)(matchId),
+    [selectedTeamId, setTeams],
+  );
+  const editManualMatch = useCallback(
+    (oldMatchId: number, newMatchId: number, teamSide: 'radiant' | 'dire') =>
+      createEditManualMatch(selectedTeamId, teams, setTeams, matchContext)(oldMatchId, newMatchId, teamSide),
+    [selectedTeamId, teams, setTeams, matchContext],
+  );
   return { loadManualMatches, removeManualMatch, editManualMatch };
 }
 
-function useManualPlayersOps(
-  teams: Map<string, TeamData>,
-  playerContext: PlayerContextValue
-) {
+function useManualPlayersOps(teams: Map<string, TeamData>, playerContext: PlayerContextValue) {
   const loadManualPlayers = useCallback(async () => {
     const manualPlayerIds = new Set<number>();
     teams.forEach((teamData) => {
       if (Array.isArray(teamData.manualPlayers)) {
-        teamData.manualPlayers.forEach(id => manualPlayerIds.add(id));
+        teamData.manualPlayers.forEach((id) => manualPlayerIds.add(id));
       } else if (teamData.manualPlayers && typeof teamData.manualPlayers === 'object') {
-        Object.keys(teamData.manualPlayers).forEach(id => manualPlayerIds.add(Number(id)));
+        Object.keys(teamData.manualPlayers).forEach((id) => manualPlayerIds.add(Number(id)));
       }
     });
     for (const playerId of manualPlayerIds) {
@@ -409,12 +389,13 @@ function useManualPlayersOps(
   return { loadManualPlayers };
 }
 
-function useManualTeamsOps(
-  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>
-) {
-  const loadTeamsFromConfig = useCallback(async (teamsArg: Map<string, TeamData>) => {
-    setTeams(teamsArg);
-  }, [setTeams]);
+function useManualTeamsOps(setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>) {
+  const loadTeamsFromConfig = useCallback(
+    async (teamsArg: Map<string, TeamData>) => {
+      setTeams(teamsArg);
+    },
+    [setTeams],
+  );
   return { loadTeamsFromConfig };
 }
 
@@ -428,7 +409,7 @@ export function useTeamCoreOperations(
   teamDataFetching: TeamDataFetchingContextValue,
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
-  configContext: ConfigContextValue
+  configContext: ConfigContextValue,
 ) {
   const { teams, setTeams, setTeamsForLoading, selectedTeamId } = state;
   const addTeam = useAddTeamCore(teams, setTeams, setTeamsForLoading, teamDataFetching, matchContext, playerContext);
@@ -448,8 +429,6 @@ export function useTeamCoreOperations(
     loadManualMatches: manualMatchesOps.loadManualMatches,
     loadManualPlayers: manualPlayersOps.loadManualPlayers,
     removeManualMatch: manualMatchesOps.removeManualMatch,
-    editManualMatch: manualMatchesOps.editManualMatch
+    editManualMatch: manualMatchesOps.editManualMatch,
   };
 }
-
-

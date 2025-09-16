@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { ThemeProvider } from "next-themes";
-import React from "react";
+import { ThemeProvider } from 'next-themes';
+import React from 'react';
 
-import { ConfigProvider } from "@/frontend/contexts/config-context";
-import { ConstantsProvider } from "@/frontend/contexts/constants-context";
-import { ConstantsDataFetchingProvider } from "@/frontend/contexts/constants-data-fetching-context";
-import { MatchDataFetchingProvider } from "@/frontend/matches/contexts/fetching/match-data-fetching-context";
-import { MatchProvider } from "@/frontend/matches/contexts/state/match-context";
-import { PlayerDataFetchingProvider } from "@/frontend/players/contexts/fetching/player-data-fetching-context";
-import { PlayerProvider } from "@/frontend/players/contexts/state/player-context";
+import { ConfigProvider } from '@/frontend/contexts/config-context';
+import { ConstantsProvider } from '@/frontend/contexts/constants-context';
+import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-data-fetching-context';
+import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
+import { PlayerDataFetchingProvider } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
+import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
 import { AppLayout } from '@/frontend/shared/layout/AppLayout';
-import { TeamDataFetchingProvider } from "@/frontend/teams/contexts/fetching/team-data-fetching-context";
-import { TeamProvider } from "@/frontend/teams/contexts/state/team-context";
-import { useAppHydration } from "@/hooks/useAppHydration";
+import { TeamDataFetchingProvider } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
+import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
+import { useAppHydration } from '@/hooks/useAppHydration';
 
 interface ClientRootProps {
   children: React.ReactNode;
@@ -42,8 +42,8 @@ function AppContent({ children }: ClientRootProps) {
         <div className="text-center">
           <p className="text-destructive mb-4">Failed to load application data</p>
           <p className="text-muted-foreground text-sm">{hydrationError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             Retry
@@ -59,12 +59,7 @@ function AppContent({ children }: ClientRootProps) {
 
 export function ClientRoot({ children }: ClientRootProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       {/* Data Fetching Contexts (no dependencies) */}
       <TeamDataFetchingProvider>
         <MatchDataFetchingProvider>
@@ -80,9 +75,7 @@ export function ClientRoot({ children }: ClientRootProps) {
                     <PlayerProvider>
                       {/* Team Context (depends on ConfigContext, MatchContext, PlayerContext) */}
                       <TeamProvider>
-                        <AppContent>
-                          {children}
-                        </AppContent>
+                        <AppContent>{children}</AppContent>
                       </TeamProvider>
                     </PlayerProvider>
                   </MatchProvider>
@@ -94,4 +87,4 @@ export function ClientRoot({ children }: ClientRootProps) {
       </TeamDataFetchingProvider>
     </ThemeProvider>
   );
-} 
+}

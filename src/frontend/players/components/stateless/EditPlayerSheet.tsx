@@ -7,7 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Form, FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { getValidationAriaAttributes } from '@/utils/validation';
 
 interface EditPlayerSheetProps {
@@ -47,7 +55,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid
+  isValid,
 }) => {
   const hasError = Boolean(error);
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
@@ -66,7 +74,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           required
           disabled={disabled}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
           {...ariaAttributes}
         />
@@ -79,20 +87,13 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           {error}
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          {helpText}
-        </p>
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       )}
     </FormField>
   );
 };
 
-function getButtonText(
-  playerId: string,
-  isDuplicate: boolean,
-  isValid: boolean,
-  isSubmitting: boolean
-): string {
+function getButtonText(playerId: string, isDuplicate: boolean, isValid: boolean, isSubmitting: boolean): string {
   if (playerId.trim() === '') return 'Update Player';
   if (isDuplicate) return 'Player Already Added';
   if (!isValid) return 'Invalid Player ID';
@@ -106,7 +107,7 @@ function EditPlayerForm({
   isDisabled,
   handleSubmit,
   combinedError,
-  isFieldValid
+  isFieldValid,
 }: {
   playerId: string;
   setPlayerId: (value: string) => void;
@@ -117,12 +118,15 @@ function EditPlayerForm({
   isFieldValid: boolean;
 }) {
   return (
-    <div className="grid gap-4" onKeyDown={(e) => {
-      if (e.key === 'Enter' && !isDisabled) {
-        e.preventDefault();
-        void handleSubmit(e);
-      }
-    }}>
+    <div
+      className="grid gap-4"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && !isDisabled) {
+          e.preventDefault();
+          void handleSubmit(e);
+        }
+      }}
+    >
       <FormFieldInput
         id="player-id"
         label="Player ID"
@@ -148,7 +152,7 @@ export function EditPlayerSheet({
   error,
   validationError,
   isDuplicate = false,
-  isValid
+  isValid,
 }: EditPlayerSheetProps): React.ReactElement {
   const isDisabled = isSubmitting || !isValid || isDuplicate;
 
@@ -166,9 +170,7 @@ export function EditPlayerSheet({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Edit Player</SheetTitle>
-          <SheetDescription>
-            Update the Account ID for this player
-          </SheetDescription>
+          <SheetDescription>Update the Account ID for this player</SheetDescription>
         </SheetHeader>
 
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
@@ -192,12 +194,7 @@ export function EditPlayerSheet({
         </div>
 
         <SheetFooter>
-          <Button
-            type="submit"
-            disabled={isDisabled}
-            className="w-full"
-            onClick={handleSubmit}
-          >
+          <Button type="submit" disabled={isDisabled} className="w-full" onClick={handleSubmit}>
             {getButtonText(playerId, isDuplicate, isValid, isSubmitting)}
           </Button>
           <SheetClose asChild>
@@ -210,5 +207,3 @@ export function EditPlayerSheet({
     </Sheet>
   );
 }
-
-

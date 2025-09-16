@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Match Context (Frontend - Matches State Context)
@@ -13,11 +13,7 @@ import { useConstantsContext } from '@/frontend/contexts/constants-context';
 import { useMatchDataFetching } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import { useMatchOperations } from '@/hooks/use-match-operations';
 import { processMatchData } from '@/lib/processing/match-processing';
-import type {
-  Match,
-  MatchContextProviderProps,
-  MatchContextValue
-} from '@/types/contexts/match-context-value';
+import type { Match, MatchContextProviderProps, MatchContextValue } from '@/types/contexts/match-context-value';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 // ============================================================================
@@ -41,7 +37,7 @@ function useMatchState() {
     selectedMatchId,
     setSelectedMatchId,
     isLoading,
-    setIsLoading
+    setIsLoading,
   };
 }
 
@@ -49,12 +45,15 @@ function useMatchProcessing() {
   const { heroes, heroesByName, items } = useConstantsContext();
 
   // Process match data from API responses using the processing module
-  const processMatchDataFromApi = useCallback((matchData: OpenDotaMatch): Match => {
-    return processMatchData(matchData, heroes, heroesByName, items);
-  }, [heroes, heroesByName, items]);
+  const processMatchDataFromApi = useCallback(
+    (matchData: OpenDotaMatch): Match => {
+      return processMatchData(matchData, heroes, heroesByName, items);
+    },
+    [heroes, heroesByName, items],
+  );
 
   return {
-    processMatchData: processMatchDataFromApi
+    processMatchData: processMatchDataFromApi,
   };
 }
 
@@ -66,7 +65,7 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
   const state = useMatchState();
   const processing = useMatchProcessing();
   const matchDataFetching = useMatchDataFetching();
-  
+
   const actions = useMatchOperations(state, processing, matchDataFetching);
 
   const contextValue: MatchContextValue = {
@@ -75,31 +74,28 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     selectedMatchId: state.selectedMatchId,
     setSelectedMatchId: state.setSelectedMatchId,
     isLoading: state.isLoading,
-    
+
     // Core operations
     addMatch: actions.addMatch,
     refreshMatch: actions.refreshMatch,
     parseMatch: actions.parseMatch,
     removeMatch: actions.removeMatch,
-    
+
     // Data access
     getMatch: (matchId: number) => {
       return state.matches.get(matchId);
     },
-    getMatches: (matchIds: number[]) => matchIds.map(id => state.matches.get(id)).filter((match): match is Match => match !== undefined),
-    
+    getMatches: (matchIds: number[]) =>
+      matchIds.map((id) => state.matches.get(id)).filter((match): match is Match => match !== undefined),
+
     // State setters for optimistic updates
     setMatches: state.setMatches,
-    
+
     // High-performing heroes (TeamProvider computes this cross-cutting data)
-    highPerformingHeroes: new Set()
+    highPerformingHeroes: new Set(),
   };
 
-  return (
-    <MatchContext.Provider value={contextValue}>
-      {children}
-    </MatchContext.Provider>
-  );
+  return <MatchContext.Provider value={contextValue}>{children}</MatchContext.Provider>;
 };
 
 // ============================================================================
@@ -113,6 +109,3 @@ export const useMatchContext = (): MatchContextValue => {
   }
   return context;
 };
-
-
-

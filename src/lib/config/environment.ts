@@ -1,6 +1,6 @@
 /**
  * Environment Configuration
- * 
+ *
  * This module provides type-safe access to environment variables with validation
  * and default values. It centralizes all environment variable handling and
  * provides clear documentation for each variable.
@@ -10,7 +10,7 @@ export interface EnvironmentConfig {
   // Core Configuration
   NODE_ENV: 'development' | 'production' | 'test';
   NEXT_PUBLIC_APP_URL?: string;
-  
+
   // Mock Mode Settings
   USE_MOCK_API: boolean;
   USE_MOCK_OPENDOTA: boolean;
@@ -19,48 +19,48 @@ export interface EnvironmentConfig {
   USE_MOCK_D2PT: boolean;
   USE_MOCK_DB: boolean;
   WRITE_REAL_DATA_TO_MOCK: boolean;
-  
+
   // Logging Configuration
   DEBUG_LOGGING: boolean;
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
   LOG_FILE_PATH: string;
-  
+
   // Redis Configuration
   REDIS_URL?: string;
   UPSTASH_REDIS_REST_URL?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   USE_REDIS: boolean;
-  
+
   // QStash Configuration
   QSTASH_TOKEN?: string;
   QSTASH_CURRENT_SIGNING_KEY?: string;
   QSTASH_NEXT_SIGNING_KEY?: string;
   USE_QSTASH: boolean;
-  
+
   // Rate Limiting Configuration
   RATE_LIMIT_OPENDOTA: number;
   RATE_LIMIT_DOTABUFF: number;
   RATE_LIMIT_STRATZ: number;
   RATE_LIMIT_D2PT: number;
   RATE_LIMIT_WINDOW: number;
-  
+
   // External API Configuration
   OPENDOTA_API_KEY?: string;
   OPENDOTA_API_BASE_URL: string;
   OPENDOTA_API_TIMEOUT: number;
-  
+
   DOTABUFF_BASE_URL: string;
   DOTABUFF_REQUEST_DELAY: number;
-  
+
   D2PT_BASE_URL: string;
   D2PT_REQUEST_DELAY: number;
-  
+
   STRATZ_API_KEY?: string;
   STEAM_API_KEY?: string;
-  
+
   // Vercel Deployment Configuration
   VERCEL_OIDC_TOKEN?: string;
-  
+
   // Testing Configuration
   TEST_MOCK_MODE: boolean;
   TEST_TIMEOUT: number;
@@ -132,11 +132,20 @@ function getExternalApiConfig() {
   return {
     OPENDOTA_API_KEY: process.env.OPENDOTA_API_KEY,
     OPENDOTA_API_BASE_URL: process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api',
-    OPENDOTA_API_TIMEOUT: process.env.OPENDOTA_API_TIMEOUT && process.env.OPENDOTA_API_TIMEOUT !== '' ? Number(process.env.OPENDOTA_API_TIMEOUT) : 10000,
+    OPENDOTA_API_TIMEOUT:
+      process.env.OPENDOTA_API_TIMEOUT && process.env.OPENDOTA_API_TIMEOUT !== ''
+        ? Number(process.env.OPENDOTA_API_TIMEOUT)
+        : 10000,
     DOTABUFF_BASE_URL: process.env.DOTABUFF_BASE_URL || 'https://www.dotabuff.com',
-    DOTABUFF_REQUEST_DELAY: process.env.DOTABUFF_REQUEST_DELAY && process.env.DOTABUFF_REQUEST_DELAY !== '' ? Number(process.env.DOTABUFF_REQUEST_DELAY) : 1000,
+    DOTABUFF_REQUEST_DELAY:
+      process.env.DOTABUFF_REQUEST_DELAY && process.env.DOTABUFF_REQUEST_DELAY !== ''
+        ? Number(process.env.DOTABUFF_REQUEST_DELAY)
+        : 1000,
     D2PT_BASE_URL: process.env.D2PT_BASE_URL || 'https://dota2protracker.com',
-    D2PT_REQUEST_DELAY: process.env.D2PT_REQUEST_DELAY && process.env.D2PT_REQUEST_DELAY !== '' ? Number(process.env.D2PT_REQUEST_DELAY) : 2000,
+    D2PT_REQUEST_DELAY:
+      process.env.D2PT_REQUEST_DELAY && process.env.D2PT_REQUEST_DELAY !== ''
+        ? Number(process.env.D2PT_REQUEST_DELAY)
+        : 2000,
     STRATZ_API_KEY: process.env.STRATZ_API_KEY,
   };
 }
@@ -150,7 +159,8 @@ function getVercelConfig() {
 function getTestingConfig() {
   return {
     TEST_MOCK_MODE: process.env.TEST_MOCK_MODE === 'true',
-    TEST_TIMEOUT: process.env.TEST_TIMEOUT && process.env.TEST_TIMEOUT !== '' ? Number(process.env.TEST_TIMEOUT) : 10000,
+    TEST_TIMEOUT:
+      process.env.TEST_TIMEOUT && process.env.TEST_TIMEOUT !== '' ? Number(process.env.TEST_TIMEOUT) : 10000,
     CI: process.env.CI === 'true',
   };
 }
@@ -541,4 +551,4 @@ export const getEnv = {
   TEST_MOCK_MODE: () => envConfig.TEST_MOCK_MODE,
   TEST_TIMEOUT: () => envConfig.TEST_TIMEOUT,
   CI: () => envConfig.CI,
-}; 
+};

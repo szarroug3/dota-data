@@ -20,7 +20,7 @@ describe('CacheService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Create mock instances
     mockMemoryBackend = new MockMemoryCacheBackend(undefined) as jest.Mocked<MemoryCacheBackend>;
     mockRedisBackend = new MockRedisCacheBackend('redis://localhost:6379') as jest.Mocked<RedisCacheBackend>;
@@ -33,24 +33,24 @@ describe('CacheService', () => {
     it('should use memory backend when USE_MOCK_API is true', () => {
       const originalEnv = process.env.USE_MOCK_API;
       process.env.USE_MOCK_API = 'true';
-      
+
       cacheService = new CacheService();
-      
+
       expect(MockMemoryCacheBackend).toHaveBeenCalled();
       // Redis might still be called during fallback setup, so we don't check this
-      
+
       process.env.USE_MOCK_API = originalEnv;
     });
 
     it('should use memory backend when USE_MOCK_DB is true', () => {
       const originalEnv = process.env.USE_MOCK_DB;
       process.env.USE_MOCK_DB = 'true';
-      
+
       cacheService = new CacheService();
-      
+
       expect(MockMemoryCacheBackend).toHaveBeenCalled();
       // Redis might still be called during fallback setup, so we don't check this
-      
+
       process.env.USE_MOCK_DB = originalEnv;
     });
 
@@ -59,11 +59,11 @@ describe('CacheService', () => {
       process.env.REDIS_URL = 'redis://localhost:6379';
       process.env.USE_MOCK_API = 'false';
       process.env.USE_MOCK_DB = 'false';
-      
+
       cacheService = new CacheService();
-      
+
       expect(MockRedisCacheBackend).toHaveBeenCalledWith('redis://localhost:6379');
-      
+
       process.env.REDIS_URL = originalEnv;
     });
 
@@ -72,12 +72,12 @@ describe('CacheService', () => {
       delete process.env.REDIS_URL;
       process.env.USE_MOCK_API = 'false';
       process.env.USE_MOCK_DB = 'false';
-      
+
       cacheService = new CacheService();
-      
+
       // Should not throw, should default to memory
       expect(cacheService).toBeInstanceOf(CacheService);
-      
+
       process.env.REDIS_URL = originalEnv;
     });
   });
@@ -148,9 +148,7 @@ describe('CacheService', () => {
 
     it('should fallback to memory backend when primary fails', async () => {
       const testData = { test: 'data' };
-      mockMemoryBackend.set
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce();
+      mockMemoryBackend.set.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce();
 
       await cacheService.set('test-key', testData);
 
@@ -174,9 +172,7 @@ describe('CacheService', () => {
     });
 
     it('should fallback to memory backend when primary fails', async () => {
-      mockMemoryBackend.delete
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce(false);
+      mockMemoryBackend.delete.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce(false);
 
       const result = await cacheService.delete('test-key');
 
@@ -201,9 +197,7 @@ describe('CacheService', () => {
     });
 
     it('should fallback to memory backend when primary fails', async () => {
-      mockMemoryBackend.exists
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce(false);
+      mockMemoryBackend.exists.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce(false);
 
       const result = await cacheService.exists('test-key');
 
@@ -230,9 +224,7 @@ describe('CacheService', () => {
 
     it('should fallback to memory backend when primary fails', async () => {
       const mockData = ['value1', 'value2'];
-      mockMemoryBackend.mget
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce(mockData);
+      mockMemoryBackend.mget.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce(mockData);
 
       const result = await cacheService.mget(['key1', 'key2']);
 
@@ -250,7 +242,7 @@ describe('CacheService', () => {
     it('should set multiple entries in primary backend', async () => {
       const entries = [
         { key: 'key1', value: 'value1' },
-        { key: 'key2', value: 'value2', ttl: 3600 }
+        { key: 'key2', value: 'value2', ttl: 3600 },
       ];
       mockMemoryBackend.mset.mockResolvedValue();
 
@@ -261,9 +253,7 @@ describe('CacheService', () => {
 
     it('should fallback to memory backend when primary fails', async () => {
       const entries = [{ key: 'key1', value: 'value1' }];
-      mockMemoryBackend.mset
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce();
+      mockMemoryBackend.mset.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce();
 
       await cacheService.mset(entries);
 
@@ -287,9 +277,7 @@ describe('CacheService', () => {
     });
 
     it('should fallback to memory backend when primary fails', async () => {
-      mockMemoryBackend.mdelete
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce(1);
+      mockMemoryBackend.mdelete.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce(1);
 
       const result = await cacheService.mdelete(['key1']);
 
@@ -338,7 +326,7 @@ describe('CacheService', () => {
         hitRate: 0.8,
         missRate: 0.2,
         uptime: 3600000,
-        backend: 'memory' as const
+        backend: 'memory' as const,
       };
       mockMemoryBackend.getStats.mockResolvedValue(mockStats);
 
@@ -355,7 +343,7 @@ describe('CacheService', () => {
         hitRate: 0.7,
         missRate: 0.3,
         uptime: 2400000,
-        backend: 'memory' as const
+        backend: 'memory' as const,
       };
       mockMemoryBackend.getStats
         .mockRejectedValueOnce(new Error('Primary backend failed'))
@@ -383,13 +371,11 @@ describe('CacheService', () => {
     });
 
     it('should fallback to memory backend when primary fails', async () => {
-      mockMemoryBackend.clear
-        .mockRejectedValueOnce(new Error('Primary backend failed'))
-        .mockResolvedValueOnce();
+      mockMemoryBackend.clear.mockRejectedValueOnce(new Error('Primary backend failed')).mockResolvedValueOnce();
 
       await cacheService.clear();
 
       expect(mockMemoryBackend.clear).toHaveBeenCalledTimes(2);
     });
   });
-}); 
+});

@@ -11,4 +11,4 @@ export default function MatchHistoryPageRoute() {
       <MatchHistoryPageContainer />
     </>
   );
-} 
+}

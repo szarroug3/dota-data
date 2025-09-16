@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 
-import { ClientRoot } from "./ClientRoot";
+import { ClientRoot } from './ClientRoot';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -34,11 +34,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
 
@@ -47,12 +43,10 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-background text-foreground`}>
         <ErrorBoundary>
           <SidebarProvider defaultOpen={defaultOpen}>
-            <ClientRoot>
-              {children}
-            </ClientRoot>
+            <ClientRoot>{children}</ClientRoot>
           </SidebarProvider>
         </ErrorBoundary>
       </body>
     </html>
   );
-} 
+}

@@ -1,6 +1,6 @@
 /**
  * Team data hook types
- * 
+ *
  * Provides type definitions for the useTeamData hook.
  */
 
@@ -25,4 +25,4 @@ export interface UseTeamDataReturn {
   addTeam: (teamId: string, leagueId: string) => Promise<void>;
   removeTeam: (teamId: string, leagueId: string) => void;
   refreshTeam: (teamId: string, leagueId: string) => Promise<void>;
-} 
+}

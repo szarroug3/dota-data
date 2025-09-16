@@ -1,6 +1,6 @@
 /**
  * Match context value types
- * 
+ *
  * Defines the structure for match-related state and data management
  * in the frontend application.
  */
@@ -42,7 +42,7 @@ export interface Match {
   id: number;
   date: string;
   duration: number;
-  
+
   // Team information
   radiant: {
     id?: number;
@@ -52,7 +52,7 @@ export interface Match {
     id?: number;
     name?: string;
   };
-  
+
   // Draft information
   draft: {
     radiantPicks: HeroPick[];
@@ -60,13 +60,13 @@ export interface Match {
     radiantBans: string[]; // Hero IDs
     direBans: string[]; // Hero IDs
   };
-  
+
   // Player information
   players: {
     radiant: PlayerMatchData[];
     dire: PlayerMatchData[];
   };
-  
+
   // Match statistics
   statistics: {
     radiantScore: number;
@@ -82,32 +82,30 @@ export interface Match {
       direExperience: number[];
     };
   };
-  
+
   // Match events
   events: MatchEvent[];
-  
+
   // Match result
   result: 'radiant' | 'dire';
-  
+
   // Pick order information
   pickOrder?: {
     radiant: 'first' | 'second' | null;
     dire: 'first' | 'second' | null;
   };
-  
+
   // Processed data for components
   processedDraft?: DraftPhase[];
   processedEvents?: GameEvent[];
   teamFightStats?: TeamFightStats;
-  
+
   // Error handling
   error?: string;
-  
+
   // Loading state
   isLoading?: boolean;
 }
-
-
 
 export interface HeroPick {
   hero: Hero; // Hero data (always available since we wait for heroes to load)
@@ -120,7 +118,7 @@ export interface PlayerMatchData {
   playerName: string;
   hero: Hero; // Hero data (always available since we wait for heroes to load)
   role?: PlayerRole;
-  
+
   // Performance stats
   stats: {
     kills: number;
@@ -133,10 +131,10 @@ export interface PlayerMatchData {
     netWorth: number;
     level: number;
   };
-  
+
   // Items
   items: Item[];
-  
+
   // Hero-specific stats
   heroStats: {
     damageDealt: number;
@@ -152,7 +150,7 @@ export interface MatchEvent {
   details: EventDetails;
 }
 
-export type EventType = 
+export type EventType =
   | 'CHAT_MESSAGE_FIRSTBLOOD'
   | 'CHAT_MESSAGE_ROSHAN_KILL'
   | 'CHAT_MESSAGE_AEGIS'
@@ -173,17 +171,17 @@ export interface EventDetails {
   killer?: string; // Player ID
   victim?: string; // Player ID
   assists?: string[]; // Player IDs
-  
+
   // Hero information for tooltips
   killerHero?: Hero;
   victimHero?: Hero;
   aegisHolderHero?: Hero;
-  
+
   // For tower/barracks kills
   buildingType?: 'tower' | 'barracks';
   buildingTier?: number;
   buildingLane?: 'top' | 'mid' | 'bottom';
-  
+
   // For team fights
   participants?: string[]; // Player IDs
   duration?: number;
@@ -197,15 +195,15 @@ export interface EventDetails {
     damage: number;
     healing: number;
   }>;
-  
+
   // For roshan
   roshanKiller?: 'radiant' | 'dire'; // Team that killed roshan
   aegisHolder?: string; // Player ID
-  
+
   // For runes
   runeType?: string;
   runeLocation?: string;
-  
+
   // For wards
   wardType?: 'observer' | 'sentry';
   wardLocation?: string;
@@ -215,28 +213,26 @@ export interface EventDetails {
 // MATCH CONTEXT STATE
 // ============================================================================
 
-
-
 export interface MatchContextValue {
   // State
   matches: Map<number, Match>; // Key: matchId
   selectedMatchId: number | null;
   setSelectedMatchId: (matchId: number | null) => void;
   isLoading: boolean;
-  
+
   // Core operations
   addMatch: (matchId: number) => Promise<Match | null>;
   refreshMatch: (matchId: number) => Promise<Match | null>;
   parseMatch: (matchId: number) => Promise<void>;
   removeMatch: (matchId: number) => void;
-  
+
   // Data access
   getMatch: (matchId: number) => Match | undefined;
   getMatches: (matchIds: number[]) => Match[];
-  
+
   // State setters for optimistic updates
   setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
-  
+
   // High-performing heroes (calculated once, used by multiple components)
   highPerformingHeroes: Set<string>; // Set of hero IDs that are high-performing
 }
@@ -267,13 +263,13 @@ export interface MatchActions {
   matches: Map<number, Match>;
   selectedMatchId: number | null;
   isLoading: boolean;
-  
+
   // Core operations
   addMatch: (matchId: number) => Promise<Match | null>;
   refreshMatch: (matchId: number) => Promise<Match | null>;
   parseMatch: (matchId: number) => Promise<void>;
   removeMatch: (matchId: number) => void;
-  
+
   // Data access
   setSelectedMatchId: (matchId: number | null) => void;
   getMatch: (matchId: number) => Match | undefined;
@@ -314,4 +310,4 @@ export interface PlayerAnalysisResult {
   farmScore: number;
   killScore: number;
   totalScore: number;
-} 
+}

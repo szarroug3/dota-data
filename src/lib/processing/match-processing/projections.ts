@@ -43,12 +43,12 @@ function generateEventDescription(event: MatchEvent): string {
 }
 
 export function processGameEvents(match: Match): GameEvent[] {
-  return match.events.map(event => ({
+  return match.events.map((event) => ({
     type: event.type,
     time: event.timestamp,
     description: generateEventDescription(event),
     team: event.side === 'neutral' ? undefined : event.side,
-    details: event.details as never
+    details: event.details as never,
   }));
 }
 
@@ -58,9 +58,19 @@ export function processDraftData(match: Match, originalMatchData?: OpenDotaMatch
     originalMatchData.picks_bans.forEach((pickBan, index) => {
       const order = index + 1;
       if (pickBan.is_pick) {
-        phases.push({ phase: 'pick', team: pickBan.team === 0 ? 'radiant' : 'dire', hero: pickBan.hero_id.toString(), time: order });
+        phases.push({
+          phase: 'pick',
+          team: pickBan.team === 0 ? 'radiant' : 'dire',
+          hero: pickBan.hero_id.toString(),
+          time: order,
+        });
       } else {
-        phases.push({ phase: 'ban', team: pickBan.team === 0 ? 'radiant' : 'dire', hero: pickBan.hero_id.toString(), time: order });
+        phases.push({
+          phase: 'ban',
+          team: pickBan.team === 0 ? 'radiant' : 'dire',
+          hero: pickBan.hero_id.toString(),
+          time: order,
+        });
       }
     });
     return phases.sort((a, b) => a.time - b.time);
@@ -69,22 +79,28 @@ export function processDraftData(match: Match, originalMatchData?: OpenDotaMatch
 }
 
 function calculateWinsForTeam(fights: MatchEvent[], matchResult: 'radiant' | 'dire'): number {
-  return fights.filter(fight => fight.side === matchResult).length;
+  return fights.filter((fight) => fight.side === matchResult).length;
 }
 
 function calculateLossesForTeam(fights: MatchEvent[], matchResult: 'radiant' | 'dire'): number {
   const opposingSide = matchResult === 'radiant' ? 'dire' : 'radiant';
-  return fights.filter(fight => fight.side === opposingSide).length;
+  return fights.filter((fight) => fight.side === opposingSide).length;
 }
 
 export function calculateTeamFightStats(match: Match): TeamFightStats {
-  const teamFightEvents = match.events.filter(e => e.type === 'team_fight');
-  const radiantFights = teamFightEvents.filter(e => e.side === 'radiant');
-  const direFights = teamFightEvents.filter(e => e.side === 'dire');
+  const teamFightEvents = match.events.filter((e) => e.type === 'team_fight');
+  const radiantFights = teamFightEvents.filter((e) => e.side === 'radiant');
+  const direFights = teamFightEvents.filter((e) => e.side === 'dire');
   return {
-    radiant: { total: radiantFights.length, wins: calculateWinsForTeam(radiantFights, match.result), losses: calculateLossesForTeam(radiantFights, match.result) },
-    dire: { total: direFights.length, wins: calculateWinsForTeam(direFights, match.result), losses: calculateLossesForTeam(direFights, match.result) },
+    radiant: {
+      total: radiantFights.length,
+      wins: calculateWinsForTeam(radiantFights, match.result),
+      losses: calculateLossesForTeam(radiantFights, match.result),
+    },
+    dire: {
+      total: direFights.length,
+      wins: calculateWinsForTeam(direFights, match.result),
+      losses: calculateLossesForTeam(direFights, match.result),
+    },
   };
 }
-
-

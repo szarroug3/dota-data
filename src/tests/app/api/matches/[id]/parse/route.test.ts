@@ -6,7 +6,9 @@ import type { OpenDotaMatch } from '@/types/external-apis';
 
 jest.mock('@/lib/api/opendota/matches');
 
-const mockParseOpenDotaMatchWithJobPolling = parseOpenDotaMatchWithJobPolling as jest.MockedFunction<typeof parseOpenDotaMatchWithJobPolling>;
+const mockParseOpenDotaMatchWithJobPolling = parseOpenDotaMatchWithJobPolling as jest.MockedFunction<
+  typeof parseOpenDotaMatchWithJobPolling
+>;
 
 describe('/api/matches/[id]/parse route', () => {
   const matchId = '1234567890';
@@ -81,4 +83,4 @@ describe('/api/matches/[id]/parse route', () => {
     expect(res.status).toBe(500);
     expect(data.error).toMatch(/failed to parse match/i);
   });
-}); 
+});

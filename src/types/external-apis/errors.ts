@@ -16,5 +16,3 @@ export interface ExternalApiError extends Error {
   retryAfter?: number;
   retryable: boolean;
 }
-
-

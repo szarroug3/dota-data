@@ -1,6 +1,6 @@
 /**
  * Team Context Tests
- * 
+ *
  * Tests for the team context functionality including team operations,
  * league-specific filtering, and player aggregation.
  */
@@ -53,9 +53,9 @@ describe('TeamContext', () => {
               </MatchDataFetchingProvider>
             </ConstantsProvider>
           </ConstantsDataFetchingProvider>
-        </ConfigProvider>
+        </ConfigProvider>,
       );
-      
+
       expect(screen.getByText('Test Content')).toBeInTheDocument();
     });
 
@@ -85,8 +85,8 @@ describe('TeamContext', () => {
               </MatchDataFetchingProvider>
             </ConstantsProvider>
           </ConstantsDataFetchingProvider>
-        </ConfigProvider>
+        </ConfigProvider>,
       );
     });
   });
-}); 
+});

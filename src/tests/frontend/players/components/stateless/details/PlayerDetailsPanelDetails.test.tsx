@@ -6,12 +6,9 @@ import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-dat
 import { PlayerDetailsPanelDetails } from '@/frontend/players/components/stateless/details/PlayerDetailsPanelDetails';
 import type { Player } from '@/types/contexts/player-context-value';
 
-
 // Mock the HeroAvatar component
 jest.mock('@/frontend/matches/components/stateless/common/HeroAvatar', () => ({
-  HeroAvatar: ({ hero }: { hero: any }) => (
-    <div data-testid="hero-avatar">{hero.localizedName}</div>
-  ),
+  HeroAvatar: ({ hero }: { hero: any }) => <div data-testid="hero-avatar">{hero.localizedName}</div>,
 }));
 
 const mockHeroes = {
@@ -22,7 +19,7 @@ const mockHeroes = {
     primaryAttribute: 'agility',
     attackType: 'melee',
     roles: ['Carry', 'Escape', 'Nuker'],
-    imageUrl: '/heroes/antimage.png'
+    imageUrl: '/heroes/antimage.png',
   },
   '2': {
     id: '2',
@@ -31,8 +28,8 @@ const mockHeroes = {
     primaryAttribute: 'strength',
     attackType: 'melee',
     roles: ['Initiator', 'Durable', 'Disabler'],
-    imageUrl: '/heroes/axe.png'
-  }
+    imageUrl: '/heroes/axe.png',
+  },
 };
 
 const mockPlayer: Player = {
@@ -97,7 +94,7 @@ const mockPlayer: Player = {
       average_rank: null,
       leaver_status: 0,
       party_size: null,
-      hero_variant: null
+      hero_variant: null,
     },
     {
       match_id: 2,
@@ -115,8 +112,8 @@ const mockPlayer: Player = {
       average_rank: null,
       leaver_status: 0,
       party_size: null,
-      hero_variant: null
-    }
+      hero_variant: null,
+    },
   ],
   totals: {
     np: 0,
@@ -134,10 +131,8 @@ const mockPlayer: Player = {
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <ConstantsDataFetchingProvider>
-      <ConstantsProvider>
-        {component}
-      </ConstantsProvider>
-    </ConstantsDataFetchingProvider>
+      <ConstantsProvider>{component}</ConstantsProvider>
+    </ConstantsDataFetchingProvider>,
   );
 };
 
@@ -149,28 +144,28 @@ describe('PlayerDetailsPanelDetails', () => {
 
   it('renders player statistics with default 2 weeks filter', () => {
     renderWithProviders(<PlayerDetailsPanelDetails player={mockPlayer} heroes={mockHeroes as any} />);
-    
+
     expect(screen.getByText('Player Statistics')).toBeInTheDocument();
     expect(screen.getByText(/2\s*games/i)).toBeInTheDocument();
   });
 
   it('allows custom date range selection', async () => {
     renderWithProviders(<PlayerDetailsPanelDetails player={mockPlayer} heroes={mockHeroes as any} />);
-    
+
     // Click on the select to open options
     const select = screen.getByRole('combobox');
     fireEvent.click(select);
-    
+
     // Wait for the select options to appear and click custom range
     await waitFor(() => {
       const customOption = screen.getByText('Custom Range');
       fireEvent.click(customOption);
     });
-    
+
     // Should show date inputs
     const startDateButton = screen.getByText('Start Date');
     const endDateButton = screen.getByText('End Date');
-    
+
     expect(startDateButton).toBeInTheDocument();
     expect(endDateButton).toBeInTheDocument();
   });
@@ -178,14 +173,14 @@ describe('PlayerDetailsPanelDetails', () => {
   it('handles empty match data gracefully', () => {
     const emptyPlayer: Player = {
       ...mockPlayer,
-      recentMatches: []
+      recentMatches: [],
     };
-    
+
     renderWithProviders(<PlayerDetailsPanelDetails player={emptyPlayer} heroes={mockHeroes as any} />);
-    
+
     // Check that we show 0 games in the selected period
     expect(screen.getByText(/0\s*games/i)).toBeInTheDocument();
-    
+
     // Check that the hero statistics table is empty
     const tableBody = screen.getByRole('table').querySelector('tbody');
     expect(tableBody?.children.length).toBe(0);
@@ -203,7 +198,7 @@ describe('PlayerDetailsPanelDetails', () => {
           with_games: 0,
           with_win: 0,
           against_games: 0,
-          against_win: 0
+          against_win: 0,
         },
         {
           hero_id: 2,
@@ -213,22 +208,22 @@ describe('PlayerDetailsPanelDetails', () => {
           with_games: 0,
           with_win: 0,
           against_games: 0,
-          against_win: 0
-        }
-      ]
+          against_win: 0,
+        },
+      ],
     };
-    
+
     renderWithProviders(<PlayerDetailsPanelDetails player={playerWithMultipleHeroes} heroes={mockHeroes as any} />);
-    
+
     // Click on the select to open options
     const select = screen.getByRole('combobox');
     fireEvent.click(select);
-    
+
     await waitFor(() => {
       const threeMonthsOption = screen.getByText('3 Months');
       fireEvent.click(threeMonthsOption);
     });
-    
+
     // Should show heroes sorted by games count (highest first)
     const tableRows = screen.getAllByRole('row');
     // Skip header row, check first hero row

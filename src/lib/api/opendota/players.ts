@@ -11,12 +11,12 @@ import {
   OpenDotaPlayerRating,
   OpenDotaPlayerTotals,
   OpenDotaPlayerWardMap,
-  OpenDotaPlayerWL
+  OpenDotaPlayerWL,
 } from '@/types/external-apis';
 
 /**
  * Fetches comprehensive Dota 2 player data from OpenDota using the generic request function.
- * OpenDota endpoints: 
+ * OpenDota endpoints:
  * - https://api.opendota.com/api/players/{playerId}
  * - https://api.opendota.com/api/players/{playerId}/counts
  * - https://api.opendota.com/api/players/{playerId}/heroes
@@ -43,7 +43,7 @@ export async function fetchOpenDotaPlayer(playerId: string, force = false): Prom
     mockFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -71,7 +71,7 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
 
   // Helper to add delay
   function delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // 1. Profile
@@ -133,7 +133,7 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
     recentMatches,
     totals,
     wl,
-    wardMap
+    wardMap,
   };
 
   return JSON.stringify(comprehensiveData);
@@ -148,4 +148,4 @@ function parseOpenDotaPlayerComprehensive(data: string): OpenDotaPlayerComprehen
   } catch (err) {
     throw new Error(`Failed to parse OpenDota player comprehensive data: ${err}`);
   }
-} 
+}

@@ -23,13 +23,7 @@ interface TeamInformationProps {
   hasError: boolean;
 }
 
-const TeamInformation: React.FC<TeamInformationProps> = ({
-  teamData,
-  isActive,
-  teamName,
-  leagueName,
-  hasError
-}) => {
+const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, teamName, leagueName, hasError }) => {
   const getTeamStats = () => {
     if (hasError || !teamData.performance) {
       return null;
@@ -94,7 +88,7 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
   onRefreshTeam,
   onEditTeam,
   onRemoveTeam,
-  isLoading
+  isLoading,
 }) => {
   const handleRefreshTeam = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -222,5 +216,3 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     </div>
   );
 };
-
-

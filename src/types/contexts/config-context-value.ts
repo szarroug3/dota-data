@@ -1,6 +1,6 @@
 /**
  * Config context value types
- * 
+ *
  * Defines the structure for application configuration and user preferences
  * in the frontend application.
  */
@@ -90,4 +90,4 @@ export interface ConfigChange {
   oldValue: string | number | boolean | null;
   newValue: string | number | boolean | null;
   type: 'added' | 'removed' | 'modified';
-} 
+}

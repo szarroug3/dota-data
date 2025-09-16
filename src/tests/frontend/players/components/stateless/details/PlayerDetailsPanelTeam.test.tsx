@@ -5,7 +5,6 @@ import type { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
 
-
 // Mock dependent contexts to avoid requiring full provider trees
 jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
   useTeamContext: () => ({
@@ -72,11 +71,16 @@ describe('PlayerDetailsPanelTeam - Team Overview responsiveness', () => {
     const heroes: Record<string, Hero> = {};
     const matchesArray: Match[] = [];
     const selectedTeam = null;
-    render(<PlayerDetailsPanelTeam player={mockPlayer} heroes={heroes} matchesArray={matchesArray} selectedTeam={selectedTeam} />);
+    render(
+      <PlayerDetailsPanelTeam
+        player={mockPlayer}
+        heroes={heroes}
+        matchesArray={matchesArray}
+        selectedTeam={selectedTeam}
+      />,
+    );
 
     // Header present
     expect(screen.getByText('Team Overview')).toBeInTheDocument();
   });
 });
-
-

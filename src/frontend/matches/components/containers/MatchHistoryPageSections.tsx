@@ -12,9 +12,13 @@ import useViewMode, { type MatchListViewMode } from '@/hooks/useViewMode';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
-import { AddMatchFormSection, getMatchHistoryEmptyState, HeroSummarySection, HiddenMatchesModalSection } from './MatchHistorySectionsHelpers';
+import {
+  AddMatchFormSection,
+  getMatchHistoryEmptyState,
+  HeroSummarySection,
+  HiddenMatchesModalSection,
+} from './MatchHistorySectionsHelpers';
 import { ResizableMatchLayout, type ResizableMatchLayoutRef } from './ResizableMatchLayout';
-
 
 export type MatchHistoryContentProps = {
   teamDataList: TeamData[];
@@ -113,7 +117,7 @@ export function MatchListSection({
       onSelectMatch={selectMatch}
       hiddenMatchesCount={hiddenMatches.length}
       onShowHiddenMatches={() => setShowHiddenModal(true)}
-      hiddenMatchIds={new Set(hiddenMatches.map(m => m.id))}
+      hiddenMatchIds={new Set(hiddenMatches.map((m) => m.id))}
       selectedMatch={selectedMatch}
       matchDetailsViewMode={matchDetailsViewMode}
       setMatchDetailsViewMode={setMatchDetailsViewMode}
@@ -133,12 +137,7 @@ export function SummaryAndHiddenSection({
   setShowHiddenModal,
 }: Pick<
   MatchHistoryContentProps,
-  | 'visibleMatches'
-  | 'teamMatches'
-  | 'unhiddenMatches'
-  | 'showHiddenModal'
-  | 'handleUnhideMatch'
-  | 'setShowHiddenModal'
+  'visibleMatches' | 'teamMatches' | 'unhiddenMatches' | 'showHiddenModal' | 'handleUnhideMatch' | 'setShowHiddenModal'
 > & { hiddenMatches: Match[] }) {
   return (
     <>
@@ -261,13 +260,16 @@ function useMatchData() {
 function useHiddenMatches(filteredMatches: Match[]) {
   const [hiddenMatches, setHiddenMatches] = useState<Match[]>([]);
   const [showHiddenModal, setShowHiddenModal] = useState(false);
-  const handleHideMatch = useCallback((id: number) => {
-    setHiddenMatches((prev) => {
-      const matchToHide = filteredMatches.find((m) => m.id === id);
-      if (!matchToHide) return prev;
-      return [...prev, matchToHide];
-    });
-  }, [filteredMatches]);
+  const handleHideMatch = useCallback(
+    (id: number) => {
+      setHiddenMatches((prev) => {
+        const matchToHide = filteredMatches.find((m) => m.id === id);
+        if (!matchToHide) return prev;
+        return [...prev, matchToHide];
+      });
+    },
+    [filteredMatches],
+  );
   const handleUnhideMatch = useCallback((id: number) => {
     setHiddenMatches((prev) => prev.filter((m) => m.id !== id));
   }, []);
@@ -284,18 +286,32 @@ function useAddMatchForm() {
   const [teamSide, setTeamSide] = useState<'radiant' | 'dire' | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>();
-  return { showAddMatchForm, setShowAddMatchForm, matchId, setMatchId, teamSide, setTeamSide, isSubmitting, setIsSubmitting, error, setError };
+  return {
+    showAddMatchForm,
+    setShowAddMatchForm,
+    matchId,
+    setMatchId,
+    teamSide,
+    setTeamSide,
+    isSubmitting,
+    setIsSubmitting,
+    error,
+    setError,
+  };
 }
 
 function useScheduledScroll(ref: React.RefObject<ResizableMatchLayoutRef | null>) {
   const scheduledScrollRef = useRef<NodeJS.Timeout | null>(null);
-  return useCallback((matchId: number) => {
-    if (scheduledScrollRef.current) clearTimeout(scheduledScrollRef.current);
-    scheduledScrollRef.current = setTimeout(() => {
-      ref.current?.scrollToMatch(matchId);
-      scheduledScrollRef.current = null;
-    }, 100);
-  }, [ref]);
+  return useCallback(
+    (matchId: number) => {
+      if (scheduledScrollRef.current) clearTimeout(scheduledScrollRef.current);
+      scheduledScrollRef.current = setTimeout(() => {
+        ref.current?.scrollToMatch(matchId);
+        scheduledScrollRef.current = null;
+      }, 100);
+    },
+    [ref],
+  );
 }
 
 function useAddMatchHandler(
@@ -308,39 +324,94 @@ function useAddMatchHandler(
   setIsSubmitting: (v: boolean) => void,
   setError: (e: string | undefined) => void,
   selectMatch: (id: number) => void,
-  scrollToMatch: (id: number) => void
+  scrollToMatch: (id: number) => void,
 ) {
-  return useCallback(async (matchId: string, teamSide: 'radiant' | 'dire') => {
-    const matchIdNum = parseInt(matchId, 10);
-    if (isNaN(matchIdNum)) return;
-    setShowAddMatchForm(false);
-    setIsSubmitting(true);
-    setError(undefined);
-    try {
-      await addMatch(matchIdNum);
-      await addMatchToTeam(matchIdNum, teamSide);
-      if (selectedTeamId) {
-        const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
-        const currentTeams = teams;
-        const team = currentTeams.get(teamKey);
-        if (team) {
-          if (!team.manualMatches) {
-            team.manualMatches = {} as TeamData['manualMatches'];
+  return useCallback(
+    async (matchId: string, teamSide: 'radiant' | 'dire') => {
+      const matchIdNum = parseInt(matchId, 10);
+      if (isNaN(matchIdNum)) return;
+      setShowAddMatchForm(false);
+      setIsSubmitting(true);
+      setError(undefined);
+      try {
+        await addMatch(matchIdNum);
+        await addMatchToTeam(matchIdNum, teamSide);
+        if (selectedTeamId) {
+          const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
+          const currentTeams = teams;
+          const team = currentTeams.get(teamKey);
+          if (team) {
+            if (!team.manualMatches) {
+              team.manualMatches = {} as TeamData['manualMatches'];
+            }
+            (team.manualMatches as Record<number, { side: 'radiant' | 'dire' }>)[matchIdNum] = { side: teamSide };
+            const updatedTeams = new Map(currentTeams);
+            updatedTeams.set(teamKey, team);
+            setTeams(updatedTeams);
           }
-          (team.manualMatches as Record<number, { side: 'radiant' | 'dire' }>)[matchIdNum] = { side: teamSide };
-          const updatedTeams = new Map(currentTeams);
-          updatedTeams.set(teamKey, team);
-          setTeams(updatedTeams);
         }
+        selectMatch(matchIdNum);
+        scrollToMatch(matchIdNum);
+      } catch (error) {
+        console.error('Failed to add match:', error);
+      } finally {
+        setIsSubmitting(false);
       }
-      selectMatch(matchIdNum);
-      scrollToMatch(matchIdNum);
-    } catch (error) {
-      console.error('Failed to add match:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [addMatch, addMatchToTeam, selectedTeamId, teams, setTeams, setShowAddMatchForm, setIsSubmitting, setError, selectMatch, scrollToMatch]);
+    },
+    [
+      addMatch,
+      addMatchToTeam,
+      selectedTeamId,
+      teams,
+      setTeams,
+      setShowAddMatchForm,
+      setIsSubmitting,
+      setError,
+      selectMatch,
+      scrollToMatch,
+    ],
+  );
+}
+
+function useTeamMatchesMemo(
+  teams: Map<string, TeamData>,
+  selectedTeamId: { teamId: number; leagueId: number } | null,
+) {
+  return useMemo(() => {
+    if (!selectedTeamId) return {} as Record<number, TeamMatchParticipation>;
+    const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
+    const selectedTeam = teams.get(teamKey);
+    return selectedTeam?.matches || {};
+  }, [teams, selectedTeamId]);
+}
+
+function useSelectedMatchMemo(selectedMatchId: number | null, getMatch: (id: number) => Match | undefined) {
+  return useMemo(() => (selectedMatchId ? getMatch(selectedMatchId) || null : null), [selectedMatchId, getMatch]);
+}
+
+function useActiveTeamMemo(selectedTeamId: { teamId: number; leagueId: number } | null) {
+  return useMemo(() => {
+    if (!selectedTeamId) return null;
+    return { teamId: selectedTeamId.teamId.toString(), leagueId: selectedTeamId.leagueId.toString() };
+  }, [selectedTeamId]);
+}
+
+function useMatchExistsCallback(
+  teams: Map<string, TeamData>,
+  selectedTeamId: { teamId: number; leagueId: number } | null,
+) {
+  return useCallback(
+    (mid: string) => {
+      if (!selectedTeamId) return false;
+      const matchIdNum = parseInt(mid, 10);
+      if (isNaN(matchIdNum)) return false;
+      const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
+      const selectedTeam = teams.get(teamKey);
+      if (!selectedTeam) return false;
+      return matchIdNum in selectedTeam.matches;
+    },
+    [teams, selectedTeamId],
+  );
 }
 
 export function useMatchHistoryPageState(): MatchHistoryContentProps {
@@ -361,12 +432,7 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
   const { viewMode, setViewMode } = useViewMode();
   const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft');
   const { activeTeamMatches } = useMatchData();
-  const teamMatches = useMemo(() => {
-    if (!selectedTeamId) return {} as Record<number, TeamMatchParticipation>;
-    const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
-    const selectedTeam = teams.get(teamKey);
-    return selectedTeam?.matches || {};
-  }, [teams, selectedTeamId]);
+  const teamMatches = useTeamMatchesMemo(teams, selectedTeamId);
   const addMatchForm = useAddMatchForm();
   const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set());
   const hidden = useHiddenMatches(filteredMatches);
@@ -375,11 +441,8 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
     return activeTeamMatches.filter((m) => !hiddenIds.has(m.id));
   }, [activeTeamMatches, hidden.hiddenMatches]);
   const teamDataList = useMemo(() => getAllTeams(), [getAllTeams]);
-  const selectedMatch = useMemo(() => (selectedMatchId ? getMatch(selectedMatchId) || null : null), [selectedMatchId, getMatch]);
-  const activeTeam = useMemo(() => {
-    if (!selectedTeamId) return null;
-    return { teamId: selectedTeamId.teamId.toString(), leagueId: selectedTeamId.leagueId.toString() };
-  }, [selectedTeamId]);
+  const selectedMatch = useSelectedMatchMemo(selectedMatchId, getMatch);
+  const activeTeam = useActiveTeamMemo(selectedTeamId);
   const scrollToMatch = useScheduledScroll(resizableLayoutRef);
   const handleAddMatch = useAddMatchHandler(
     addMatch,
@@ -391,18 +454,15 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
     addMatchForm.setIsSubmitting,
     addMatchForm.setError,
     (id) => setSelectedMatchId(id),
-    scrollToMatch
+    scrollToMatch,
   );
-  const handleRefreshMatch = useCallback((id: number) => { refreshMatch(id); }, [refreshMatch]);
-  const matchExists = useCallback((mid: string) => {
-    if (!selectedTeamId) return false;
-    const matchIdNum = parseInt(mid, 10);
-    if (isNaN(matchIdNum)) return false;
-    const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
-    const selectedTeam = teams.get(teamKey);
-    if (!selectedTeam) return false;
-    return matchIdNum in selectedTeam.matches;
-  }, [teams, selectedTeamId]);
+  const handleRefreshMatch = useCallback(
+    (id: number) => {
+      refreshMatch(id);
+    },
+    [refreshMatch],
+  );
+  const matchExists = useMatchExistsCallback(teams, selectedTeamId);
   const selectMatch = (id: number) => setSelectedMatchId(id);
 
   return {
@@ -441,5 +501,3 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
     scrollToMatch,
   };
 }
-
-

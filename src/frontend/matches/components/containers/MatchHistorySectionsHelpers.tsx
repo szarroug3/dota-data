@@ -1,5 +1,4 @@
-"use client";
-
+'use client';
 
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
@@ -8,7 +7,10 @@ import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 import { validateMatchId } from '@/utils/validation';
 
-export function getMatchHistoryEmptyState(teamDataList: TeamData[], activeTeam: { teamId: string; leagueId: string } | null) {
+export function getMatchHistoryEmptyState(
+  teamDataList: TeamData[],
+  activeTeam: { teamId: string; leagueId: string } | null,
+) {
   if (teamDataList.length === 0) {
     return <div className="p-4 text-center">No teams available</div>;
   }
@@ -18,11 +20,25 @@ export function getMatchHistoryEmptyState(teamDataList: TeamData[], activeTeam: 
   return null;
 }
 
-export function HeroSummarySection({ visibleMatches, teamMatches, allMatches }: { visibleMatches: Match[]; teamMatches: Record<number, TeamMatchParticipation>; allMatches: Match[] }) {
+export function HeroSummarySection({
+  visibleMatches,
+  teamMatches,
+  allMatches,
+}: {
+  visibleMatches: Match[];
+  teamMatches: Record<number, TeamMatchParticipation>;
+  allMatches: Match[];
+}) {
   return <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} allMatches={allMatches} />;
 }
 
-export function HiddenMatchesModalSection({ showHiddenModal, hiddenMatches, handleUnhideMatch, setShowHiddenModal, teamMatches }: {
+export function HiddenMatchesModalSection({
+  showHiddenModal,
+  hiddenMatches,
+  handleUnhideMatch,
+  setShowHiddenModal,
+  teamMatches,
+}: {
   showHiddenModal: boolean;
   hiddenMatches: Match[];
   handleUnhideMatch: (id: number) => void;

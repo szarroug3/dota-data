@@ -66,9 +66,7 @@ export function usePlayerSelection() {
   const selectedPlayer = useMemo(() => {
     if (!selectedPlayerId) return null;
     return (
-      Array.from(players.values()).find(
-        (player) => player.profile.profile.account_id === selectedPlayerId,
-      ) || null
+      Array.from(players.values()).find((player) => player.profile.profile.account_id === selectedPlayerId) || null
     );
   }, [selectedPlayerId, players]);
 
@@ -90,9 +88,7 @@ export function useHiddenPlayers(filteredPlayers: Player[]) {
   const handleHidePlayer = useCallback(
     (id: number) => {
       setHiddenPlayers((prev) => {
-        const playerToHide = filteredPlayers.find(
-          (p: Player) => p.profile.profile.account_id === id,
-        );
+        const playerToHide = filteredPlayers.find((p: Player) => p.profile.profile.account_id === id);
         if (!playerToHide) return prev;
         return [...prev, playerToHide];
       });
@@ -101,18 +97,12 @@ export function useHiddenPlayers(filteredPlayers: Player[]) {
   );
 
   const handleUnhidePlayer = useCallback((id: number) => {
-    setHiddenPlayers((prev) =>
-      prev.filter((p: Player) => p.profile.profile.account_id !== id),
-    );
+    setHiddenPlayers((prev) => prev.filter((p: Player) => p.profile.profile.account_id !== id));
   }, []);
 
   const visiblePlayers = useMemo(() => {
-    const hiddenIds = new Set(
-      hiddenPlayers.map((p: Player) => p.profile.profile.account_id),
-    );
-    return filteredPlayers.filter(
-      (p: Player) => !hiddenIds.has(p.profile.profile.account_id),
-    );
+    const hiddenIds = new Set(hiddenPlayers.map((p: Player) => p.profile.profile.account_id));
+    return filteredPlayers.filter((p: Player) => !hiddenIds.has(p.profile.profile.account_id));
   }, [filteredPlayers, hiddenPlayers]);
 
   return {
@@ -128,9 +118,7 @@ export function useHiddenPlayers(filteredPlayers: Player[]) {
 export function usePlayerViewModes() {
   const { config, updateConfig } = useConfigContext();
 
-  const [viewMode, setViewModeState] = useState<PlayerListViewMode>(
-    config.preferredPlayerlistView ?? 'list',
-  );
+  const [viewMode, setViewModeState] = useState<PlayerListViewMode>(config.preferredPlayerlistView ?? 'list');
   const [playerDetailsViewMode, setPlayerDetailsViewMode] = useState<PlayerDetailsPanelMode>('summary');
 
   useEffect(() => {
@@ -157,17 +145,11 @@ export function usePlayerViewModes() {
 
 export function useSortedPlayers(players: Player[]) {
   return useMemo(() => {
-    return [...players].sort((a, b) =>
-      a.profile.profile.personaname.localeCompare(
-        b.profile.profile.personaname,
-      ),
-    );
+    return [...players].sort((a, b) => a.profile.profile.personaname.localeCompare(b.profile.profile.personaname));
   }, [players]);
 }
 
-export function useManualPlayerIds(
-  getSelectedTeam?: () => TeamData | undefined,
-) {
+export function useManualPlayerIds(getSelectedTeam?: () => TeamData | undefined) {
   return useMemo(() => {
     const selectedTeam = getSelectedTeam?.();
     const manual = selectedTeam?.manualPlayers ?? [];
@@ -184,9 +166,7 @@ export function useWaitForPlayerReadySource(players: Player[]) {
   const waitForPlayerReady = useCallback(async (playerId: number, timeoutMs = 3000): Promise<boolean> => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
-      const player = playersRef.current.find(
-        (p) => p.profile.profile.account_id === playerId,
-      );
+      const player = playersRef.current.find((p) => p.profile.profile.account_id === playerId);
       if (player && !player.error) {
         return true;
       }
@@ -208,22 +188,28 @@ export function usePlayerListActions(deps: {
 }) {
   const { refreshPlayer, resizableLayoutRef, setShowAddPlayerSheet } = deps;
 
-  const handleRefreshPlayer = useCallback(async (playerId: number) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      await refreshPlayer(playerId);
-    } catch (error) {
-      console.error('Error in handleRefreshPlayer:', error);
-    }
-  }, [refreshPlayer]);
+  const handleRefreshPlayer = useCallback(
+    async (playerId: number) => {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        await refreshPlayer(playerId);
+      } catch (error) {
+        console.error('Error in handleRefreshPlayer:', error);
+      }
+    },
+    [refreshPlayer],
+  );
 
   const handleOpenAddPlayerSheet = useCallback(() => {
     setShowAddPlayerSheet(true);
   }, [setShowAddPlayerSheet]);
 
-  const handleScrollToPlayer = useCallback((playerId: number) => {
-    resizableLayoutRef.current?.scrollToPlayer(playerId);
-  }, [resizableLayoutRef]);
+  const handleScrollToPlayer = useCallback(
+    (playerId: number) => {
+      resizableLayoutRef.current?.scrollToPlayer(playerId);
+    },
+    [resizableLayoutRef],
+  );
 
   return { handleRefreshPlayer, handleOpenAddPlayerSheet, handleScrollToPlayer } as const;
 }
@@ -237,50 +223,67 @@ export function usePlayerEditActions(deps: {
   resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;
   waitForPlayerReady: (playerId: number, timeoutMs?: number) => Promise<boolean>;
 }) {
-  const { addPlayer, addPlayerToTeam, removeManualPlayer, editManualPlayer, selectPlayer, resizableLayoutRef, waitForPlayerReady } = deps;
+  const {
+    addPlayer,
+    addPlayerToTeam,
+    removeManualPlayer,
+    editManualPlayer,
+    selectPlayer,
+    resizableLayoutRef,
+    waitForPlayerReady,
+  } = deps;
 
-  const handleRemoveManualPlayer = useCallback((playerId: number) => {
-    try {
-      removeManualPlayer?.(playerId);
-    } catch (e) {
-      console.error('Failed to remove manual player:', e);
-    }
-  }, [removeManualPlayer]);
+  const handleRemoveManualPlayer = useCallback(
+    (playerId: number) => {
+      try {
+        removeManualPlayer?.(playerId);
+      } catch (e) {
+        console.error('Failed to remove manual player:', e);
+      }
+    },
+    [removeManualPlayer],
+  );
 
   const handleEditManualPlayer = useCallback((playerId: number) => {
     // This consumer should open the edit sheet; leave empty here
     console.warn('handleEditManualPlayer should be provided by UI consumer', playerId);
   }, []);
 
-  const handleAddPlayer = useCallback(async (playerId: string) => {
-    const playerIdNum = parseInt(playerId, 10);
-    if (isNaN(playerIdNum)) {
-      throw new Error('Invalid player ID');
-    }
-    const added = await addPlayer(playerIdNum);
-    try {
-      await addPlayerToTeam?.(playerIdNum);
-    } catch (e) {
-      console.warn('addPlayerToTeam failed, player added to context only:', e);
-    }
-    if (added && !added.error) {
-      selectPlayer(playerIdNum);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    resizableLayoutRef.current?.scrollToPlayer(playerIdNum);
-  }, [addPlayer, addPlayerToTeam, selectPlayer, resizableLayoutRef]);
+  const handleAddPlayer = useCallback(
+    async (playerId: string) => {
+      const playerIdNum = parseInt(playerId, 10);
+      if (isNaN(playerIdNum)) {
+        throw new Error('Invalid player ID');
+      }
+      const added = await addPlayer(playerIdNum);
+      try {
+        await addPlayerToTeam?.(playerIdNum);
+      } catch (e) {
+        console.warn('addPlayerToTeam failed, player added to context only:', e);
+      }
+      if (added && !added.error) {
+        selectPlayer(playerIdNum);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      resizableLayoutRef.current?.scrollToPlayer(playerIdNum);
+    },
+    [addPlayer, addPlayerToTeam, selectPlayer, resizableLayoutRef],
+  );
 
-  const onEditPlayer = useCallback(async (oldId: number, newPlayerId: string) => {
-    if (!Number.isFinite(Number(newPlayerId))) return;
-    const newIdNum = Number(newPlayerId);
-    await editManualPlayer?.(oldId, newIdNum);
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    resizableLayoutRef.current?.scrollToPlayer(newIdNum);
-    const ready = await waitForPlayerReady(newIdNum);
-    if (ready) {
-      selectPlayer(newIdNum);
-    }
-  }, [editManualPlayer, resizableLayoutRef, waitForPlayerReady, selectPlayer]);
+  const onEditPlayer = useCallback(
+    async (oldId: number, newPlayerId: string) => {
+      if (!Number.isFinite(Number(newPlayerId))) return;
+      const newIdNum = Number(newPlayerId);
+      await editManualPlayer?.(oldId, newIdNum);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      resizableLayoutRef.current?.scrollToPlayer(newIdNum);
+      const ready = await waitForPlayerReady(newIdNum);
+      if (ready) {
+        selectPlayer(newIdNum);
+      }
+    },
+    [editManualPlayer, resizableLayoutRef, waitForPlayerReady, selectPlayer],
+  );
 
   return { handleRemoveManualPlayer, handleEditManualPlayer, handleAddPlayer, onEditPlayer } as const;
 }

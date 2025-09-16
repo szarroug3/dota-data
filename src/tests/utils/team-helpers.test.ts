@@ -1,6 +1,6 @@
 /**
  * Team Helpers Tests
- * 
+ *
  * Tests for the team helper utility functions including team key generation,
  * side determination, player extraction, and data creation.
  */
@@ -12,7 +12,7 @@ import {
   extractPlayersFromMatchSide,
   generateTeamKey,
   updateTeamPerformance,
-  validateActiveTeam
+  validateActiveTeam,
 } from '@/utils/team-helpers';
 
 // ============================================================================
@@ -28,24 +28,32 @@ const mockMatch: MatchWithTeamIds = {
   direTeamId: 67890,
   radiant: {
     id: 12345,
-    name: 'Radiant Team'
+    name: 'Radiant Team',
   },
   dire: {
     id: 67890,
-    name: 'Dire Team'
+    name: 'Dire Team',
   },
   draft: {
     radiantPicks: [],
     direPicks: [],
     radiantBans: [],
-    direBans: []
+    direBans: [],
   },
   players: {
     radiant: [
       {
         accountId: 111111111,
         playerName: 'Player 1',
-        hero: { id: '1', name: 'Anti-Mage', localizedName: 'Anti-Mage', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape'], imageUrl: '/heroes/anti-mage.png' },
+        hero: {
+          id: '1',
+          name: 'Anti-Mage',
+          localizedName: 'Anti-Mage',
+          primaryAttribute: 'agility',
+          attackType: 'melee',
+          roles: ['carry', 'escape'],
+          imageUrl: '/heroes/anti-mage.png',
+        },
         role: 'Carry',
         stats: {
           kills: 10,
@@ -56,19 +64,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 600,
           xpm: 500,
           netWorth: 25000,
-          level: 25
+          level: 25,
         },
         items: [],
         heroStats: {
           damageDealt: 15000,
           healingDone: 0,
-          towerDamage: 2000
-        }
+          towerDamage: 2000,
+        },
       },
       {
         accountId: 222222222,
         playerName: 'Player 2',
-        hero: { id: '2', name: 'Axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'durable'], imageUrl: '/heroes/axe.png' },
+        hero: {
+          id: '2',
+          name: 'Axe',
+          localizedName: 'Axe',
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: ['initiator', 'durable'],
+          imageUrl: '/heroes/axe.png',
+        },
         role: 'Support',
         stats: {
           kills: 2,
@@ -79,19 +95,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 300,
           xpm: 400,
           netWorth: 12000,
-          level: 20
+          level: 20,
         },
         items: [],
         heroStats: {
           damageDealt: 8000,
           healingDone: 5000,
-          towerDamage: 500
-        }
+          towerDamage: 500,
+        },
       },
       {
         accountId: 333333333,
         playerName: 'Player 3',
-        hero: { id: '3', name: 'Crystal Maiden', localizedName: 'Crystal Maiden', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/crystal-maiden.png' },
+        hero: {
+          id: '3',
+          name: 'Crystal Maiden',
+          localizedName: 'Crystal Maiden',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['support', 'disabler'],
+          imageUrl: '/heroes/crystal-maiden.png',
+        },
         role: 'Mid',
         stats: {
           kills: 15,
@@ -102,19 +126,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 500,
           xpm: 600,
           netWorth: 20000,
-          level: 24
+          level: 24,
         },
         items: [],
         heroStats: {
           damageDealt: 20000,
           healingDone: 0,
-          towerDamage: 1000
-        }
+          towerDamage: 1000,
+        },
       },
       {
         accountId: 444444444,
         playerName: 'Player 4',
-        hero: { id: '4', name: 'Lina', localizedName: 'Lina', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['carry', 'support'], imageUrl: '/heroes/lina.png' },
+        hero: {
+          id: '4',
+          name: 'Lina',
+          localizedName: 'Lina',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['carry', 'support'],
+          imageUrl: '/heroes/lina.png',
+        },
         role: 'Offlane',
         stats: {
           kills: 8,
@@ -125,19 +157,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 450,
           xpm: 480,
           netWorth: 18000,
-          level: 22
+          level: 22,
         },
         items: [],
         heroStats: {
           damageDealt: 12000,
           healingDone: 0,
-          towerDamage: 800
-        }
+          towerDamage: 800,
+        },
       },
       {
         accountId: 555555555,
         playerName: 'Player 5',
-        hero: { id: '5', name: 'Lion', localizedName: 'Lion', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/lion.png' },
+        hero: {
+          id: '5',
+          name: 'Lion',
+          localizedName: 'Lion',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['support', 'disabler'],
+          imageUrl: '/heroes/lion.png',
+        },
         role: 'Support',
         stats: {
           kills: 1,
@@ -148,21 +188,29 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 250,
           xpm: 350,
           netWorth: 8000,
-          level: 18
+          level: 18,
         },
         items: [],
         heroStats: {
           damageDealt: 6000,
           healingDone: 8000,
-          towerDamage: 300
-        }
-      }
+          towerDamage: 300,
+        },
+      },
     ],
     dire: [
       {
         accountId: 666666666,
         playerName: 'Player 6',
-        hero: { id: '6', name: 'Phantom Assassin', localizedName: 'Phantom Assassin', primaryAttribute: 'agility', attackType: 'melee', roles: ['carry', 'escape'], imageUrl: '/heroes/phantom-assassin.png' },
+        hero: {
+          id: '6',
+          name: 'Phantom Assassin',
+          localizedName: 'Phantom Assassin',
+          primaryAttribute: 'agility',
+          attackType: 'melee',
+          roles: ['carry', 'escape'],
+          imageUrl: '/heroes/phantom-assassin.png',
+        },
         role: 'Carry',
         stats: {
           kills: 12,
@@ -173,19 +221,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 550,
           xpm: 480,
           netWorth: 22000,
-          level: 23
+          level: 23,
         },
         items: [],
         heroStats: {
           damageDealt: 16000,
           healingDone: 0,
-          towerDamage: 1500
-        }
+          towerDamage: 1500,
+        },
       },
       {
         accountId: 777777777,
         playerName: 'Player 7',
-        hero: { id: '7', name: 'Witch Doctor', localizedName: 'Witch Doctor', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/witch-doctor.png' },
+        hero: {
+          id: '7',
+          name: 'Witch Doctor',
+          localizedName: 'Witch Doctor',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['support', 'disabler'],
+          imageUrl: '/heroes/witch-doctor.png',
+        },
         role: 'Support',
         stats: {
           kills: 3,
@@ -196,19 +252,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 280,
           xpm: 380,
           netWorth: 10000,
-          level: 19
+          level: 19,
         },
         items: [],
         heroStats: {
           damageDealt: 7000,
           healingDone: 6000,
-          towerDamage: 400
-        }
+          towerDamage: 400,
+        },
       },
       {
         accountId: 888888888,
         playerName: 'Player 8',
-        hero: { id: '8', name: 'Storm Spirit', localizedName: 'Storm Spirit', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['carry', 'escape'], imageUrl: '/heroes/storm-spirit.png' },
+        hero: {
+          id: '8',
+          name: 'Storm Spirit',
+          localizedName: 'Storm Spirit',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['carry', 'escape'],
+          imageUrl: '/heroes/storm-spirit.png',
+        },
         role: 'Mid',
         stats: {
           kills: 18,
@@ -219,19 +283,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 520,
           xpm: 580,
           netWorth: 21000,
-          level: 25
+          level: 25,
         },
         items: [],
         heroStats: {
           damageDealt: 22000,
           healingDone: 0,
-          towerDamage: 1200
-        }
+          towerDamage: 1200,
+        },
       },
       {
         accountId: 999999999,
         playerName: 'Player 9',
-        hero: { id: '9', name: 'Tidehunter', localizedName: 'Tidehunter', primaryAttribute: 'strength', attackType: 'melee', roles: ['initiator', 'durable'], imageUrl: '/heroes/tidehunter.png' },
+        hero: {
+          id: '9',
+          name: 'Tidehunter',
+          localizedName: 'Tidehunter',
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: ['initiator', 'durable'],
+          imageUrl: '/heroes/tidehunter.png',
+        },
         role: 'Offlane',
         stats: {
           kills: 6,
@@ -242,19 +314,27 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 420,
           xpm: 450,
           netWorth: 16000,
-          level: 21
+          level: 21,
         },
         items: [],
         heroStats: {
           damageDealt: 11000,
           healingDone: 0,
-          towerDamage: 600
-        }
+          towerDamage: 600,
+        },
       },
       {
         accountId: 101010101,
         playerName: 'Player 10',
-        hero: { id: '10', name: 'Shadow Shaman', localizedName: 'Shadow Shaman', primaryAttribute: 'intelligence', attackType: 'ranged', roles: ['support', 'disabler'], imageUrl: '/heroes/shadow-shaman.png' },
+        hero: {
+          id: '10',
+          name: 'Shadow Shaman',
+          localizedName: 'Shadow Shaman',
+          primaryAttribute: 'intelligence',
+          attackType: 'ranged',
+          roles: ['support', 'disabler'],
+          imageUrl: '/heroes/shadow-shaman.png',
+        },
         role: 'Support',
         stats: {
           kills: 2,
@@ -265,16 +345,16 @@ const mockMatch: MatchWithTeamIds = {
           gpm: 240,
           xpm: 320,
           netWorth: 7000,
-          level: 17
+          level: 17,
         },
         items: [],
         heroStats: {
           damageDealt: 5000,
           healingDone: 7000,
-          towerDamage: 200
-        }
-      }
-    ]
+          towerDamage: 200,
+        },
+      },
+    ],
   },
   statistics: {
     radiantScore: 30,
@@ -282,16 +362,16 @@ const mockMatch: MatchWithTeamIds = {
     goldAdvantage: {
       times: [0, 300, 600, 900, 1200, 1500, 1800],
       radiantGold: [0, 5000, 12000, 18000, 25000, 32000, 40000],
-      direGold: [0, 4800, 11500, 17000, 23000, 29000, 35000]
+      direGold: [0, 4800, 11500, 17000, 23000, 29000, 35000],
     },
     experienceAdvantage: {
       times: [0, 300, 600, 900, 1200, 1500, 1800],
       radiantExperience: [0, 2000, 5000, 8000, 12000, 16000, 20000],
-      direExperience: [0, 1900, 4800, 7500, 11000, 14500, 18000]
-    }
+      direExperience: [0, 1900, 4800, 7500, 11000, 14500, 18000],
+    },
   },
   events: [],
-  result: 'radiant'
+  result: 'radiant',
 };
 
 // ============================================================================
@@ -354,7 +434,7 @@ describe('Team Helpers', () => {
     it('should return empty array for match with no players', () => {
       const emptyMatch: Match = {
         ...mockMatch,
-        players: { radiant: [], dire: [] }
+        players: { radiant: [], dire: [] },
       };
       const result = extractPlayersFromMatchSide(emptyMatch, 'radiant');
       expect(result).toEqual([]);
@@ -377,31 +457,66 @@ describe('Team Helpers', () => {
           totalLosses: 0,
           overallWinRate: 0,
           heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-          draftStats: { firstPickCount: 0, secondPickCount: 0, firstPickWinRate: 0, secondPickWinRate: 0, uniqueHeroesPicked: 0, uniqueHeroesBanned: 0, mostPickedHero: '', mostBannedHero: '' },
+          draftStats: {
+            firstPickCount: 0,
+            secondPickCount: 0,
+            firstPickWinRate: 0,
+            secondPickWinRate: 0,
+            uniqueHeroesPicked: 0,
+            uniqueHeroesBanned: 0,
+            mostPickedHero: '',
+            mostBannedHero: '',
+          },
           currentWinStreak: 0,
           currentLoseStreak: 0,
           averageMatchDuration: 0,
           averageKills: 0,
           averageDeaths: 0,
           averageGold: 0,
-          averageExperience: 0
-        }
+          averageExperience: 0,
+        },
       };
 
       const matchesWithCorrectSides: Record<number, TeamMatchParticipation> = {
-        1: { matchId: 1, side: 'radiant', pickOrder: 'first', result: 'won', duration: 0, opponentName: '', leagueId: '0', startTime: 0 },
-        2: { matchId: 2, side: 'dire', pickOrder: 'second', result: 'lost', duration: 0, opponentName: '', leagueId: '0', startTime: 0 },
-        3: { matchId: 3, side: 'radiant', pickOrder: 'first', result: 'won', duration: 0, opponentName: '', leagueId: '0', startTime: 0 }
+        1: {
+          matchId: 1,
+          side: 'radiant',
+          pickOrder: 'first',
+          result: 'won',
+          duration: 0,
+          opponentName: '',
+          leagueId: '0',
+          startTime: 0,
+        },
+        2: {
+          matchId: 2,
+          side: 'dire',
+          pickOrder: 'second',
+          result: 'lost',
+          duration: 0,
+          opponentName: '',
+          leagueId: '0',
+          startTime: 0,
+        },
+        3: {
+          matchId: 3,
+          side: 'radiant',
+          pickOrder: 'first',
+          result: 'won',
+          duration: 0,
+          opponentName: '',
+          leagueId: '0',
+          startTime: 0,
+        },
       };
 
       const originalTeamData = {
         matches: [
           { matchId: 1, result: 'won' },
           { matchId: 2, result: 'lost' },
-          { matchId: 3, result: 'won' }
-        ]
+          { matchId: 3, result: 'won' },
+        ],
       };
-
 
       const result = updateTeamPerformance(baseTeam, matchesWithCorrectSides, originalTeamData);
 
@@ -426,15 +541,24 @@ describe('Team Helpers', () => {
           totalLosses: 2,
           overallWinRate: 60,
           heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-          draftStats: { firstPickCount: 0, secondPickCount: 0, firstPickWinRate: 0, secondPickWinRate: 0, uniqueHeroesPicked: 0, uniqueHeroesBanned: 0, mostPickedHero: '', mostBannedHero: '' },
+          draftStats: {
+            firstPickCount: 0,
+            secondPickCount: 0,
+            firstPickWinRate: 0,
+            secondPickWinRate: 0,
+            uniqueHeroesPicked: 0,
+            uniqueHeroesBanned: 0,
+            mostPickedHero: '',
+            mostBannedHero: '',
+          },
           currentWinStreak: 0,
           currentLoseStreak: 0,
           averageMatchDuration: 0,
           averageKills: 0,
           averageDeaths: 0,
           averageGold: 0,
-          averageExperience: 0
-        }
+          averageExperience: 0,
+        },
       };
 
       const result = updateTeamPerformance(baseTeam, [], { matches: [] });
@@ -465,4 +589,4 @@ describe('Team Helpers', () => {
       }).toThrow('No active team selected');
     });
   });
-}); 
+});

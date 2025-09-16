@@ -1,9 +1,9 @@
 /**
  * Generic error handling utilities
- * 
+ *
  * Provides reusable error handling functions for contexts and components.
  * Eliminates code duplication across different data types.
- * 
+ *
  * Works with objects that have optional `error` and `isLoading` fields.
  */
 
@@ -28,9 +28,9 @@ export interface DataWithError {
 export function updateMapItemError<K, T extends DataWithError>(
   setMap: Dispatch<SetStateAction<Map<K, T>>>,
   key: K,
-  errorMessage: string
+  errorMessage: string,
 ): void {
-  setMap(prev => {
+  setMap((prev) => {
     const newMap = new Map(prev);
     const currentItem = newMap.get(key);
     if (currentItem) {
@@ -45,9 +45,9 @@ export function updateMapItemError<K, T extends DataWithError>(
  */
 export function clearMapItemError<K, T extends DataWithError>(
   setMap: Dispatch<SetStateAction<Map<K, T>>>,
-  key: K
+  key: K,
 ): void {
-  setMap(prev => {
+  setMap((prev) => {
     const newMap = new Map(prev);
     const currentItem = newMap.get(key);
     if (currentItem) {
@@ -66,24 +66,22 @@ export function clearMapItemError<K, T extends DataWithError>(
  */
 export function updateErrorState<T extends DataWithError>(
   errorMessage: string,
-  setData: Dispatch<SetStateAction<T>>
+  setData: Dispatch<SetStateAction<T>>,
 ): void {
-  setData(prev => ({
+  setData((prev) => ({
     ...prev,
     error: errorMessage,
-    isLoading: false
+    isLoading: false,
   }));
 }
 
 /**
  * Clear error for a single item with error/isLoading fields
  */
-export function clearErrorState<T extends DataWithError>(
-  setData: Dispatch<SetStateAction<T>>
-): void {
-  setData(prev => ({
+export function clearErrorState<T extends DataWithError>(setData: Dispatch<SetStateAction<T>>): void {
+  setData((prev) => ({
     ...prev,
-    error: null
+    error: null,
   }));
 }
 
@@ -94,19 +92,14 @@ export function clearErrorState<T extends DataWithError>(
 /**
  * Check if an item has an error
  */
-export function hasError<T extends DataWithError>(
-  item: T
-): boolean {
+export function hasError<T extends DataWithError>(item: T): boolean {
   return item.error !== null && item.error !== undefined;
 }
 
 /**
  * Get error message for a specific item in a Map
  */
-export function getMapItemError<K, T extends DataWithError>(
-  map: Map<K, T>,
-  key: K
-): string | null {
+export function getMapItemError<K, T extends DataWithError>(map: Map<K, T>, key: K): string | null {
   const item = map.get(key);
   return item ? item.error || null : null;
 }
@@ -121,7 +114,7 @@ export function getMapItemError<K, T extends DataWithError>(
 export function handleOperationError(
   error: Error | string | object,
   abortController: AbortController,
-  errorMessage: string = 'Operation failed'
+  errorMessage: string = 'Operation failed',
 ): string | null {
   // Only handle actual errors, not aborts
   if (!abortController.signal.aborted) {
@@ -135,7 +128,7 @@ export function handleOperationError(
  */
 export function createErrorMessage(
   error: Error | string | object,
-  defaultMessage: string = 'An error occurred'
+  defaultMessage: string = 'An error occurred',
 ): string {
   if (error instanceof Error) {
     return error.message;
@@ -144,4 +137,4 @@ export function createErrorMessage(
     return error;
   }
   return defaultMessage;
-} 
+}

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Config Context Provider (Frontend)
@@ -9,11 +9,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import type {
-  AppConfig,
-  ConfigContextProviderProps,
-  ConfigContextValue,
-} from '@/types/contexts/config-context-value';
+import type { AppConfig, ConfigContextProviderProps, ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
 import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage';
 
@@ -22,7 +18,7 @@ const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 const STORAGE_KEYS = {
   CONFIG: 'dota-scout-assistant-config',
   TEAMS: 'dota-scout-assistant-teams',
-  ACTIVE_TEAM: 'dota-scout-assistant-active-team'
+  ACTIVE_TEAM: 'dota-scout-assistant-active-team',
 } as const;
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -83,28 +79,31 @@ function useUpdateConfig(
   config: AppConfig,
   setConfig: (c: AppConfig) => void,
   setIsSaving: (b: boolean) => void,
-  setError: (e: string | null) => void
+  setError: (e: string | null) => void,
 ) {
-  return useCallback(async (updates: Partial<AppConfig>): Promise<void> => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      const newConfig = { ...config, ...updates };
-      setConfig(newConfig);
-      saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
-    } catch (error) {
-      console.error('Failed to update configuration:', error);
-      setError('Failed to update configuration');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [config, setConfig, setIsSaving, setError]);
+  return useCallback(
+    async (updates: Partial<AppConfig>): Promise<void> => {
+      setIsSaving(true);
+      setError(null);
+      try {
+        const newConfig = { ...config, ...updates };
+        setConfig(newConfig);
+        saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
+      } catch (error) {
+        console.error('Failed to update configuration:', error);
+        setError('Failed to update configuration');
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [config, setConfig, setIsSaving, setError],
+  );
 }
 
 function useResetConfig(
   setConfig: (c: AppConfig) => void,
   setIsSaving: (b: boolean) => void,
-  setError: (e: string | null) => void
+  setError: (e: string | null) => void,
 ) {
   return useCallback(async (): Promise<void> => {
     setIsSaving(true);
@@ -138,7 +137,10 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedActiveTeam = loadFromStorage<{ teamId: number; leagueId: number } | null>(STORAGE_KEYS.ACTIVE_TEAM, null);
+      const storedActiveTeam = loadFromStorage<{ teamId: number; leagueId: number } | null>(
+        STORAGE_KEYS.ACTIVE_TEAM,
+        null,
+      );
       setActiveTeamState(storedActiveTeam);
     }
   }, []);
@@ -173,14 +175,10 @@ export const ConfigProvider: React.FC<ConfigContextProviderProps> = ({ children 
     error,
     updateConfig,
     resetConfig,
-    clearErrors
+    clearErrors,
   };
 
-  return (
-    <ConfigContext.Provider value={contextValue}>
-      {children}
-    </ConfigContext.Provider>
-  );
+  return <ConfigContext.Provider value={contextValue}>{children}</ConfigContext.Provider>;
 };
 
 export const useConfigContext = (): ConfigContextValue => {
@@ -190,5 +188,3 @@ export const useConfigContext = (): ConfigContextValue => {
   }
   return context;
 };
-
-

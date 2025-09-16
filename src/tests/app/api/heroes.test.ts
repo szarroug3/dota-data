@@ -18,7 +18,7 @@ const mockHeroesData: OpenDotaHero[] = [
     primary_attr: 'agi',
     attack_type: 'Melee',
     roles: ['Carry', 'Escape', 'Nuker'],
-    legs: 2
+    legs: 2,
   },
   {
     id: 2,
@@ -27,8 +27,8 @@ const mockHeroesData: OpenDotaHero[] = [
     primary_attr: 'str',
     attack_type: 'Melee',
     roles: ['Initiator', 'Durable', 'Disabler', 'Carry'],
-    legs: 2
-  }
+    legs: 2,
+  },
 ];
 
 describe('Heroes API Route', () => {
@@ -45,8 +45,25 @@ describe('Heroes API Route', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      
-      expect(data).toEqual(mockHeroesData);
+
+      expect(data).toEqual([
+        {
+          id: 1,
+          name: 'npc_dota_hero_antimage',
+          localized_name: 'Anti-Mage',
+          primary_attr: 'agi',
+          attack_type: 'Melee',
+          roles: ['Carry', 'Escape', 'Nuker'],
+        },
+        {
+          id: 2,
+          name: 'npc_dota_hero_axe',
+          localized_name: 'Axe',
+          primary_attr: 'str',
+          attack_type: 'Melee',
+          roles: ['Initiator', 'Durable', 'Disabler', 'Carry'],
+        },
+      ]);
       expect(mockFetchOpenDotaHeroes).toHaveBeenCalledWith(false);
     });
 
@@ -138,4 +155,4 @@ describe('Heroes API Route', () => {
       expect(mockFetchOpenDotaHeroes).toHaveBeenCalledWith(false);
     });
   });
-}); 
+});

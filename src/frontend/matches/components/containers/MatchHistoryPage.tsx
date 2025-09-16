@@ -15,5 +15,3 @@ export const MatchHistoryPage: React.FC = () => {
     </div>
   );
 };
-
-

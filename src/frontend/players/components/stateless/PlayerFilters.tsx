@@ -17,10 +17,7 @@ interface PlayerFiltersProps {
   players: Player[];
 }
 
-export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
-  filters,
-  onFiltersChange,
-}) => {
+export const PlayerFilters: React.FC<PlayerFiltersProps> = ({ filters, onFiltersChange }) => {
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, search: value });
   };
@@ -83,5 +80,3 @@ export const PlayerFilters: React.FC<PlayerFiltersProps> = ({
     </div>
   );
 };
-
-

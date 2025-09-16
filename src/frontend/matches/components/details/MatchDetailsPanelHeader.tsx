@@ -18,10 +18,7 @@ interface MatchDetailsLayoutButtonsProps {
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
 }
 
-const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({ 
-  viewMode, 
-  onViewModeChange,
-}) => (
+const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({ viewMode, onViewModeChange }) => (
   <>
     <div className="@[150px]:flex hidden">
       <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as MatchDetailsPanelMode)}>
@@ -43,7 +40,7 @@ const MatchDetailsLayoutButtons: React.FC<MatchDetailsLayoutButtonsProps> = ({
     </div>
     <div className="@[150px]:hidden h-9 w-32" />
   </>
-)
+);
 
 export const MatchDetailsPanelHeader: React.FC<MatchDetailsPanelHeaderProps> = ({
   className = '',
@@ -53,16 +50,13 @@ export const MatchDetailsPanelHeader: React.FC<MatchDetailsPanelHeaderProps> = (
   return (
     <div className={`flex items-center justify-between gap-2 min-w-0 ${className}`}>
       <div className="min-w-0 flex-1 overflow-hidden">
-        <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[190px]:block hidden">Match Details</h2>
+        <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[190px]:block hidden">
+          Match Details
+        </h2>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0 justify-end">
-        <MatchDetailsLayoutButtons 
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-        />
+        <MatchDetailsLayoutButtons viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </div>
     </div>
   );
 };
-
-

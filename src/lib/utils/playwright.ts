@@ -12,21 +12,19 @@ const BROWSER_CONFIG = {
  * Browser context configuration to avoid detection
  */
 const CONTEXT_CONFIG = {
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+  userAgent:
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
   viewport: { width: 1280, height: 800 },
 };
 
 /**
  * Scrapes HTML from a URL using Playwright
- * 
+ *
  * @param url The URL to scrape
  * @param selector The CSS selector to wait for before extracting HTML
  * @returns The HTML content of the page
  */
-export async function scrapeHtmlFromUrl(
-  url: string,
-  selector: string
-): Promise<string> {
+export async function scrapeHtmlFromUrl(url: string, selector: string): Promise<string> {
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
   let page: Page | null = null;
@@ -56,4 +54,4 @@ export async function scrapeHtmlFromUrl(
     if (context) await context.close();
     if (browser) await browser.close();
   }
-} 
+}

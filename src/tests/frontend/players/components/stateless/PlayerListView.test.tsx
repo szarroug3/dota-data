@@ -9,10 +9,10 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   useConfigContext: () => ({
     config: {
       config: {
-        preferredExternalSite: 'opendota'
-      }
-    }
-  })
+        preferredExternalSite: 'opendota',
+      },
+    },
+  }),
 }));
 
 // Mock the utility function
@@ -20,8 +20,8 @@ jest.mock('@/utils/player-statistics', () => ({
   processPlayerRank: jest.fn().mockReturnValue({
     displayText: 'Legend',
     isImmortal: false,
-    stars: 5
-  })
+    stars: 5,
+  }),
 }));
 
 // Test data
@@ -43,10 +43,10 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
       status: 'online',
       fh_unavailable: false,
       is_contributor: false,
-      is_subscriber: false
+      is_subscriber: false,
     },
     rank_tier: 50,
-    leaderboard_rank: 0
+    leaderboard_rank: 0,
   },
   counts: {
     leaver_status: {},
@@ -54,11 +54,29 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
     lobby_type: {},
     lane_role: {},
     region: {},
-    patch: {}
+    patch: {},
   },
   heroes: [
-    { hero_id: 1, last_played: 1640995200, games: 20, win: 12, with_games: 0, with_win: 0, against_games: 0, against_win: 0 },
-    { hero_id: 2, last_played: 1640995200, games: 15, win: 8, with_games: 0, with_win: 0, against_games: 0, against_win: 0 }
+    {
+      hero_id: 1,
+      last_played: 1640995200,
+      games: 20,
+      win: 12,
+      with_games: 0,
+      with_win: 0,
+      against_games: 0,
+      against_win: 0,
+    },
+    {
+      hero_id: 2,
+      last_played: 1640995200,
+      games: 15,
+      win: 8,
+      with_games: 0,
+      with_win: 0,
+      against_games: 0,
+      against_win: 0,
+    },
   ],
   rankings: [],
   ratings: [],
@@ -70,28 +88,44 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
     all_time: 0,
     ranked: 0,
     turbo: 0,
-    matched: 0
+    matched: 0,
   },
   wl: {
     win: 100,
-    lose: 50
+    lose: 50,
   },
   wardMap: {
     obs: {},
-    sen: {}
+    sen: {},
   },
-  ...overrides
+  ...overrides,
 });
 
 const createMockPlayerWithError = (errorMessage: string): Player => ({
   ...createMockPlayer(),
-  error: errorMessage
+  error: errorMessage,
 });
 
 describe('PlayerListView', () => {
   const heroes: Record<string, Hero> = {
-    '1': { id: '1', name: 'antimage', localizedName: 'Anti-Mage', primaryAttribute: 'agility', attackType: 'melee', roles: [], imageUrl: '' },
-    '2': { id: '2', name: 'axe', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: [], imageUrl: '' },
+    '1': {
+      id: '1',
+      name: 'antimage',
+      localizedName: 'Anti-Mage',
+      primaryAttribute: 'agility',
+      attackType: 'melee',
+      roles: [],
+      imageUrl: '',
+    },
+    '2': {
+      id: '2',
+      name: 'axe',
+      localizedName: 'Axe',
+      primaryAttribute: 'strength',
+      attackType: 'melee',
+      roles: [],
+      imageUrl: '',
+    },
   };
   const defaultProps = {
     players: [createMockPlayer()],
@@ -110,24 +144,24 @@ describe('PlayerListView', () => {
   describe('List View Mode', () => {
     it('renders players in list format', () => {
       render(<PlayerListView {...defaultProps} />);
-      
+
       expect(screen.getByText('TestPlayer')).toBeInTheDocument();
       // Assert stats numbers are present without depending on responsive labels/text splitting
       expect(
         screen.getAllByText((content, node) => {
           const text = node?.textContent || '';
           return text.includes('150') && text.includes('66.7%');
-        }).length
+        }).length,
       ).toBeGreaterThan(0);
     });
 
     it('shows error state correctly', () => {
       const errorPlayer = createMockPlayerWithError('Failed to fetch player data');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       // Card has aria-label with error text
       expect(screen.getByRole('button', { name: /Error: Failed to fetch player data/i })).toBeInTheDocument();
-      
+
       // Should not show normal player data when there's an error
       expect(screen.queryByText('150')).not.toBeInTheDocument();
       expect(screen.queryByText(/66\.7%/)).not.toBeInTheDocument();
@@ -137,7 +171,7 @@ describe('PlayerListView', () => {
     it('shows error aria-label on errored row', () => {
       const errorPlayer = createMockPlayerWithError('Network error');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       const erroredCard = screen.getByRole('button', { name: /Error: Network error/i });
       expect(erroredCard).toBeInTheDocument();
     });
@@ -145,7 +179,7 @@ describe('PlayerListView', () => {
     it('hides hero data when player has error', () => {
       const errorPlayer = createMockPlayerWithError('Data fetch failed');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       // Should not show "No hero data" text when there's an error
       expect(screen.queryByText('No hero data')).not.toBeInTheDocument();
     });
@@ -153,7 +187,7 @@ describe('PlayerListView', () => {
     it('hides win rate and game count when player has error', () => {
       const errorPlayer = createMockPlayerWithError('Connection timeout');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       // Should not show game statistics
       expect(screen.queryByText(/games/)).not.toBeInTheDocument();
       expect(screen.queryByText(/win rate/)).not.toBeInTheDocument();
@@ -162,7 +196,7 @@ describe('PlayerListView', () => {
     it('hides rank information when player has error', () => {
       const errorPlayer = createMockPlayerWithError('Server error');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       // Should not show rank
       expect(screen.queryByText('Legend')).not.toBeInTheDocument();
     });
@@ -173,23 +207,23 @@ describe('PlayerListView', () => {
 
     it('renders players in card format', () => {
       render(<PlayerListView {...cardViewProps} />);
-      
+
       expect(screen.getByText('TestPlayer')).toBeInTheDocument();
       expect(
         screen.getAllByText((content, node) => {
           const text = node?.textContent || '';
           return text.includes('150') && text.includes('66.7%');
-        }).length
+        }).length,
       ).toBeGreaterThan(0);
     });
 
     it('shows error state correctly in card view', () => {
       const errorPlayer = createMockPlayerWithError('Failed to fetch player data');
       render(<PlayerListView {...cardViewProps} players={[errorPlayer]} />);
-      
+
       const erroredCard = screen.getByRole('button', { name: /Error: Failed to fetch player data/i });
       expect(erroredCard).toBeInTheDocument();
-      
+
       // Should not show normal player data when there's an error
       expect(screen.queryByText('150')).not.toBeInTheDocument();
       expect(screen.queryByText(/66\.7%/)).not.toBeInTheDocument();
@@ -199,10 +233,10 @@ describe('PlayerListView', () => {
     it('shows error aria-label in card view', () => {
       const errorPlayer = createMockPlayerWithError('API error');
       render(<PlayerListView {...cardViewProps} players={[errorPlayer]} />);
-      
+
       const erroredCard = screen.getByRole('button', { name: /Error: API error/i });
       expect(erroredCard).toBeInTheDocument();
-      
+
       expect(erroredCard).toHaveClass('border-destructive');
     });
 
@@ -217,7 +251,7 @@ describe('PlayerListView', () => {
           manualPlayerIds={new Set([manualId])}
           onEditPlayer={onEditPlayer}
           onRemovePlayer={onRemovePlayer}
-        />
+        />,
       );
 
       // Edit and Remove buttons should be present for manual players
@@ -230,7 +264,7 @@ describe('PlayerListView', () => {
     it('applies destructive border styling when player has error', () => {
       const errorPlayer = createMockPlayerWithError('Network error');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       const playerCard = screen.getByRole('button', { name: /Error: Network error/i });
       expect(playerCard).toHaveClass('border-destructive');
     });
@@ -238,7 +272,7 @@ describe('PlayerListView', () => {
     it('shows error message below error badge', () => {
       const errorPlayer = createMockPlayerWithError('Custom error message');
       render(<PlayerListView {...defaultProps} players={[errorPlayer]} />);
-      
+
       const erroredCard = screen.getByRole('button', { name: /Error: Custom error message/i });
       expect(erroredCard).toBeInTheDocument();
       expect(erroredCard).toHaveClass('border-destructive');

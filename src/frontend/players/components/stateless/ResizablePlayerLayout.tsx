@@ -2,7 +2,6 @@
 
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
@@ -126,7 +125,16 @@ function PlayerDetailsSection(props: {
   matchesArray: Match[];
   selectedTeam: TeamData | null | undefined;
 }) {
-  const { selectedPlayer, playerDetailsViewMode, setPlayerDetailsViewMode, players, hiddenPlayerIds = new Set(), heroes, matchesArray, selectedTeam } = props;
+  const {
+    selectedPlayer,
+    playerDetailsViewMode,
+    setPlayerDetailsViewMode,
+    players,
+    hiddenPlayerIds = new Set(),
+    heroes,
+    matchesArray,
+    selectedTeam,
+  } = props;
   return (
     <div className="h-fit pt-2 pl-3">
       {selectedPlayer ? (
@@ -152,102 +160,100 @@ function PlayerDetailsSection(props: {
   );
 }
 
-export const ResizablePlayerLayout =
-  React.memo(forwardRef<ResizablePlayerLayoutRef, ResizablePlayerLayoutProps>(({ 
-  players,
-  visiblePlayers,
-  filteredPlayers,
-  onHidePlayer,
-  onRefreshPlayer,
-  viewMode,
-  setViewMode,
-  selectedPlayerId,
-  onSelectPlayer,
-  hiddenPlayersCount = 0,
-  onShowHiddenPlayers,
-  hiddenPlayerIds = new Set(),
-  selectedPlayer,
-  playerDetailsViewMode,
-  setPlayerDetailsViewMode,
-  onScrollToPlayer,
-  onAddPlayer,
-  manualPlayerIds,
-  onEditPlayer,
-  onRemovePlayer,
-  heroes,
-  preferredSite,
-  matchesArray,
-  selectedTeam,
-}, ref) => {
-  const playersListRef = React.useRef<PlayersListRef>(null!);
+export const ResizablePlayerLayout = React.memo(
+  forwardRef<ResizablePlayerLayoutRef, ResizablePlayerLayoutProps>(
+    (
+      {
+        players,
+        visiblePlayers,
+        filteredPlayers,
+        onHidePlayer,
+        onRefreshPlayer,
+        viewMode,
+        setViewMode,
+        selectedPlayerId,
+        onSelectPlayer,
+        hiddenPlayersCount = 0,
+        onShowHiddenPlayers,
+        hiddenPlayerIds = new Set(),
+        selectedPlayer,
+        playerDetailsViewMode,
+        setPlayerDetailsViewMode,
+        onScrollToPlayer,
+        onAddPlayer,
+        manualPlayerIds,
+        onEditPlayer,
+        onRemovePlayer,
+        heroes,
+        preferredSite,
+        matchesArray,
+        selectedTeam,
+      },
+      ref,
+    ) => {
+      const playersListRef = React.useRef<PlayersListRef>(null!);
 
-  useImperativeHandle(ref, () => ({
-    scrollToPlayer: (playerId: number) => {
-      playersListRef.current?.scrollToPlayer(playerId);
-    }
-  }));
+      useImperativeHandle(ref, () => ({
+        scrollToPlayer: (playerId: number) => {
+          playersListRef.current?.scrollToPlayer(playerId);
+        },
+      }));
 
-  return (
-    <div className="h-fit flex flex-col">
-      <div className="h-fit">
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel 
-            id="player-list" 
-            defaultSize={50}
-            minSize={0} 
-            maxSize={100} 
-            className="overflow-visible"
-          >
-            <PlayersListSection
-              players={players}
-              visiblePlayers={visiblePlayers}
-              filteredPlayers={filteredPlayers}
-              selectedPlayerId={selectedPlayerId}
-              onSelectPlayer={onSelectPlayer}
-              onHidePlayer={onHidePlayer}
-              onRefreshPlayer={onRefreshPlayer}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              hiddenPlayersCount={hiddenPlayersCount}
-              onShowHiddenPlayers={onShowHiddenPlayers}
-              hiddenPlayerIds={hiddenPlayerIds}
-              onScrollToPlayer={onScrollToPlayer}
-              onAddPlayer={onAddPlayer}
-              manualPlayerIds={manualPlayerIds}
-              onEditPlayer={onEditPlayer}
-              onRemovePlayer={onRemovePlayer}
-              heroes={heroes}
-              preferredSite={preferredSite}
-              playersListRef={playersListRef}
-            />
-          </ResizablePanel>
-          
-          <ResizableHandle withHandle className="after:w-4" />
-          
-          <ResizablePanel 
-            id="player-details" 
-            defaultSize={50}
-            minSize={0} 
-            maxSize={100}
-            className="overflow-hidden"
-          >
-            <PlayerDetailsSection
-              selectedPlayer={selectedPlayer}
-              playerDetailsViewMode={playerDetailsViewMode}
-              setPlayerDetailsViewMode={setPlayerDetailsViewMode}
-              players={players}
-              hiddenPlayerIds={hiddenPlayerIds}
-              heroes={heroes}
-              matchesArray={matchesArray}
-              selectedTeam={selectedTeam}
-            />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    </div>
-  );
-}));
+      return (
+        <div className="h-fit flex flex-col">
+          <div className="h-fit">
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel id="player-list" defaultSize={50} minSize={0} maxSize={100} className="overflow-visible">
+                <PlayersListSection
+                  players={players}
+                  visiblePlayers={visiblePlayers}
+                  filteredPlayers={filteredPlayers}
+                  selectedPlayerId={selectedPlayerId}
+                  onSelectPlayer={onSelectPlayer}
+                  onHidePlayer={onHidePlayer}
+                  onRefreshPlayer={onRefreshPlayer}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  hiddenPlayersCount={hiddenPlayersCount}
+                  onShowHiddenPlayers={onShowHiddenPlayers}
+                  hiddenPlayerIds={hiddenPlayerIds}
+                  onScrollToPlayer={onScrollToPlayer}
+                  onAddPlayer={onAddPlayer}
+                  manualPlayerIds={manualPlayerIds}
+                  onEditPlayer={onEditPlayer}
+                  onRemovePlayer={onRemovePlayer}
+                  heroes={heroes}
+                  preferredSite={preferredSite}
+                  playersListRef={playersListRef}
+                />
+              </ResizablePanel>
+
+              <ResizableHandle withHandle className="after:w-4" />
+
+              <ResizablePanel
+                id="player-details"
+                defaultSize={50}
+                minSize={0}
+                maxSize={100}
+                className="overflow-hidden"
+              >
+                <PlayerDetailsSection
+                  selectedPlayer={selectedPlayer}
+                  playerDetailsViewMode={playerDetailsViewMode}
+                  setPlayerDetailsViewMode={setPlayerDetailsViewMode}
+                  players={players}
+                  hiddenPlayerIds={hiddenPlayerIds}
+                  heroes={heroes}
+                  matchesArray={matchesArray}
+                  selectedTeam={selectedTeam}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+        </div>
+      );
+    },
+  ),
+);
 
 ResizablePlayerLayout.displayName = 'ResizablePlayerLayout';
-
-

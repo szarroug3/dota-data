@@ -257,10 +257,7 @@
       "localized_name": "Nyx Assassin",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Durable"
-      ],
+      "roles": ["Carry", "Durable"],
       "legs": 2
     },
     {
@@ -269,10 +266,7 @@
       "localized_name": "Batrider",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Support"
-      ],
+      "roles": ["Pusher", "Support"],
       "legs": 0
     },
     {
@@ -281,13 +275,7 @@
       "localized_name": "Chen",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Disabler",
-        "Initiator",
-        "Support",
-        "Carry"
-      ],
+      "roles": ["Escape", "Disabler", "Initiator", "Support", "Carry"],
       "legs": 2
     },
     {
@@ -296,10 +284,7 @@
       "localized_name": "Dawnbreaker",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Carry"
-      ],
+      "roles": ["Pusher", "Carry"],
       "legs": 2
     },
     {
@@ -308,10 +293,7 @@
       "localized_name": "Centaur Warrunner",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Disabler"
-      ],
+      "roles": ["Escape", "Disabler"],
       "legs": 2
     },
     {
@@ -320,10 +302,7 @@
       "localized_name": "Medusa",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Initiator"
-      ],
+      "roles": ["Carry", "Initiator"],
       "legs": 1
     },
     {
@@ -332,13 +311,7 @@
       "localized_name": "Earth Spirit",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Support",
-        "Escape",
-        "Initiator",
-        "Carry",
-        "Nuker"
-      ],
+      "roles": ["Support", "Escape", "Initiator", "Carry", "Nuker"],
       "legs": 1
     },
     {
@@ -347,13 +320,7 @@
       "localized_name": "Void Spirit",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Escape",
-        "Carry",
-        "Initiator",
-        "Support"
-      ],
+      "roles": ["Disabler", "Escape", "Carry", "Initiator", "Support"],
       "legs": 1
     },
     {
@@ -362,12 +329,7 @@
       "localized_name": "Bounty Hunter",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Carry",
-        "Escape",
-        "Nuker"
-      ],
+      "roles": ["Pusher", "Carry", "Escape", "Nuker"],
       "legs": 0
     },
     {
@@ -376,12 +338,7 @@
       "localized_name": "Bloodseeker",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Disabler",
-        "Durable",
-        "Jungler"
-      ],
+      "roles": ["Carry", "Disabler", "Durable", "Jungler"],
       "legs": 0
     },
     {
@@ -390,12 +347,7 @@
       "localized_name": "Ember Spirit",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Initiator",
-        "Escape",
-        "Durable"
-      ],
+      "roles": ["Pusher", "Initiator", "Escape", "Durable"],
       "legs": 0
     },
     {
@@ -404,11 +356,7 @@
       "localized_name": "Tusk",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Nuker",
-        "Support"
-      ],
+      "roles": ["Pusher", "Nuker", "Support"],
       "legs": 0
     },
     {
@@ -417,10 +365,7 @@
       "localized_name": "Necrophos",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Disabler", "Nuker"],
       "legs": 2
     },
     {
@@ -429,11 +374,7 @@
       "localized_name": "Wraith King",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Carry",
-        "Initiator"
-      ],
+      "roles": ["Escape", "Carry", "Initiator"],
       "legs": 2
     },
     {
@@ -442,10 +383,7 @@
       "localized_name": "Terrorblade",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Carry"
-      ],
+      "roles": ["Pusher", "Carry"],
       "legs": 1
     },
     {
@@ -454,11 +392,7 @@
       "localized_name": "Slardar",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Nuker",
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Nuker", "Carry", "Support"],
       "legs": 2
     },
     {
@@ -467,13 +401,7 @@
       "localized_name": "Windranger",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Nuker",
-        "Disabler",
-        "Carry",
-        "Pusher"
-      ],
+      "roles": ["Escape", "Nuker", "Disabler", "Carry", "Pusher"],
       "legs": 1
     },
     {
@@ -482,10 +410,7 @@
       "localized_name": "Visage",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Carry", "Support"],
       "legs": 1
     },
     {
@@ -494,12 +419,7 @@
       "localized_name": "Dark Willow",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Nuker",
-        "Disabler",
-        "Carry"
-      ],
+      "roles": ["Pusher", "Nuker", "Disabler", "Carry"],
       "legs": 0
     },
     {
@@ -508,13 +428,7 @@
       "localized_name": "Bristleback",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Disabler",
-        "Nuker",
-        "Support",
-        "Jungler"
-      ],
+      "roles": ["Durable", "Disabler", "Nuker", "Support", "Jungler"],
       "legs": 0
     },
     {
@@ -523,11 +437,7 @@
       "localized_name": "Legion Commander",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Nuker",
-        "Initiator"
-      ],
+      "roles": ["Carry", "Nuker", "Initiator"],
       "legs": 2
     },
     {
@@ -536,10 +446,7 @@
       "localized_name": "Phoenix",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Escape"
-      ],
+      "roles": ["Durable", "Escape"],
       "legs": 0
     },
     {
@@ -548,13 +455,7 @@
       "localized_name": "Puck",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Escape",
-        "Nuker",
-        "Support",
-        "Pusher"
-      ],
+      "roles": ["Disabler", "Escape", "Nuker", "Support", "Pusher"],
       "legs": 0
     },
     {
@@ -563,10 +464,7 @@
       "localized_name": "Invoker",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Initiator",
-        "Disabler"
-      ],
+      "roles": ["Initiator", "Disabler"],
       "legs": 2
     },
     {
@@ -575,10 +473,7 @@
       "localized_name": "Witch Doctor",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Disabler"
-      ],
+      "roles": ["Carry", "Disabler"],
       "legs": 2
     },
     {
@@ -587,13 +482,7 @@
       "localized_name": "Sven",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Nuker",
-        "Initiator",
-        "Jungler"
-      ],
+      "roles": ["Carry", "Support", "Nuker", "Initiator", "Jungler"],
       "legs": 2
     },
     {
@@ -602,13 +491,7 @@
       "localized_name": "Juggernaut",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Support",
-        "Pusher",
-        "Initiator"
-      ],
+      "roles": ["Disabler", "Nuker", "Support", "Pusher", "Initiator"],
       "legs": 0
     },
     {
@@ -617,13 +500,7 @@
       "localized_name": "Crystal Maiden",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Nuker",
-        "Disabler",
-        "Pusher",
-        "Durable"
-      ],
+      "roles": ["Escape", "Nuker", "Disabler", "Pusher", "Durable"],
       "legs": 0
     },
     {
@@ -632,13 +509,7 @@
       "localized_name": "Keeper of the Light",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Support",
-        "Escape",
-        "Initiator",
-        "Jungler",
-        "Nuker"
-      ],
+      "roles": ["Support", "Escape", "Initiator", "Jungler", "Nuker"],
       "legs": 0
     },
     {
@@ -647,10 +518,7 @@
       "localized_name": "Tidehunter",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Jungler"
-      ],
+      "roles": ["Durable", "Jungler"],
       "legs": 2
     },
     {
@@ -659,13 +527,7 @@
       "localized_name": "Treant Protector",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Carry",
-        "Support",
-        "Pusher",
-        "Durable"
-      ],
+      "roles": ["Escape", "Carry", "Support", "Pusher", "Durable"],
       "legs": 1
     },
     {
@@ -674,11 +536,7 @@
       "localized_name": "Alchemist",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Support",
-        "Jungler",
-        "Durable"
-      ],
+      "roles": ["Support", "Jungler", "Durable"],
       "legs": 0
     },
     {
@@ -687,12 +545,7 @@
       "localized_name": "Dark Seer",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Escape",
-        "Nuker",
-        "Durable"
-      ],
+      "roles": ["Pusher", "Escape", "Nuker", "Durable"],
       "legs": 1
     },
     {
@@ -701,10 +554,7 @@
       "localized_name": "Pugna",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Carry", "Support"],
       "legs": 2
     },
     {
@@ -713,13 +563,7 @@
       "localized_name": "Abaddon",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Pusher",
-        "Escape",
-        "Jungler",
-        "Disabler"
-      ],
+      "roles": ["Nuker", "Pusher", "Escape", "Jungler", "Disabler"],
       "legs": 2
     },
     {
@@ -728,13 +572,7 @@
       "localized_name": "Drow Ranger",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Carry",
-        "Jungler",
-        "Support",
-        "Durable"
-      ],
+      "roles": ["Disabler", "Carry", "Jungler", "Support", "Durable"],
       "legs": 1
     },
     {
@@ -743,13 +581,7 @@
       "localized_name": "Night Stalker",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Nuker",
-        "Carry",
-        "Support",
-        "Initiator"
-      ],
+      "roles": ["Pusher", "Nuker", "Carry", "Support", "Initiator"],
       "legs": 0
     },
     {
@@ -758,10 +590,7 @@
       "localized_name": "Primal Beast",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Jungler",
-        "Disabler"
-      ],
+      "roles": ["Jungler", "Disabler"],
       "legs": 2
     },
     {
@@ -770,11 +599,7 @@
       "localized_name": "Naga Siren",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Escape",
-        "Nuker"
-      ],
+      "roles": ["Disabler", "Escape", "Nuker"],
       "legs": 2
     },
     {
@@ -783,12 +608,7 @@
       "localized_name": "Huskar",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Disabler",
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Escape", "Disabler", "Carry", "Support"],
       "legs": 2
     },
     {
@@ -797,13 +617,7 @@
       "localized_name": "Brewmaster",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Pusher",
-        "Escape",
-        "Durable"
-      ],
+      "roles": ["Carry", "Support", "Pusher", "Escape", "Durable"],
       "legs": 2
     },
     {
@@ -812,13 +626,7 @@
       "localized_name": "Silencer",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Durable",
-        "Carry",
-        "Support",
-        "Initiator"
-      ],
+      "roles": ["Disabler", "Durable", "Carry", "Support", "Initiator"],
       "legs": 0
     },
     {
@@ -827,13 +635,7 @@
       "localized_name": "Kunkka",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Pusher",
-        "Initiator",
-        "Support",
-        "Nuker"
-      ],
+      "roles": ["Carry", "Pusher", "Initiator", "Support", "Nuker"],
       "legs": 2
     },
     {
@@ -842,12 +644,7 @@
       "localized_name": "Lone Druid",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Carry",
-        "Initiator",
-        "Jungler"
-      ],
+      "roles": ["Disabler", "Carry", "Initiator", "Jungler"],
       "legs": 0
     },
     {
@@ -856,11 +653,7 @@
       "localized_name": "Undying",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Initiator",
-        "Escape"
-      ],
+      "roles": ["Disabler", "Initiator", "Escape"],
       "legs": 0
     },
     {
@@ -869,11 +662,7 @@
       "localized_name": "Tinker",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Jungler",
-        "Disabler",
-        "Escape"
-      ],
+      "roles": ["Jungler", "Disabler", "Escape"],
       "legs": 2
     },
     {
@@ -882,12 +671,7 @@
       "localized_name": "Bane",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Support",
-        "Pusher",
-        "Nuker"
-      ],
+      "roles": ["Durable", "Support", "Pusher", "Nuker"],
       "legs": 0
     },
     {
@@ -896,12 +680,7 @@
       "localized_name": "Lion",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Carry",
-        "Durable",
-        "Pusher"
-      ],
+      "roles": ["Disabler", "Carry", "Durable", "Pusher"],
       "legs": 2
     },
     {
@@ -910,11 +689,7 @@
       "localized_name": "Skywrath Mage",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Escape", "Carry", "Support"],
       "legs": 0
     },
     {
@@ -923,12 +698,7 @@
       "localized_name": "Rubick",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Disabler",
-        "Carry",
-        "Jungler"
-      ],
+      "roles": ["Durable", "Disabler", "Carry", "Jungler"],
       "legs": 2
     },
     {
@@ -937,11 +707,7 @@
       "localized_name": "Ursa",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Pusher"
-      ],
+      "roles": ["Carry", "Support", "Pusher"],
       "legs": 0
     },
     {
@@ -950,12 +716,7 @@
       "localized_name": "Zeus",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Carry",
-        "Support",
-        "Disabler"
-      ],
+      "roles": ["Durable", "Carry", "Support", "Disabler"],
       "legs": 0
     },
     {
@@ -964,11 +725,7 @@
       "localized_name": "Pudge",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Jungler",
-        "Support",
-        "Initiator"
-      ],
+      "roles": ["Jungler", "Support", "Initiator"],
       "legs": 1
     },
     {
@@ -977,12 +734,7 @@
       "localized_name": "Mars",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Pusher",
-        "Carry",
-        "Support"
-      ],
+      "roles": ["Escape", "Pusher", "Carry", "Support"],
       "legs": 2
     },
     {
@@ -991,11 +743,7 @@
       "localized_name": "Disruptor",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Pusher",
-        "Support",
-        "Escape"
-      ],
+      "roles": ["Pusher", "Support", "Escape"],
       "legs": 0
     },
     {
@@ -1004,11 +752,7 @@
       "localized_name": "Enchantress",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Nuker",
-        "Pusher"
-      ],
+      "roles": ["Durable", "Nuker", "Pusher"],
       "legs": 2
     },
     {
@@ -1017,10 +761,7 @@
       "localized_name": "Broodmother",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Initiator"
-      ],
+      "roles": ["Escape", "Initiator"],
       "legs": 1
     },
     {
@@ -1029,11 +770,7 @@
       "localized_name": "Snapfire",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Initiator"
-      ],
+      "roles": ["Carry", "Support", "Initiator"],
       "legs": 1
     },
     {
@@ -1042,10 +779,7 @@
       "localized_name": "Vengeful Spirit",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Jungler"
-      ],
+      "roles": ["Carry", "Jungler"],
       "legs": 1
     },
     {
@@ -1054,12 +788,7 @@
       "localized_name": "Lifestealer",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Disabler",
-        "Nuker",
-        "Initiator"
-      ],
+      "roles": ["Durable", "Disabler", "Nuker", "Initiator"],
       "legs": 2
     },
     {
@@ -1068,13 +797,7 @@
       "localized_name": "Shadow Fiend",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Pusher",
-        "Carry",
-        "Durable"
-      ],
+      "roles": ["Disabler", "Nuker", "Pusher", "Carry", "Durable"],
       "legs": 0
     },
     {
@@ -1083,12 +806,7 @@
       "localized_name": "Pangolier",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Support",
-        "Disabler",
-        "Carry"
-      ],
+      "roles": ["Nuker", "Support", "Disabler", "Carry"],
       "legs": 2
     },
     {
@@ -1097,10 +815,7 @@
       "localized_name": "Io",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Disabler", "Nuker"],
       "legs": 2
     },
     {
@@ -1109,12 +824,7 @@
       "localized_name": "Viper",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Durable",
-        "Disabler",
-        "Jungler"
-      ],
+      "roles": ["Pusher", "Durable", "Disabler", "Jungler"],
       "legs": 2
     },
     {
@@ -1123,10 +833,7 @@
       "localized_name": "Techies",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Pusher"
-      ],
+      "roles": ["Escape", "Pusher"],
       "legs": 1
     },
     {
@@ -1135,10 +842,7 @@
       "localized_name": "Storm Spirit",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Jungler",
-        "Support"
-      ],
+      "roles": ["Jungler", "Support"],
       "legs": 1
     },
     {
@@ -1147,11 +851,7 @@
       "localized_name": "Clinkz",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Initiator",
-        "Disabler",
-        "Pusher"
-      ],
+      "roles": ["Initiator", "Disabler", "Pusher"],
       "legs": 0
     },
     {
@@ -1160,12 +860,7 @@
       "localized_name": "Hoodwink",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Nuker",
-        "Initiator",
-        "Carry"
-      ],
+      "roles": ["Escape", "Nuker", "Initiator", "Carry"],
       "legs": 0
     },
     {
@@ -1174,11 +869,7 @@
       "localized_name": "Spectre",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Escape",
-        "Support"
-      ],
+      "roles": ["Disabler", "Escape", "Support"],
       "legs": 1
     },
     {
@@ -1187,13 +878,7 @@
       "localized_name": "Timbersaw",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Carry",
-        "Escape",
-        "Durable",
-        "Support"
-      ],
+      "roles": ["Nuker", "Carry", "Escape", "Durable", "Support"],
       "legs": 2
     },
     {
@@ -1202,10 +887,7 @@
       "localized_name": "Luna",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Durable"
-      ],
+      "roles": ["Carry", "Durable"],
       "legs": 1
     },
     {
@@ -1214,10 +896,7 @@
       "localized_name": "Warlock",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Pusher"
-      ],
+      "roles": ["Nuker", "Pusher"],
       "legs": 1
     },
     {
@@ -1226,13 +905,7 @@
       "localized_name": "Omniknight",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Jungler",
-        "Durable",
-        "Escape",
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Jungler", "Durable", "Escape", "Disabler", "Nuker"],
       "legs": 1
     },
     {
@@ -1241,13 +914,7 @@
       "localized_name": "Nature's Prophet",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Nuker",
-        "Pusher",
-        "Carry",
-        "Escape",
-        "Jungler"
-      ],
+      "roles": ["Nuker", "Pusher", "Carry", "Escape", "Jungler"],
       "legs": 0
     },
     {
@@ -1256,13 +923,7 @@
       "localized_name": "Ogre Magi",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Disabler",
-        "Nuker",
-        "Support",
-        "Carry"
-      ],
+      "roles": ["Escape", "Disabler", "Nuker", "Support", "Carry"],
       "legs": 2
     },
     {
@@ -1271,10 +932,7 @@
       "localized_name": "Templar Assassin",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Initiator"
-      ],
+      "roles": ["Disabler", "Initiator"],
       "legs": 2
     },
     {
@@ -1283,13 +941,7 @@
       "localized_name": "Spirit Breaker",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Support",
-        "Pusher",
-        "Escape",
-        "Durable"
-      ],
+      "roles": ["Nuker", "Support", "Pusher", "Escape", "Durable"],
       "legs": 1
     },
     {
@@ -1298,12 +950,7 @@
       "localized_name": "Lina",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Nuker",
-        "Disabler"
-      ],
+      "roles": ["Carry", "Support", "Nuker", "Disabler"],
       "legs": 1
     },
     {
@@ -1312,11 +959,7 @@
       "localized_name": "Ancient Apparition",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Support",
-        "Nuker"
-      ],
+      "roles": ["Carry", "Support", "Nuker"],
       "legs": 1
     },
     {
@@ -1325,12 +968,7 @@
       "localized_name": "Dawnbreaker",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Initiator",
-        "Disabler",
-        "Nuker",
-        "Escape"
-      ],
+      "roles": ["Initiator", "Disabler", "Nuker", "Escape"],
       "legs": 1
     },
     {
@@ -1339,12 +977,7 @@
       "localized_name": "Sand King",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Escape",
-        "Initiator",
-        "Nuker"
-      ],
+      "roles": ["Durable", "Escape", "Initiator", "Nuker"],
       "legs": 2
     },
     {
@@ -1353,12 +986,7 @@
       "localized_name": "Leshrac",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Nuker",
-        "Carry",
-        "Escape"
-      ],
+      "roles": ["Durable", "Nuker", "Carry", "Escape"],
       "legs": 1
     },
     {
@@ -1367,11 +995,7 @@
       "localized_name": "Jakiro",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Pusher",
-        "Disabler",
-        "Durable"
-      ],
+      "roles": ["Pusher", "Disabler", "Durable"],
       "legs": 2
     },
     {
@@ -1380,11 +1004,7 @@
       "localized_name": "Monkey King",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Initiator",
-        "Pusher",
-        "Nuker"
-      ],
+      "roles": ["Initiator", "Pusher", "Nuker"],
       "legs": 2
     },
     {
@@ -1393,10 +1013,7 @@
       "localized_name": "Muerta",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Disabler"
-      ],
+      "roles": ["Escape", "Disabler"],
       "legs": 0
     },
     {
@@ -1405,13 +1022,7 @@
       "localized_name": "Meepo",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Nuker",
-        "Support",
-        "Initiator",
-        "Pusher"
-      ],
+      "roles": ["Escape", "Nuker", "Support", "Initiator", "Pusher"],
       "legs": 2
     },
     {
@@ -1420,11 +1031,7 @@
       "localized_name": "Phantom Lancer",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Pusher",
-        "Initiator"
-      ],
+      "roles": ["Disabler", "Pusher", "Initiator"],
       "legs": 0
     },
     {
@@ -1433,10 +1040,7 @@
       "localized_name": "Grimstroke",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Support"
-      ],
+      "roles": ["Disabler", "Support"],
       "legs": 2
     },
     {
@@ -1445,10 +1049,7 @@
       "localized_name": "Mirana",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Initiator",
-        "Disabler"
-      ],
+      "roles": ["Initiator", "Disabler"],
       "legs": 2
     },
     {
@@ -1457,13 +1058,7 @@
       "localized_name": "Dazzle",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Jungler",
-        "Disabler",
-        "Nuker",
-        "Escape"
-      ],
+      "roles": ["Durable", "Jungler", "Disabler", "Nuker", "Escape"],
       "legs": 2
     },
     {
@@ -1472,13 +1067,7 @@
       "localized_name": "Shadow Shaman",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Jungler",
-        "Escape",
-        "Disabler",
-        "Initiator"
-      ],
+      "roles": ["Durable", "Jungler", "Escape", "Disabler", "Initiator"],
       "legs": 2
     },
     {
@@ -1487,11 +1076,7 @@
       "localized_name": "Slark",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Initiator"
-      ],
+      "roles": ["Disabler", "Nuker", "Initiator"],
       "legs": 2
     },
     {
@@ -1500,10 +1085,7 @@
       "localized_name": "Arc Warden",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Disabler"
-      ],
+      "roles": ["Escape", "Disabler"],
       "legs": 2
     },
     {
@@ -1512,13 +1094,7 @@
       "localized_name": "Outworld Destroyer",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Nuker",
-        "Durable",
-        "Initiator",
-        "Support",
-        "Carry"
-      ],
+      "roles": ["Nuker", "Durable", "Initiator", "Support", "Carry"],
       "legs": 0
     },
     {
@@ -1527,10 +1103,7 @@
       "localized_name": "Lich",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Pusher"
-      ],
+      "roles": ["Durable", "Pusher"],
       "legs": 2
     },
     {
@@ -1539,11 +1112,7 @@
       "localized_name": "Riki",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Initiator",
-        "Support",
-        "Durable"
-      ],
+      "roles": ["Initiator", "Support", "Durable"],
       "legs": 0
     },
     {
@@ -1552,13 +1121,7 @@
       "localized_name": "Morphling",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Durable",
-        "Escape",
-        "Carry"
-      ],
+      "roles": ["Disabler", "Nuker", "Durable", "Escape", "Carry"],
       "legs": 1
     },
     {
@@ -1567,10 +1130,7 @@
       "localized_name": "Anti-Mage",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Initiator",
-        "Escape"
-      ],
+      "roles": ["Initiator", "Escape"],
       "legs": 0
     },
     {
@@ -1579,13 +1139,7 @@
       "localized_name": "Lycan",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Support",
-        "Pusher",
-        "Nuker",
-        "Jungler",
-        "Carry"
-      ],
+      "roles": ["Support", "Pusher", "Nuker", "Jungler", "Carry"],
       "legs": 1
     },
     {
@@ -1594,13 +1148,7 @@
       "localized_name": "Doom",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Carry",
-        "Initiator",
-        "Durable"
-      ],
+      "roles": ["Disabler", "Nuker", "Carry", "Initiator", "Durable"],
       "legs": 0
     },
     {
@@ -1609,12 +1157,7 @@
       "localized_name": "Tiny",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Support",
-        "Pusher",
-        "Jungler"
-      ],
+      "roles": ["Carry", "Support", "Pusher", "Jungler"],
       "legs": 0
     },
     {
@@ -1623,10 +1166,7 @@
       "localized_name": "Axe",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Carry"
-      ],
+      "roles": ["Escape", "Carry"],
       "legs": 2
     },
     {
@@ -1635,10 +1175,7 @@
       "localized_name": "Shadow Demon",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Escape"
-      ],
+      "roles": ["Disabler", "Escape"],
       "legs": 0
     },
     {
@@ -1647,13 +1184,7 @@
       "localized_name": "Elder Titan",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Nuker",
-        "Durable",
-        "Disabler",
-        "Jungler",
-        "Support"
-      ],
+      "roles": ["Nuker", "Durable", "Disabler", "Jungler", "Support"],
       "legs": 0
     },
     {
@@ -1662,13 +1193,7 @@
       "localized_name": "Faceless Void",
       "primary_attr": "str",
       "attack_type": "Melee",
-      "roles": [
-        "Jungler",
-        "Disabler",
-        "Nuker",
-        "Support",
-        "Carry"
-      ],
+      "roles": ["Jungler", "Disabler", "Nuker", "Support", "Carry"],
       "legs": 1
     },
     {
@@ -1677,11 +1202,7 @@
       "localized_name": "Troll Warlord",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Nuker",
-        "Pusher"
-      ],
+      "roles": ["Carry", "Nuker", "Pusher"],
       "legs": 2
     },
     {
@@ -1690,10 +1211,7 @@
       "localized_name": "Enigma",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Carry"
-      ],
+      "roles": ["Escape", "Carry"],
       "legs": 2
     },
     {
@@ -1702,12 +1220,7 @@
       "localized_name": "Underlord",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Support",
-        "Nuker",
-        "Disabler"
-      ],
+      "roles": ["Carry", "Support", "Nuker", "Disabler"],
       "legs": 2
     },
     {
@@ -1716,10 +1229,7 @@
       "localized_name": "Chaos Knight",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Disabler", "Nuker"],
       "legs": 0
     },
     {
@@ -1728,10 +1238,7 @@
       "localized_name": "Venomancer",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Disabler", "Nuker"],
       "legs": 0
     },
     {
@@ -1740,12 +1247,7 @@
       "localized_name": "Magnus",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Durable",
-        "Jungler",
-        "Disabler"
-      ],
+      "roles": ["Escape", "Durable", "Jungler", "Disabler"],
       "legs": 0
     },
     {
@@ -1754,11 +1256,7 @@
       "localized_name": "Phantom Assassin",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Durable",
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Durable", "Disabler", "Nuker"],
       "legs": 0
     },
     {
@@ -1767,13 +1265,7 @@
       "localized_name": "Razor",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Jungler",
-        "Disabler",
-        "Durable",
-        "Carry"
-      ],
+      "roles": ["Escape", "Jungler", "Disabler", "Durable", "Carry"],
       "legs": 0
     },
     {
@@ -1782,13 +1274,7 @@
       "localized_name": "Gyrocopter",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Jungler",
-        "Carry",
-        "Support",
-        "Disabler",
-        "Nuker"
-      ],
+      "roles": ["Jungler", "Carry", "Support", "Disabler", "Nuker"],
       "legs": 0
     },
     {
@@ -1797,11 +1283,7 @@
       "localized_name": "Beastmaster",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Support",
-        "Jungler"
-      ],
+      "roles": ["Durable", "Support", "Jungler"],
       "legs": 0
     },
     {
@@ -1810,12 +1292,7 @@
       "localized_name": "Oracle",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Disabler",
-        "Nuker",
-        "Initiator"
-      ],
+      "roles": ["Carry", "Disabler", "Nuker", "Initiator"],
       "legs": 0
     },
     {
@@ -1824,11 +1301,7 @@
       "localized_name": "Weaver",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Escape",
-        "Pusher",
-        "Carry"
-      ],
+      "roles": ["Escape", "Pusher", "Carry"],
       "legs": 1
     },
     {
@@ -1837,11 +1310,7 @@
       "localized_name": "Sniper",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Nuker",
-        "Durable"
-      ],
+      "roles": ["Disabler", "Nuker", "Durable"],
       "legs": 0
     },
     {
@@ -1850,11 +1319,7 @@
       "localized_name": "Death Prophet",
       "primary_attr": "int",
       "attack_type": "Melee",
-      "roles": [
-        "Carry",
-        "Durable",
-        "Pusher"
-      ],
+      "roles": ["Carry", "Durable", "Pusher"],
       "legs": 1
     },
     {
@@ -1863,11 +1328,7 @@
       "localized_name": "Dragon Knight",
       "primary_attr": "agi",
       "attack_type": "Melee",
-      "roles": [
-        "Escape",
-        "Durable",
-        "Support"
-      ],
+      "roles": ["Escape", "Durable", "Support"],
       "legs": 2
     },
     {
@@ -1876,13 +1337,7 @@
       "localized_name": "Clockwerk",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Carry",
-        "Jungler",
-        "Initiator",
-        "Support",
-        "Escape"
-      ],
+      "roles": ["Carry", "Jungler", "Initiator", "Support", "Escape"],
       "legs": 1
     },
     {
@@ -1891,12 +1346,7 @@
       "localized_name": "Queen of Pain",
       "primary_attr": "agi",
       "attack_type": "Ranged",
-      "roles": [
-        "Durable",
-        "Disabler",
-        "Nuker",
-        "Initiator"
-      ],
+      "roles": ["Durable", "Disabler", "Nuker", "Initiator"],
       "legs": 1
     },
     {
@@ -1905,11 +1355,7 @@
       "localized_name": "Winter Wyvern",
       "primary_attr": "int",
       "attack_type": "Ranged",
-      "roles": [
-        "Support",
-        "Initiator",
-        "Jungler"
-      ],
+      "roles": ["Support", "Initiator", "Jungler"],
       "legs": 1
     },
     {
@@ -1918,11 +1364,7 @@
       "localized_name": "Marci",
       "primary_attr": "str",
       "attack_type": "Ranged",
-      "roles": [
-        "Disabler",
-        "Jungler",
-        "Escape"
-      ],
+      "roles": ["Disabler", "Jungler", "Escape"],
       "legs": 2
     }
   ]

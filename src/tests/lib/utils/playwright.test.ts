@@ -56,7 +56,8 @@ describe('scrapeHtmlFromUrl', () => {
       args: ['--disable-blink-features=AutomationControlled'],
     });
     expect(mockBrowser.newContext).toHaveBeenCalledWith({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
       viewport: { width: 1280, height: 800 },
     });
     expect(mockContext.newPage).toHaveBeenCalled();
@@ -73,7 +74,7 @@ describe('scrapeHtmlFromUrl', () => {
     mockPage.goto.mockRejectedValue(new Error('Navigation failed'));
 
     await expect(scrapeHtmlFromUrl(url, selector)).rejects.toThrow(
-      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Navigation failed'
+      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Navigation failed',
     );
 
     // Verify cleanup
@@ -90,7 +91,7 @@ describe('scrapeHtmlFromUrl', () => {
     mockPage.waitForSelector.mockRejectedValue(new Error('Selector not found'));
 
     await expect(scrapeHtmlFromUrl(url, selector)).rejects.toThrow(
-      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Selector not found'
+      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Selector not found',
     );
 
     // Verify cleanup
@@ -107,7 +108,7 @@ describe('scrapeHtmlFromUrl', () => {
     mockPage.content.mockRejectedValue(new Error('Content extraction failed'));
 
     await expect(scrapeHtmlFromUrl(url, selector)).rejects.toThrow(
-      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Content extraction failed'
+      'Failed to scrape https://www.dotabuff.com/esports/teams/9517508/matches: Error: Content extraction failed',
     );
 
     // Verify cleanup
@@ -115,4 +116,4 @@ describe('scrapeHtmlFromUrl', () => {
     expect(mockContext.close).toHaveBeenCalled();
     expect(mockBrowser.close).toHaveBeenCalled();
   });
-}); 
+});

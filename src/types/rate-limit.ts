@@ -20,10 +20,7 @@ export interface RateLimitBackend {
   /**
    * Check if a request is allowed within the rate limit
    */
-  checkLimit(
-    key: string,
-    config: RateLimitConfig
-  ): Promise<RateLimitResult>;
+  checkLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult>;
 
   /**
    * Get current usage for a key
@@ -61,7 +58,7 @@ export interface RateLimitBackend {
  */
 export interface RateLimitConfig {
   window: number; // Window size in seconds
-  max: number;    // Maximum requests per window
+  max: number; // Maximum requests per window
   service: string; // Service identifier
   identifier?: string; // Optional identifier for the key
 }
@@ -96,12 +93,15 @@ export interface RateLimitStats {
   totalChecks: number;
   allowed: number;
   blocked: number;
-  services: Record<string, {
-    checks: number;
-    allowed: number;
-    blocked: number;
-    averageResponseTime: number;
-  }>;
+  services: Record<
+    string,
+    {
+      checks: number;
+      allowed: number;
+      blocked: number;
+      averageResponseTime: number;
+    }
+  >;
   backend: RateLimitBackendType;
   uptime: number;
 }
@@ -130,10 +130,7 @@ export interface RateLimitService {
   /**
    * Check if a request is allowed within the rate limit
    */
-  checkLimit(
-    key: string,
-    config: RateLimitConfig
-  ): Promise<RateLimitResult>;
+  checkLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult>;
 
   /**
    * Get current usage for a key
@@ -197,7 +194,7 @@ export const DEFAULT_SERVICE_LIMITS: ServiceRateLimitConfig = {
   opendota: { window: 60, max: 60, service: 'opendota' },
   dotabuff: { window: 60, max: 60, service: 'dotabuff' },
   stratz: { window: 60, max: 20, service: 'stratz' },
-  d2pt: { window: 60, max: 30, service: 'd2pt' }
+  d2pt: { window: 60, max: 30, service: 'd2pt' },
 };
 
 // ============================================================================
@@ -207,7 +204,7 @@ export const DEFAULT_SERVICE_LIMITS: ServiceRateLimitConfig = {
 /**
  * Rate limit error types
  */
-export type RateLimitErrorType = 
+export type RateLimitErrorType =
   | 'connection_failed'
   | 'timeout'
   | 'invalid_config'
@@ -286,4 +283,4 @@ export interface RateLimitEvent {
   remaining: number;
   responseTime: number;
   error?: string;
-} 
+}

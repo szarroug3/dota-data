@@ -27,7 +27,7 @@ export async function fetchDotabuffTeam(teamId: string, force = false): Promise<
     mockFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -42,7 +42,7 @@ export async function fetchDotabuffTeam(teamId: string, force = false): Promise<
  */
 async function fetchTeamFromDotabuff(teamId: string): Promise<string> {
   const url = `https://www.dotabuff.com/esports/teams/${teamId}/matches`;
-  
+
   try {
     return await scrapeHtmlFromUrl(url, 'table.table');
   } catch (err) {
@@ -98,7 +98,7 @@ function extractStartTime(resultCell: cheerio.Cheerio<Element>): number {
 function parseDuration(durationStr: cheerio.Cheerio<Element>): number {
   // Get the text content and remove any HTML elements
   const durationText = durationStr.text().trim();
-  
+
   // Extract just the time part (e.g., "34:56" from "34:56<div class="bar...">")
   const timeMatch = durationText.match(/(\d+):(\d+)/);
   if (timeMatch) {
@@ -106,12 +106,12 @@ function parseDuration(durationStr: cheerio.Cheerio<Element>): number {
     const seconds = parseInt(timeMatch[2], 10);
     return minutes * 60 + seconds;
   }
-  
+
   // Handle "TBA" or other non-time formats
   if (durationText === 'TBA' || durationText.includes('–')) {
     return 0;
   }
-  
+
   return 0;
 }
 
@@ -146,8 +146,9 @@ function parseDotabuffTeamHtml(html: string, teamId: string): DotabuffTeam {
   const $ = cheerio.load(html);
 
   // Extract team name from the header
-  const teamName = $('.header-content-title h1').first().text().replace('Matches', '').trim() ||
-                   $('title').text().split('-')[0].trim();
+  const teamName =
+    $('.header-content-title h1').first().text().replace('Matches', '').trim() ||
+    $('title').text().split('-')[0].trim();
 
   if (!teamName) {
     throw new Error('Could not parse team name from Dotabuff HTML');
@@ -163,4 +164,4 @@ function parseDotabuffTeamHtml(html: string, teamId: string): DotabuffTeam {
   });
 
   return { id: teamId, name: teamName, matches };
-} 
+}

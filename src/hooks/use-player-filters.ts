@@ -28,14 +28,14 @@ function buildComparator(filters: PlayerFilters) {
       };
     case 'games':
       return (a: Player, b: Player) => {
-        const av = (a.wl.win + a.wl.lose) || 0;
-        const bv = (b.wl.win + b.wl.lose) || 0;
+        const av = a.wl.win + a.wl.lose || 0;
+        const bv = b.wl.win + b.wl.lose || 0;
         return flip(compareNumbers(av, bv));
       };
     case 'winRate':
       return (a: Player, b: Player) => {
-        const aGames = (a.wl.win + a.wl.lose) || 1;
-        const bGames = (b.wl.win + b.wl.lose) || 1;
+        const aGames = a.wl.win + a.wl.lose || 1;
+        const bGames = b.wl.win + b.wl.lose || 1;
         const av = (a.wl.win / aGames) * 100;
         const bv = (b.wl.win / bGames) * 100;
         return flip(compareNumbers(av, bv));
@@ -59,11 +59,11 @@ export function usePlayerFilters(players: Player[]) {
   const [filters, setFilters] = useState<PlayerFilters>({
     search: '',
     sortBy: 'name',
-    sortDirection: 'asc'
+    sortDirection: 'asc',
   });
 
   const updateFilters = useCallback((newFilters: Partial<PlayerFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
 
   const filteredAndSortedPlayers = useMemo(() => {
@@ -84,7 +84,7 @@ export function usePlayerFilters(players: Player[]) {
     return {
       totalPlayers: players.length,
       filteredPlayers: filteredAndSortedPlayers.length,
-      searchTerm: filters.search.trim()
+      searchTerm: filters.search.trim(),
     };
   }, [players, filteredAndSortedPlayers, filters.search]);
 
@@ -92,6 +92,6 @@ export function usePlayerFilters(players: Player[]) {
     filters,
     updateFilters,
     filteredAndSortedPlayers,
-    filterStats
+    filterStats,
   };
 }

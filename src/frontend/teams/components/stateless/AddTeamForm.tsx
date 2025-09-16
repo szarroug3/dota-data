@@ -40,7 +40,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid
+  isValid,
 }) => {
   const hasError = Boolean(error);
   const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
@@ -59,7 +59,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           required
           disabled={disabled}
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           className={`w-full ${hasError ? 'border-destructive focus:border-destructive' : ''}`}
           {...ariaAttributes}
         />
@@ -72,9 +72,7 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
           {error}
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          {helpText}
-        </p>
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       )}
     </FormField>
   );
@@ -87,41 +85,28 @@ interface FormActionsProps {
   getButtonText: () => string;
 }
 
-const FormActions: React.FC<FormActionsProps> = ({
-  isDisabled,
-  isSubmitting,
-  onReset,
-  getButtonText
-}) => (
+const FormActions: React.FC<FormActionsProps> = ({ isDisabled, isSubmitting, onReset, getButtonText }) => (
   <div className="flex gap-4 justify-end">
     {onReset && (
-      <Button
-        type="button"
-        variant="outline"
-        onClick={onReset}
-        disabled={isSubmitting}
-      >
+      <Button type="button" variant="outline" onClick={onReset} disabled={isSubmitting}>
         Reset
       </Button>
     )}
-    <Button
-      type="submit"
-      disabled={isDisabled}
-    >
+    <Button type="submit" disabled={isDisabled}>
       {getButtonText()}
     </Button>
   </div>
 );
 
-export const AddTeamForm: React.FC<AddTeamFormProps> = ({ 
-  teamId, 
-  leagueId, 
-  onTeamIdChange, 
-  onLeagueIdChange, 
-  onAddTeam, 
+export const AddTeamForm: React.FC<AddTeamFormProps> = ({
+  teamId,
+  leagueId,
+  onTeamIdChange,
+  onLeagueIdChange,
+  onAddTeam,
   teamExists,
   isSubmitting = false,
-  onReset
+  onReset,
 }) => {
   const validation = validateTeamForm(teamId, leagueId);
 
@@ -129,7 +114,7 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isDisabled) {
       const currentTeamId = teamId;
       const currentLeagueId = leagueId;
@@ -151,9 +136,7 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Add New Team</CardTitle>
-        <CardDescription>
-          Add a team to track their performance and statistics
-        </CardDescription>
+        <CardDescription>Add a team to track their performance and statistics</CardDescription>
       </CardHeader>
       <CardContent>
         <Form onSubmit={handleSubmit}>
@@ -192,5 +175,3 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     </Card>
   );
 };
-
-

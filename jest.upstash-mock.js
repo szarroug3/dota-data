@@ -16,9 +16,11 @@ const mockRedisInstance = {
   flushall: jest.fn(),
 };
 
-const MockRedis = function() { return mockRedisInstance; };
+const MockRedis = function () {
+  return mockRedisInstance;
+};
 MockRedis.fromEnv = () => mockRedisInstance;
 
 jest.mock('@upstash/redis', () => ({
   Redis: MockRedis,
-})); 
+}));
