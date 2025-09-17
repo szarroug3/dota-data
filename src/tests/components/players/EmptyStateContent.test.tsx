@@ -15,5 +15,3 @@ describe('EmptyStateContent', () => {
     expect(screen.getByText(/Choose a team from the sidebar/i)).toBeInTheDocument();
   });
 });
-
-

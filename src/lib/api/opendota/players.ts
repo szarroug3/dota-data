@@ -1,7 +1,13 @@
 import path from 'path';
 
 import { request, requestWithRetry } from '@/lib/utils/request';
-import { OpenDotaPlayer, OpenDotaPlayerComprehensive, OpenDotaPlayerHero, OpenDotaPlayerMatches, OpenDotaPlayerWL } from '@/types/external-apis';
+import {
+  OpenDotaPlayer,
+  OpenDotaPlayerComprehensive,
+  OpenDotaPlayerHero,
+  OpenDotaPlayerMatches,
+  OpenDotaPlayerWL,
+} from '@/types/external-apis';
 
 /**
  * Fetch comprehensive Dota 2 player data from OpenDota using the generic request function.

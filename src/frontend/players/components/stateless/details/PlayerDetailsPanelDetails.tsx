@@ -73,25 +73,23 @@ function buildHeroRows(
     byHero[heroId].games += 1;
     if (isWin) byHero[heroId].wins += 1;
   }
-  return (
-    Object.entries(byHero)
-      .map(([heroId, agg]) => {
-        const hero =
-          heroesMap[heroId] ||
-          ({
-            id: heroId,
-            name: `npc_dota_hero_${heroId}`,
-            localizedName: `Hero ${heroId}`,
-            primaryAttribute: 'strength',
-            attackType: 'melee',
-            roles: [],
-            imageUrl: '',
-          } as Hero);
-        const winRate = agg.games > 0 ? (agg.wins / agg.games) * 100 : 0;
-        return { hero, games: agg.games, winRate };
-      })
-      .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>
-  );
+  return Object.entries(byHero)
+    .map(([heroId, agg]) => {
+      const hero =
+        heroesMap[heroId] ||
+        ({
+          id: heroId,
+          name: `npc_dota_hero_${heroId}`,
+          localizedName: `Hero ${heroId}`,
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: [],
+          imageUrl: '',
+        } as Hero);
+      const winRate = agg.games > 0 ? (agg.wins / agg.games) * 100 : 0;
+      return { hero, games: agg.games, winRate };
+    })
+    .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>;
 }
 
 function HeroStatsHeaderControls({
@@ -124,7 +122,9 @@ function HeroStatsHeaderControls({
       {dateRange === 'custom' && (
         <div className="items-end gap-3 hidden @[480px]:flex">
           <div className="flex flex-col">
-            <Label className="text-sm font-medium" htmlFor="custom-start">Start</Label>
+            <Label className="text-sm font-medium" htmlFor="custom-start">
+              Start
+            </Label>
             <Input
               type="date"
               id="custom-start"
@@ -134,7 +134,9 @@ function HeroStatsHeaderControls({
             />
           </div>
           <div className="flex flex-col">
-            <Label className="text-sm font-medium" htmlFor="custom-end">End</Label>
+            <Label className="text-sm font-medium" htmlFor="custom-end">
+              End
+            </Label>
             <Input
               type="date"
               id="custom-end"
@@ -161,7 +163,10 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
   const [dateRange, setDateRange] = useState<DateRangeSelection>('30days');
-  const [customDateRange, setCustomDateRange] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
+  const [customDateRange, setCustomDateRange] = useState<{ start: string | null; end: string | null }>({
+    start: null,
+    end: null,
+  });
 
   const matches = useMemo(() => {
     return Array.isArray(player.recentMatches) ? (player.recentMatches as OpenDotaPlayerMatches[]) : [];
@@ -172,7 +177,10 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
     return matches.reduce((max, m) => (m.start_time > max ? m.start_time : max), matches[0].start_time);
   }, [matches]);
 
-  const cutoffs = useMemo(() => getDateCutoffs(dateRange, customDateRange, referenceNowSec), [dateRange, customDateRange, referenceNowSec]);
+  const cutoffs = useMemo(
+    () => getDateCutoffs(dateRange, customDateRange, referenceNowSec),
+    [dateRange, customDateRange, referenceNowSec],
+  );
 
   const filteredMatches = useMemo(() => filterMatchesByDateRange(matches, cutoffs), [matches, cutoffs]);
 

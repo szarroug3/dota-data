@@ -55,7 +55,6 @@ function getForceFlagFromUrl(url: string): boolean {
   return searchParams.get('force') === 'true';
 }
 
-
 /**
  * @swagger
  * /api/players/{id}:

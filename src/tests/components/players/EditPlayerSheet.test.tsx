@@ -71,5 +71,3 @@ describe('EditPlayerSheet', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 });
-
-

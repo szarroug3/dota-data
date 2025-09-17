@@ -344,7 +344,6 @@ function useEditTeamCore(
   );
 }
 
-
 function useManualMatchesOps(
   teams: Map<string, TeamData>,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,

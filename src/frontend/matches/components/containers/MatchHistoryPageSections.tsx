@@ -373,10 +373,7 @@ function useAddMatchHandler(
   );
 }
 
-function useTeamMatchesMemo(
-  teams: Map<string, TeamData>,
-  selectedTeamId: { teamId: number; leagueId: number } | null,
-) {
+function useTeamMatchesMemo(teams: Map<string, TeamData>, selectedTeamId: { teamId: number; leagueId: number } | null) {
   return useMemo(() => {
     if (!selectedTeamId) return {} as Record<number, TeamMatchParticipation>;
     const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;

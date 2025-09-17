@@ -4,20 +4,18 @@ import { PlayerGridVirtualized } from '@/frontend/players/components/stateless/P
 
 jest.mock('react-window', () => ({
   FixedSizeList: ({ itemCount, children }: any) => (
-    <div data-testid="virtual-list">{Array.from({ length: itemCount }).map((_, i) => children({ index: i, style: {} }))}</div>
+    <div data-testid="virtual-list">
+      {Array.from({ length: itemCount }).map((_, i) => children({ index: i, style: {} }))}
+    </div>
   ),
 }));
 
 jest.mock('@/frontend/players/components/stateless/PlayerOverviewCard', () => ({
-  PlayerOverviewCard: ({ player }: { player: any }) => (
-    <div data-testid="player-overview">{player?.playerName}</div>
-  ),
+  PlayerOverviewCard: ({ player }: { player: any }) => <div data-testid="player-overview">{player?.playerName}</div>,
 }));
 
 jest.mock('@/frontend/players/components/stateless/PlayerDetailedCard', () => ({
-  PlayerDetailedCard: ({ player }: { player: any }) => (
-    <div data-testid="player-detailed">{player?.playerName}</div>
-  ),
+  PlayerDetailedCard: ({ player }: { player: any }) => <div data-testid="player-detailed">{player?.playerName}</div>,
 }));
 
 describe('PlayerGridVirtualized', () => {
@@ -43,5 +41,3 @@ describe('PlayerGridVirtualized', () => {
     expect(items).toHaveLength(2);
   });
 });
-
-

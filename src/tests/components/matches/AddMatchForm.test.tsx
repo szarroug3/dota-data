@@ -41,12 +41,7 @@ jest.mock('@/components/ui/button', () => ({
 
 jest.mock('@/components/ui/select', () => ({
   Select: ({ value, onValueChange, children, disabled }: any) => (
-    <select
-      aria-label="team-side"
-      value={value}
-      onChange={(e) => onValueChange?.(e.target.value)}
-      disabled={disabled}
-    >
+    <select aria-label="team-side" value={value} onChange={(e) => onValueChange?.(e.target.value)} disabled={disabled}>
       <option value="">Select team side</option>
       <option value="radiant">Radiant</option>
       <option value="dire">Dire</option>
@@ -87,15 +82,7 @@ describe('AddMatchForm', () => {
   });
 
   it('shows duplicate text when match already exists', () => {
-    render(
-      <AddMatchForm
-        {...baseProps}
-        matchId="123"
-        teamSide="radiant"
-        isValid={true}
-        matchExists={() => true}
-      />,
-    );
+    render(<AddMatchForm {...baseProps} matchId="123" teamSide="radiant" isValid={true} matchExists={() => true} />);
     expect(screen.getByRole('button', { name: 'Match Already Added' })).toBeDisabled();
   });
 
@@ -118,5 +105,3 @@ describe('AddMatchForm', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 });
-
-

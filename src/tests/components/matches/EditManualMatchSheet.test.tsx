@@ -40,12 +40,7 @@ jest.mock('@/components/ui/button', () => ({
 
 jest.mock('@/components/ui/select', () => ({
   Select: ({ value, onValueChange, children, disabled }: any) => (
-    <select
-      aria-label="team-side"
-      value={value}
-      onChange={(e) => onValueChange?.(e.target.value)}
-      disabled={disabled}
-    >
+    <select aria-label="team-side" value={value} onChange={(e) => onValueChange?.(e.target.value)} disabled={disabled}>
       <option value="">Select team side</option>
       <option value="radiant">Radiant</option>
       <option value="dire">Dire</option>
@@ -99,5 +94,3 @@ describe('EditManualMatchSheet', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 });
-
-

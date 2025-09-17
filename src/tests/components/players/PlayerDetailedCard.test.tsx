@@ -30,15 +30,49 @@ describe('PlayerDetailedCard', () => {
     detailedStats: {
       rank: { displayText: 'Divine', isImmortal: false, stars: 5 },
       topHeroesAllTime: [
-        { hero: { id: '1', name: 'npc_dota_hero_1', localizedName: 'Anti-Mage', primaryAttribute: 'agility', attackType: 'melee', roles: ['Carry'], imageUrl: '' }, games: 50, winRate: 58.3 },
+        {
+          hero: {
+            id: '1',
+            name: 'npc_dota_hero_1',
+            localizedName: 'Anti-Mage',
+            primaryAttribute: 'agility',
+            attackType: 'melee',
+            roles: ['Carry'],
+            imageUrl: '',
+          },
+          games: 50,
+          winRate: 58.3,
+        },
       ],
       topHeroesRecent: [],
       teamRoles: [{ role: 'Mid', games: 80, winRate: 62.5 }],
       teamHeroes: [
-        { hero: { id: '2', name: 'npc_dota_hero_2', localizedName: 'Axe', primaryAttribute: 'strength', attackType: 'melee', roles: ['Durable'], imageUrl: '' }, games: 20, winRate: 55.0, roles: ['Offlane'] },
+        {
+          hero: {
+            id: '2',
+            name: 'npc_dota_hero_2',
+            localizedName: 'Axe',
+            primaryAttribute: 'strength',
+            attackType: 'melee',
+            roles: ['Durable'],
+            imageUrl: '',
+          },
+          games: 20,
+          winRate: 55.0,
+          roles: ['Offlane'],
+        },
       ],
     },
-    recentPerformance: { trend: 'improving', lastFiveMatches: [{ win: true, kda: 4 }, { win: false, kda: 2 }, { win: true, kda: 3 }, { win: true, kda: 6 }, { win: false, kda: 1 }] },
+    recentPerformance: {
+      trend: 'improving',
+      lastFiveMatches: [
+        { win: true, kda: 4 },
+        { win: false, kda: 2 },
+        { win: true, kda: 3 },
+        { win: true, kda: 6 },
+        { win: false, kda: 1 },
+      ],
+    },
   } as any;
 
   it('renders player heading and key averages', () => {
@@ -59,5 +93,3 @@ describe('PlayerDetailedCard', () => {
     expect(screen.getByText('Recent Performance')).toBeInTheDocument();
   });
 });
-
-

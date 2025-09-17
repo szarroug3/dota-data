@@ -39,9 +39,7 @@ const basePlayer = (overrides: Partial<Player> = {}): Player => ({
 
 describe('PlayerAvatar', () => {
   it('renders initials when no image is available', () => {
-    render(
-      <PlayerAvatar player={basePlayer()} avatarSize={{ width: 'w-10', height: 'h-10' }} showLink={false} />,
-    );
+    render(<PlayerAvatar player={basePlayer()} avatarSize={{ width: 'w-10', height: 'h-10' }} showLink={false} />);
     expect(screen.getByText('TP')).toBeInTheDocument();
   });
 
@@ -73,5 +71,3 @@ describe('PlayerAvatar', () => {
     openSpy.mockRestore();
   });
 });
-
-

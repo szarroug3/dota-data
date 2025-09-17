@@ -2,7 +2,6 @@
 
 // Ensure global File exists for libraries that expect it in Node
 if (typeof globalThis.File === 'undefined') {
-   
   globalThis.File = class {};
 }
 

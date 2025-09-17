@@ -63,7 +63,11 @@ function calculateKda(kills: number, deaths: number, assists: number): number {
   return deaths > 0 ? (kills + assists) / deaths : kills + assists;
 }
 
-function accumulateStats(total: { kda: number; gpm: number; xpm: number; count: number }, match: Match, accountId: number) {
+function accumulateStats(
+  total: { kda: number; gpm: number; xpm: number; count: number },
+  match: Match,
+  accountId: number,
+) {
   const me = findPlayerInMatch(match, accountId);
   if (!me) return total;
   const kills = safeStat(me.stats?.kills);
@@ -79,11 +83,11 @@ function accumulateStats(total: { kda: number; gpm: number; xpm: number; count: 
   };
 }
 
-function computeAverages(matches: Match[], accountId: number): { averageKDA: number; averageGPM: number; averageXPM: number } {
-  const totals = matches.reduce(
-    (acc, m) => accumulateStats(acc, m, accountId),
-    { kda: 0, gpm: 0, xpm: 0, count: 0 },
-  );
+function computeAverages(
+  matches: Match[],
+  accountId: number,
+): { averageKDA: number; averageGPM: number; averageXPM: number } {
+  const totals = matches.reduce((acc, m) => accumulateStats(acc, m, accountId), { kda: 0, gpm: 0, xpm: 0, count: 0 });
   const divisor = totals.count > 0 ? totals.count : 1;
   return {
     averageKDA: totals.kda / divisor,

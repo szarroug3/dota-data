@@ -170,17 +170,15 @@ export function getTopHeroesFromRecentMatches(
       const averageKDA = stats.kdaCount > 0 ? stats.kdaSum / stats.kdaCount : undefined;
 
       return {
-        hero:
-          heroData ||
-          {
-            id: heroId,
-            name: `npc_dota_hero_${heroId}`,
-            localizedName: `Hero ${heroId}`,
-            primaryAttribute: 'strength',
-            attackType: 'melee',
-            roles: [],
-            imageUrl: '',
-          },
+        hero: heroData || {
+          id: heroId,
+          name: `npc_dota_hero_${heroId}`,
+          localizedName: `Hero ${heroId}`,
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: [],
+          imageUrl: '',
+        },
         games: gamesPlayed,
         wins,
         winRate,
@@ -384,11 +382,7 @@ export function processPlayerDetailedStats(
 ): PlayerDetailedStats {
   const rank = processPlayerRank(player.profile.rank_tier);
   const topHeroesAllTime = getTopHeroesByGames(player.heroes, heroesData, 5);
-  const topHeroesRecent = getTopHeroesFromRecentMatches(
-    player.recentMatches ?? [],
-    heroesData,
-    5,
-  );
+  const topHeroesRecent = getTopHeroesFromRecentMatches(player.recentMatches ?? [], heroesData, 5);
 
   const teamRoles = teamData ? processTeamRoleStats(player, teamData, matches) : [];
   const teamHeroes = teamData ? processTeamHeroStats(player, teamData, matches, heroesData) : [];

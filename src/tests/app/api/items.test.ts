@@ -69,7 +69,9 @@ describe('Items API Route', () => {
         dname: 123,
       },
     };
-    mockFetchOpenDotaItems.mockResolvedValue(badData as Record<string, Partial<OpenDotaItem>> as Record<string, OpenDotaItem>);
+    mockFetchOpenDotaItems.mockResolvedValue(
+      badData as Record<string, Partial<OpenDotaItem>> as Record<string, OpenDotaItem>,
+    );
     const request = new NextRequest('http://localhost:3000/api/items');
     const response = await GET(request);
     expect(response.status).toBe(422);
@@ -77,5 +79,3 @@ describe('Items API Route', () => {
     expect(json.error).toBe('Invalid items data');
   });
 });
-
-

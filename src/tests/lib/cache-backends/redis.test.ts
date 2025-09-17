@@ -41,13 +41,12 @@ jest.mock('@upstash/redis', () => {
     }),
     ping: jest.fn(async () => 'PONG'),
   };
-  const Ctor = (function () {
+  const Ctor = function () {
     return instance;
-  }) as never as MockRedisCtor;
+  } as never as MockRedisCtor;
   Ctor.fromEnv = () => instance;
   return { Redis: Ctor };
 });
-
 
 // Helper functions
 const createTestBackend = () => {

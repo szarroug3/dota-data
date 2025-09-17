@@ -78,5 +78,3 @@ describe('PlayerOverviewCard', () => {
     expect(badges).toHaveLength(5);
   });
 });
-
-

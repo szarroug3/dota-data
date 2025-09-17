@@ -65,8 +65,22 @@ const getApiPlayers = z
       })
       .partial()
       .catchall(z.unknown()),
-    heroes: z.array(z.object({ hero_id: z.number().int(), games: z.number().int(), win: z.number().int() }).partial().catchall(z.unknown())).optional(),
-    recentMatches: z.array(z.object({ hero_id: z.number().int(), player_slot: z.number().int(), radiant_win: z.boolean() }).partial().catchall(z.unknown())).optional(),
+    heroes: z
+      .array(
+        z
+          .object({ hero_id: z.number().int(), games: z.number().int(), win: z.number().int() })
+          .partial()
+          .catchall(z.unknown()),
+      )
+      .optional(),
+    recentMatches: z
+      .array(
+        z
+          .object({ hero_id: z.number().int(), player_slot: z.number().int(), radiant_win: z.boolean() })
+          .partial()
+          .catchall(z.unknown()),
+      )
+      .optional(),
     wl: z.object({ win: z.number().int(), lose: z.number().int() }).partial().catchall(z.unknown()).optional(),
   })
   .partial()

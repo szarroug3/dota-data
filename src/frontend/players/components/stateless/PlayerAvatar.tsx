@@ -18,7 +18,10 @@ function getFallbackTextFromName(nameRaw: string): string {
   if (!name) return '?';
   const words = name.split(/\s+/);
   if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-  return words.map((w) => w[0]).join('').toUpperCase();
+  return words
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
 }
 
 function resolvePlayerUrl(accountId: number, site?: PreferredExternalSite): string {
@@ -28,10 +31,7 @@ function resolvePlayerUrl(accountId: number, site?: PreferredExternalSite): stri
 
 function resolveImageSrc(player: Player): string {
   return (
-    player.profile.profile.avatarfull ||
-    player.profile.profile.avatarmedium ||
-    player.profile.profile.avatar ||
-    ''
+    player.profile.profile.avatarfull || player.profile.profile.avatarmedium || player.profile.profile.avatar || ''
   );
 }
 
@@ -49,9 +49,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
 }) => {
   const { width, height } = avatarSize;
 
-  const fallbackText = player.error
-    ? '?'
-    : getFallbackTextFromName(player.profile.profile.personaname || '');
+  const fallbackText = player.error ? '?' : getFallbackTextFromName(player.profile.profile.personaname || '');
   const playerUrl = resolvePlayerUrl(player.profile.profile.account_id, preferredSite);
   const imageSrc = resolveImageSrc(player);
   const onClick = showLink

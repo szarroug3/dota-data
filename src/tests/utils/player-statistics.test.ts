@@ -57,5 +57,3 @@ describe('getTopHeroesFromRecentMatches', () => {
     expect(hero2?.averageKDA).toBeGreaterThan(0);
   });
 });
-
-

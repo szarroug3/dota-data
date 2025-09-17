@@ -3,15 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { PlayerGrid } from '@/frontend/players/components/stateless/PlayerGrid';
 
 jest.mock('@/frontend/players/components/stateless/PlayerOverviewCard', () => ({
-  PlayerOverviewCard: ({ player }: { player: any }) => (
-    <div data-testid="player-overview">{player?.playerName}</div>
-  ),
+  PlayerOverviewCard: ({ player }: { player: any }) => <div data-testid="player-overview">{player?.playerName}</div>,
 }));
 
 jest.mock('@/frontend/players/components/stateless/PlayerDetailedCard', () => ({
-  PlayerDetailedCard: ({ player }: { player: any }) => (
-    <div data-testid="player-detailed">{player?.playerName}</div>
-  ),
+  PlayerDetailedCard: ({ player }: { player: any }) => <div data-testid="player-detailed">{player?.playerName}</div>,
 }));
 
 describe('PlayerGrid', () => {
@@ -37,5 +33,3 @@ describe('PlayerGrid', () => {
     expect(items).toHaveLength(2);
   });
 });
-
-

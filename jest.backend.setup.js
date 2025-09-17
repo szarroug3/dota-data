@@ -35,4 +35,3 @@ jest.mock('@upstash/redis', () => ({
 // Set minimal envs used by tests
 process.env.UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL || 'https://example.upstash.io';
 process.env.UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || 'token';
-

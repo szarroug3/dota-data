@@ -15,9 +15,7 @@ export function createCollectManualMatches(teams: Map<string, TeamData>) {
   };
 }
 
-export function createEnsureOptimisticMatches(
-  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
-) {
+export function createEnsureOptimisticMatches(setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>) {
   return (entries: { teamKey: string; matchId: number; side: 'radiant' | 'dire' | null }[]) => {
     setTeams((prev) => {
       const newTeams = new Map(prev);
@@ -122,5 +120,3 @@ export function createEditManualMatch(
     }
   };
 }
-
-
