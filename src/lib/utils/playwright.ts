@@ -1,11 +1,19 @@
-import { chromium, Browser, BrowserContext, Page } from 'playwright';
+import { Browser, BrowserContext, chromium, Page } from 'playwright';
 
 /**
  * Playwright browser configuration for scraping Dotabuff
  */
 const BROWSER_CONFIG = {
   headless: true,
-  args: ['--disable-blink-features=AutomationControlled'],
+  args: [
+    '--disable-blink-features=AutomationControlled',
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--single-process',
+    '--no-zygote',
+  ],
 };
 
 /**

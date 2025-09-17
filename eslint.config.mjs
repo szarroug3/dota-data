@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
 import prettier from 'eslint-config-prettier';
 import pluginImport from 'eslint-plugin-import';
 import jest from 'eslint-plugin-jest';
@@ -36,6 +37,25 @@ export default defineConfig([
       react: {
         version: 'detect',
       },
+    },
+  },
+  {
+    files: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      'out/**',
+      '.next/**',
+      '.backup/**',
+      'coverage/**',
+      'src/components/ui/**',
+    ],
+    plugins: {
+      '@next/next': nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
     },
   },
   {

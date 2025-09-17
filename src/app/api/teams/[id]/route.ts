@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
 import { ApiErrorResponse } from '@/types/api';
 import { schemas } from '@/types/api-zod';

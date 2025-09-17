@@ -25,7 +25,8 @@
     "test:e2e:install": "playwright install",
     "test:e2e:report": "playwright show-report",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "postinstall": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -66,7 +67,9 @@
     "swagger-ui-react": "^5.29.0",
     "tailwind-merge": "^3.3.1",
     "ws": "^8.18.3",
-    "zod": "^4.1.9"
+    "zod": "^4.1.9",
+    "@playwright/test": "^1.55.0",
+    "playwright": "^1.55.0"
   },
   "pnpm": {
     "overrides": {
@@ -78,7 +81,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@eslint/js": "^9.35.0",
-    "@playwright/test": "^1.55.0",
+    "@next/eslint-plugin-next": "15.5.3",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.13",
     "@testing-library/jest-dom": "^6.8.0",
@@ -108,7 +111,6 @@
     "node-fetch": "^2.7.0",
     "openapi-comment-parser": "^1.0.0",
     "openapi-zod-client": "^1.16.0",
-    "playwright": "^1.54.1",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "supertest": "^6.3.3",
