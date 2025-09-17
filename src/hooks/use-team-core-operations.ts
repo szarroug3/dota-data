@@ -243,6 +243,7 @@ function useAddTeamCore(
   teamDataFetching: TeamDataFetchingContextValue,
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
+  configContext: ConfigContextValue,
 ) {
   const abortController = useAbortController();
 
@@ -263,6 +264,9 @@ function useAddTeamCore(
           setTeams,
         );
         if (transformedTeam && !transformedTeam.error) {
+          // Set newly added team as active immediately upon successful team + league load
+          configContext.setActiveTeam({ teamId, leagueId });
+
           // Derive matches from Steam league cache
           const teamMatches = teamDataFetching.findTeamMatchesInLeague(leagueId, teamId);
           const existing = teams.get(teamKey);
@@ -303,6 +307,8 @@ function useAddTeamCore(
             }
             return newTeams;
           });
+
+          configContext.setActiveTeam({ teamId, leagueId });
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to add team';
@@ -311,19 +317,32 @@ function useAddTeamCore(
         clearMapItemLoading(setTeamsForLoading, teamKey);
       }
     },
-    [teams, setTeams, setTeamsForLoading, teamDataFetching, matchContext, playerContext, abortController],
+    [
+      teams,
+      setTeams,
+      setTeamsForLoading,
+      teamDataFetching,
+      matchContext,
+      playerContext,
+      configContext,
+      abortController,
+    ],
   );
 }
 
 function useRefreshTeamCore(
+  teams: Map<string, TeamData>,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
   teamDataFetching: TeamDataFetchingContextValue,
+  matchContext: MatchContextValue,
+  playerContext: PlayerContextValue,
 ) {
   const abortController = useAbortController();
   return useCallback(
     async (teamId: number, leagueId: number): Promise<void> => {
       const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
-      await handleTeamSummaryOperation(
+      const teamKey = generateTeamKey(teamId, leagueId);
+      const transformedTeam = await handleTeamSummaryOperation(
         teamId,
         leagueId,
         true,
@@ -332,8 +351,50 @@ function useRefreshTeamCore(
         teamDataFetching,
         setTeams,
       );
+
+      // After refresh, perform cascading fetch of matches and players
+      if (transformedTeam && !transformedTeam.error) {
+        const teamMatches = teamDataFetching.findTeamMatchesInLeague(leagueId, teamId);
+        const existing = teams.get(teamKey);
+        const matchProcessingPromises = teamMatches.map(({ matchId, side }) => {
+          const isManualMatch = existing?.manualMatches?.[matchId];
+          const knownSide = (isManualMatch?.side as 'radiant' | 'dire' | undefined) ?? side ?? undefined;
+          return processMatchAndExtractPlayers(matchId, teamId, matchContext, playerContext, knownSide);
+        });
+        const processedMatches = await Promise.all(matchProcessingPromises);
+        setTeams((prev) => {
+          const newTeams = new Map(prev);
+          const team = newTeams.get(teamKey);
+          if (team) {
+            const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
+            processedMatches.forEach((processedMatch) => {
+              if (processedMatch) {
+                updatedMatches[processedMatch.matchId] = processedMatch;
+              }
+            });
+            const matchesArray = Object.values(updatedMatches);
+            const totalWins = matchesArray.filter((m) => m.result === 'won').length;
+            const totalLosses = matchesArray.filter((m) => m.result === 'lost').length;
+            const averageMatchDuration =
+              matchesArray.reduce((sum: number, m) => sum + (m.duration || 0), 0) / (matchesArray.length || 1);
+            newTeams.set(teamKey, {
+              ...team,
+              matches: updatedMatches,
+              performance: {
+                ...team.performance,
+                totalMatches: matchesArray.length,
+                totalWins,
+                totalLosses,
+                overallWinRate: matchesArray.length > 0 ? (totalWins / matchesArray.length) * 100 : 0,
+                averageMatchDuration,
+              },
+            });
+          }
+          return newTeams;
+        });
+      }
     },
-    [teamDataFetching, setTeams, abortController],
+    [teams, teamDataFetching, setTeams, matchContext, playerContext, abortController],
   );
 }
 
@@ -441,8 +502,16 @@ export function useTeamCoreOperations(
   configContext: ConfigContextValue,
 ) {
   const { teams, setTeams, setTeamsForLoading, selectedTeamId } = state;
-  const addTeam = useAddTeamCore(teams, setTeams, setTeamsForLoading, teamDataFetching, matchContext, playerContext);
-  const refreshTeam = useRefreshTeamCore(setTeams, teamDataFetching);
+  const addTeam = useAddTeamCore(
+    teams,
+    setTeams,
+    setTeamsForLoading,
+    teamDataFetching,
+    matchContext,
+    playerContext,
+    configContext,
+  );
+  const refreshTeam = useRefreshTeamCore(teams, setTeams, teamDataFetching, matchContext, playerContext);
   const removeTeam = useRemoveTeamCore(selectedTeamId, setTeams, configContext);
   const editTeam = useEditTeamCore(removeTeam, addTeam);
   const manualMatchesOps = useManualMatchesOps(teams, setTeams, matchContext, selectedTeamId);

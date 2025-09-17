@@ -343,7 +343,16 @@ const useLeagueApiFetching = (
 
   const findTeamMatchesInLeague = useCallback(
     (leagueId: number, teamId: number): Array<{ matchId: number; side: 'radiant' | 'dire' | null }> => {
-      const league = leagueCacheRef.current.get(leagueId);
+      // Try in-memory cache first
+      let league = leagueCacheRef.current.get(leagueId);
+      // If not in memory yet (setState not flushed), fall back to persisted cache
+      if (!league) {
+        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
+        const persisted = getCacheItem<SteamLeague>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
+        if (persisted) {
+          league = persisted;
+        }
+      }
       const matches = league?.steam?.result?.matches || [];
       const results: Array<{ matchId: number; side: 'radiant' | 'dire' | null }> = [];
       matches.forEach((m: SteamMatchSlim) => {

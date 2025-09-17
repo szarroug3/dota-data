@@ -13,6 +13,14 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   { ignores: ['.next/**', 'next-env.d.ts', '.backup/**', 'coverage/**', 'src/components/ui/**'] },
+  {
+    plugins: {
+      '@next/next': nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+    },
+  },
   // Only lint source files, never .next or build output
   {
     files: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
@@ -37,25 +45,6 @@ export default defineConfig([
       react: {
         version: 'detect',
       },
-    },
-  },
-  {
-    files: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      'build/**',
-      'out/**',
-      '.next/**',
-      '.backup/**',
-      'coverage/**',
-      'src/components/ui/**',
-    ],
-    plugins: {
-      '@next/next': nextPlugin,
-    },
-    rules: {
-      ...nextPlugin.configs.recommended.rules,
     },
   },
   {
