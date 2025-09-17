@@ -11,14 +11,13 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 
 import { useConstantsDataFetching } from '@/frontend/contexts/constants-data-fetching-context';
 import { formatHeroImageUrl, formatItemImageUrl } from '@/lib/utils/image-url';
-import type { ApiItemSummary } from '@/types/api';
 import type {
   ConstantsContextProviderProps,
   ConstantsContextValue,
   Hero,
   Item,
 } from '@/types/contexts/constants-context-value';
-import type { OpenDotaHero } from '@/types/external-apis';
+import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
 
 // ============================================================================
 // HELPERS
@@ -40,7 +39,7 @@ function buildFetchHeroes(
         setHeroesError(result.error);
         return;
       }
-      const convertedHeroes = result.map(convertOpenDotaHeroToHero);
+      const convertedHeroes = result.map(convertApiHeroToHero);
       const heroesById: Record<string, Hero> = {};
       const heroesByNameLocal: Record<string, Hero> = {};
       convertedHeroes.forEach((hero) => {
@@ -58,7 +57,7 @@ function buildFetchHeroes(
 }
 
 function buildFetchItems(
-  fetchItemsData: (force?: boolean) => Promise<Record<string, ApiItemSummary> | { error: string }>,
+  fetchItemsData: (force?: boolean) => Promise<Record<string, OpenDotaItem> | { error: string }>,
   setIsLoadingItems: (v: boolean) => void,
   setItemsError: (v: string | null) => void,
   setItemsById: React.Dispatch<React.SetStateAction<Record<number, Item>>>,
@@ -78,11 +77,11 @@ function buildFetchItems(
       const itemsByNameLocal: Record<string, Item> = {};
       Object.entries(result).forEach(([itemName, itemData]) => {
         const item: Item = {
-          id: itemData.id as number,
-          name: (itemData.displayName as string) ?? '',
-          imageUrl: formatItemImageUrl((itemData.image as string) ?? ''),
+          id: (itemData.id as number) ?? -1,
+          name: (itemData.dname as string) ?? '',
+          imageUrl: formatItemImageUrl((itemData.img as string) ?? ''),
         };
-        itemsByIdLocal[(itemData.id as number) ?? -1] = item;
+        itemsByIdLocal[item.id] = item;
         itemsByNameLocal[itemName] = item;
       });
       setItemsById(itemsByIdLocal);
@@ -95,21 +94,18 @@ function buildFetchItems(
     }
   };
 }
-const convertOpenDotaHeroToHero = (openDotaHero: OpenDotaHero): Hero => {
-  // Convert primary attribute string to proper type
-  const primaryAttribute = openDotaHero.primary_attr as 'strength' | 'agility' | 'intelligence';
-
-  // Convert attack type string to proper type
-  const attackType = openDotaHero.attack_type as 'melee' | 'ranged';
+const convertApiHeroToHero = (hero: OpenDotaHero): Hero => {
+  const name = hero.name ?? '';
 
   return {
-    id: openDotaHero.id.toString(),
-    name: openDotaHero.name,
-    localizedName: openDotaHero.localized_name,
-    primaryAttribute,
-    attackType,
-    roles: openDotaHero.roles,
-    imageUrl: formatHeroImageUrl(openDotaHero.name),
+    id: String(hero.id ?? ''),
+    name,
+    localizedName: hero.localized_name ?? '',
+    primaryAttribute:
+      hero.primary_attr === 'str' ? 'strength' : hero.primary_attr === 'agi' ? 'agility' : 'intelligence',
+    attackType: (hero.attack_type || '').toLowerCase() === 'ranged' ? 'ranged' : 'melee',
+    roles: Array.isArray(hero.roles) ? hero.roles : [],
+    imageUrl: formatHeroImageUrl(name),
   };
 };
 

@@ -69,7 +69,6 @@ interface PlayersListProps {
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
   hiddenPlayerIds?: Set<number>;
-  filteredPlayers?: Player[];
   onScrollToPlayer?: (playerId: number) => void;
   heroes: Record<string, Hero>;
   preferredSite: PreferredExternalSite;

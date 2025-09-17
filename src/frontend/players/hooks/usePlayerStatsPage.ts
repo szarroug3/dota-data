@@ -145,7 +145,11 @@ export function usePlayerViewModes() {
 
 export function useSortedPlayers(players: Player[]) {
   return useMemo(() => {
-    return [...players].sort((a, b) => a.profile.profile.personaname.localeCompare(b.profile.profile.personaname));
+    return [...players].sort((a, b) => {
+      const aName = (a.profile.profile.personaname || '').toLowerCase();
+      const bName = (b.profile.profile.personaname || '').toLowerCase();
+      return aName.localeCompare(bName);
+    });
   }, [players]);
 }
 

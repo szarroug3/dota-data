@@ -34,7 +34,6 @@ export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps>
           name: `npc_dota_hero_${hero.hero_id}`,
           localizedName: `Hero ${hero.hero_id}`,
           primaryAttribute: 'strength',
-          attackType: 'melee',
           roles: [],
           imageUrl: '',
         },

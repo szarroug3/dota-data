@@ -1,8 +1,3 @@
-import { TextDecoder, TextEncoder } from 'util';
-global.TextEncoder = TextEncoder;
-// @ts-expect-error - Node.js TextDecoder is compatible with browser TextDecoder
-global.TextDecoder = TextDecoder;
-
 /**
  * Match Data Fetching Context Tests
  *

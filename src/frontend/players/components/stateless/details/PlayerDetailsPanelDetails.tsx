@@ -1,11 +1,15 @@
 import React, { useMemo, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import type { Hero } from '@/types/contexts/constants-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
+import type { OpenDotaPlayerMatches } from '@/types/external-apis';
 
 type SortKey = 'games' | 'winRate' | 'name';
 
@@ -24,6 +28,128 @@ const renderHeroWithAvatar = (hero: Hero) => (
   </div>
 );
 
+type DateRangeSelection = '7days' | '30days' | 'custom';
+
+function getDateCutoffs(
+  selection: DateRangeSelection,
+  custom: { start: string | null; end: string | null },
+  referenceNowSec: number,
+): { startCutoffSec: number | null; endCutoffSec: number | null; referenceNowSec: number } {
+  if (selection === '7days') {
+    return { startCutoffSec: referenceNowSec - 7 * 24 * 60 * 60, endCutoffSec: referenceNowSec, referenceNowSec };
+  }
+  if (selection === '30days') {
+    return { startCutoffSec: referenceNowSec - 30 * 24 * 60 * 60, endCutoffSec: referenceNowSec, referenceNowSec };
+  }
+  let startCutoffSec: number | null = null;
+  let endCutoffSec: number | null = null;
+  if (custom.start) startCutoffSec = Math.floor(new Date(custom.start).getTime() / 1000);
+  if (custom.end) endCutoffSec = Math.floor((new Date(custom.end).getTime() + 24 * 60 * 60 * 1000 - 1) / 1000);
+  return { startCutoffSec, endCutoffSec, referenceNowSec };
+}
+
+function filterMatchesByDateRange(
+  matches: OpenDotaPlayerMatches[],
+  cutoffs: { startCutoffSec: number | null; endCutoffSec: number | null },
+): OpenDotaPlayerMatches[] {
+  const { startCutoffSec, endCutoffSec } = cutoffs;
+  return matches.filter((m) => {
+    if (startCutoffSec !== null && m.start_time < startCutoffSec) return false;
+    if (endCutoffSec !== null && m.start_time > endCutoffSec) return false;
+    return true;
+  });
+}
+
+function buildHeroRows(
+  filtered: OpenDotaPlayerMatches[],
+  heroesMap: Record<string, Hero>,
+): Array<{ hero: Hero; games: number; winRate: number }> {
+  const byHero: Record<string, { games: number; wins: number }> = {};
+  for (const match of filtered) {
+    const heroId = match.hero_id.toString();
+    const isRadiantPlayer = match.player_slot < 128;
+    const isWin = match.radiant_win ? isRadiantPlayer : !isRadiantPlayer;
+    if (!byHero[heroId]) byHero[heroId] = { games: 0, wins: 0 };
+    byHero[heroId].games += 1;
+    if (isWin) byHero[heroId].wins += 1;
+  }
+  return (
+    Object.entries(byHero)
+      .map(([heroId, agg]) => {
+        const hero =
+          heroesMap[heroId] ||
+          ({
+            id: heroId,
+            name: `npc_dota_hero_${heroId}`,
+            localizedName: `Hero ${heroId}`,
+            primaryAttribute: 'strength',
+            attackType: 'melee',
+            roles: [],
+            imageUrl: '',
+          } as Hero);
+        const winRate = agg.games > 0 ? (agg.wins / agg.games) * 100 : 0;
+        return { hero, games: agg.games, winRate };
+      })
+      .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>
+  );
+}
+
+function HeroStatsHeaderControls({
+  dateRange,
+  setDateRange,
+  customDateRange,
+  setCustomDateRange,
+}: {
+  dateRange: DateRangeSelection;
+  setDateRange: (v: DateRangeSelection) => void;
+  customDateRange: { start: string | null; end: string | null };
+  setCustomDateRange: (v: { start: string | null; end: string | null }) => void;
+}) {
+  return (
+    <div className="flex items-end gap-3">
+      <div className="w-40 hidden @[145px]:block">
+        <Label className="text-sm font-medium">Time Range</Label>
+        <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRangeSelection)}>
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7days">Last 7 Days</SelectItem>
+            <SelectItem value="30days">Last 30 Days</SelectItem>
+            <SelectItem value="custom">Custom</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="w-40 @[145px]:hidden block h-15" aria-hidden="true" />
+      {dateRange === 'custom' && (
+        <div className="items-end gap-3 hidden @[480px]:flex">
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium" htmlFor="custom-start">Start</Label>
+            <Input
+              type="date"
+              id="custom-start"
+              value={customDateRange.start || ''}
+              onChange={(e) => setCustomDateRange({ ...customDateRange, start: e.target.value || null })}
+              className="mt-1 text-xs"
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium" htmlFor="custom-end">End</Label>
+            <Input
+              type="date"
+              id="custom-end"
+              value={customDateRange.end || ''}
+              onChange={(e) => setCustomDateRange({ ...customDateRange, end: e.target.value || null })}
+              className="mt-1 text-xs"
+            />
+          </div>
+        </div>
+      )}
+      {dateRange === 'custom' && <div className="hidden @[480px]:block h-15" aria-hidden="true" />}
+    </div>
+  );
+}
+
 interface PlayerDetailsPanelDetailsProps {
   player: Player;
   _allPlayers?: Player[];
@@ -34,30 +160,45 @@ interface PlayerDetailsPanelDetailsProps {
 export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player, heroes }) => {
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
+  const [dateRange, setDateRange] = useState<DateRangeSelection>('30days');
+  const [customDateRange, setCustomDateRange] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
+
+  const matches = useMemo(() => {
+    return Array.isArray(player.recentMatches) ? (player.recentMatches as OpenDotaPlayerMatches[]) : [];
+  }, [player.recentMatches]);
+
+  const referenceNowSec = useMemo(() => {
+    if (!matches.length) return Math.floor(Date.now() / 1000);
+    return matches.reduce((max, m) => (m.start_time > max ? m.start_time : max), matches[0].start_time);
+  }, [matches]);
+
+  const cutoffs = useMemo(() => getDateCutoffs(dateRange, customDateRange, referenceNowSec), [dateRange, customDateRange, referenceNowSec]);
+
+  const filteredMatches = useMemo(() => filterMatchesByDateRange(matches, cutoffs), [matches, cutoffs]);
+
+  const unsortedRows = useMemo(() => buildHeroRows(filteredMatches, heroes), [filteredMatches, heroes]);
 
   const rows = useMemo(() => {
-    const data = player.heroes
-      .map((h) => {
-        const hero = heroes[h.hero_id.toString()];
-        const winRate = h.games > 0 ? (h.win / h.games) * 100 : 0;
-        return hero ? { hero, games: h.games, winRate } : null;
-      })
-      .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>;
-    const by = (
+    const comparator = (
       a: { hero: Hero; games: number; winRate: number },
       b: { hero: Hero; games: number; winRate: number },
-    ) =>
-      sortKey === 'name'
-        ? a.hero.localizedName.localeCompare(b.hero.localizedName)
-        : sortKey === 'games'
-          ? b.games - a.games
-          : b.winRate - a.winRate;
-    const sorted = [...data].sort(by);
+    ) => {
+      if (sortKey === 'name') return a.hero.localizedName.localeCompare(b.hero.localizedName);
+      if (sortKey === 'games') return b.games - a.games;
+      return b.winRate - a.winRate;
+    };
+    const sorted = [...unsortedRows].sort(comparator);
     return sortDirection === 'asc' ? sorted.reverse() : sorted;
-  }, [player.heroes, heroes, sortKey, sortDirection]);
+  }, [unsortedRows, sortKey, sortDirection]);
 
   return (
     <div className="space-y-6">
+      <HeroStatsHeaderControls
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        customDateRange={customDateRange}
+        setCustomDateRange={setCustomDateRange}
+      />
       <Card className="@container">
         <CardHeader className="min-w-0">
           <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">

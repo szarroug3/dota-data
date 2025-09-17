@@ -54,6 +54,7 @@ describe('Heroes API Route', () => {
           primary_attr: 'agi',
           attack_type: 'Melee',
           roles: ['Carry', 'Escape', 'Nuker'],
+          legs: 2,
         },
         {
           id: 2,
@@ -62,6 +63,7 @@ describe('Heroes API Route', () => {
           primary_attr: 'str',
           attack_type: 'Melee',
           roles: ['Initiator', 'Durable', 'Disabler', 'Carry'],
+          legs: 2,
         },
       ]);
       expect(mockFetchOpenDotaHeroes).toHaveBeenCalledWith(false);

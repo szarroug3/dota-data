@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaHeroes } from '@/lib/api/opendota/heroes';
-import { ApiErrorResponse, ApiHeroSummary } from '@/types/api';
-import { schemas } from '@/types/api-zod';
+import { ApiErrorResponse } from '@/types/api';
 
 /**
  * Handle heroes API errors
@@ -207,22 +206,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Fetch raw heroes data (handles caching, rate limiting, mock mode)
     const heroes = await fetchOpenDotaHeroes(force);
 
-    // Trim to summary and validate output shape against Zod schema before responding
-    try {
-      const summaries: ApiHeroSummary[] = (heroes || []).map((h) => ({
-        id: h.id,
-        name: h.name,
-        localized_name: h.localized_name,
-        primary_attr: h.primary_attr,
-        attack_type: h.attack_type,
-        roles: h.roles,
-      }));
-      const validated = schemas.getApiHeroes.parse(summaries);
-      return NextResponse.json(validated);
-    } catch {
-      // Normalize validation errors to our 422 handler branch
-      throw new Error('Failed to parse heroes data');
-    }
+    return NextResponse.json(heroes);
   } catch (error) {
     console.error('Heroes API Error:', error);
 

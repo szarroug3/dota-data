@@ -122,8 +122,8 @@ function PlayerStatsPageInner(): React.ReactElement {
   const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelectionHook();
   const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModesHook();
   const preferredSite: PreferredExternalSite = useConfigContext().config.preferredExternalSite;
-  const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(players);
   const sortedPlayers = useSortedPlayersHook(players);
+  const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(sortedPlayers);
   const manualPlayerIds = useMemo(() => {
     const selectedTeam = getSelectedTeam();
     const manual = selectedTeam?.manualPlayers ?? [];

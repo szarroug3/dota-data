@@ -126,7 +126,7 @@ describe('Players API Route', () => {
   });
 
   describe('GET /api/players/[id]', () => {
-    it('should return comprehensive player data successfully', async () => {
+    it('should return player data successfully', async () => {
       const request = new NextRequest('http://localhost:3000/api/players/40927904');
       const params = Promise.resolve({ id: '40927904' });
 

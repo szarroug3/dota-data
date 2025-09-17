@@ -42,6 +42,56 @@ function getPlayerParticipatedMatches(
   });
 }
 
+function getPlayerSide(match: Match, accountId: number): 'radiant' | 'dire' | null {
+  if (!match.players) return null;
+  const isRadiant = match.players.radiant?.some((p: { accountId: number }) => p.accountId === accountId);
+  return isRadiant ? 'radiant' : 'dire';
+}
+
+function findPlayerInMatch(match: Match, accountId: number) {
+  const side = getPlayerSide(match, accountId);
+  if (!side || !match.players) return null;
+  const teamPlayers = side === 'radiant' ? match.players.radiant : match.players.dire;
+  return teamPlayers.find((p: { accountId: number }) => p.accountId === accountId) || null;
+}
+
+function safeStat(value: number | undefined): number {
+  return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
+}
+
+function calculateKda(kills: number, deaths: number, assists: number): number {
+  return deaths > 0 ? (kills + assists) / deaths : kills + assists;
+}
+
+function accumulateStats(total: { kda: number; gpm: number; xpm: number; count: number }, match: Match, accountId: number) {
+  const me = findPlayerInMatch(match, accountId);
+  if (!me) return total;
+  const kills = safeStat(me.stats?.kills);
+  const deaths = safeStat(me.stats?.deaths);
+  const assists = safeStat(me.stats?.assists);
+  const gpm = safeStat(me.stats?.gpm);
+  const xpm = safeStat(me.stats?.xpm);
+  return {
+    kda: total.kda + calculateKda(kills, deaths, assists),
+    gpm: total.gpm + gpm,
+    xpm: total.xpm + xpm,
+    count: total.count + 1,
+  };
+}
+
+function computeAverages(matches: Match[], accountId: number): { averageKDA: number; averageGPM: number; averageXPM: number } {
+  const totals = matches.reduce(
+    (acc, m) => accumulateStats(acc, m, accountId),
+    { kda: 0, gpm: 0, xpm: 0, count: 0 },
+  );
+  const divisor = totals.count > 0 ? totals.count : 1;
+  return {
+    averageKDA: totals.kda / divisor,
+    averageGPM: totals.gpm / divisor,
+    averageXPM: totals.xpm / divisor,
+  };
+}
+
 function computePlayerTeamStats(
   selectedTeam: TeamData | undefined | null,
   playerParticipatedMatches: Match[],
@@ -50,12 +100,12 @@ function computePlayerTeamStats(
   if (!selectedTeam || playerParticipatedMatches.length === 0) return null;
   const totalGames = playerParticipatedMatches.length;
   const totalWins = playerParticipatedMatches.filter((match) => {
-    if (!match.players) return false;
-    const isRadiant = match.players.radiant?.some((p: { accountId: number }) => p.accountId === accountId);
-    const playerTeamSide = isRadiant ? 'radiant' : 'dire';
-    return playerTeamSide === match.result;
+    const side = getPlayerSide(match, accountId);
+    return side !== null && side === match.result;
   }).length;
-  return { totalGames, totalWins, winRate: 0, averageKDA: 0, averageGPM: 0, averageXPM: 0 };
+  const { averageKDA, averageGPM, averageXPM } = computeAverages(playerParticipatedMatches, accountId);
+  const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
+  return { totalGames, totalWins, winRate, averageKDA, averageGPM, averageXPM };
 }
 
 function getWinRateBarColor(winRate: number): string {

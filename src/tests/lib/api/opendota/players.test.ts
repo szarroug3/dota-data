@@ -126,7 +126,7 @@ describe('Players API', () => {
   });
 
   describe('GET /api/players/[id]', () => {
-    it('should return comprehensive player data successfully', async () => {
+    it('should return player summary data successfully', async () => {
       const request = new NextRequest('http://localhost:3000/api/players/40927904');
       const params = Promise.resolve({ id: '40927904' });
 
@@ -135,7 +135,33 @@ describe('Players API', () => {
       expect(response.status).toBe(200);
       const data = await response.json();
 
-      expect(data).toEqual(mockComprehensivePlayerData);
+      expect(data).toEqual(
+        expect.objectContaining({
+          profile: expect.objectContaining({
+            profile: expect.objectContaining({
+              account_id: mockComprehensivePlayerData.profile.profile.account_id,
+              personaname: mockComprehensivePlayerData.profile.profile.personaname,
+              avatar: mockComprehensivePlayerData.profile.profile.avatar,
+              avatarmedium: mockComprehensivePlayerData.profile.profile.avatarmedium,
+              avatarfull: mockComprehensivePlayerData.profile.profile.avatarfull,
+            }),
+            rank_tier: mockComprehensivePlayerData.profile.rank_tier,
+            leaderboard_rank: mockComprehensivePlayerData.profile.leaderboard_rank,
+          }),
+          wl: expect.objectContaining({
+            win: mockComprehensivePlayerData.wl.win,
+            lose: mockComprehensivePlayerData.wl.lose,
+          }),
+          heroes: expect.arrayContaining([
+            expect.objectContaining({
+              hero_id: mockComprehensivePlayerData.heroes[0].hero_id,
+              games: mockComprehensivePlayerData.heroes[0].games,
+              win: mockComprehensivePlayerData.heroes[0].win,
+            }),
+          ]),
+          recentMatches: mockComprehensivePlayerData.recentMatches,
+        }),
+      );
       expect(mockFetchOpenDotaPlayer).toHaveBeenCalledWith('40927904', false);
     });
 

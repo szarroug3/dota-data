@@ -24,6 +24,7 @@ import type {
   TeamMatchParticipation,
   TeamState,
 } from '@/types/contexts/team-context-value';
+import { generateTeamKey } from '@/utils/team-helpers';
 
 // ============================================================================
 // CONTEXT CREATION
@@ -164,15 +165,18 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
 
   // Calculate high-performing heroes based on selected team's matches
   const highPerformingHeroes = useMemo(() => {
-    const selectedTeam = actions.getSelectedTeam();
+    const active = configContext.activeTeam;
+    if (!active) {
+      return new Set<string>();
+    }
+    const teamKey = generateTeamKey(active.teamId, active.leagueId);
+    const selectedTeam = teams.get(teamKey);
     if (!selectedTeam) {
       return new Set<string>();
     }
-
-    // For now, we'll use an empty set for hidden matches
     const hiddenMatchIds = new Set<number>();
     return calculateHighPerformingHeroes(matchContext.matches, selectedTeam.matches, hiddenMatchIds);
-  }, [matchContext.matches, actions]);
+  }, [teams, configContext.activeTeam, matchContext.matches]);
 
   const contextValue: TeamContextValue = {
     // State

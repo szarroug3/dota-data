@@ -47,7 +47,6 @@ export interface ResizablePlayerLayoutRef {
 function PlayersListSection(props: {
   players: Player[];
   visiblePlayers: Player[];
-  filteredPlayers: Player[];
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
   onHidePlayer: (playerId: number) => void;
@@ -77,7 +76,6 @@ function PlayersListSection(props: {
     hiddenPlayersCount = 0,
     onShowHiddenPlayers,
     hiddenPlayerIds = new Set(),
-    filteredPlayers,
     onScrollToPlayer,
     onAddPlayer,
     manualPlayerIds,
@@ -102,7 +100,6 @@ function PlayersListSection(props: {
         hiddenPlayersCount={hiddenPlayersCount}
         onShowHiddenPlayers={onShowHiddenPlayers}
         hiddenPlayerIds={hiddenPlayerIds}
-        filteredPlayers={filteredPlayers}
         onScrollToPlayer={onScrollToPlayer}
         onAddPlayer={onAddPlayer}
         manualPlayerIds={manualPlayerIds}
@@ -166,7 +163,6 @@ export const ResizablePlayerLayout = React.memo(
       {
         players,
         visiblePlayers,
-        filteredPlayers,
         onHidePlayer,
         onRefreshPlayer,
         viewMode,
@@ -207,7 +203,6 @@ export const ResizablePlayerLayout = React.memo(
                 <PlayersListSection
                   players={players}
                   visiblePlayers={visiblePlayers}
-                  filteredPlayers={filteredPlayers}
                   selectedPlayerId={selectedPlayerId}
                   onSelectPlayer={onSelectPlayer}
                   onHidePlayer={onHidePlayer}

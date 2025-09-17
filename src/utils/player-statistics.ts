@@ -119,6 +119,81 @@ export function getTopHeroesByGames(
 }
 
 /**
+ * Get top heroes by games played from recent matches
+ */
+export function getTopHeroesFromRecentMatches(
+  recentMatches: Array<{
+    hero_id: number;
+    player_slot: number;
+    radiant_win: boolean;
+    kills: number;
+    deaths: number;
+    assists: number;
+  }>,
+  heroesData: Record<string, Hero>,
+  limit: number = 5,
+): HeroUsage[] {
+  if (!Array.isArray(recentMatches) || recentMatches.length === 0) {
+    return [];
+  }
+
+  // Aggregate usage per hero from recent matches
+  const heroUsageAccumulator: Record<string, { games: number; wins: number; kdaSum: number; kdaCount: number }> = {};
+
+  for (const match of recentMatches) {
+    const heroId = match.hero_id.toString();
+    const isRadiantPlayer = match.player_slot < 128; // OpenDota convention
+    const isWin = match.radiant_win ? isRadiantPlayer : !isRadiantPlayer;
+
+    if (!heroUsageAccumulator[heroId]) {
+      heroUsageAccumulator[heroId] = { games: 0, wins: 0, kdaSum: 0, kdaCount: 0 };
+    }
+
+    heroUsageAccumulator[heroId].games += 1;
+    if (isWin) {
+      heroUsageAccumulator[heroId].wins += 1;
+    }
+
+    // Track average KDA per hero (optional field on HeroUsage)
+    const kda = match.deaths > 0 ? (match.kills + match.assists) / match.deaths : match.kills + match.assists;
+    heroUsageAccumulator[heroId].kdaSum += kda;
+    heroUsageAccumulator[heroId].kdaCount += 1;
+  }
+
+  // Build sorted list
+  const usages: HeroUsage[] = Object.entries(heroUsageAccumulator)
+    .map(([heroId, stats]) => {
+      const heroData = heroesData[heroId];
+      const gamesPlayed = stats.games;
+      const wins = stats.wins;
+      const winRate = gamesPlayed > 0 ? (wins / gamesPlayed) * 100 : 0;
+      const averageKDA = stats.kdaCount > 0 ? stats.kdaSum / stats.kdaCount : undefined;
+
+      return {
+        hero:
+          heroData ||
+          {
+            id: heroId,
+            name: `npc_dota_hero_${heroId}`,
+            localizedName: `Hero ${heroId}`,
+            primaryAttribute: 'strength',
+            attackType: 'melee',
+            roles: [],
+            imageUrl: '',
+          },
+        games: gamesPlayed,
+        wins,
+        winRate,
+        averageKDA,
+      };
+    })
+    .sort((a, b) => b.games - a.games)
+    .slice(0, limit);
+
+  return usages;
+}
+
+/**
  * Get top heroes by win rate (minimum games threshold)
  */
 export function getTopHeroesByWinRate(
@@ -185,18 +260,20 @@ export function processTeamRoleStats(player: Player, teamData: TeamData, matches
     const direPlayer = match.players.dire.find((p) => p.accountId === player.profile.profile.account_id);
     const matchPlayer = radiantPlayer || direPlayer;
 
-    if (matchPlayer && matchPlayer.role) {
-      const role = matchPlayer.role;
-      const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : direPlayer ? true : false;
+    if (!matchPlayer) {
+      return;
+    }
 
-      if (!roleStats[role]) {
-        roleStats[role] = { games: 0, wins: 0 };
-      }
+    const role = matchPlayer.role || 'Unknown';
+    const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : direPlayer ? true : false;
 
-      roleStats[role].games++;
-      if (isWin) {
-        roleStats[role].wins++;
-      }
+    if (!roleStats[role]) {
+      roleStats[role] = { games: 0, wins: 0 };
+    }
+
+    roleStats[role].games++;
+    if (isWin) {
+      roleStats[role].wins++;
     }
   });
 
@@ -307,7 +384,11 @@ export function processPlayerDetailedStats(
 ): PlayerDetailedStats {
   const rank = processPlayerRank(player.profile.rank_tier);
   const topHeroesAllTime = getTopHeroesByGames(player.heroes, heroesData, 5);
-  const topHeroesRecent = getTopHeroesByGames(player.heroes, heroesData, 5); // TODO: Filter by recent matches
+  const topHeroesRecent = getTopHeroesFromRecentMatches(
+    player.recentMatches ?? [],
+    heroesData,
+    5,
+  );
 
   const teamRoles = teamData ? processTeamRoleStats(player, teamData, matches) : [];
   const teamHeroes = teamData ? processTeamHeroStats(player, teamData, matches, heroesData) : [];

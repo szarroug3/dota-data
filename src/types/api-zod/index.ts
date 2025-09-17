@@ -4,8 +4,73 @@ import { z } from 'zod';
 const postApiCacheInvalidateBody = z.object({ pattern: z.string(), key: z.string() }).partial().catchall(z.unknown());
 
 // Response schemas for clients that validate via schemas.* lookups (permissive)
-const getApiMatches = z.unknown();
-const getApiPlayers = z.unknown();
+// Accept full OpenDota match object
+const getApiMatches = z
+  .object({
+    match_id: z.number().int(),
+    start_time: z.number().int(),
+    duration: z.number().int(),
+    radiant_win: z.boolean(),
+    players: z
+      .array(
+        z
+          .object({
+            account_id: z.number().int(),
+            player_slot: z.number().int(),
+            hero_id: z.number().int(),
+            isRadiant: z.boolean().optional(),
+            personaname: z.string().optional(),
+            lane_role: z.number().int().optional(),
+            observer_uses: z.number().int().optional(),
+            sentry_uses: z.number().int().optional(),
+            is_roaming: z.boolean().optional(),
+            item_0: z.number().int().optional(),
+            item_1: z.number().int().optional(),
+            item_2: z.number().int().optional(),
+            item_3: z.number().int().optional(),
+            item_4: z.number().int().optional(),
+            item_5: z.number().int().optional(),
+            kills: z.number().int().optional(),
+            deaths: z.number().int().optional(),
+            assists: z.number().int().optional(),
+            last_hits: z.number().int().optional(),
+            denies: z.number().int().optional(),
+            gold_per_min: z.number().int().optional(),
+            xp_per_min: z.number().int().optional(),
+            level: z.number().int().optional(),
+          })
+          .partial()
+          .catchall(z.unknown()),
+      )
+      .optional(),
+  })
+  .partial()
+  .catchall(z.unknown());
+const getApiPlayers = z
+  .object({
+    profile: z
+      .object({
+        profile: z
+          .object({
+            account_id: z.number().int(),
+            personaname: z.string().optional(),
+            avatar: z.string().optional(),
+            avatarmedium: z.string().optional(),
+            avatarfull: z.string().optional(),
+          })
+          .partial()
+          .catchall(z.unknown()),
+        rank_tier: z.number().int().optional(),
+        leaderboard_rank: z.number().int().nullable().optional(),
+      })
+      .partial()
+      .catchall(z.unknown()),
+    heroes: z.array(z.object({ hero_id: z.number().int(), games: z.number().int(), win: z.number().int() }).partial().catchall(z.unknown())).optional(),
+    recentMatches: z.array(z.object({ hero_id: z.number().int(), player_slot: z.number().int(), radiant_win: z.boolean() }).partial().catchall(z.unknown())).optional(),
+    wl: z.object({ win: z.number().int(), lose: z.number().int() }).partial().catchall(z.unknown()).optional(),
+  })
+  .partial()
+  .catchall(z.unknown());
 const getApiTeams = z.unknown();
 const getApiLeagues = z.unknown();
 
@@ -16,31 +81,48 @@ const getApiHeroes = z.array(
       id: z.number().int(),
       name: z.string(),
       localized_name: z.string(),
-      primary_attr: z.string(),
-      attack_type: z.string(),
-      roles: z.array(z.string()),
+      primary_attr: z.string().optional(),
+      attack_type: z.string().optional(),
+      roles: z.array(z.string()).optional(),
+      img: z.string().optional(),
+      icon: z.string().optional(),
+      base_health: z.number().int().optional(),
+      base_mana: z.number().int().optional(),
+      base_armor: z.number().int().optional(),
+      base_attack_min: z.number().int().optional(),
+      base_attack_max: z.number().int().optional(),
+      move_speed: z.number().int().optional(),
+      base_attack_time: z.number().optional(),
+      attack_point: z.number().optional(),
+      attack_range: z.number().int().optional(),
+      projectile_speed: z.number().int().optional(),
+      turn_rate: z.number().optional(),
+      cm_enabled: z.boolean().optional(),
+      legs: z.number().int().optional(),
+      day_vision: z.number().int().optional(),
+      night_vision: z.number().int().optional(),
+      hero_id: z.number().int().optional(),
+      turbo_picks: z.number().int().optional(),
+      turbo_wins: z.number().int().optional(),
+      pro_ban: z.number().int().optional(),
+      pro_win: z.number().int().optional(),
+      pro_pick: z.number().int().optional(),
     })
     .partial()
     .catchall(z.unknown()),
 );
 
-const getApiItems = z
-  .object({
-    data: z.record(
-      z.string(),
-      z
-        .object({
-          id: z.number().int(),
-          image: z.string(),
-          displayName: z.string(),
-        })
-        .partial()
-        .catchall(z.unknown()),
-    ),
-    timestamp: z.string().datetime({ offset: true }).optional(),
-  })
-  .partial()
-  .catchall(z.unknown());
+const getApiItems = z.record(
+  z.string(),
+  z
+    .object({
+      id: z.number().int(),
+      img: z.string(),
+      dname: z.string(),
+    })
+    .partial()
+    .catchall(z.unknown()),
+);
 
 const getApiLeaguesId = z
   .union([

@@ -48,6 +48,15 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
 }
 
 /**
+ * Extract force flag from request URL
+ */
+function getForceFlagFromUrl(url: string): boolean {
+  const { searchParams } = new URL(url);
+  return searchParams.get('force') === 'true';
+}
+
+
+/**
  * @swagger
  * /api/players/{id}:
  *   get:
@@ -134,15 +143,9 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id: playerId } = await params;
+    const force = getForceFlagFromUrl(request.url);
 
-    // Extract query parameters
-    const { searchParams } = new URL(request.url);
-    const force = searchParams.get('force') === 'true';
-
-    // Fetch comprehensive player data (handles caching, rate limiting, mock mode)
     const player = await fetchOpenDotaPlayer(playerId, force);
-
-    // Validate response shape (permissive unknown in schema, still parse for consistency)
     try {
       const validated = schemas.getApiPlayers.parse(player);
       return NextResponse.json(validated);

@@ -11,7 +11,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  { ignores: ['.next/**', '.backup/**', 'coverage/**', 'src/components/ui/**'] },
+  { ignores: ['.next/**', 'next-env.d.ts', '.backup/**', 'coverage/**', 'src/components/ui/**'] },
   // Only lint source files, never .next or build output
   {
     files: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

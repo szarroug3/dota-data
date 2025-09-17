@@ -142,32 +142,29 @@ describe('PlayerDetailsPanelDetails', () => {
     Element.prototype.scrollIntoView = jest.fn();
   });
 
-  it('renders player statistics with default 2 weeks filter', () => {
+  it('renders hero statistics table with data', () => {
     renderWithProviders(<PlayerDetailsPanelDetails player={mockPlayer} heroes={mockHeroes as any} />);
 
-    expect(screen.getByText('Player Statistics')).toBeInTheDocument();
-    expect(screen.getByText(/2\s*games/i)).toBeInTheDocument();
+    expect(screen.getByText('Hero Statistics')).toBeInTheDocument();
+    // Should render at least one row for hero 1 aggregated from recent matches
+    const table = screen.getByRole('table');
+    const body = table.querySelector('tbody');
+    expect(body && body.children.length).toBeGreaterThan(0);
   });
 
   it('allows custom date range selection', async () => {
     renderWithProviders(<PlayerDetailsPanelDetails player={mockPlayer} heroes={mockHeroes as any} />);
 
-    // Click on the select to open options
+    // Open select and choose Custom
     const select = screen.getByRole('combobox');
     fireEvent.click(select);
-
-    // Wait for the select options to appear and click custom range
     await waitFor(() => {
-      const customOption = screen.getByText('Custom Range');
-      fireEvent.click(customOption);
+      fireEvent.click(screen.getByText('Custom'));
     });
 
-    // Should show date inputs
-    const startDateButton = screen.getByText('Start Date');
-    const endDateButton = screen.getByText('End Date');
-
-    expect(startDateButton).toBeInTheDocument();
-    expect(endDateButton).toBeInTheDocument();
+    // Should show Start/End inputs
+    expect(screen.getByLabelText('Start')).toBeInTheDocument();
+    expect(screen.getByLabelText('End')).toBeInTheDocument();
   });
 
   it('handles empty match data gracefully', () => {
@@ -189,40 +186,66 @@ describe('PlayerDetailsPanelDetails', () => {
   it('sorts heroes by games count in descending order', async () => {
     const playerWithMultipleHeroes: Player = {
       ...mockPlayer,
-      heroes: [
+      recentMatches: [
+        // Two games on hero 1 and one game on hero 2
         {
+          match_id: 10,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1800,
+          game_mode: 1,
+          lobby_type: 0,
           hero_id: 1,
-          last_played: Math.floor(Date.now() / 1000),
-          games: 1,
-          win: 0,
-          with_games: 0,
-          with_win: 0,
-          against_games: 0,
-          against_win: 0,
+          start_time: Math.floor(Date.now() / 1000) - 1 * 24 * 60 * 60,
+          version: null,
+          kills: 8,
+          deaths: 2,
+          assists: 6,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
         },
         {
+          match_id: 11,
+          player_slot: 0,
+          radiant_win: false,
+          duration: 2000,
+          game_mode: 1,
+          lobby_type: 0,
+          hero_id: 1,
+          start_time: Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60,
+          version: null,
+          kills: 4,
+          deaths: 5,
+          assists: 3,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
+        },
+        {
+          match_id: 12,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1600,
+          game_mode: 1,
+          lobby_type: 0,
           hero_id: 2,
-          last_played: Math.floor(Date.now() / 1000),
-          games: 2,
-          win: 1,
-          with_games: 0,
-          with_win: 0,
-          against_games: 0,
-          against_win: 0,
+          start_time: Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60,
+          version: null,
+          kills: 6,
+          deaths: 1,
+          assists: 9,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
         },
       ],
     };
 
     renderWithProviders(<PlayerDetailsPanelDetails player={playerWithMultipleHeroes} heroes={mockHeroes as any} />);
-
-    // Click on the select to open options
-    const select = screen.getByRole('combobox');
-    fireEvent.click(select);
-
-    await waitFor(() => {
-      const threeMonthsOption = screen.getByText('3 Months');
-      fireEvent.click(threeMonthsOption);
-    });
 
     // Should show heroes sorted by games count (highest first)
     const tableRows = screen.getAllByRole('row');

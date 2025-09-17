@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaItems } from '@/lib/api/opendota/items';
-import { ApiErrorResponse, ApiItemSummary } from '@/types/api';
+import { ApiErrorResponse } from '@/types/api';
 import { schemas } from '@/types/api-zod';
 
 /**
@@ -237,22 +237,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Fetch raw items data (handles caching, rate limiting, mock mode)
     const items = await fetchOpenDotaItems(force);
 
-    // Wrap in response envelope, trim payload to only required fields, and validate
     try {
-      // Create a minimal map of only the fields the frontend uses
-      const minimalItems = Object.entries(items || {}).reduce<Record<string, ApiItemSummary>>(
-        (acc, [key, value]) => {
-          if (value && typeof value === 'object') {
-            const v = value as { id?: number; img?: string; dname?: string };
-            acc[key] = { id: v.id, image: v.img, displayName: v.dname };
-          }
-          return acc;
-        },
-        {},
-      );
-
-      const response = { data: minimalItems, timestamp: new Date().toISOString() };
-      const validated = schemas.getApiItems.parse(response);
+      const validated = schemas.getApiItems.parse(items);
       return NextResponse.json(validated);
     } catch {
       // Normalize validation errors to our 422 handler branch

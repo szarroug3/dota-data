@@ -11,9 +11,8 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import { requestAndValidate, type JsonValue } from '@/frontend/lib/api-client';
-import type { ApiItemSummary } from '@/types/api';
 import { schemas } from '@/types/api-zod';
-import type { OpenDotaHero } from '@/types/external-apis';
+import type { OpenDotaHero, OpenDotaItem } from '@/types/external-apis';
 
 // ============================================================================
 // TYPES
@@ -22,7 +21,7 @@ import type { OpenDotaHero } from '@/types/external-apis';
 interface ConstantsDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
   fetchHeroesData: (force?: boolean) => Promise<OpenDotaHero[] | { error: string }>;
-  fetchItemsData: (force?: boolean) => Promise<Record<string, ApiItemSummary> | { error: string }>;
+  fetchItemsData: (force?: boolean) => Promise<Record<string, OpenDotaItem> | { error: string }>;
 
   // Cache management (for explicit control)
   clearHeroesCache: () => void;
@@ -57,7 +56,7 @@ const ConstantsDataFetchingContext = createContext<ConstantsDataFetchingContextV
 
 const useConstantsDataState = () => {
   const [heroesCache, setHeroesCache] = useState<OpenDotaHero[] | null>(null);
-  const [itemsCache, setItemsCache] = useState<Record<string, ApiItemSummary> | null>(null);
+  const [itemsCache, setItemsCache] = useState<Record<string, OpenDotaItem> | null>(null);
   const [heroesError, setHeroesError] = useState<string | null>(null);
   const [itemsError, setItemsError] = useState<string | null>(null);
 
@@ -75,7 +74,7 @@ const useConstantsDataState = () => {
 
 const useCacheManagement = (
   setHeroesCache: React.Dispatch<React.SetStateAction<OpenDotaHero[] | null>>,
-  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, OpenDotaItem> | null>>,
 ) => {
   const clearHeroesCache = useCallback(() => {
     setHeroesCache(null);
@@ -94,7 +93,7 @@ const useCacheManagement = (
     return heroesCache !== null;
   }, []);
 
-  const isItemsCached = useCallback((itemsCache: Record<string, ApiItemSummary> | null) => {
+  const isItemsCached = useCallback((itemsCache: Record<string, OpenDotaItem> | null) => {
     return itemsCache !== null;
   }, []);
 
@@ -207,11 +206,11 @@ function useHeroesApi(
 }
 
 function useItemsApi(
-  itemsCache: Record<string, ApiItemSummary> | null,
-  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
+  itemsCache: Record<string, OpenDotaItem> | null,
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, OpenDotaItem> | null>>,
   setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
 ) {
-  const itemsCacheRef = useRef<Record<string, ApiItemSummary> | null>(null);
+  const itemsCacheRef = useRef<Record<string, OpenDotaItem> | null>(null);
   itemsCacheRef.current = itemsCache;
 
   const handleError = useCallback(
@@ -222,7 +221,7 @@ function useItemsApi(
   );
 
   const handleSuccess = useCallback(
-    (items: Record<string, ApiItemSummary>) => {
+    (items: Record<string, OpenDotaItem>) => {
       setItemsCache(items);
       setItemsError(null);
     },
@@ -230,13 +229,11 @@ function useItemsApi(
   );
 
   const processResponse = useCallback(
-    async (path: string): Promise<Record<string, ApiItemSummary> | { error: string }> => {
+    async (path: string): Promise<Record<string, OpenDotaItem> | { error: string }> => {
       try {
-        const validated = await requestAndValidate<{ data: Record<string, ApiItemSummary> }>(path, (d: JsonValue) => {
-          const parsed = schemas.getApiItems.parse(d) as { data?: Record<string, ApiItemSummary> };
-          return { data: parsed.data ?? {} };
+        const items = await requestAndValidate<Record<string, OpenDotaItem>>(path, (d: JsonValue) => {
+          return schemas.getApiItems.parse(d) as Record<string, OpenDotaItem>;
         });
-        const items = validated.data;
         handleSuccess(items);
         return items;
       } catch (err) {
@@ -252,7 +249,7 @@ function useItemsApi(
   );
 
   const fetchItemsData = useCallback(
-    async (force = false): Promise<Record<string, ApiItemSummary> | { error: string }> => {
+    async (force = false): Promise<Record<string, OpenDotaItem> | { error: string }> => {
       if (!force && itemsCacheRef.current !== null) {
         return itemsCacheRef.current;
       }
@@ -274,9 +271,9 @@ function useItemsApi(
 
 const useConstantsApiFetching = (
   heroesCache: OpenDotaHero[] | null,
-  itemsCache: Record<string, ApiItemSummary> | null,
+  itemsCache: Record<string, OpenDotaItem> | null,
   setHeroesCache: React.Dispatch<React.SetStateAction<OpenDotaHero[] | null>>,
-  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, ApiItemSummary> | null>>,
+  setItemsCache: React.Dispatch<React.SetStateAction<Record<string, OpenDotaItem> | null>>,
   setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
   setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
 ) => {
