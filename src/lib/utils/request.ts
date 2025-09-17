@@ -80,21 +80,35 @@ export async function requestWithRetry(
 ): Promise<Response> {
   const request = { method, body: body ? JSON.stringify(body) : undefined, headers };
 
-  let response;
-  let status;
-  let statusText;
-  for (let i = 0; i < retries; i++) {
-    response = await fetch(url, request);
-
-    if (response.ok) {
-      return response;
-    }
-
-    const delay = Number(response.headers.get('Retry-After')) || retryDelay;
-    await new Promise((resolve) => setTimeout(resolve, delay));
-    status = response.status;
-    statusText = response.statusText;
+  function shouldRetry(status: number): boolean {
+    return status === 429 || (status >= 500 && status < 600);
   }
 
-  throw new Error(`Request failed: ${status} ${statusText}`);
+  function computeBackoffMs(retryAfter: string | null, attempt: number): number {
+    const backoffMs = retryDelay * Math.pow(2, attempt);
+    if (!retryAfter) return backoffMs;
+    const seconds = Number(retryAfter);
+    if (!Number.isNaN(seconds)) return Math.max(backoffMs, seconds * 1000);
+    const dateMs = Date.parse(retryAfter);
+    if (!Number.isNaN(dateMs)) return Math.max(backoffMs, dateMs - Date.now());
+    return backoffMs;
+  }
+
+  let lastStatus: number | undefined;
+  let lastStatusText: string | undefined;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const response = await fetch(url, request);
+    if (response.ok) return response;
+
+    lastStatus = response.status;
+    lastStatusText = response.statusText;
+
+    if (!shouldRetry(response.status)) break;
+
+    const backoffMs = computeBackoffMs(response.headers.get('Retry-After'), attempt);
+    await new Promise((resolve) => setTimeout(resolve, Math.max(0, backoffMs)));
+  }
+
+  throw new Error(`Request failed: ${lastStatus} ${lastStatusText}`);
 }

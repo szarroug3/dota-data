@@ -6,6 +6,7 @@ import type { PlayerListViewMode } from '@/frontend/players/components/stateless
 import type { ResizablePlayerLayoutRef } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
 import { usePlayerContext } from '@/frontend/players/contexts/state/player-context';
 import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import type { Match } from '@/types/contexts/match-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
 import { TeamData } from '@/types/contexts/team-context-value';
 
@@ -159,6 +160,39 @@ export function useManualPlayerIds(getSelectedTeam?: () => TeamData | undefined)
     const manual = selectedTeam?.manualPlayers ?? [];
     return new Set<number>(manual);
   }, [getSelectedTeam]);
+}
+
+// Filter helpers to scope players to the active team
+export function useTeamPlayerIds(
+  getSelectedTeam?: () => TeamData | undefined,
+  matches?: Map<number, Match>,
+): Set<number> {
+  return useMemo(() => {
+    const ids = new Set<number>();
+    const selectedTeam = getSelectedTeam?.();
+    if (!selectedTeam) return ids;
+    // Manual players
+    (selectedTeam.manualPlayers ?? []).forEach((id) => ids.add(id));
+    // Auto-detected from matches where team side is known and match data is available
+    if (matches) {
+      Object.entries(selectedTeam.matches || {}).forEach(([matchIdStr, teamMatch]) => {
+        if (!teamMatch?.side) return;
+        const matchId = Number(matchIdStr);
+        const match = matches.get(matchId);
+        if (!match || match.isLoading || match.error) return;
+        const teamSidePlayers = teamMatch.side === 'radiant' ? match.players.radiant : match.players.dire;
+        teamSidePlayers.forEach((p) => ids.add(p.accountId));
+      });
+    }
+    return ids;
+  }, [getSelectedTeam, matches]);
+}
+
+export function useFilteredTeamPlayers(players: Player[], teamPlayerIds: Set<number>): Player[] {
+  return useMemo(() => {
+    if (teamPlayerIds.size === 0) return [] as Player[];
+    return players.filter((p) => teamPlayerIds.has(p.profile.profile.account_id));
+  }, [players, teamPlayerIds]);
 }
 
 export function useWaitForPlayerReadySource(players: Player[]) {

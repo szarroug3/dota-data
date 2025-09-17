@@ -31,11 +31,7 @@ function validateInvalidationRequest(body: CacheInvalidateRequest): ApiErrorResp
  * Create cache service instance
  */
 function createCacheService(): CacheService {
-  return new CacheService({
-    useRedis: process.env.USE_REDIS === 'true',
-    redisUrl: process.env.REDIS_URL,
-    fallbackToMemory: true,
-  });
+  return new CacheService();
 }
 
 /**

@@ -14,6 +14,7 @@ jest.mock('@/frontend/players/contexts/state/player-context', () => {
     usePlayerContext: () => {
       const players = new Map<number, ReturnType<typeof helpers.createInitialPlayerData>>();
       players.set(123456789, helpers.createInitialPlayerData(123456789));
+      players.set(999999999, helpers.createInitialPlayerData(999999999));
       return {
         players,
         selectedPlayerId: null,
@@ -35,7 +36,7 @@ jest.mock('@/frontend/teams/contexts/state/team-context', () => {
     useTeamContext: () => ({
       selectedTeamId: { teamId: 1, leagueId: 1 },
       addPlayerToTeam: jest.fn(),
-      getSelectedTeam: () => ({ manualPlayers: [] }),
+      getSelectedTeam: () => ({ manualPlayers: [123456789], matches: {} }),
       removeManualPlayer: jest.fn(),
       editManualPlayer: jest.fn(),
     }),
@@ -61,7 +62,12 @@ jest.mock('@/frontend/contexts/constants-context', () => {
 // Mock ResizablePlayerLayout to render a deterministic marker
 jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () => ({
   ResizablePlayerLayout: (props: any) => (
-    <div data-testid="player-layout" data-view-mode={props.viewMode}>
+    <div
+      data-testid="player-layout"
+      data-view-mode={props.viewMode}
+      data-player-count={props.players?.length ?? 0}
+      data-player-ids={(props.players || []).map((p: any) => p.profile.profile.account_id).join(',')}
+    >
       layout
     </div>
   ),
@@ -94,5 +100,12 @@ describe('PlayerStatsPage', () => {
     renderWithProviders(<PlayerStatsPage />);
     const layout = screen.getByTestId('player-layout');
     expect(layout).toHaveAttribute('data-view-mode', 'card');
+  });
+
+  it('filters players to only those on the active team (manual or auto)', () => {
+    renderWithProviders(<PlayerStatsPage />);
+    const layout = screen.getByTestId('player-layout');
+    expect(layout).toHaveAttribute('data-player-count', '1');
+    expect(layout).toHaveAttribute('data-player-ids', '123456789');
   });
 });

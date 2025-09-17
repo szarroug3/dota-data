@@ -25,10 +25,13 @@ export interface EnvironmentConfig {
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
   LOG_FILE_PATH: string;
 
-  // Redis Configuration
+  // Redis / KV Configuration
   REDIS_URL?: string;
-  UPSTASH_REDIS_REST_URL?: string;
-  UPSTASH_REDIS_REST_TOKEN?: string;
+  DOTA_ASSISTANT_REDIS_URL?: string;
+  DOTA_ASSISTANT_KV_REST_API_URL?: string;
+  DOTA_ASSISTANT_KV_URL?: string;
+  DOTA_ASSISTANT_KV_REST_API_TOKEN?: string;
+  DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN?: string;
   USE_REDIS: boolean;
 
   // QStash Configuration
@@ -98,8 +101,11 @@ function getLoggingConfig() {
 function getRedisConfig() {
   return {
     REDIS_URL: process.env.REDIS_URL,
-    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
-    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    DOTA_ASSISTANT_REDIS_URL: process.env.DOTA_ASSISTANT_REDIS_URL,
+    DOTA_ASSISTANT_KV_REST_API_URL: process.env.DOTA_ASSISTANT_KV_REST_API_URL,
+    DOTA_ASSISTANT_KV_URL: process.env.DOTA_ASSISTANT_KV_URL,
+    DOTA_ASSISTANT_KV_REST_API_TOKEN: process.env.DOTA_ASSISTANT_KV_REST_API_TOKEN,
+    DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN: process.env.DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN,
     USE_REDIS: process.env.USE_REDIS === 'true',
   };
 }
@@ -329,15 +335,30 @@ function docsRedisConfig() {
 - **Default**: undefined
 - **Description**: Redis connection URL
 
-### UPSTASH_REDIS_REST_URL
+### DOTA_ASSISTANT_REDIS_URL
 - **Type**: string
 - **Default**: undefined
-- **Description**: Upstash Redis REST API URL
+- **Description**: Redis connection URL used by Dota Assistant
 
-### UPSTASH_REDIS_REST_TOKEN
+### DOTA_ASSISTANT_KV_REST_API_URL
 - **Type**: string
 - **Default**: undefined
-- **Description**: Upstash Redis REST API token
+- **Description**: Dota Assistant KV REST API URL
+
+### DOTA_ASSISTANT_KV_URL
+- **Type**: string
+- **Default**: undefined
+- **Description**: Dota Assistant KV base URL
+
+### DOTA_ASSISTANT_KV_REST_API_TOKEN
+- **Type**: string
+- **Default**: undefined
+- **Description**: Dota Assistant KV REST API token
+
+### DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN
+- **Type**: string
+- **Default**: undefined
+- **Description**: Read-only token for Dota Assistant KV REST API
 
 ### USE_REDIS
 - **Type**: boolean
@@ -527,8 +548,11 @@ export const getEnv = {
   LOG_LEVEL: () => envConfig.LOG_LEVEL,
   LOG_FILE_PATH: () => envConfig.LOG_FILE_PATH,
   REDIS_URL: () => envConfig.REDIS_URL,
-  UPSTASH_REDIS_REST_URL: () => envConfig.UPSTASH_REDIS_REST_URL,
-  UPSTASH_REDIS_REST_TOKEN: () => envConfig.UPSTASH_REDIS_REST_TOKEN,
+  DOTA_ASSISTANT_REDIS_URL: () => envConfig.DOTA_ASSISTANT_REDIS_URL,
+  DOTA_ASSISTANT_KV_REST_API_URL: () => envConfig.DOTA_ASSISTANT_KV_REST_API_URL,
+  DOTA_ASSISTANT_KV_URL: () => envConfig.DOTA_ASSISTANT_KV_URL,
+  DOTA_ASSISTANT_KV_REST_API_TOKEN: () => envConfig.DOTA_ASSISTANT_KV_REST_API_TOKEN,
+  DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN: () => envConfig.DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN,
   USE_REDIS: () => envConfig.USE_REDIS,
   QSTASH_TOKEN: () => envConfig.QSTASH_TOKEN,
   QSTASH_CURRENT_SIGNING_KEY: () => envConfig.QSTASH_CURRENT_SIGNING_KEY,

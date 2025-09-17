@@ -1,35 +1,21 @@
 import path from 'path';
 
 import { request, requestWithRetry } from '@/lib/utils/request';
-import {
-  OpenDotaPlayer,
-  OpenDotaPlayerComprehensive,
-  OpenDotaPlayerCounts,
-  OpenDotaPlayerHero,
-  OpenDotaPlayerMatches,
-  OpenDotaPlayerRanking,
-  OpenDotaPlayerRating,
-  OpenDotaPlayerTotals,
-  OpenDotaPlayerWardMap,
-  OpenDotaPlayerWL,
-} from '@/types/external-apis';
+import { OpenDotaPlayer, OpenDotaPlayerComprehensive, OpenDotaPlayerHero, OpenDotaPlayerMatches, OpenDotaPlayerWL } from '@/types/external-apis';
 
 /**
- * Fetches comprehensive Dota 2 player data from OpenDota using the generic request function.
- * OpenDota endpoints:
- * - https://api.opendota.com/api/players/{playerId}
- * - https://api.opendota.com/api/players/{playerId}/counts
- * - https://api.opendota.com/api/players/{playerId}/heroes
- * - https://api.opendota.com/api/players/{playerId}/rankings
- * - https://api.opendota.com/api/players/{playerId}/ratings
- * - https://api.opendota.com/api/players/{playerId}/matches
- * - https://api.opendota.com/api/players/{playerId}/totals
- * - https://api.opendota.com/api/players/{playerId}/wl
- * - https://api.opendota.com/api/players/{playerId}/wardMap
+ * Fetch comprehensive Dota 2 player data from OpenDota using the generic request function.
  *
- * @param playerId The player ID to fetch
- * @param force If true, bypasses cache and fetches fresh data
- * @returns Comprehensive player data object
+ * Calls only the endpoints used by the frontend:
+ * - players/{playerId} (profile)
+ * - players/{playerId}/heroes
+ * - players/{playerId}/matches
+ * - players/{playerId}/wl
+ *
+ * Unused fields are omitted from the response shape. Data is cached for 24h to minimize
+ * repeated traffic. A small inter-call delay is included
+ * to respect OpenDota's 1 req/sec guidance. Retries/backoff for 429/5xx are handled
+ * by the shared requestWithRetry helper.
  */
 export async function fetchOpenDotaPlayer(playerId: string, force = false): Promise<OpenDotaPlayerComprehensive> {
   const cacheKey = `opendota:player-comprehensive:${playerId}`;
@@ -58,7 +44,7 @@ export async function fetchOpenDotaPlayer(playerId: string, force = false): Prom
  */
 async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string> {
   const baseUrl = process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api';
-  const delayMs = 1000;
+  const delayMs = 1100;
 
   // Helper to fetch and parse JSON
   async function fetchJson(url: string) {
@@ -78,63 +64,24 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
   const profile: OpenDotaPlayer = await fetchJson(`${baseUrl}/players/${playerId}`);
   await delay(delayMs);
 
-  // 2. Counts
-  const counts: OpenDotaPlayerCounts = await fetchJson(`${baseUrl}/players/${playerId}/counts`);
-  await delay(delayMs);
-
-  // 3. Heroes
+  // 2. Heroes (used by frontend)
   const heroes: OpenDotaPlayerHero[] = await fetchJson(`${baseUrl}/players/${playerId}/heroes`);
   await delay(delayMs);
 
-  // 4. Rankings
-  let rankings: OpenDotaPlayerRanking[] = [];
-  try {
-    rankings = await fetchJson(`${baseUrl}/players/${playerId}/rankings`);
-  } catch {
-    rankings = [];
-  }
-  await delay(delayMs);
-
-  // 5. Ratings
-  let ratings: OpenDotaPlayerRating[] = [];
-  try {
-    ratings = await fetchJson(`${baseUrl}/players/${playerId}/ratings`);
-  } catch {
-    ratings = [];
-  }
-  await delay(delayMs);
-
-  // 6. Matches
+  // 3. Matches (recentMatches used by frontend)
   const recentMatches: OpenDotaPlayerMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/matches`);
   await delay(delayMs);
 
-  // 7. Totals
-  const totals: OpenDotaPlayerTotals = await fetchJson(`${baseUrl}/players/${playerId}/totals`);
-  await delay(delayMs);
-
-  // 8. Win/Loss
+  // 4. Win/Loss (used by frontend)
   const wl: OpenDotaPlayerWL = await fetchJson(`${baseUrl}/players/${playerId}/wl`);
   await delay(delayMs);
 
-  // 9. Ward Map
-  let wardMap: OpenDotaPlayerWardMap = { obs: {}, sen: {} };
-  try {
-    wardMap = await fetchJson(`${baseUrl}/players/${playerId}/wardMap`);
-  } catch {
-    wardMap = { obs: {}, sen: {} };
-  }
-
-  const comprehensiveData: OpenDotaPlayerComprehensive = {
+  const comprehensiveData = {
     profile,
-    counts,
     heroes,
-    rankings,
-    ratings,
     recentMatches,
-    totals,
     wl,
-    wardMap,
-  };
+  } as OpenDotaPlayerComprehensive;
 
   return JSON.stringify(comprehensiveData);
 }

@@ -23,7 +23,7 @@ describe('CacheService', () => {
 
     // Create mock instances
     mockMemoryBackend = new MockMemoryCacheBackend(undefined) as jest.Mocked<MemoryCacheBackend>;
-    mockRedisBackend = new MockRedisCacheBackend('redis://localhost:6379') as jest.Mocked<RedisCacheBackend>;
+    mockRedisBackend = new MockRedisCacheBackend() as jest.Mocked<RedisCacheBackend>;
 
     MockMemoryCacheBackend.mockImplementation(() => mockMemoryBackend);
     MockRedisCacheBackend.mockImplementation(() => mockRedisBackend);
@@ -54,17 +54,20 @@ describe('CacheService', () => {
       process.env.USE_MOCK_DB = originalEnv;
     });
 
-    it('should use Redis backend when REDIS_URL is provided', () => {
-      const originalEnv = process.env.REDIS_URL;
-      process.env.REDIS_URL = 'redis://localhost:6379';
+    it('should use Redis backend when UPSTASH envs are provided', () => {
+      const originalUrl = process.env.UPSTASH_REDIS_REST_URL;
+      const originalToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+      process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io';
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'token';
       process.env.USE_MOCK_API = 'false';
       process.env.USE_MOCK_DB = 'false';
 
       cacheService = new CacheService();
 
-      expect(MockRedisCacheBackend).toHaveBeenCalledWith('redis://localhost:6379');
+      expect(MockRedisCacheBackend).toHaveBeenCalled();
 
-      process.env.REDIS_URL = originalEnv;
+      process.env.UPSTASH_REDIS_REST_URL = originalUrl;
+      process.env.UPSTASH_REDIS_REST_TOKEN = originalToken;
     });
 
     it('should default to memory backend when no Redis URL is provided', () => {

@@ -178,6 +178,11 @@ describe('Environment Configuration', () => {
       expect(docs).toContain('### NODE_ENV');
       expect(docs).toContain('### USE_MOCK_API');
       expect(docs).toContain('### REDIS_URL');
+      expect(docs).toContain('### DOTA_ASSISTANT_REDIS_URL');
+      expect(docs).toContain('### DOTA_ASSISTANT_KV_REST_API_URL');
+      expect(docs).toContain('### DOTA_ASSISTANT_KV_URL');
+      expect(docs).toContain('### DOTA_ASSISTANT_KV_REST_API_TOKEN');
+      expect(docs).toContain('### DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN');
       expect(docs).toContain('### OPENDOTA_API_KEY');
       expect(docs).toContain('### STRATZ_API_KEY');
       expect(docs).toContain('### VERCEL_OIDC_TOKEN');
@@ -222,8 +227,11 @@ describe('Environment Configuration', () => {
       expect(env).toHaveProperty('LOG_LEVEL');
       expect(env).toHaveProperty('LOG_FILE_PATH');
       expect(env).toHaveProperty('REDIS_URL');
-      expect(env).toHaveProperty('UPSTASH_REDIS_REST_URL');
-      expect(env).toHaveProperty('UPSTASH_REDIS_REST_TOKEN');
+      expect(env).toHaveProperty('DOTA_ASSISTANT_REDIS_URL');
+      expect(env).toHaveProperty('DOTA_ASSISTANT_KV_REST_API_URL');
+      expect(env).toHaveProperty('DOTA_ASSISTANT_KV_URL');
+      expect(env).toHaveProperty('DOTA_ASSISTANT_KV_REST_API_TOKEN');
+      expect(env).toHaveProperty('DOTA_ASSISTANT_KV_REST_API_READ_ONLY_TOKEN');
       expect(env).toHaveProperty('USE_REDIS');
       expect(env).toHaveProperty('QSTASH_TOKEN');
       expect(env).toHaveProperty('QSTASH_CURRENT_SIGNING_KEY');

@@ -14,6 +14,7 @@ import {
   type ResizablePlayerLayoutRef,
 } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
 import {
+  useFilteredTeamPlayers,
   useHiddenPlayers as useHiddenPlayersHook,
   usePlayerData as usePlayerDataHook,
   usePlayerEditActions,
@@ -21,6 +22,7 @@ import {
   usePlayerSelection as usePlayerSelectionHook,
   usePlayerViewModes as usePlayerViewModesHook,
   useSortedPlayers as useSortedPlayersHook,
+  useTeamPlayerIds,
   useWaitForPlayerReadySource,
 } from '@/frontend/players/hooks/usePlayerStatsPage';
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
@@ -122,7 +124,14 @@ function PlayerStatsPageInner(): React.ReactElement {
   const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelectionHook();
   const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModesHook();
   const preferredSite: PreferredExternalSite = useConfigContext().config.preferredExternalSite;
-  const sortedPlayers = useSortedPlayersHook(players);
+  const { matches } = useMatchContext();
+  const matchesArray = useMemo(() => Array.from(matches.values()), [matches]);
+
+  // Team-scoped player filtering
+  const teamPlayerIds = useTeamPlayerIds(getSelectedTeam, matches);
+  const teamPlayersOnly = useFilteredTeamPlayers(players, teamPlayerIds);
+
+  const sortedPlayers = useSortedPlayersHook(teamPlayersOnly);
   const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(sortedPlayers);
   const manualPlayerIds = useMemo(() => {
     const selectedTeam = getSelectedTeam();
@@ -153,14 +162,11 @@ function PlayerStatsPageInner(): React.ReactElement {
     waitForPlayerReady,
   });
 
-  const { matches } = useMatchContext();
-  const matchesArray = useMemo(() => Array.from(matches.values()), [matches]);
-
   const listActions = usePlayerListActions({ refreshPlayer, resizableLayoutRef, setShowAddPlayerSheet });
 
   const contentProps = {
     resizableLayoutRef,
-    players,
+    players: teamPlayersOnly,
     visiblePlayers,
     filteredPlayers: sortedPlayers,
     onRefreshPlayer: listActions.handleRefreshPlayer,
@@ -186,7 +192,7 @@ function PlayerStatsPageInner(): React.ReactElement {
 
   const renderContent = () => {
     if (error) return <ErrorContent error={error} />;
-    const emptyState = getPlayerStatsEmptyState(players, selectedTeamId);
+    const emptyState = getPlayerStatsEmptyState(teamPlayersOnly, selectedTeamId);
     if (emptyState) return emptyState;
     return <PlayerStatsContent {...contentProps} />;
   };

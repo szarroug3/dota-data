@@ -1,7 +1,6 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  setupFiles: ['<rootDir>/jest.upstash-mock.js', '<rootDir>/jest.setup.js'],
   testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.test.tsx'],
   moduleNameMapper: {
     '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
@@ -16,7 +15,6 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: ['node_modules/(?!(@upstash/redis|uncrypto)/)'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   verbose: false,
   silent: true,
   projects: [
@@ -24,6 +22,7 @@ module.exports = {
       displayName: 'backend',
       testMatch: ['<rootDir>/src/tests/lib/**/*.test.ts', '<rootDir>/src/tests/app/api/**/*.test.ts'],
       testEnvironment: 'node',
+      setupFilesAfterEnv: ['<rootDir>/jest.backend.setup.js'],
       moduleNameMapper: {
         '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
         '^@/(.*)$': '<rootDir>/src/$1',

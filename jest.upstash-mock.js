@@ -1,4 +1,11 @@
 // Dedicated Jest setup file to mock @upstash/redis before any app code is loaded
+
+// Ensure global File exists for libraries that expect it in Node
+if (typeof globalThis.File === 'undefined') {
+   
+  globalThis.File = class {};
+}
+
 const mockRedisInstance = {
   get: jest.fn(),
   set: jest.fn(),

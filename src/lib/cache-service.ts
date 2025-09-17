@@ -2,6 +2,8 @@ import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
 import { CacheBackend, CacheStats, CacheValue } from '@/types/cache';
 
+// One-time log guard to avoid noisy logs from multiple instantiations
+
 /**
  * Main cache service with automatic backend selection and fallback
  */
@@ -9,15 +11,32 @@ export class CacheService implements CacheBackend {
   private backend: CacheBackend;
   private fallbackBackend: MemoryCacheBackend;
 
-  constructor(config?: { useRedis?: boolean; redisUrl?: string; fallbackToMemory?: boolean }) {
+  constructor() {
     this.fallbackBackend = new MemoryCacheBackend();
-    if (process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DB === 'true') {
-      this.backend = this.fallbackBackend;
-    } else if (config?.redisUrl || process.env.REDIS_URL) {
-      this.backend = new RedisCacheBackend(config?.redisUrl || process.env.REDIS_URL || '');
+
+    const shouldUseRedis = this.shouldUseRedis();
+
+    if (shouldUseRedis) {
+      this.backend = new RedisCacheBackend();
     } else {
       this.backend = this.fallbackBackend;
     }
+  }
+
+  private isMockMode(): boolean {
+    return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DB === 'true';
+  }
+
+  private shouldUseRedis(): boolean {
+    const isMock = this.isMockMode();
+    if (isMock) return false;
+
+    const hasUpstash = Boolean(process.env.UPSTASH_REDIS_REST_URL) && Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
+    if (!hasUpstash) {
+      if (process.env.NODE_ENV === 'test') return false;
+      throw new Error('Upstash Redis credentials missing: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
+    }
+    return true;
   }
 
   async get<T>(key: string): Promise<T | null> {
