@@ -14,7 +14,7 @@ export interface EnvironmentConfig {
   // Mock Mode Settings
   USE_MOCK_API: boolean;
   USE_MOCK_OPENDOTA: boolean;
-  USE_MOCK_DOTABUFF: boolean;
+  USE_MOCK_STEAM: boolean;
   USE_MOCK_STRATZ: boolean;
   USE_MOCK_D2PT: boolean;
   USE_MOCK_DB: boolean;
@@ -42,7 +42,7 @@ export interface EnvironmentConfig {
 
   // Rate Limiting Configuration
   RATE_LIMIT_OPENDOTA: number;
-  RATE_LIMIT_DOTABUFF: number;
+  RATE_LIMIT_STEAM: number;
   RATE_LIMIT_STRATZ: number;
   RATE_LIMIT_D2PT: number;
   RATE_LIMIT_WINDOW: number;
@@ -52,14 +52,14 @@ export interface EnvironmentConfig {
   OPENDOTA_API_BASE_URL: string;
   OPENDOTA_API_TIMEOUT: number;
 
-  DOTABUFF_BASE_URL: string;
-  DOTABUFF_REQUEST_DELAY: number;
+  STEAM_API_KEY?: string;
+  STEAM_API_BASE_URL: string;
+  STEAM_API_REQUEST_DELAY: number;
 
   D2PT_BASE_URL: string;
   D2PT_REQUEST_DELAY: number;
 
   STRATZ_API_KEY?: string;
-  STEAM_API_KEY?: string;
 
   // Vercel Deployment Configuration
   VERCEL_OIDC_TOKEN?: string;
@@ -82,7 +82,7 @@ function getMockConfig() {
   return {
     USE_MOCK_API: process.env.USE_MOCK_API === 'true',
     USE_MOCK_OPENDOTA: process.env.USE_MOCK_OPENDOTA === 'true',
-    USE_MOCK_DOTABUFF: process.env.USE_MOCK_DOTABUFF === 'true',
+    USE_MOCK_STEAM: process.env.USE_MOCK_STEAM === 'true',
     USE_MOCK_STRATZ: process.env.USE_MOCK_STRATZ === 'true',
     USE_MOCK_D2PT: process.env.USE_MOCK_D2PT === 'true',
     USE_MOCK_DB: process.env.USE_MOCK_DB === 'true',
@@ -127,7 +127,7 @@ function parseNumberEnvVar(value: string | undefined, defaultValue: number): num
 function getRateLimitConfig() {
   return {
     RATE_LIMIT_OPENDOTA: parseNumberEnvVar(process.env.RATE_LIMIT_OPENDOTA, 60),
-    RATE_LIMIT_DOTABUFF: parseNumberEnvVar(process.env.RATE_LIMIT_DOTABUFF, 60),
+    RATE_LIMIT_STEAM: parseNumberEnvVar(process.env.RATE_LIMIT_STEAM, 60),
     RATE_LIMIT_STRATZ: parseNumberEnvVar(process.env.RATE_LIMIT_STRATZ, 20),
     RATE_LIMIT_D2PT: parseNumberEnvVar(process.env.RATE_LIMIT_D2PT, 30),
     RATE_LIMIT_WINDOW: parseNumberEnvVar(process.env.RATE_LIMIT_WINDOW, 60),
@@ -142,10 +142,10 @@ function getExternalApiConfig() {
       process.env.OPENDOTA_API_TIMEOUT && process.env.OPENDOTA_API_TIMEOUT !== ''
         ? Number(process.env.OPENDOTA_API_TIMEOUT)
         : 10000,
-    DOTABUFF_BASE_URL: process.env.DOTABUFF_BASE_URL || 'https://www.dotabuff.com',
-    DOTABUFF_REQUEST_DELAY:
-      process.env.DOTABUFF_REQUEST_DELAY && process.env.DOTABUFF_REQUEST_DELAY !== ''
-        ? Number(process.env.DOTABUFF_REQUEST_DELAY)
+    STEAM_API_BASE_URL: process.env.STEAM_API_BASE_URL || 'https://api.steampowered.com',
+    STEAM_API_REQUEST_DELAY:
+      process.env.STEAM_API_REQUEST_DELAY && process.env.STEAM_API_REQUEST_DELAY !== ''
+        ? Number(process.env.STEAM_API_REQUEST_DELAY)
         : 1000,
     D2PT_BASE_URL: process.env.D2PT_BASE_URL || 'https://dota2protracker.com',
     D2PT_REQUEST_DELAY:
@@ -153,6 +153,7 @@ function getExternalApiConfig() {
         ? Number(process.env.D2PT_REQUEST_DELAY)
         : 2000,
     STRATZ_API_KEY: process.env.STRATZ_API_KEY,
+    STEAM_API_KEY: process.env.STEAM_API_KEY,
   };
 }
 
@@ -220,21 +221,19 @@ function validateEnvironment(config: EnvironmentConfig): void {
     ['OPENDOTA_API_TIMEOUT', config.OPENDOTA_API_TIMEOUT],
     ['TEST_TIMEOUT', config.TEST_TIMEOUT],
     ['RATE_LIMIT_OPENDOTA', config.RATE_LIMIT_OPENDOTA],
-    ['RATE_LIMIT_DOTABUFF', config.RATE_LIMIT_DOTABUFF],
+    ['RATE_LIMIT_STEAM', config.RATE_LIMIT_STEAM],
     ['RATE_LIMIT_STRATZ', config.RATE_LIMIT_STRATZ],
     ['RATE_LIMIT_D2PT', config.RATE_LIMIT_D2PT],
     ['RATE_LIMIT_WINDOW', config.RATE_LIMIT_WINDOW],
   ].forEach(([name, value]) => validatePositiveNumber(Number(value), String(name), errors));
 
   // Allow zero for delays
-  [
-    ['DOTABUFF_REQUEST_DELAY', config.DOTABUFF_REQUEST_DELAY],
-    ['D2PT_REQUEST_DELAY', config.D2PT_REQUEST_DELAY],
-  ].forEach(([name, value]) => validatePositiveNumber(Number(value), String(name), errors, true));
+  [['D2PT_REQUEST_DELAY', config.D2PT_REQUEST_DELAY]].forEach(([name, value]) =>
+    validatePositiveNumber(Number(value), String(name), errors, true),
+  );
 
   // URLs
   validateUrlIfPresent(config.OPENDOTA_API_BASE_URL, 'OPENDOTA_API_BASE_URL', errors);
-  validateUrlIfPresent(config.DOTABUFF_BASE_URL, 'DOTABUFF_BASE_URL', errors);
   validateUrlIfPresent(config.D2PT_BASE_URL, 'D2PT_BASE_URL', errors);
 
   if (errors.length > 0) {
@@ -282,10 +281,10 @@ function docsMockConfig() {
 - **Default**: false
 - **Description**: Enable mock mode for OpenDota API
 
-### USE_MOCK_DOTABUFF
+### USE_MOCK_STEAM
 - **Type**: boolean
 - **Default**: false
-- **Description**: Enable mock mode for Dotabuff API
+- **Description**: Enable mock mode for Steam API
 
 ### USE_MOCK_STRATZ
 - **Type**: boolean
@@ -398,10 +397,10 @@ function docsRateLimitConfig() {
 - **Default**: 60
 - **Description**: Rate limit for OpenDota API (requests per minute)
 
-### RATE_LIMIT_DOTABUFF
+### RATE_LIMIT_STEAM
 - **Type**: number
 - **Default**: 60
-- **Description**: Rate limit for Dotabuff API (requests per minute)
+- **Description**: Rate limit for Steam API (requests per minute)
 
 ### RATE_LIMIT_STRATZ
 - **Type**: number
@@ -437,15 +436,15 @@ function docsExternalApiConfig() {
 - **Default**: 10000
 - **Description**: OpenDota API timeout in milliseconds
 
-### DOTABUFF_BASE_URL
+### STEAM_API_BASE_URL
 - **Type**: string
-- **Default**: 'https://www.dotabuff.com'
-- **Description**: Dotabuff base URL
+- **Default**: 'https://api.steampowered.com'
+- **Description**: Steam API base URL
 
-### DOTABUFF_REQUEST_DELAY
+### STEAM_API_REQUEST_DELAY
 - **Type**: number
 - **Default**: 1000
-- **Description**: Delay between Dotabuff requests in milliseconds
+- **Description**: Delay between Steam API requests in milliseconds
 
 ### D2PT_BASE_URL
 - **Type**: string
@@ -539,7 +538,7 @@ export const getEnv = {
   NEXT_PUBLIC_APP_URL: () => envConfig.NEXT_PUBLIC_APP_URL,
   USE_MOCK_API: () => envConfig.USE_MOCK_API,
   USE_MOCK_OPENDOTA: () => envConfig.USE_MOCK_OPENDOTA,
-  USE_MOCK_DOTABUFF: () => envConfig.USE_MOCK_DOTABUFF,
+  USE_MOCK_STEAM: () => envConfig.USE_MOCK_STEAM,
   USE_MOCK_STRATZ: () => envConfig.USE_MOCK_STRATZ,
   USE_MOCK_D2PT: () => envConfig.USE_MOCK_D2PT,
   USE_MOCK_DB: () => envConfig.USE_MOCK_DB,
@@ -559,18 +558,19 @@ export const getEnv = {
   QSTASH_NEXT_SIGNING_KEY: () => envConfig.QSTASH_NEXT_SIGNING_KEY,
   USE_QSTASH: () => envConfig.USE_QSTASH,
   RATE_LIMIT_OPENDOTA: () => envConfig.RATE_LIMIT_OPENDOTA,
-  RATE_LIMIT_DOTABUFF: () => envConfig.RATE_LIMIT_DOTABUFF,
+  RATE_LIMIT_STEAM: () => envConfig.RATE_LIMIT_STEAM,
   RATE_LIMIT_STRATZ: () => envConfig.RATE_LIMIT_STRATZ,
   RATE_LIMIT_D2PT: () => envConfig.RATE_LIMIT_D2PT,
   RATE_LIMIT_WINDOW: () => envConfig.RATE_LIMIT_WINDOW,
   OPENDOTA_API_KEY: () => envConfig.OPENDOTA_API_KEY,
   OPENDOTA_API_BASE_URL: () => envConfig.OPENDOTA_API_BASE_URL,
   OPENDOTA_API_TIMEOUT: () => envConfig.OPENDOTA_API_TIMEOUT,
-  DOTABUFF_BASE_URL: () => envConfig.DOTABUFF_BASE_URL,
-  DOTABUFF_REQUEST_DELAY: () => envConfig.DOTABUFF_REQUEST_DELAY,
+  STEAM_API_BASE_URL: () => envConfig.STEAM_API_BASE_URL,
+  STEAM_API_REQUEST_DELAY: () => envConfig.STEAM_API_REQUEST_DELAY,
   D2PT_BASE_URL: () => envConfig.D2PT_BASE_URL,
   D2PT_REQUEST_DELAY: () => envConfig.D2PT_REQUEST_DELAY,
   STRATZ_API_KEY: () => envConfig.STRATZ_API_KEY,
+  STEAM_API_KEY: () => envConfig.STEAM_API_KEY,
   VERCEL_OIDC_TOKEN: () => envConfig.VERCEL_OIDC_TOKEN,
   TEST_MOCK_MODE: () => envConfig.TEST_MOCK_MODE,
   TEST_TIMEOUT: () => envConfig.TEST_TIMEOUT,

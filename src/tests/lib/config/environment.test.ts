@@ -52,25 +52,25 @@ describe('Environment Configuration', () => {
 
     it('should parse numeric environment variables correctly', () => {
       (process.env as any).OPENDOTA_API_TIMEOUT = '5000';
-      (process.env as any).DOTABUFF_REQUEST_DELAY = '2000';
+      (process.env as any).STEAM_API_REQUEST_DELAY = '2000';
 
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
 
       expect(freshEnv.OPENDOTA_API_TIMEOUT).toBe(5000);
-      expect(freshEnv.DOTABUFF_REQUEST_DELAY).toBe(2000);
+      expect(freshEnv.STEAM_API_REQUEST_DELAY).toBe(2000);
     });
 
     it('should use default values when environment variables are not set', () => {
       // Clear specific env vars
       delete (process.env as any).OPENDOTA_API_BASE_URL;
-      delete (process.env as any).DOTABUFF_BASE_URL;
+      delete (process.env as any).STEAM_API_BASE_URL;
 
       jest.resetModules();
       const { env: freshEnv } = require('../../../lib/config/environment');
 
       expect(freshEnv.OPENDOTA_API_BASE_URL).toBe('https://api.opendota.com/api');
-      expect(freshEnv.DOTABUFF_BASE_URL).toBe('https://www.dotabuff.com');
+      expect(freshEnv.STEAM_API_BASE_URL).toBe('https://api.steampowered.com');
     });
 
     it('should parse NODE_ENV correctly', () => {
@@ -218,7 +218,7 @@ describe('Environment Configuration', () => {
       expect(env).toHaveProperty('NODE_ENV');
       expect(env).toHaveProperty('USE_MOCK_API');
       expect(env).toHaveProperty('USE_MOCK_OPENDOTA');
-      expect(env).toHaveProperty('USE_MOCK_DOTABUFF');
+      expect(env).toHaveProperty('USE_MOCK_STEAM');
       expect(env).toHaveProperty('USE_MOCK_STRATZ');
       expect(env).toHaveProperty('USE_MOCK_D2PT');
       expect(env).toHaveProperty('USE_MOCK_DB');
@@ -238,15 +238,15 @@ describe('Environment Configuration', () => {
       expect(env).toHaveProperty('QSTASH_NEXT_SIGNING_KEY');
       expect(env).toHaveProperty('USE_QSTASH');
       expect(env).toHaveProperty('RATE_LIMIT_OPENDOTA');
-      expect(env).toHaveProperty('RATE_LIMIT_DOTABUFF');
+      expect(env).toHaveProperty('RATE_LIMIT_STEAM');
       expect(env).toHaveProperty('RATE_LIMIT_STRATZ');
       expect(env).toHaveProperty('RATE_LIMIT_D2PT');
       expect(env).toHaveProperty('RATE_LIMIT_WINDOW');
       expect(env).toHaveProperty('OPENDOTA_API_KEY');
       expect(env).toHaveProperty('OPENDOTA_API_BASE_URL');
       expect(env).toHaveProperty('OPENDOTA_API_TIMEOUT');
-      expect(env).toHaveProperty('DOTABUFF_BASE_URL');
-      expect(env).toHaveProperty('DOTABUFF_REQUEST_DELAY');
+      expect(env).toHaveProperty('STEAM_API_BASE_URL');
+      expect(env).toHaveProperty('STEAM_API_REQUEST_DELAY');
       expect(env).toHaveProperty('D2PT_BASE_URL');
       expect(env).toHaveProperty('D2PT_REQUEST_DELAY');
       expect(env).toHaveProperty('STRATZ_API_KEY');

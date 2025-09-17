@@ -79,4 +79,7 @@ global.process.env.DOTA_ASSISTANT_KV_REST_API_URL = 'http://localhost:6379';
 global.process.env.DOTA_ASSISTANT_KV_REST_API_TOKEN = 'dummy-token';
 global.process.env.MOCK_DATA = 'true';
 global.process.env.USE_MOCK_OPENDOTA = 'true';
-global.process.env.USE_MOCK_DOTABUFF = 'true';
+global.process.env.USE_MOCK_STEAM = 'true';
+
+// Mock next/image to behave like a plain img for Jest environment
+jest.mock('next/image', () => ({ __esModule: true, default: 'img' }));

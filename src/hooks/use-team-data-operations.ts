@@ -12,7 +12,7 @@ import { createTeamLeagueOperationKey, useAbortController } from '@/hooks/use-ab
 import { createInitialTeamData, generateTeamKey } from '@/lib/processing/team-processing';
 import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
-import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
+import type { SteamLeague, SteamTeam } from '@/types/external-apis/steam';
 import { handleOperationError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { updateTeamError } from '@/utils/team-helpers';
@@ -93,8 +93,8 @@ function checkForOngoingOperation(
 }
 
 function handleApiErrors(
-  teamResult: DotabuffTeam | { error: string },
-  leagueResult: DotabuffLeague | { error: string },
+  teamResult: SteamTeam | { error: string },
+  leagueResult: SteamLeague | { error: string },
   controller: AbortController,
   teamId: number,
   leagueId: number,
@@ -117,8 +117,8 @@ function handleApiErrors(
 }
 
 function processSuccessfulResults(
-  teamResult: DotabuffTeam,
-  leagueResult: DotabuffLeague,
+  teamResult: SteamTeam,
+  leagueResult: SteamLeague,
   initialTeamData: TeamData,
   teamKey: string,
   state: { setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>> },
@@ -192,8 +192,8 @@ export function useProcessTeamData(
         }
 
         // Process successful results - at this point we know both results are successful
-        const successfulTeamResult = teamResult as DotabuffTeam;
-        const successfulLeagueResult = leagueResult as DotabuffLeague;
+        const successfulTeamResult = teamResult as SteamTeam;
+        const successfulLeagueResult = leagueResult as SteamLeague;
         processSuccessfulResults(
           successfulTeamResult,
           successfulLeagueResult,

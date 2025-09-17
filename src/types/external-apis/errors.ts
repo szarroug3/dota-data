@@ -7,7 +7,7 @@ export type ExternalApiErrorType =
   | 'service_unavailable'
   | 'network_error';
 
-export type ExternalApiService = 'opendota' | 'dotabuff';
+export type ExternalApiService = 'opendota' | 'steam';
 
 export interface ExternalApiError extends Error {
   type: ExternalApiErrorType;

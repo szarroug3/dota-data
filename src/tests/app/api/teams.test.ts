@@ -1,29 +1,18 @@
 import { NextRequest } from 'next/server';
 
 import { GET } from '@/app/api/teams/[id]/route';
-import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
-import { DotabuffTeam } from '@/types/external-apis';
+import { fetchSteamTeam } from '@/lib/api/steam/teams';
 
 // Mock external dependencies
-jest.mock('@/lib/api/dotabuff/teams', () => ({
-  fetchDotabuffTeam: jest.fn(),
+jest.mock('@/lib/api/steam/teams', () => ({
+  fetchSteamTeam: jest.fn(),
 }));
 
-const mockFetchDotabuffTeam = fetchDotabuffTeam as jest.MockedFunction<typeof fetchDotabuffTeam>;
+const mockFetchSteamTeam = fetchSteamTeam as jest.MockedFunction<typeof fetchSteamTeam>;
 
-const mockTeam: DotabuffTeam = {
+const mockTeam = {
   id: '9517508',
   name: 'Team Spirit',
-  matches: {
-    8054301932: {
-      matchId: 8054301932,
-      result: 'won',
-      duration: 2400,
-      opponentName: 'Team Liquid',
-      leagueId: '16435',
-      startTime: 1640995200,
-    },
-  },
 };
 
 describe('Teams API', () => {
@@ -34,29 +23,29 @@ describe('Teams API', () => {
   describe('GET /api/teams/{id}', () => {
     describe('Success Cases', () => {
       it('should return team data successfully', async () => {
-        mockFetchDotabuffTeam.mockResolvedValueOnce(mockTeam);
+        mockFetchSteamTeam.mockResolvedValueOnce(mockTeam as any);
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
         const data = await response.json();
 
         expect(response.status).toBe(200);
         expect(data).toEqual(mockTeam);
-        expect(mockFetchDotabuffTeam).toHaveBeenCalledWith('9517508', false);
+        expect(mockFetchSteamTeam).toHaveBeenCalledWith('9517508', false);
       });
 
       it('should handle force refresh parameter', async () => {
-        mockFetchDotabuffTeam.mockResolvedValueOnce(mockTeam);
+        mockFetchSteamTeam.mockResolvedValueOnce(mockTeam as any);
         const request = new NextRequest('http://localhost:3000/api/teams/9517508?force=true');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
 
         expect(response.status).toBe(200);
-        expect(mockFetchDotabuffTeam).toHaveBeenCalledWith('9517508', true);
+        expect(mockFetchSteamTeam).toHaveBeenCalledWith('9517508', true);
       });
     });
 
     describe('Error Cases', () => {
       it('should handle rate limiting errors', async () => {
-        mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Rate limited by Dotabuff API'));
+        mockFetchSteamTeam.mockRejectedValueOnce(new Error('Rate limited by Steam API'));
 
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
@@ -64,14 +53,14 @@ describe('Teams API', () => {
 
         expect(response.status).toBe(429);
         expect(data).toEqual({
-          error: 'Rate limited by Dotabuff API',
+          error: 'Rate limited by Steam API',
           status: 429,
-          details: 'Too many requests to Dotabuff API. Please try again later.',
+          details: 'Too many requests to Steam API. Please try again later.',
         });
       });
 
       it('should handle data not found errors', async () => {
-        mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Data Not Found'));
+        mockFetchSteamTeam.mockRejectedValueOnce(new Error('Data Not Found'));
 
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
@@ -86,7 +75,7 @@ describe('Teams API', () => {
       });
 
       it('should handle invalid team data errors', async () => {
-        mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Invalid team data'));
+        mockFetchSteamTeam.mockRejectedValueOnce(new Error('Invalid team data'));
 
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
@@ -101,7 +90,7 @@ describe('Teams API', () => {
       });
 
       it('should handle unexpected errors', async () => {
-        mockFetchDotabuffTeam.mockRejectedValueOnce(new Error('Unexpected error'));
+        mockFetchSteamTeam.mockRejectedValueOnce(new Error('Unexpected error'));
 
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });
@@ -116,7 +105,7 @@ describe('Teams API', () => {
       });
 
       it('should handle non-Error exceptions', async () => {
-        mockFetchDotabuffTeam.mockRejectedValueOnce('String error');
+        mockFetchSteamTeam.mockRejectedValueOnce('String error');
 
         const request = new NextRequest('http://localhost:3000/api/teams/9517508');
         const response = await GET(request, { params: Promise.resolve({ id: '9517508' }) });

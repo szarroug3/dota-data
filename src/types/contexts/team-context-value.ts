@@ -6,7 +6,7 @@
  */
 
 import type { Match } from '@/types/contexts/match-context-value';
-import type { DotabuffMatchSummary, OpenDotaPlayerComprehensive } from '@/types/external-apis';
+import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
 // ============================================================================
 // TEAM DATA STRUCTURES
@@ -50,7 +50,13 @@ export interface TeamData {
   isLoading?: boolean;
 }
 
-export interface TeamMatchParticipation extends DotabuffMatchSummary {
+export interface TeamMatchParticipation {
+  matchId: number;
+  result: 'won' | 'lost';
+  duration: number;
+  opponentName: string;
+  leagueId: string;
+  startTime: number;
   side: 'radiant' | 'dire' | null;
   pickOrder: 'first' | 'second' | null;
 }

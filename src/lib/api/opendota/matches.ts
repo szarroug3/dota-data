@@ -127,7 +127,7 @@ export async function parseOpenDotaMatchWithJobPolling(matchId: string, timeout 
  * @returns OpenDotaMatch object
  */
 export async function fetchParsedOpenDotaMatch(matchId: string, force = false): Promise<OpenDotaMatch> {
-  const cacheKey = `opendota:parsed-match:${matchId}`;
+  const cacheKey = `opendota:match:${matchId}`;
   const cacheTTL = 60 * 60 * 24 * 14; // 14 days
   const mockFilename = path.join(process.cwd(), 'mock-data', 'matches', `parsed-match-${matchId}.json`);
 

@@ -1,4 +1,5 @@
 import { Check, Coins, Skull, Zap } from 'lucide-react';
+import Image from 'next/image';
 import React from 'react';
 
 import { EventDetails, GameEvent, Match } from '@/types/contexts/match-context-value';
@@ -72,30 +73,42 @@ export function AdvantagesList({ payload }: { payload: TooltipEntry[] }) {
 }
 
 export function FirstBloodDescription({ details }: { details?: EventDetails }) {
+  const killerName = details?.killer ?? 'unknown player';
+  const victimName = details?.victim ?? 'unknown player';
+  const killerImageUrl = details?.killerHero?.imageUrl;
+  const victimImageUrl = details?.victimHero?.imageUrl;
   return (
     <span className="flex items-center gap-2">
       <span>First Blood:</span>
-      {details?.killerHero && (
-        <img src={details.killerHero.imageUrl} alt={details.killer} className="w-4 h-4 rounded" />
-      )}
-      <span>{details?.killer || 'unknown player'}</span>
+      <NameWithInlineHeroImage imageUrl={killerImageUrl} name={killerName} />
       <span>killed</span>
-      {details?.victimHero && (
-        <img src={details.victimHero.imageUrl} alt={details.victim} className="w-4 h-4 rounded" />
-      )}
-      <span>{details?.victim || 'unknown player'}</span>
+      <NameWithInlineHeroImage imageUrl={victimImageUrl} name={victimName} />
     </span>
   );
 }
 
 export function AegisDescription({ details }: { details?: EventDetails }) {
+  const aegisHolderName = details?.aegisHolder ?? 'unknown player';
+  const aegisHolderImageUrl = details?.aegisHolderHero?.imageUrl;
   return (
     <span className="flex items-center gap-2">
       <span>Aegis picked up by</span>
-      {details?.aegisHolderHero && (
-        <img src={details.aegisHolderHero.imageUrl} alt={details.aegisHolder} className="w-4 h-4 rounded" />
-      )}
-      <span>{details?.aegisHolder || 'unknown player'}</span>
+      <InlineHeroImage imageUrl={aegisHolderImageUrl} altText={aegisHolderName} />
+      <span>{aegisHolderName}</span>
+    </span>
+  );
+}
+
+function InlineHeroImage({ imageUrl, altText }: { imageUrl?: string; altText: string }) {
+  if (!imageUrl) return null;
+  return <Image src={imageUrl} alt={altText} width={16} height={16} className="w-4 h-4 rounded" />;
+}
+
+function NameWithInlineHeroImage({ imageUrl, name }: { imageUrl?: string; name: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <InlineHeroImage imageUrl={imageUrl} altText={name} />
+      <span>{name}</span>
     </span>
   );
 }
@@ -333,7 +346,7 @@ function HeroCell({ imageUrl, heroName }: { imageUrl?: string; heroName: string 
   return (
     <div className="flex items-center gap-1">
       {imageUrl ? (
-        <img src={imageUrl} alt={heroName} className="w-4 h-4 rounded" />
+        <Image src={imageUrl} alt={heroName} width={16} height={16} className="w-4 h-4 rounded" />
       ) : (
         <div className="w-4 h-4 bg-muted rounded" />
       )}

@@ -175,14 +175,14 @@ export interface RateLimitService {
 /**
  * External service enumeration
  */
-export type ExternalService = 'opendota' | 'dotabuff' | 'stratz' | 'd2pt';
+export type ExternalService = 'opendota' | 'steam' | 'stratz' | 'd2pt';
 
 /**
  * Service-specific rate limit configuration
  */
 export interface ServiceRateLimitConfig {
   opendota: RateLimitConfig;
-  dotabuff: RateLimitConfig;
+  steam: RateLimitConfig;
   stratz: RateLimitConfig;
   d2pt: RateLimitConfig;
 }
@@ -192,7 +192,7 @@ export interface ServiceRateLimitConfig {
  */
 export const DEFAULT_SERVICE_LIMITS: ServiceRateLimitConfig = {
   opendota: { window: 60, max: 60, service: 'opendota' },
-  dotabuff: { window: 60, max: 60, service: 'dotabuff' },
+  steam: { window: 60, max: 60, service: 'steam' },
   stratz: { window: 60, max: 20, service: 'stratz' },
   d2pt: { window: 60, max: 30, service: 'd2pt' },
 };

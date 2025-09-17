@@ -8,7 +8,7 @@ import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { MatchContextValue } from '@/types/contexts/match-context-value';
 import type { PlayerContextValue } from '@/types/contexts/player-context-value';
 import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
-import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
+import type { SteamLeague } from '@/types/external-apis/steam';
 import { updateMapItemError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { generateTeamKey } from '@/utils/team-helpers';
@@ -23,8 +23,23 @@ import {
 
 // Type guards and helpers for error handling without using unknown/any
 type ErrorResult = { error: string };
-type TeamResult = DotabuffTeam | ErrorResult | null | undefined;
-type LeagueResult = DotabuffLeague | ErrorResult | null | undefined;
+
+interface TeamSourceMatchSlim {
+  result?: 'won' | 'lost';
+  duration?: number;
+  opponentName?: string;
+  leagueId?: string;
+  startTime?: number;
+}
+
+interface TeamSource {
+  id: string | number;
+  name: string;
+  matches?: Record<number, TeamSourceMatchSlim>;
+}
+
+type TeamResult = TeamSource | ErrorResult | null | undefined;
+type LeagueResult = SteamLeague | ErrorResult | null | undefined;
 
 function isErrorResult(value: TeamResult | LeagueResult): value is ErrorResult {
   return Boolean(value) && typeof value === 'object' && value !== null && 'error' in (value as Record<string, string>);
@@ -76,30 +91,22 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
 function transformTeamData(
   teamId: number,
   leagueId: number,
-  dotabuffTeam: DotabuffTeam,
-  dotabuffLeague?: { name: string },
+  teamSource: TeamSource,
+  league?: { name: string },
 ): TeamData {
-  const matchesArray = Object.values(dotabuffTeam.matches);
   return {
-    team: { id: teamId, name: dotabuffTeam.name },
-    league: { id: leagueId, name: dotabuffLeague?.name || `League ${leagueId}` },
+    team: { id: teamId, name: teamSource.name },
+    league: { id: leagueId, name: league?.name || `League ${leagueId}` },
     timeAdded: new Date().toISOString(),
-    matches: (() => {
-      const matches: Record<number, TeamMatchParticipation> = {};
-      Object.entries(dotabuffTeam.matches).forEach(([matchId, match]) => {
-        matches[Number(matchId)] = { ...match, side: null, pickOrder: null };
-      });
-      return matches;
-    })(),
+    matches: {},
     manualMatches: {},
     manualPlayers: [],
     players: [],
     performance: {
-      totalMatches: matchesArray.length,
-      totalWins: matchesArray.filter((m) => m.result === 'won').length,
-      totalLosses: matchesArray.filter((m) => m.result === 'lost').length,
-      overallWinRate:
-        matchesArray.length > 0 ? matchesArray.filter((m) => m.result === 'won').length / matchesArray.length : 0,
+      totalMatches: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      overallWinRate: 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -113,7 +120,7 @@ function transformTeamData(
       },
       currentWinStreak: 0,
       currentLoseStreak: 0,
-      averageMatchDuration: matchesArray.reduce((sum: number, m) => sum + m.duration, 0) / matchesArray.length || 0,
+      averageMatchDuration: 0,
       averageKills: 0,
       averageDeaths: 0,
       averageGold: 0,
@@ -143,7 +150,7 @@ function handleTeamDataErrors(
     return true;
   } else if (teamError) {
     const errorTeam = createErrorTeamData(teamId, leagueId, 'Failed to fetch team');
-    errorTeam.league.name = isErrorResult(leagueData) ? `League ${leagueId}` : (leagueData as DotabuffLeague).name;
+    errorTeam.league.name = isErrorResult(leagueData) ? `League ${leagueId}` : (leagueData as SteamLeague).name;
     setTeams((prev) => {
       const m = new Map(prev);
       m.set(teamKey, errorTeam);
@@ -151,7 +158,7 @@ function handleTeamDataErrors(
     });
     return true;
   } else if (leagueError) {
-    const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, undefined);
+    const transformedTeam = transformTeamData(teamId, leagueId, teamData as TeamSource, undefined);
     transformedTeam.error = 'Failed to fetch league';
     setTeams((prev) => {
       const m = new Map(prev);
@@ -182,7 +189,12 @@ async function handleTeamSummaryOperation(
     ]);
     if (controller.signal.aborted) return null;
     if (handleTeamDataErrors(teamId, leagueId, teamData, leagueData, teamKey, setTeams)) return null;
-    const transformedTeam = transformTeamData(teamId, leagueId, teamData as DotabuffTeam, leagueData as DotabuffLeague);
+    const transformedTeam = transformTeamData(
+      teamId,
+      leagueId,
+      teamData as TeamSource,
+      (leagueData as SteamLeague | null | undefined) || undefined,
+    );
     setTeams((prev) => {
       const newTeams = new Map(prev);
       const existingTeam = newTeams.get(teamKey);
@@ -244,18 +256,20 @@ function useAddTeamCore(
         const transformedTeam = await handleTeamSummaryOperation(
           teamId,
           leagueId,
-          false,
+          force,
           operationKey,
           abortController,
           teamDataFetching,
           setTeams,
         );
         if (transformedTeam && !transformedTeam.error) {
-          const matchProcessingPromises = Object.values(transformedTeam.matches).map((match) => {
-            const existing = teams.get(teamKey);
-            const isManualMatch = existing?.manualMatches?.[match.matchId];
-            const knownSide = isManualMatch?.side as 'radiant' | 'dire' | undefined;
-            return processMatchAndExtractPlayers(match.matchId, teamId, matchContext, playerContext, knownSide);
+          // Derive matches from Steam league cache
+          const teamMatches = teamDataFetching.findTeamMatchesInLeague(leagueId, teamId);
+          const existing = teams.get(teamKey);
+          const matchProcessingPromises = teamMatches.map(({ matchId, side }) => {
+            const isManualMatch = existing?.manualMatches?.[matchId];
+            const knownSide = (isManualMatch?.side as 'radiant' | 'dire' | undefined) ?? side ?? undefined;
+            return processMatchAndExtractPlayers(matchId, teamId, matchContext, playerContext, knownSide);
           });
           const processedMatches = await Promise.all(matchProcessingPromises);
           setTeams((prev) => {
@@ -263,13 +277,29 @@ function useAddTeamCore(
             const team = newTeams.get(teamKey);
             if (team) {
               const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
-              processedMatches.forEach((processedMatch, index) => {
+              processedMatches.forEach((processedMatch) => {
                 if (processedMatch) {
-                  const originalMatch = Object.values(transformedTeam.matches)[index];
-                  updatedMatches[originalMatch.matchId] = processedMatch;
+                  updatedMatches[processedMatch.matchId] = processedMatch;
                 }
               });
-              newTeams.set(teamKey, { ...team, matches: updatedMatches });
+              // Update basic performance counts based on processed matches
+              const matchesArray = Object.values(updatedMatches);
+              const totalWins = matchesArray.filter((m) => m.result === 'won').length;
+              const totalLosses = matchesArray.filter((m) => m.result === 'lost').length;
+              const averageMatchDuration =
+                matchesArray.reduce((sum: number, m) => sum + (m.duration || 0), 0) / (matchesArray.length || 1);
+              newTeams.set(teamKey, {
+                ...team,
+                matches: updatedMatches,
+                performance: {
+                  ...team.performance,
+                  totalMatches: matchesArray.length,
+                  totalWins,
+                  totalLosses,
+                  overallWinRate: matchesArray.length > 0 ? (totalWins / matchesArray.length) * 100 : 0,
+                  averageMatchDuration,
+                },
+              });
             }
             return newTeams;
           });

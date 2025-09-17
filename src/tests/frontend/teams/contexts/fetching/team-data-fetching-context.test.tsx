@@ -12,12 +12,13 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import fetch from 'node-fetch';
+import type { z } from 'zod';
 
 import {
   TeamDataFetchingProvider,
   useTeamDataFetching,
 } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
-import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
+import { schemas } from '@/types/api-zod';
 
 // @ts-expect-error - node-fetch v2 types are compatible with global fetch
 global.fetch = fetch;
@@ -30,15 +31,16 @@ global.Response = fetch.Response;
 // MOCK DATA
 // ============================================================================
 
-const mockTeam: DotabuffTeam = {
+const mockTeam = {
   id: '123',
   name: 'Test Team',
-  matches: [],
 };
 
-const mockLeague: DotabuffLeague = {
+type SteamLeague = z.infer<typeof schemas.getApiLeaguesId>;
+const mockLeague: SteamLeague = {
   id: '456',
   name: 'Test League',
+  steam: { result: { status: 1, num_results: 0, total_results: 0, results_remaining: 0, matches: [] } },
 };
 
 // ============================================================================

@@ -52,11 +52,11 @@ const useCacheManagement = (
           newCache.delete(matchId);
           return newCache;
         });
-        const key = getCacheKey(`matches:match:${matchId}`, CACHE_VERSION);
+        const key = getCacheKey(`match:${matchId}`, CACHE_VERSION);
         clearCacheItem(key);
       } else {
         setMatchCache(new Map());
-        clearCacheByPrefix(`matches:match:`);
+        clearCacheByPrefix(`match:`);
       }
     },
     [setMatchCache],
@@ -129,7 +129,7 @@ const useMatchApiFetching = (
         if (cachedMatch) return cachedMatch;
       }
       if (!force) {
-        const key = getCacheKey(`matches:match:${matchId}`, CACHE_VERSION);
+        const key = getCacheKey(`match:${matchId}`, CACHE_VERSION);
         const persisted = getCacheItem<OpenDotaMatch>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.matches });
         if (persisted) {
           setMatchCache((prev) => new Map(prev).set(matchId, persisted));
@@ -139,7 +139,7 @@ const useMatchApiFetching = (
       try {
         const match = await getMatch(matchId, force);
         handleMatchSuccess(matchId, match);
-        const key = getCacheKey(`matches:match:${matchId}`, CACHE_VERSION);
+        const key = getCacheKey(`match:${matchId}`, CACHE_VERSION);
         setCacheItem(key, match, { version: CACHE_VERSION, ttlMs: CacheTtl.matches });
         return match;
       } catch (error) {

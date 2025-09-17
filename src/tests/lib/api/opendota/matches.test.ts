@@ -139,7 +139,7 @@ describe('OpenDota Matches API', () => {
         expect.any(String),
         true,
         60 * 60 * 24 * 14,
-        'opendota:parsed-match:1234567890',
+        'opendota:match:1234567890',
       );
     });
   });

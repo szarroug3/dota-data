@@ -6,7 +6,7 @@ jest.mock('@/lib/cache-service');
 jest.mock('@/lib/config/environment', () => ({
   getEnv: {
     USE_MOCK_API: jest.fn(() => false),
-    USE_MOCK_DOTABUFF: jest.fn(() => false),
+    USE_MOCK_STEAM: jest.fn(() => false),
     USE_MOCK_OPENDOTA: jest.fn(() => false),
     USE_MOCK_D2PT: jest.fn(() => false),
     WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false),
@@ -29,7 +29,7 @@ describe('request utility', () => {
 
       const requestFn = jest.fn();
       const processingFn = jest.fn();
-      const result = await request('dotabuff', requestFn, processingFn, '/mock/file.html', false, 3600, 'test-key');
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key');
 
       expect(result).toEqual(cachedData);
       expect(requestFn).not.toHaveBeenCalled();
@@ -37,12 +37,12 @@ describe('request utility', () => {
     });
 
     it('should fetch from API when cache is empty and force is false', async () => {
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const processedData = { id: '123', name: 'Test' };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
-      const result = await request('dotabuff', requestFn, processingFn, '/mock/file.html', false, 3600, 'test-key');
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
@@ -54,12 +54,12 @@ describe('request utility', () => {
       const cachedData = { id: '123', name: 'Test' };
       mockCacheService.prototype.get.mockResolvedValue(cachedData);
 
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const processedData = { id: '456', name: 'New Test' };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
-      const result = await request('dotabuff', requestFn, processingFn, '/mock/file.html', true, 3600, 'test-key');
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', true, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
@@ -71,19 +71,19 @@ describe('request utility', () => {
       const processingFn = jest.fn();
 
       await expect(
-        request('dotabuff', requestFn, processingFn, '/mock/file.html', false, 3600, 'test-key'),
+        request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key'),
       ).rejects.toThrow('API Error');
     });
 
     it('should handle errors from processing function', async () => {
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockImplementation(() => {
         throw new Error('Processing Error');
       });
 
       await expect(
-        request('dotabuff', requestFn, processingFn, '/mock/file.html', false, 3600, 'test-key'),
+        request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key'),
       ).rejects.toThrow('Processing Error');
     });
   });

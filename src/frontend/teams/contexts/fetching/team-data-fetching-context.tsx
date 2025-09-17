@@ -9,7 +9,7 @@
 
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 
-import { getLeague } from '@/frontend/leagues/api/leagues';
+import { getLeague, type SteamLeague } from '@/frontend/leagues/api/leagues';
 import {
   CACHE_VERSION,
   CacheTtl,
@@ -20,7 +20,7 @@ import {
   setCacheItem,
 } from '@/frontend/lib/cache';
 import { getTeam } from '@/frontend/teams/api/teams';
-import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
+import type { SteamTeam } from '@/types/external-apis/steam';
 
 // ============================================================================
 // TYPES
@@ -28,8 +28,14 @@ import type { DotabuffLeague, DotabuffTeam } from '@/types/external-apis';
 
 export interface TeamDataFetchingContextValue {
   // Core data fetching (handles cache logic internally)
-  fetchTeamData: (teamId: number, force?: boolean) => Promise<DotabuffTeam | { error: string }>;
-  fetchLeagueData: (leagueId: number, force?: boolean) => Promise<DotabuffLeague | { error: string }>;
+  fetchTeamData: (teamId: number, force?: boolean) => Promise<SteamTeam | { error: string }>;
+  fetchLeagueData: (leagueId: number, force?: boolean) => Promise<SteamLeague | { error: string }>;
+
+  // Derived data helpers
+  findTeamMatchesInLeague: (
+    leagueId: number,
+    teamId: number,
+  ) => Array<{ matchId: number; side: 'radiant' | 'dire' | null }>;
 
   // Cache management (for explicit control)
   clearTeamCache: (teamId?: number) => void;
@@ -63,8 +69,8 @@ const TeamDataFetchingContext = createContext<TeamDataFetchingContextValue | und
 // ============================================================================
 
 const useTeamDataState = () => {
-  const [teamCache, setTeamCache] = useState<Map<number, DotabuffTeam>>(new Map());
-  const [leagueCache, setLeagueCache] = useState<Map<number, DotabuffLeague>>(new Map());
+  const [teamCache, setTeamCache] = useState<Map<number, SteamTeam>>(new Map());
+  const [leagueCache, setLeagueCache] = useState<Map<number, SteamLeague>>(new Map());
   const [teamErrors, setTeamErrors] = useState<Map<number, string>>(new Map());
   const [leagueErrors, setLeagueErrors] = useState<Map<number, string>>(new Map());
 
@@ -85,10 +91,10 @@ const useTeamDataState = () => {
 // ============================================================================
 
 const useCacheManagement = (
-  teamCache: Map<number, DotabuffTeam>,
-  leagueCache: Map<number, DotabuffLeague>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>,
+  teamCache: Map<number, SteamTeam>,
+  leagueCache: Map<number, SteamLeague>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, SteamTeam>>>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, SteamLeague>>>,
 ) => {
   const clearTeamCache = useCallback(
     (teamId?: number) => {
@@ -98,11 +104,11 @@ const useCacheManagement = (
           newCache.delete(teamId);
           return newCache;
         });
-        const key = getCacheKey(`teams:team:${teamId}`, CACHE_VERSION);
+        const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
         clearCacheItem(key);
       } else {
         setTeamCache(new Map());
-        clearCacheByPrefix(`teams:team:`);
+        clearCacheByPrefix(`team:`);
       }
     },
     [setTeamCache],
@@ -116,11 +122,11 @@ const useCacheManagement = (
           newCache.delete(leagueId);
           return newCache;
         });
-        const key = getCacheKey(`teams:league:${leagueId}`, CACHE_VERSION);
+        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
         clearCacheItem(key);
       } else {
         setLeagueCache(new Map());
-        clearCacheByPrefix(`teams:league:`);
+        clearCacheByPrefix(`league:`);
       }
     },
     [setLeagueCache],
@@ -219,11 +225,11 @@ const useErrorManagement = (
 // ============================================================================
 
 const useTeamApiFetching = (
-  teamCache: Map<number, DotabuffTeam>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
+  teamCache: Map<number, SteamTeam>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, SteamTeam>>>,
   setTeamErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
 ) => {
-  const teamCacheRef = useRef<Map<number, DotabuffTeam>>(new Map());
+  const teamCacheRef = useRef<Map<number, SteamTeam>>(new Map());
   teamCacheRef.current = teamCache;
 
   const handleTeamError = useCallback(
@@ -234,7 +240,7 @@ const useTeamApiFetching = (
   );
 
   const handleTeamSuccess = useCallback(
-    (teamId: number, team: DotabuffTeam) => {
+    (teamId: number, team: SteamTeam) => {
       setTeamCache((prevCache) => new Map(prevCache).set(teamId, team));
       setTeamErrors((prev) => {
         const newErrors = new Map(prev);
@@ -246,14 +252,14 @@ const useTeamApiFetching = (
   );
 
   const fetchTeamData = useCallback(
-    async (teamId: number, force = false): Promise<DotabuffTeam | { error: string }> => {
+    async (teamId: number, force = false): Promise<SteamTeam | { error: string }> => {
       if (!force && teamCacheRef.current.has(teamId)) {
         const cachedTeam = teamCacheRef.current.get(teamId);
         if (cachedTeam) return cachedTeam;
       }
       if (!force) {
-        const key = getCacheKey(`teams:team:${teamId}`, CACHE_VERSION);
-        const persisted = getCacheItem<DotabuffTeam>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
+        const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
+        const persisted = getCacheItem<SteamTeam>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
         if (persisted) {
           setTeamCache((prev) => new Map(prev).set(teamId, persisted));
           return persisted;
@@ -262,7 +268,7 @@ const useTeamApiFetching = (
       try {
         const team = await getTeam(teamId, force);
         handleTeamSuccess(teamId, team);
-        const key = getCacheKey(`teams:team:${teamId}`, CACHE_VERSION);
+        const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
         setCacheItem(key, team, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
         return team;
       } catch {
@@ -278,11 +284,11 @@ const useTeamApiFetching = (
 };
 
 const useLeagueApiFetching = (
-  leagueCache: Map<number, DotabuffLeague>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>,
+  leagueCache: Map<number, SteamLeague>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, SteamLeague>>>,
   setLeagueErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
 ) => {
-  const leagueCacheRef = useRef<Map<number, DotabuffLeague>>(new Map());
+  const leagueCacheRef = useRef<Map<number, SteamLeague>>(new Map());
   leagueCacheRef.current = leagueCache;
 
   const handleLeagueError = useCallback(
@@ -293,7 +299,7 @@ const useLeagueApiFetching = (
   );
 
   const handleLeagueSuccess = useCallback(
-    (leagueId: number, league: DotabuffLeague) => {
+    (leagueId: number, league: SteamLeague) => {
       setLeagueCache((prevCache) => new Map(prevCache).set(leagueId, league));
       setLeagueErrors((prev) => {
         const newErrors = new Map(prev);
@@ -305,14 +311,14 @@ const useLeagueApiFetching = (
   );
 
   const fetchLeagueData = useCallback(
-    async (leagueId: number, force = false): Promise<DotabuffLeague | { error: string }> => {
+    async (leagueId: number, force = false): Promise<SteamLeague | { error: string }> => {
       if (!force && leagueCacheRef.current.has(leagueId)) {
         const cachedLeague = leagueCacheRef.current.get(leagueId);
         if (cachedLeague) return cachedLeague;
       }
       if (!force) {
-        const key = getCacheKey(`teams:league:${leagueId}`, CACHE_VERSION);
-        const persisted = getCacheItem<DotabuffLeague>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
+        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
+        const persisted = getCacheItem<SteamLeague>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
         if (persisted) {
           setLeagueCache((prev) => new Map(prev).set(leagueId, persisted));
           return persisted;
@@ -321,7 +327,7 @@ const useLeagueApiFetching = (
       try {
         const league = await getLeague(leagueId, force);
         handleLeagueSuccess(leagueId, league);
-        const key = getCacheKey(`teams:league:${leagueId}`, CACHE_VERSION);
+        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
         setCacheItem(key, league, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
         return league;
       } catch {
@@ -333,7 +339,27 @@ const useLeagueApiFetching = (
     [handleLeagueSuccess, handleLeagueError, setLeagueCache],
   );
 
-  return { fetchLeagueData };
+  type SteamMatchSlim = { match_id?: number; radiant_team_id?: number; dire_team_id?: number };
+
+  const findTeamMatchesInLeague = useCallback(
+    (leagueId: number, teamId: number): Array<{ matchId: number; side: 'radiant' | 'dire' | null }> => {
+      const league = leagueCacheRef.current.get(leagueId);
+      const matches = league?.steam?.result?.matches || [];
+      const results: Array<{ matchId: number; side: 'radiant' | 'dire' | null }> = [];
+      matches.forEach((m: SteamMatchSlim) => {
+        if (!m || typeof m.match_id !== 'number') return;
+        const isRadiant = m.radiant_team_id === teamId;
+        const isDire = m.dire_team_id === teamId;
+        if (isRadiant || isDire) {
+          results.push({ matchId: m.match_id, side: isRadiant ? 'radiant' : 'dire' });
+        }
+      });
+      return results;
+    },
+    [],
+  );
+
+  return { fetchLeagueData, findTeamMatchesInLeague };
 };
 
 // ============================================================================
@@ -341,16 +367,20 @@ const useLeagueApiFetching = (
 // ============================================================================
 
 const useApiFetching = (
-  teamCache: Map<number, DotabuffTeam>,
-  leagueCache: Map<number, DotabuffLeague>,
-  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffTeam>>>,
-  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, DotabuffLeague>>>,
+  teamCache: Map<number, SteamTeam>,
+  leagueCache: Map<number, SteamLeague>,
+  setTeamCache: React.Dispatch<React.SetStateAction<Map<number, SteamTeam>>>,
+  setLeagueCache: React.Dispatch<React.SetStateAction<Map<number, SteamLeague>>>,
   setTeamErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
   setLeagueErrors: React.Dispatch<React.SetStateAction<Map<number, string>>>,
 ) => {
   const { fetchTeamData } = useTeamApiFetching(teamCache, setTeamCache, setTeamErrors);
-  const { fetchLeagueData } = useLeagueApiFetching(leagueCache, setLeagueCache, setLeagueErrors);
-  return { fetchTeamData, fetchLeagueData };
+  const { fetchLeagueData, findTeamMatchesInLeague } = useLeagueApiFetching(
+    leagueCache,
+    setLeagueCache,
+    setLeagueErrors,
+  );
+  return { fetchTeamData, fetchLeagueData, findTeamMatchesInLeague };
 };
 
 // ============================================================================
@@ -383,7 +413,7 @@ export const TeamDataFetchingProvider: React.FC<TeamDataFetchingProviderProps> =
     setLeagueErrors,
   );
 
-  const { fetchTeamData, fetchLeagueData } = useApiFetching(
+  const { fetchTeamData, fetchLeagueData, findTeamMatchesInLeague } = useApiFetching(
     teamCache,
     leagueCache,
     setTeamCache,
@@ -395,6 +425,7 @@ export const TeamDataFetchingProvider: React.FC<TeamDataFetchingProviderProps> =
   const contextValue: TeamDataFetchingContextValue = {
     fetchTeamData,
     fetchLeagueData,
+    findTeamMatchesInLeague,
     clearTeamCache,
     clearLeagueCache,
     clearAllCache,

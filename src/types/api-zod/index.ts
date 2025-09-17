@@ -85,8 +85,6 @@ const getApiPlayers = z
   })
   .partial()
   .catchall(z.unknown());
-const getApiTeams = z.unknown();
-const getApiLeagues = z.unknown();
 
 // Concrete response schemas used directly by our typed API clients
 const getApiHeroes = z.array(
@@ -139,16 +137,42 @@ const getApiItems = z.record(
 );
 
 const getApiLeaguesId = z
-  .union([
-    z.object({ id: z.string(), name: z.string() }).catchall(z.unknown()),
-    z.object({ data: z.object({ id: z.string(), name: z.string() }).catchall(z.unknown()) }).catchall(z.unknown()),
-  ])
-  .transform((input) => {
-    if ('data' in input) {
-      return { data: input.data } as { data: { id: string; name: string } };
-    }
-    return { data: { id: input.id, name: input.name } } as { data: { id: string; name: string } };
-  });
+  .object({
+    id: z.string(),
+    name: z.string(),
+    steam: z
+      .object({
+        result: z
+          .object({
+            status: z.number().int().optional(),
+            matches: z
+              .array(
+                z
+                  .object({
+                    match_id: z.number().int(),
+                    radiant_team_id: z.number().int().optional(),
+                    dire_team_id: z.number().int().optional(),
+                  })
+                  .partial()
+                  .catchall(z.unknown()),
+              )
+              .optional(),
+          })
+          .partial()
+          .catchall(z.unknown()),
+      })
+      .partial()
+      .catchall(z.unknown())
+      .optional(),
+  })
+  .catchall(z.unknown());
+
+const getApiTeams = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+  })
+  .catchall(z.unknown());
 
 export const schemas = {
   postApiCacheInvalidateBody,
@@ -158,7 +182,6 @@ export const schemas = {
   getApiMatches,
   getApiPlayers,
   getApiTeams,
-  getApiLeagues,
 };
 
 const endpoints = makeApi([
@@ -444,7 +467,7 @@ const endpoints = makeApi([
     method: 'get',
     path: '/api/leagues/:id',
     alias: 'getApiLeaguesId',
-    description: `Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.`,
+    description: `Retrieves league information with Steam match history payload preserved for client consumption.`,
     requestFormat: 'json',
     parameters: [
       { name: 'id', type: 'Path', schema: z.string() },
@@ -452,46 +475,7 @@ const endpoints = makeApi([
       { name: 'includeMatches', type: 'Query', schema: z.boolean().optional().default(false) },
       { name: 'view', type: 'Query', schema: z.enum(['full', 'summary']).optional().default('full') },
     ],
-    response: z
-      .object({
-        data: z
-          .object({
-            leagueId: z.string(),
-            name: z.string(),
-            description: z.string(),
-            tournamentUrl: z.string(),
-            matches: z.array(
-              z
-                .object({
-                  matchId: z.string(),
-                  duration: z.number().int(),
-                  radiant_win: z.boolean(),
-                  radiant_name: z.string(),
-                  dire_name: z.string(),
-                })
-                .partial()
-                .catchall(z.unknown()),
-            ),
-            statistics: z
-              .object({
-                totalMatches: z.number().int(),
-                averageDuration: z.number(),
-                radiantWins: z.number().int(),
-                direWins: z.number().int(),
-                uniqueTeams: z.number().int(),
-              })
-              .partial()
-              .catchall(z.unknown()),
-            processed: z.object({ timestamp: z.string(), version: z.string() }).partial().catchall(z.unknown()),
-          })
-          .partial()
-          .catchall(z.unknown()),
-        timestamp: z.string().datetime({ offset: true }),
-        view: z.string(),
-        options: z.object({ includeMatches: z.boolean() }).partial().catchall(z.unknown()),
-      })
-      .partial()
-      .catchall(z.unknown()),
+    response: getApiLeaguesId,
     errors: [
       {
         status: 400,

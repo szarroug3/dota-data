@@ -6,9 +6,9 @@ import { getEnv } from '@/lib/config/environment';
 import { CacheValue } from '@/types/cache';
 
 const mockServices = {
-  dotabuff: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_DOTABUFF(),
   opendota: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_OPENDOTA(),
   d2pt: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_D2PT(),
+  steam: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_STEAM(),
 };
 
 async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boolean): Promise<T | null> {

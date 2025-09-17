@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { fetchDotabuffLeague } from '@/lib/api/dotabuff/leagues';
+import { fetchSteamLeague } from '@/lib/api/steam/leagues';
 import { ApiErrorResponse } from '@/types/api';
-import { schemas } from '@/types/api-zod';
 
 /**
  * Handle league API errors
@@ -10,9 +9,9 @@ import { schemas } from '@/types/api-zod';
 function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
   if (error.message.includes('Rate limited')) {
     return {
-      error: 'Rate limited by Dotabuff API',
+      error: 'Rate limited by Steam API',
       status: 429,
-      details: 'Too many requests to Dotabuff API. Please try again later.',
+      details: 'Too many requests to Steam API. Please try again later.',
     };
   }
 
@@ -51,8 +50,8 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  * @swagger
  * /api/leagues/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 league data for Dota Scout Assistant
- *     description: Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.
+ *     summary: Fetch Steam league match history (fully aggregated)
+ *     description: Retrieves league information from Steam Web API (GetMatchHistory) using league_id. The backend aggregates all pages server-side and returns a single unmodified-style Steam payload: { result: { status, num_results, total_results, results_remaining: 0, matches[] } }.
  *     tags:
  *       - Leagues
  *     parameters:
@@ -68,19 +67,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  *           type: boolean
  *           default: false
  *         description: Force refresh of cached data
- *       - in: query
- *         name: includeMatches
- *         schema:
- *           type: boolean
- *           default: false
- *         description: Include matches data in the response
- *       - in: query
- *         name: view
- *         schema:
- *           type: string
- *           enum: [full, summary]
- *           default: full
- *         description: Data view mode (full=all data, summary=basic info)
+ *
  *     responses:
  *       200:
  *         description: Successfully retrieved league data
@@ -89,87 +76,35 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  *             schema:
  *               type: object
  *               properties:
- *                 data:
+ *                 result:
  *                   type: object
  *                   properties:
- *                     leagueId:
- *                       type: string
- *                     name:
- *                       type: string
- *                     description:
- *                       type: string
- *                     tournamentUrl:
- *                       type: string
+ *                     status:
+ *                       type: integer
+ *                     num_results:
+ *                       type: integer
+ *                     total_results:
+ *                       type: integer
+ *                     results_remaining:
+ *                       type: integer
  *                     matches:
  *                       type: array
  *                       items:
  *                         type: object
  *                         properties:
- *                           matchId:
- *                             type: string
- *                           duration:
+ *                           match_id:
  *                             type: integer
- *                           radiant_win:
- *                             type: boolean
- *                           radiant_name:
- *                             type: string
- *                           dire_name:
- *                             type: string
- *                     statistics:
- *                       type: object
- *                       properties:
- *                         totalMatches:
- *                           type: integer
- *                         averageDuration:
- *                           type: number
- *                         radiantWins:
- *                           type: integer
- *                         direWins:
- *                           type: integer
- *                         uniqueTeams:
- *                           type: integer
- *                     processed:
- *                       type: object
- *                       properties:
- *                         timestamp:
- *                           type: string
- *                         version:
- *                           type: string
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 view:
- *                   type: string
- *                 options:
- *                   type: object
- *                   properties:
- *                     includeMatches:
- *                       type: boolean
+ *                           radiant_team_id:
+ *                             type: integer
+ *                           dire_team_id:
+ *                             type: integer
  *             example:
- *               data:
- *                 leagueId: "16435"
- *                 name: "The International 2024"
- *                 description: "The International is the premier Dota 2 tournament"
- *                 tournamentUrl: "https://www.dota2.com/esports/ti2024"
+ *               result:
+ *                 status: 1
  *                 matches:
- *                   - matchId: "8054301932"
- *                     duration: 2150
- *                     radiant_win: true
- *                     radiant_name: "Team Spirit"
- *                     dire_name: "Team Secret"
- *                 statistics:
- *                   totalMatches: 156
- *                   averageDuration: 2247
- *                   radiantWins: 78
- *                   direWins: 78
- *                   uniqueTeams: 16
- *                 processed:
- *                   timestamp: "2024-01-01T00:00:00.000Z"
- *                   version: "1.0.0"
- *               timestamp: "2024-01-01T00:00:00.000Z"
- *               view: "full"
- *               options:
- *                 includeMatches: true
+ *                   - match_id: 8465523307
+ *                     radiant_team_id: 8654939
+ *                     dire_team_id: 9849961
  *       400:
  *         description: Invalid league ID
  *         content:
@@ -222,7 +157,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  *               status: 422
  *               details: "League data is invalid or corrupted."
  *       429:
- *         description: Rate limited by Dotabuff API
+ *         description: Rate limited by Steam API
  *         content:
  *           application/json:
  *             schema:
@@ -235,9 +170,9 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  *                 details:
  *                   type: string
  *             example:
- *               error: "Rate limited by Dotabuff API"
+ *               error: "Rate limited by Steam API"
  *               status: 429
- *               details: "Too many requests to Dotabuff API. Please try again later."
+ *               details: "Too many requests to Steam API. Please try again later."
  *       500:
  *         description: Internal server error
  *         content:
@@ -263,19 +198,10 @@ export async function GET(
   const { id: leagueId } = await params;
 
   try {
-    // Extract query parameters
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
-
-    // Fetch raw league data (handles caching, rate limiting, mock mode)
-    const league = await fetchDotabuffLeague(leagueId, force);
-
-    // Validate using schema but preserve original shape
-    const result = schemas.getApiLeaguesId.safeParse(league);
-    if (!result.success) {
-      throw new Error('Invalid league data');
-    }
-    return NextResponse.json(league);
+    const response = await fetchSteamLeague(leagueId, force);
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Leagues API Error:', error);
 

@@ -138,9 +138,9 @@ export async function processMatchAndExtractPlayers(
 
     // Return match participation data
     return {
-      // Required fields from DotabuffMatchSummary
+      // Required fields for TeamMatchParticipation
       matchId,
-      result: match.result === teamSide ? 'won' : 'lost', // Convert match result to Dotabuff format
+      result: match.result === teamSide ? 'won' : 'lost',
       duration: match.duration,
       opponentName: opponentName || '', // Get opponent name from match data
       leagueId: '', // Will be populated from team data if available

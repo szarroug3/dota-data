@@ -52,11 +52,11 @@ const useCacheManagement = (
           newCache.delete(playerId);
           return newCache;
         });
-        const key = getCacheKey(`players:player:${playerId}`, CACHE_VERSION);
+        const key = getCacheKey(`player:${playerId}`, CACHE_VERSION);
         clearCacheItem(key);
       } else {
         setPlayerCache(new Map());
-        clearCacheByPrefix(`players:player:`);
+        clearCacheByPrefix(`player:`);
       }
     },
     [setPlayerCache],
@@ -122,7 +122,7 @@ const usePlayerApiFetching = (
         if (cachedPlayer) return cachedPlayer;
       }
       if (!force) {
-        const key = getCacheKey(`players:player:${playerId}`, CACHE_VERSION);
+        const key = getCacheKey(`player:${playerId}`, CACHE_VERSION);
         const persisted = getCacheItem<OpenDotaPlayerComprehensive>(key, {
           version: CACHE_VERSION,
           ttlMs: CacheTtl.players,
@@ -135,7 +135,7 @@ const usePlayerApiFetching = (
       try {
         const player = await getPlayer(playerId, force);
         handlePlayerSuccess(playerId, player);
-        const key = getCacheKey(`players:player:${playerId}`, CACHE_VERSION);
+        const key = getCacheKey(`player:${playerId}`, CACHE_VERSION);
         setCacheItem(key, player, { version: CACHE_VERSION, ttlMs: CacheTtl.players });
         return player;
       } catch {

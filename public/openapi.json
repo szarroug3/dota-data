@@ -323,7 +323,11 @@
                 },
                 "direction": {
                   "type": "string",
-                  "enum": ["up", "down", "neutral"]
+                  "enum": [
+                    "up",
+                    "down",
+                    "neutral"
+                  ]
                 }
               }
             }
@@ -536,7 +540,11 @@
                 },
                 "direction": {
                   "type": "string",
-                  "enum": ["up", "down", "neutral"]
+                  "enum": [
+                    "up",
+                    "down",
+                    "neutral"
+                  ]
                 }
               }
             }
@@ -948,7 +956,9 @@
       "post": {
         "summary": "Invalidate cache entries by pattern or key",
         "description": "Invalidates cache entries either by pattern matching or by specific key. Supports both Redis and memory cache backends with automatic fallback.",
-        "tags": ["Cache"],
+        "tags": [
+          "Cache"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1013,7 +1023,10 @@
                     },
                     "backend": {
                       "type": "string",
-                      "enum": ["redis", "memory"]
+                      "enum": [
+                        "redis",
+                        "memory"
+                      ]
                     },
                     "details": {
                       "type": "object",
@@ -1035,7 +1048,10 @@
                         },
                         "operation": {
                           "type": "string",
-                          "enum": ["pattern-invalidation", "key-invalidation"]
+                          "enum": [
+                            "pattern-invalidation",
+                            "key-invalidation"
+                          ]
                         }
                       }
                     }
@@ -1195,7 +1211,9 @@
       "get": {
         "summary": "Get cache invalidation status and statistics",
         "description": "Retrieves cache backend information, health status, statistics, and available invalidation endpoints. Useful for monitoring cache performance and understanding available operations.",
-        "tags": ["Cache"],
+        "tags": [
+          "Cache"
+        ],
         "responses": {
           "200": {
             "description": "Successfully retrieved cache status and statistics",
@@ -1209,7 +1227,10 @@
                       "properties": {
                         "backend": {
                           "type": "string",
-                          "enum": ["redis", "memory"],
+                          "enum": [
+                            "redis",
+                            "memory"
+                          ],
                           "description": "Current cache backend in use"
                         },
                         "healthy": {
@@ -1353,7 +1374,9 @@
       "get": {
         "summary": "Fetch Dota 2 heroes data from OpenDota API",
         "description": "Retrieves raw heroes data from OpenDota API including hero attributes, roles, and statistics.",
-        "tags": ["Heroes"],
+        "tags": [
+          "Heroes"
+        ],
         "parameters": [
           {
             "in": "query",
@@ -1474,7 +1497,11 @@
                       "localized_name": "Anti-Mage",
                       "primary_attr": "agi",
                       "attack_type": "Melee",
-                      "roles": ["Carry", "Escape", "Nuker"],
+                      "roles": [
+                        "Carry",
+                        "Escape",
+                        "Nuker"
+                      ],
                       "img": "/apps/dota2/images/dota_react/heroes/antimage.png",
                       "icon": "/apps/dota2/images/dota_react/heroes/icons/antimage.png",
                       "base_health": 200,
@@ -1589,7 +1616,9 @@
       "get": {
         "summary": "Fetch Dota 2 items data from OpenDota API",
         "description": "Retrieves raw items data from OpenDota API including item attributes, abilities, and statistics.",
-        "tags": ["Items"],
+        "tags": [
+          "Items"
+        ],
         "parameters": [
           {
             "in": "query",
@@ -1918,8 +1947,10 @@
     "/api/leagues/{id}": {
       "get": {
         "summary": "Fetch and process Dota 2 league data for Dota Scout Assistant",
-        "description": "Retrieves league information including tournament details, matches, and statistics from Dotabuff. Supports different view modes for optimized data delivery.",
-        "tags": ["Leagues"],
+        "description": "Retrieves league information from Steam Web API (GetMatchHistory) using league_id. Preserves Steam payload under steam.result.matches so clients can derive team match IDs and sides.",
+        "tags": [
+          "Leagues"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1953,7 +1984,10 @@
             "name": "view",
             "schema": {
               "type": "string",
-              "enum": ["full", "summary"],
+              "enum": [
+                "full",
+                "summary"
+              ],
               "default": "full"
             },
             "description": "Data view mode (full=all data, summary=basic info)"
@@ -1967,125 +2001,58 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "steam": {
                       "type": "object",
                       "properties": {
-                        "leagueId": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "description": {
-                          "type": "string"
-                        },
-                        "tournamentUrl": {
-                          "type": "string"
-                        },
-                        "matches": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "matchId": {
-                                "type": "string"
-                              },
-                              "duration": {
-                                "type": "integer"
-                              },
-                              "radiant_win": {
-                                "type": "boolean"
-                              },
-                              "radiant_name": {
-                                "type": "string"
-                              },
-                              "dire_name": {
-                                "type": "string"
+                        "result": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "integer"
+                            },
+                            "matches": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "match_id": {
+                                    "type": "integer"
+                                  },
+                                  "radiant_team_id": {
+                                    "type": "integer"
+                                  },
+                                  "dire_team_id": {
+                                    "type": "integer"
+                                  }
+                                }
                               }
                             }
                           }
-                        },
-                        "statistics": {
-                          "type": "object",
-                          "properties": {
-                            "totalMatches": {
-                              "type": "integer"
-                            },
-                            "averageDuration": {
-                              "type": "number"
-                            },
-                            "radiantWins": {
-                              "type": "integer"
-                            },
-                            "direWins": {
-                              "type": "integer"
-                            },
-                            "uniqueTeams": {
-                              "type": "integer"
-                            }
-                          }
-                        },
-                        "processed": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "string"
-                            },
-                            "version": {
-                              "type": "string"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "timestamp": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "view": {
-                      "type": "string"
-                    },
-                    "options": {
-                      "type": "object",
-                      "properties": {
-                        "includeMatches": {
-                          "type": "boolean"
                         }
                       }
                     }
                   }
                 },
                 "example": {
-                  "data": {
-                    "leagueId": "16435",
-                    "name": "The International 2024",
-                    "description": "The International is the premier Dota 2 tournament",
-                    "tournamentUrl": "https://www.dota2.com/esports/ti2024",
-                    "matches": [
-                      {
-                        "matchId": "8054301932",
-                        "duration": 2150,
-                        "radiant_win": true,
-                        "radiant_name": "Team Spirit",
-                        "dire_name": "Team Secret"
-                      }
-                    ],
-                    "statistics": {
-                      "totalMatches": 156,
-                      "averageDuration": 2247,
-                      "radiantWins": 78,
-                      "direWins": 78,
-                      "uniqueTeams": 16
-                    },
-                    "processed": {
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "version": "1.0.0"
+                  "id": "17805",
+                  "name": "League 17805",
+                  "steam": {
+                    "result": {
+                      "status": 1,
+                      "matches": [
+                        {
+                          "match_id": 8465523307,
+                          "radiant_team_id": 8654939,
+                          "dire_team_id": 9849961
+                        }
+                      ]
                     }
-                  },
-                  "timestamp": "2024-01-01T00:00:00.000Z",
-                  "view": "full",
-                  "options": {
-                    "includeMatches": true
                   }
                 }
               }
@@ -2170,7 +2137,7 @@
             }
           },
           "429": {
-            "description": "Rate limited by Dotabuff API",
+            "description": "Rate limited by Steam API",
             "content": {
               "application/json": {
                 "schema": {
@@ -2188,9 +2155,9 @@
                   }
                 },
                 "example": {
-                  "error": "Rate limited by Dotabuff API",
+                  "error": "Rate limited by Steam API",
                   "status": 429,
-                  "details": "Too many requests to Dotabuff API. Please try again later."
+                  "details": "Too many requests to Steam API. Please try again later."
                 }
               }
             }
@@ -2228,7 +2195,9 @@
       "post": {
         "summary": "Parse a Dota 2 match",
         "description": "Initiates match parsing through OpenDota API and polls for completion. Returns parsed match data when complete.",
-        "tags": ["Matches"],
+        "tags": [
+          "Matches"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -2436,7 +2405,9 @@
       "get": {
         "summary": "Fetch Dota 2 match data from OpenDota API",
         "description": "Retrieves raw match data from OpenDota API including players, teams, and game statistics.",
-        "tags": ["Matches"],
+        "tags": [
+          "Matches"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -2575,7 +2546,9 @@
       "get": {
         "summary": "Fetch comprehensive Dota 2 player data from all OpenDota endpoints",
         "description": "Retrieves complete player data including profile, statistics, heroes, counts, totals, win/loss, recent matches, rankings, ratings, and ward map. Includes rate limiting with delays between API calls.",
-        "tags": ["Players"],
+        "tags": [
+          "Players"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -2692,8 +2665,10 @@
     "/api/teams/{id}": {
       "get": {
         "summary": "Fetch and process Dota 2 team data for Dota Scout Assistant",
-        "description": "Retrieves comprehensive team data including statistics, performance metrics, and roster information from Dotabuff. Supports different view modes for optimized data delivery.",
-        "tags": ["Teams"],
+        "description": "Retrieves basic team info from Steam Web API (GetTeamInfoByTeamID). Returns id and name for the team.",
+        "tags": [
+          "Teams"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -2718,7 +2693,10 @@
             "name": "view",
             "schema": {
               "type": "string",
-              "enum": ["full", "summary"],
+              "enum": [
+                "full",
+                "summary"
+              ],
               "default": "full"
             },
             "description": "Data view mode (full=all data, summary=basic statistics)"
@@ -2744,79 +2722,17 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved team data",
+            "description": "Successfully retrieved team data (Steam format)",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "teamId": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "tag": {
-                          "type": "string"
-                        },
-                        "performance": {
-                          "type": "object",
-                          "properties": {
-                            "recentForm": {
-                              "type": "string"
-                            },
-                            "strength": {
-                              "type": "string"
-                            },
-                            "consistency": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "statistics": {
-                          "type": "object",
-                          "properties": {
-                            "totalMatches": {
-                              "type": "integer"
-                            },
-                            "wins": {
-                              "type": "integer"
-                            },
-                            "losses": {
-                              "type": "integer"
-                            },
-                            "winRate": {
-                              "type": "number"
-                            },
-                            "rating": {
-                              "type": "number"
-                            },
-                            "lastMatchTime": {
-                              "type": "string"
-                            },
-                            "averageMatchDuration": {
-                              "type": "number"
-                            }
-                          }
-                        },
-                        "processed": {
-                          "type": "object",
-                          "properties": {
-                            "timestamp": {
-                              "type": "string"
-                            },
-                            "dataQuality": {
-                              "type": "string"
-                            },
-                            "completeness": {
-                              "type": "number"
-                            }
-                          }
-                        }
-                      }
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
                     },
                     "timestamp": {
                       "type": "string",
@@ -2839,30 +2755,8 @@
                   }
                 },
                 "example": {
-                  "data": {
-                    "teamId": "9517508",
-                    "name": "Team Spirit",
-                    "tag": "TS",
-                    "performance": {
-                      "recentForm": "strong",
-                      "strength": "high",
-                      "consistency": "stable"
-                    },
-                    "statistics": {
-                      "totalMatches": 150,
-                      "wins": 95,
-                      "losses": 55,
-                      "winRate": 0.633,
-                      "rating": 1850,
-                      "lastMatchTime": "2024-01-01T00:00:00.000Z",
-                      "averageMatchDuration": 2400
-                    },
-                    "processed": {
-                      "timestamp": "2024-01-01T00:00:00.000Z",
-                      "dataQuality": "high",
-                      "completeness": 0.9
-                    }
-                  },
+                  "id": "8654939",
+                  "name": "LE Bron",
                   "timestamp": "2024-01-01T00:00:00.000Z",
                   "view": "full",
                   "options": {
@@ -2952,7 +2846,7 @@
             }
           },
           "429": {
-            "description": "Rate limited by Dotabuff API",
+            "description": "Rate limited by Steam API",
             "content": {
               "application/json": {
                 "schema": {
@@ -2970,9 +2864,9 @@
                   }
                 },
                 "example": {
-                  "error": "Rate limited by Dotabuff API",
+                  "error": "Rate limited by Steam API",
                   "status": 429,
-                  "details": "Too many requests to Dotabuff API. Please try again later."
+                  "details": "Too many requests to Steam API. Please try again later."
                 }
               }
             }
