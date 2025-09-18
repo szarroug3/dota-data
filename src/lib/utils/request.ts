@@ -7,7 +7,6 @@ import { CacheValue } from '@/types/cache';
 
 const mockServices = {
   opendota: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_OPENDOTA(),
-  d2pt: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_D2PT(),
   steam: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_STEAM(),
 };
 

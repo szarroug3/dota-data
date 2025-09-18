@@ -1,6 +1,5 @@
 import path from 'path';
 
-import { getEnv } from '@/lib/config/environment';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
 export interface OpendotaLeague {
@@ -9,8 +8,7 @@ export interface OpendotaLeague {
 }
 
 function buildOpendotaLeaguesUrl(): string {
-  const base = getEnv.OPENDOTA_API_BASE_URL();
-  return `${base}/leagues`;
+  return 'https://api.opendota.com/api/leagues';
 }
 
 async function fetchLeagues(): Promise<string> {

@@ -8,7 +8,6 @@ jest.mock('@/lib/config/environment', () => ({
     USE_MOCK_API: jest.fn(() => false),
     USE_MOCK_STEAM: jest.fn(() => false),
     USE_MOCK_OPENDOTA: jest.fn(() => false),
-    USE_MOCK_D2PT: jest.fn(() => false),
     WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false),
   },
 }));

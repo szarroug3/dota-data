@@ -176,7 +176,7 @@ export async function fetchParsedOpenDotaMatch(matchId: string, force = false): 
  * @returns Parsed match data
  */
 export async function parseOpenDotaMatchWithPolling(matchId: string, timeout = 60000): Promise<OpenDotaMatch> {
-  const baseUrl = process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api';
+  const baseUrl = 'https://api.opendota.com/api';
   const startTime = Date.now();
   const pollInterval = 2000; // 2 seconds
 
@@ -225,7 +225,7 @@ export async function parseOpenDotaMatchWithPolling(matchId: string, timeout = 6
  * Fetch match from OpenDota API
  */
 async function fetchMatchFromOpenDota(matchId: string): Promise<string> {
-  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/matches/${matchId}`;
+  const url = `https://api.opendota.com/api/matches/${matchId}`;
 
   try {
     const response = await requestWithRetry('GET', url);
@@ -247,7 +247,7 @@ async function fetchMatchFromOpenDota(matchId: string): Promise<string> {
  * Initiate parse request to OpenDota API
  */
 async function initiateParseRequest(matchId: string): Promise<string> {
-  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/request/${matchId}`;
+  const url = `https://api.opendota.com/api/request/${matchId}`;
 
   try {
     const response = await requestWithRetry('POST', url);
@@ -272,7 +272,7 @@ async function initiateParseRequest(matchId: string): Promise<string> {
  * Check parse request status from OpenDota API
  */
 async function checkParseStatus(jobId: string): Promise<string> {
-  const url = `${process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api'}/request/${jobId}`;
+  const url = `https://api.opendota.com/api/request/${jobId}`;
 
   try {
     const response = await requestWithRetry('GET', url);
