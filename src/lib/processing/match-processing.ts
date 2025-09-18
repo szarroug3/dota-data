@@ -32,9 +32,11 @@ export function processMatchData(
   heroesByName: Record<string, Hero>,
   items: Record<string, Item>,
 ): Match {
-  // Separate radiant and dire players
-  const radiantPlayers = matchData.players.filter((player) => player.isRadiant);
-  const direPlayers = matchData.players.filter((player) => !player.isRadiant);
+  // Separate radiant and dire players (derive side when isRadiant is missing)
+  const isRadiantSide = (p: OpenDotaMatch['players'][number]) =>
+    typeof p.isRadiant === 'boolean' ? p.isRadiant : p.player_slot < 128;
+  const radiantPlayers = matchData.players.filter((player) => isRadiantSide(player));
+  const direPlayers = matchData.players.filter((player) => !isRadiantSide(player));
 
   // Calculate advantage data
   const { goldAdvantage, experienceAdvantage } = calculateAdvantageData(matchData);

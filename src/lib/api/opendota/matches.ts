@@ -43,13 +43,14 @@ export async function fetchOpenDotaMatch(matchId: string, force = false): Promis
 export async function initiateOpenDotaMatchParse(matchId: string): Promise<{ jobId: string }> {
   try {
     const response = await initiateParseRequest(matchId);
-    const result = JSON.parse(response) as { jobId: string };
-
-    if (!result.jobId) {
+    type ParseResponse = { job: { jobId: number } };
+    const parsed = JSON.parse(response) as ParseResponse;
+    const jobIdNum = parsed?.job?.jobId;
+    const jobId = typeof jobIdNum === 'number' ? String(jobIdNum) : null;
+    if (!jobId) {
       throw new Error(`Invalid parse response for match ${matchId}`);
     }
-
-    return result;
+    return { jobId };
   } catch (err) {
     throw new Error(`Failed to initiate parse request for match ${matchId}: ${err}`);
   }
@@ -64,10 +65,12 @@ export async function initiateOpenDotaMatchParse(matchId: string): Promise<{ job
  */
 export async function checkOpenDotaParseStatus(
   jobId: string,
-): Promise<Record<string, string | number | boolean | null>> {
+): Promise<Record<string, string | number | boolean | null> | null> {
   try {
     const response = await checkParseStatus(jobId);
-    return JSON.parse(response);
+    if (!response || response.trim().length === 0) return null;
+    const parsed = JSON.parse(response);
+    return parsed === null ? null : (parsed as Record<string, string | number | boolean | null>);
   } catch (err) {
     throw new Error(`Failed to check parse status for job ${jobId}: ${err}`);
   }
@@ -94,10 +97,26 @@ export async function parseOpenDotaMatchWithJobPolling(matchId: string, timeout 
     try {
       // Check parse status using jobId
       const statusResponse = await checkOpenDotaParseStatus(jobId);
+      console.log(statusResponse);
 
       // If parsing is complete, fetch the parsed match data
       if (isParseComplete(statusResponse)) {
         return await fetchParsedOpenDotaMatch(matchId, true); // Force fresh data
+      }
+
+      // Schedule next poll using next_attempt_time if provided
+      const nextAttemptIso = (statusResponse as { next_attempt_time?: string }).next_attempt_time;
+      if (typeof nextAttemptIso === 'string') {
+        const target = Date.parse(nextAttemptIso);
+        if (!Number.isNaN(target)) {
+          const now = Date.now();
+          const delta = target - now;
+          const minDelay = 250;
+          const maxDelay = 10000;
+          const delayMs = Math.min(Math.max(delta, minDelay), maxDelay);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
       }
     } catch (error) {
       // If the job is not found or not yet complete, continue polling
@@ -257,7 +276,6 @@ async function checkParseStatus(jobId: string): Promise<string> {
 
   try {
     const response = await requestWithRetry('GET', url);
-
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error('Parse job not found');
@@ -301,8 +319,17 @@ function isMatchParsed(match: OpenDotaMatch): boolean {
 /**
  * Check if a parse request is complete based on the status response
  */
-function isParseComplete(statusResponse: Record<string, string | number | boolean | null>): boolean {
-  // The OpenDota API returns an empty object {} when parsing is complete
-  // We can also check for specific status fields if they exist
+function isParseComplete(statusResponse: Record<string, string | number | boolean | null> | null): boolean {
+  // If OpenDota returns no data/null, job is complete
+  if (statusResponse === null) return true;
+  // If the job still exists (has jobId/id), it's not complete
+  if (
+    statusResponse &&
+    (Object.prototype.hasOwnProperty.call(statusResponse, 'jobId') ||
+      Object.prototype.hasOwnProperty.call(statusResponse, 'id'))
+  ) {
+    return false;
+  }
+  // OpenDota returns an empty object {} when parsing is complete
   return typeof statusResponse === 'object' && statusResponse !== null && Object.keys(statusResponse).length === 0;
 }

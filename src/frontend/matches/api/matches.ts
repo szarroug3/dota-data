@@ -8,7 +8,18 @@ export async function getMatch(matchId: number, force = false): Promise<OpenDota
   const mod = schemas as never as { getApiMatches?: Parser<OpenDotaMatch> };
   const schema = mod.getApiMatches;
   if (!schema) {
-    throw new Error('Missing Zod schema for getApimatches');
+    throw new Error('Missing Zod schema for getApiMatches');
   }
   return requestAndValidate<OpenDotaMatch>(path, (d: JsonValue) => schema.parse(d));
+}
+
+export async function parseMatch(matchId: number): Promise<OpenDotaMatch> {
+  const path = `/api/matches/${matchId}/parse`;
+  type Parser<T> = { parse: (data: JsonValue) => T };
+  const mod = schemas as never as { getApiMatches?: Parser<OpenDotaMatch> };
+  const schema = mod.getApiMatches;
+  if (!schema) {
+    throw new Error('Missing Zod schema for getApiMatches');
+  }
+  return requestAndValidate<OpenDotaMatch>(path, (d: JsonValue) => schema.parse(d), { method: 'POST' });
 }

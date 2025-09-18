@@ -62,12 +62,7 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
  *         schema:
  *           type: string
  *         description: Match ID (numeric string)
- *       - in: query
- *         name: timeout
- *         schema:
- *           type: integer
- *           default: 60000
- *         description: Maximum time to wait for parsing completion (in milliseconds)
+ *
  *     responses:
  *       200:
  *         description: Match parsing completed successfully
@@ -192,14 +187,11 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
   try {
-    const matchId = params.id;
-
-    // Extract query parameters
-    const { searchParams } = new URL(request.url);
-    const timeout = Number(searchParams.get('timeout')) || 60000; // 1 minute default
+    const { id } = params;
+    const matchId = id;
 
     // Parse match using the library function
-    const parsedMatch = await parseOpenDotaMatchWithJobPolling(matchId, timeout);
+    const parsedMatch = await parseOpenDotaMatchWithJobPolling(matchId);
 
     // Validate response
     try {
@@ -212,7 +204,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     console.error('Match Parse API Error:', error);
 
     if (error instanceof Error) {
-      const errorResponse = handleMatchParsingError(error, params.id);
+      const { id } = params;
+      const errorResponse = handleMatchParsingError(error, id);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 

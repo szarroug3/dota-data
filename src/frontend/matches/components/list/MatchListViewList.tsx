@@ -63,9 +63,11 @@ function MatchInfo({
     >
       <div className="flex items-center gap-2">
         <div className="font-medium truncate">
-          {hasError ? `Match ${match.id}` : isLoading ? 'Loading...' : opponentName}
+          {hasError ? `Match ${match.id}` : isLoading ? `Loading ${match.id}` : opponentName}
         </div>
-        {isLoading && !hasError && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>}
+        {isLoading && !hasError && (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
+        )}
       </div>
       <div className="text-sm text-muted-foreground truncate">
         <span className="@[350px]:inline hidden">

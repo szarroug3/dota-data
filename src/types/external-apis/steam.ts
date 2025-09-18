@@ -19,5 +19,3 @@ export interface SteamTeam {
   id: string;
   name: string;
 }
-
-

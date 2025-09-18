@@ -221,7 +221,7 @@ function MatchCard({
         <MatchCardHeader
           isLoading={isLoading}
           hasError={hasError}
-          title={teamMatch?.opponentName ?? `Match ${match.id}`}
+          title={isLoading && !hasError ? `Loading ${match.id}` : (teamMatch?.opponentName ?? `Match ${match.id}`)}
         />
         <MatchCenter isLoading={isLoading} hasError={hasError} heroes={matchHeroes} />
 
@@ -255,10 +255,10 @@ function MatchCard({
   );
 }
 
-function MatchCardHeader({ isLoading, hasError, title }: { isLoading: boolean; hasError: boolean; title: string }) {
+function MatchCardHeader({ title }: { isLoading: boolean; hasError: boolean; title: string }) {
   return (
     <div className="absolute top-4 left-0 right-0 text-center @[100px]:flex hidden h-5 items-center justify-center">
-      <h3 className="font-medium text-sm truncate">{isLoading && !hasError ? 'Loading...' : title}</h3>
+      <h3 className="font-medium text-sm truncate">{title}</h3>
     </div>
   );
 }

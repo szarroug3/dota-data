@@ -30,13 +30,13 @@ describe('/api/matches/[id]/parse route', () => {
     };
     mockParseOpenDotaMatchWithJobPolling.mockResolvedValueOnce(mockParsedMatch);
 
-    const req = new NextRequest(`${url}?timeout=10000`);
+    const req = new NextRequest(`${url}`);
     const res = await POST(req, { params: { id: matchId } });
     const data = await res.json();
 
     expect(res.status).toBe(200);
     expect(data).toEqual(mockParsedMatch);
-    expect(mockParseOpenDotaMatchWithJobPolling).toHaveBeenCalledWith(matchId, 10000);
+    expect(mockParseOpenDotaMatchWithJobPolling).toHaveBeenCalledWith(matchId);
   });
 
   it('returns 408 if parsing times out', async () => {

@@ -1,4 +1,6 @@
-import type { Match } from '@/types/contexts/match-context-value';
+import { processMatchAndExtractPlayers } from '@/lib/processing/team-processing';
+import type { Match, MatchContextValue } from '@/types/contexts/match-context-value';
+import type { PlayerContextValue } from '@/types/contexts/player-context-value';
 import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // =============================================================================
@@ -107,4 +109,91 @@ export function getUpdatedMatchFields(
     startTime,
     pickOrder,
   };
+}
+
+// =============================================================================
+// SIDE-EFFECT HELPERS USED BY CORE OPERATIONS
+// =============================================================================
+
+export function seedOptimisticTeamMatchesInTeamsMap(
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
+  teamKey: string,
+  teamMatches: Array<{ matchId: number; side: 'radiant' | 'dire' | null }>,
+  existing: TeamData | undefined,
+  leagueId: number,
+): void {
+  setTeams((prev) => {
+    const newTeams = new Map(prev);
+    const team = newTeams.get(teamKey);
+    if (team) {
+      const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
+      teamMatches.forEach(({ matchId, side }) => {
+        if (!updatedMatches[matchId]) {
+          const isManualMatch = existing?.manualMatches?.[matchId];
+          const knownSide = (isManualMatch?.side as 'radiant' | 'dire' | undefined) ?? side ?? 'radiant';
+          updatedMatches[matchId] = buildOptimisticTeamMatch(matchId, leagueId, knownSide);
+        }
+      });
+      newTeams.set(teamKey, { ...team, matches: updatedMatches });
+    }
+    return newTeams;
+  });
+}
+
+export function seedOptimisticMatchesInMatchContext(
+  matchContext: MatchContextValue,
+  teamMatches: Array<{ matchId: number }>,
+): void {
+  teamMatches.forEach(({ matchId }) => {
+    if (!matchContext.getMatch(matchId)) {
+      void matchContext.addMatch(matchId);
+    }
+  });
+}
+
+export async function processTeamMatchesAndUpdateTeam(
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
+  teamKey: string,
+  teamMatches: Array<{ matchId: number; side: 'radiant' | 'dire' | null }>,
+  existing: TeamData | undefined,
+  teamId: number,
+  matchContext: MatchContextValue,
+  playerContext: PlayerContextValue,
+): Promise<void> {
+  const matchProcessingPromises = teamMatches.map(({ matchId, side }) => {
+    const isManualMatch = existing?.manualMatches?.[matchId];
+    const knownSide = (isManualMatch?.side as 'radiant' | 'dire' | undefined) ?? side ?? undefined;
+    return processMatchAndExtractPlayers(matchId, teamId, matchContext, playerContext, knownSide);
+  });
+  const processedMatches = await Promise.all(matchProcessingPromises);
+  setTeams((prev) => {
+    const newTeams = new Map(prev);
+    const team = newTeams.get(teamKey);
+    if (team) {
+      const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
+      processedMatches.forEach((processedMatch) => {
+        if (processedMatch) {
+          updatedMatches[processedMatch.matchId] = processedMatch;
+        }
+      });
+      const matchesArray = Object.values(updatedMatches);
+      const totalWins = matchesArray.filter((m) => m.result === 'won').length;
+      const totalLosses = matchesArray.filter((m) => m.result === 'lost').length;
+      const averageMatchDuration =
+        matchesArray.reduce((sum: number, m) => sum + (m.duration || 0), 0) / (matchesArray.length || 1);
+      newTeams.set(teamKey, {
+        ...team,
+        matches: updatedMatches,
+        performance: {
+          ...team.performance,
+          totalMatches: matchesArray.length,
+          totalWins,
+          totalLosses,
+          overallWinRate: matchesArray.length > 0 ? (totalWins / matchesArray.length) * 100 : 0,
+          averageMatchDuration,
+        },
+      });
+    }
+    return newTeams;
+  });
 }

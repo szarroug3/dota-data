@@ -1,7 +1,11 @@
 import React from 'react';
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
+import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip } from '@/components/ui/chart';
+import { parseMatch as apiParseMatch } from '@/frontend/matches/api/matches';
+import { useMatchDataFetching } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
 import { GameEvent, Match } from '@/types/contexts/match-context-value';
 import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
@@ -139,20 +143,34 @@ interface PerformanceTimelineChartProps {
   match?: Match;
 }
 
-function NoPerformanceData() {
+function NoPerformanceData({ onParse, isParsing }: { onParse?: () => void; isParsing?: boolean }) {
   return (
     <div className="text-center text-muted-foreground py-8">
       <div className="text-lg font-medium mb-2">No Performance Data</div>
       <div className="text-sm">This match doesn&apos;t have detailed performance statistics available.</div>
+      {onParse && (
+        <div className="mt-4">
+          <Button type="button" onClick={onParse} disabled={Boolean(isParsing)} aria-label="Parse Match">
+            Parse Match
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function NoChartData() {
+function NoChartData({ onParse, isParsing }: { onParse?: () => void; isParsing?: boolean }) {
   return (
     <div className="text-center text-muted-foreground py-8">
       <div className="text-lg font-medium mb-2">No Chart Data</div>
       <div className="text-sm">Unable to generate performance timeline for this match.</div>
+      {onParse && (
+        <div className="mt-4">
+          <Button type="button" onClick={onParse} disabled={Boolean(isParsing)} aria-label="Parse Match">
+            Parse Match
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -229,14 +247,14 @@ function PerformanceTimelineChart({
   );
 }
 
-function PerformanceChart({ match }: { match?: Match }) {
+function PerformanceChart({ match, onParse, isParsing }: { match?: Match; onParse?: () => void; isParsing?: boolean }) {
   const hasGold = Boolean(match?.statistics?.goldAdvantage);
   const hasXp = Boolean(match?.statistics?.experienceAdvantage);
-  if (!hasGold || !hasXp) return <NoPerformanceData />;
+  if (!hasGold || !hasXp) return <NoPerformanceData onParse={onParse} isParsing={isParsing} />;
   const { goldAdvantage: goldData, experienceAdvantage } = match!.statistics!;
   const events = match!.processedEvents || [];
   const chartData = createChartData(goldData, experienceAdvantage, events);
-  if (chartData.length === 0) return <NoChartData />;
+  if (chartData.length === 0) return <NoChartData onParse={onParse} isParsing={isParsing} />;
   const { minTime, maxTime, chartMaxAdvantage, chartMinAdvantage } = computeChartBounds(chartData);
   return (
     <div className="space-y-4">
@@ -269,6 +287,22 @@ export const MatchDetailsPanelEvents: React.FC<MatchDetailsPanelEventsProps> = (
   teamMatch: _teamMatch,
   className,
 }) => {
+  const { refreshMatch } = useMatchContext();
+  const { clearMatchCache } = useMatchDataFetching();
+  const [isParsing, setIsParsing] = React.useState(false);
+
+  const handleParse = React.useCallback(async () => {
+    if (!match) return;
+    try {
+      setIsParsing(true);
+      await apiParseMatch(match.id);
+      clearMatchCache(match.id);
+      await refreshMatch(match.id);
+    } finally {
+      setIsParsing(false);
+    }
+  }, [match, clearMatchCache, refreshMatch]);
+
   if (!match) {
     return (
       <div className="text-center text-muted-foreground py-8">
@@ -279,7 +313,7 @@ export const MatchDetailsPanelEvents: React.FC<MatchDetailsPanelEventsProps> = (
   }
   return (
     <div className={`space-y-6 ${className || ''}`}>
-      <PerformanceChart match={match} />
+      <PerformanceChart match={match} onParse={handleParse} isParsing={isParsing} />
     </div>
   );
 };

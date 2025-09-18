@@ -45,16 +45,19 @@ const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, t
               Active
             </Badge>
           )}
+          {teamData.isLoading && (
+            <div
+              className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary flex-shrink-0"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+              aria-label="Loading team data"
+              data-testid="team-loading-spinner"
+            />
+          )}
           {hasError && (
             <Badge variant="destructive" className="text-xs ml-2">
               Error
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {teamData.isLoading && (
-            <Badge variant="secondary" className="text-xs">
-              Loading...
             </Badge>
           )}
         </div>

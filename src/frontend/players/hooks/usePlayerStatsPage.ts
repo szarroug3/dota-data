@@ -293,15 +293,14 @@ export function usePlayerEditActions(deps: {
       if (isNaN(playerIdNum)) {
         throw new Error('Invalid player ID');
       }
-      const added = await addPlayer(playerIdNum);
+      addPlayer(playerIdNum);
       try {
-        await addPlayerToTeam?.(playerIdNum);
+        addPlayerToTeam?.(playerIdNum);
       } catch (e) {
         console.warn('addPlayerToTeam failed, player added to context only:', e);
       }
-      if (added && !added.error) {
-        selectPlayer(playerIdNum);
-      }
+      // Select and scroll right away so the optimistic card is visible
+      selectPlayer(playerIdNum);
       await new Promise((resolve) => setTimeout(resolve, 10));
       resizableLayoutRef.current?.scrollToPlayer(playerIdNum);
     },

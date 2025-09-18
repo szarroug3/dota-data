@@ -348,7 +348,11 @@ function PlayerSheets({
         }}
         playerId={addPlayerId}
         onChangePlayerId={setAddPlayerId}
-        onSubmit={onSubmitAdd}
+        onSubmit={async () => {
+          setAddPlayerId('');
+          setShowAddPlayerSheet(false);
+          await onSubmitAdd();
+        }}
         isSubmitting={false}
         error={undefined}
         validationError={addPlayerId.trim().length > 0 ? validatePlayerId(addPlayerId).error : undefined}

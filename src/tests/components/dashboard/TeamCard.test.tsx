@@ -313,7 +313,7 @@ describe('TeamCard', () => {
       />,
     );
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByTestId('team-loading-spinner')).toBeInTheDocument();
   });
 
   it('should handle team with missing name', () => {

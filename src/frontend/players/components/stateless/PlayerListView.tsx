@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import React, { useMemo } from 'react';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
@@ -134,6 +134,80 @@ function PlayerActions({
   );
 }
 
+function InfoOrPlaceholder({ show, children }: { show: boolean; children: React.ReactNode }) {
+  return show ? (
+    <div className="text-sm text-muted-foreground truncate">{children}</div>
+  ) : (
+    <div className="text-sm text-muted-foreground truncate h-4">&nbsp;</div>
+  );
+}
+
+function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; totalGames: number; winRate: number }) {
+  const hasError = Boolean(player.error);
+  const showLoading = player.isLoading && !hasError;
+  const showData = !hasError && !player.isLoading;
+  return (
+    <div className="min-w-0 @[120px]:block hidden">
+      <div className="font-semibold truncate flex items-center gap-2">
+        <span>{showLoading ? `Loading ${player.profile.profile.account_id}` : player.profile.profile.personaname}</span>
+        {showLoading && (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
+        )}
+      </div>
+      {!hasError && (
+        <>
+          <InfoOrPlaceholder show={showData}>
+            {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}
+          </InfoOrPlaceholder>
+          <InfoOrPlaceholder show={showData}>
+            {totalGames} Games • {winRate.toFixed(1)}% Win Rate
+          </InfoOrPlaceholder>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ManualPlayerActions({
+  playerId,
+  isManual,
+  onEditPlayer,
+  onRemovePlayer,
+}: {
+  playerId: number;
+  isManual?: boolean;
+  onEditPlayer?: (id: number) => void;
+  onRemovePlayer?: (id: number) => void;
+}) {
+  if (!isManual) return null;
+  return (
+    <div className="@[270px]:flex hidden items-center gap-2">
+      <button
+        type="button"
+        aria-label="Edit player"
+        className="p-1 text-muted-foreground hover:text-foreground"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEditPlayer?.(playerId);
+        }}
+      >
+        <Pencil className="w-4 h-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Remove player"
+        className="p-1 text-muted-foreground hover:text-foreground"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemovePlayer?.(playerId);
+        }}
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 const ListRow: React.FC<{
   player: Player;
   isSelected: boolean;
@@ -160,81 +234,50 @@ const ListRow: React.FC<{
   const handleSelect = () => {
     if (!player.error) onSelect?.(player.profile.profile.account_id);
   };
+  const aria = player.error
+    ? `${player.profile.profile.personaname} - Error: ${player.error}`
+    : `Select ${player.profile.profile.personaname}`;
   return (
     <Card
       className={`transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'} ${player.error ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer'}`}
       onClick={handleSelect}
       role="button"
       tabIndex={player.error ? -1 : 0}
-      aria-label={
-        player.error
-          ? `${player.profile.profile.personaname} - Error: ${player.error}`
-          : `Select ${player.profile.profile.personaname}`
-      }
+      aria-label={aria}
     >
-      <CardHeader
-        className="py-3 flex items-center justify-between @container"
-        style={{ containerType: 'inline-size' }}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <PlayerAvatar
-            player={player}
-            avatarSize={{ width: 'w-10', height: 'h-10' }}
-            showLink={false}
-            preferredSite={preferredSite}
-          />
-          <div className="min-w-0 @[120px]:block hidden">
-            <div className="font-semibold truncate">{player.profile.profile.personaname}</div>
-            {!player.error && (
-              <div className="text-sm text-muted-foreground truncate">
-                {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}
-              </div>
-            )}
-            {!player.error && (
-              <div className="text-sm text-muted-foreground truncate">
-                {totalGames} Games • {winRate.toFixed(1)}% Win Rate
-              </div>
-            )}
+      <CardContent className="py-0 @container" style={{ containerType: 'inline-size' }}>
+        <div className="flex items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <PlayerAvatar
+              player={player}
+              avatarSize={{ width: 'w-10', height: 'h-10' }}
+              showLink={false}
+              preferredSite={preferredSite}
+            />
+            <PlayerTextInfo player={player} totalGames={totalGames} winRate={winRate} />
           </div>
-        </div>
-        <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-0">
-          <PlayerTopHeroes heroes={topHeroes} />
-          <div className="flex items-center gap-2">
-            <div className="@[120px]:flex hidden">
-              <PlayerActions player={player} onRefresh={onRefresh} preferredSite={preferredSite} />
+          <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-0">
+            {player.isLoading ? (
+              <div className="h-8 w-28" aria-hidden="true" />
+            ) : (
+              <PlayerTopHeroes heroes={topHeroes} />
+            )}
+            <div className="flex items-center gap-2">
+              <div className="@[120px]:flex hidden">
+                <PlayerActions player={player} onRefresh={onRefresh} preferredSite={preferredSite} />
+              </div>
+              {/* Placeholder to keep alignment when actions are hidden below 120px */}
+              <div className="@[120px]:hidden flex w-10 h-8" aria-hidden="true" />
+              <ManualPlayerActions
+                playerId={player.profile.profile.account_id}
+                isManual={isManual}
+                onEditPlayer={onEditPlayer}
+                onRemovePlayer={onRemovePlayer}
+              />
             </div>
-            {/* Placeholder to keep alignment when actions are hidden below 120px */}
-            <div className="@[120px]:hidden flex w-10 h-8" aria-hidden="true" />
-            {isManual && (
-              <div className="@[270px]:flex hidden items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Edit player"
-                  className="p-1 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditPlayer?.(player.profile.profile.account_id);
-                  }}
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Remove player"
-                  className="p-1 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemovePlayer?.(player.profile.profile.account_id);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="py-0" />
+      </CardContent>
     </Card>
   );
 };

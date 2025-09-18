@@ -323,11 +323,7 @@
                 },
                 "direction": {
                   "type": "string",
-                  "enum": [
-                    "up",
-                    "down",
-                    "neutral"
-                  ]
+                  "enum": ["up", "down", "neutral"]
                 }
               }
             }
@@ -540,11 +536,7 @@
                 },
                 "direction": {
                   "type": "string",
-                  "enum": [
-                    "up",
-                    "down",
-                    "neutral"
-                  ]
+                  "enum": ["up", "down", "neutral"]
                 }
               }
             }
@@ -956,9 +948,7 @@
       "post": {
         "summary": "Invalidate cache entries by pattern or key",
         "description": "Invalidates cache entries either by pattern matching or by specific key. Supports both Redis and memory cache backends with automatic fallback.",
-        "tags": [
-          "Cache"
-        ],
+        "tags": ["Cache"],
         "requestBody": {
           "required": true,
           "content": {
@@ -1023,10 +1013,7 @@
                     },
                     "backend": {
                       "type": "string",
-                      "enum": [
-                        "redis",
-                        "memory"
-                      ]
+                      "enum": ["redis", "memory"]
                     },
                     "details": {
                       "type": "object",
@@ -1048,10 +1035,7 @@
                         },
                         "operation": {
                           "type": "string",
-                          "enum": [
-                            "pattern-invalidation",
-                            "key-invalidation"
-                          ]
+                          "enum": ["pattern-invalidation", "key-invalidation"]
                         }
                       }
                     }
@@ -1211,9 +1195,7 @@
       "get": {
         "summary": "Get cache invalidation status and statistics",
         "description": "Retrieves cache backend information, health status, statistics, and available invalidation endpoints. Useful for monitoring cache performance and understanding available operations.",
-        "tags": [
-          "Cache"
-        ],
+        "tags": ["Cache"],
         "responses": {
           "200": {
             "description": "Successfully retrieved cache status and statistics",
@@ -1227,10 +1209,7 @@
                       "properties": {
                         "backend": {
                           "type": "string",
-                          "enum": [
-                            "redis",
-                            "memory"
-                          ],
+                          "enum": ["redis", "memory"],
                           "description": "Current cache backend in use"
                         },
                         "healthy": {
@@ -1374,9 +1353,7 @@
       "get": {
         "summary": "Fetch Dota 2 heroes data from OpenDota API",
         "description": "Retrieves raw heroes data from OpenDota API including hero attributes, roles, and statistics.",
-        "tags": [
-          "Heroes"
-        ],
+        "tags": ["Heroes"],
         "parameters": [
           {
             "in": "query",
@@ -1497,11 +1474,7 @@
                       "localized_name": "Anti-Mage",
                       "primary_attr": "agi",
                       "attack_type": "Melee",
-                      "roles": [
-                        "Carry",
-                        "Escape",
-                        "Nuker"
-                      ],
+                      "roles": ["Carry", "Escape", "Nuker"],
                       "img": "/apps/dota2/images/dota_react/heroes/antimage.png",
                       "icon": "/apps/dota2/images/dota_react/heroes/icons/antimage.png",
                       "base_health": 200,
@@ -1616,9 +1589,7 @@
       "get": {
         "summary": "Fetch Dota 2 items data from OpenDota API",
         "description": "Retrieves raw items data from OpenDota API including item attributes, abilities, and statistics.",
-        "tags": [
-          "Items"
-        ],
+        "tags": ["Items"],
         "parameters": [
           {
             "in": "query",
@@ -1948,9 +1919,7 @@
       "get": {
         "summary": "Fetch and process Dota 2 league data for Dota Scout Assistant",
         "description": "Retrieves league information from Steam Web API (GetMatchHistory) using league_id. Preserves Steam payload under steam.result.matches so clients can derive team match IDs and sides.",
-        "tags": [
-          "Leagues"
-        ],
+        "tags": ["Leagues"],
         "parameters": [
           {
             "in": "path",
@@ -1984,10 +1953,7 @@
             "name": "view",
             "schema": {
               "type": "string",
-              "enum": [
-                "full",
-                "summary"
-              ],
+              "enum": ["full", "summary"],
               "default": "full"
             },
             "description": "Data view mode (full=all data, summary=basic info)"
@@ -2195,9 +2161,7 @@
       "post": {
         "summary": "Parse a Dota 2 match",
         "description": "Initiates match parsing through OpenDota API and polls for completion. Returns parsed match data when complete.",
-        "tags": [
-          "Matches"
-        ],
+        "tags": ["Matches"],
         "parameters": [
           {
             "in": "path",
@@ -2405,9 +2369,7 @@
       "get": {
         "summary": "Fetch Dota 2 match data from OpenDota API",
         "description": "Retrieves raw match data from OpenDota API including players, teams, and game statistics.",
-        "tags": [
-          "Matches"
-        ],
+        "tags": ["Matches"],
         "parameters": [
           {
             "in": "path",
@@ -2546,9 +2508,7 @@
       "get": {
         "summary": "Fetch comprehensive Dota 2 player data from all OpenDota endpoints",
         "description": "Retrieves complete player data including profile, statistics, heroes, counts, totals, win/loss, recent matches, rankings, ratings, and ward map. Includes rate limiting with delays between API calls.",
-        "tags": [
-          "Players"
-        ],
+        "tags": ["Players"],
         "parameters": [
           {
             "in": "path",
@@ -2666,9 +2626,7 @@
       "get": {
         "summary": "Fetch and process Dota 2 team data for Dota Scout Assistant",
         "description": "Retrieves basic team info from Steam Web API (GetTeamInfoByTeamID). Returns id and name for the team.",
-        "tags": [
-          "Teams"
-        ],
+        "tags": ["Teams"],
         "parameters": [
           {
             "in": "path",
@@ -2693,10 +2651,7 @@
             "name": "view",
             "schema": {
               "type": "string",
-              "enum": [
-                "full",
-                "summary"
-              ],
+              "enum": ["full", "summary"],
               "default": "full"
             },
             "description": "Data view mode (full=all data, summary=basic statistics)"

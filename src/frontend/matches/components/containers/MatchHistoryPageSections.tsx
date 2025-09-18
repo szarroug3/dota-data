@@ -334,7 +334,7 @@ function useAddMatchHandler(
       setIsSubmitting(true);
       setError(undefined);
       try {
-        await addMatch(matchIdNum);
+        addMatch(matchIdNum);
         await addMatchToTeam(matchIdNum, teamSide);
         if (selectedTeamId) {
           const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;

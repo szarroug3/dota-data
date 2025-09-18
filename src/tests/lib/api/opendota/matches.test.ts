@@ -48,7 +48,7 @@ describe('OpenDota Matches API', () => {
 
   describe('initiateOpenDotaMatchParse', () => {
     it('should initiate parse request successfully', async () => {
-      const mockParseResponse = { jobId: 'test-job-123' };
+      const mockParseResponse = { job: { jobId: 123 } };
 
       jest.mocked(requestWithRetry).mockResolvedValueOnce({
         ok: true,
@@ -59,7 +59,7 @@ describe('OpenDota Matches API', () => {
 
       const result = await initiateOpenDotaMatchParse('1234567890');
 
-      expect(result).toEqual(mockParseResponse);
+      expect(result).toEqual({ jobId: '123' });
       expect(requestWithRetry).toHaveBeenCalledWith('POST', expect.stringContaining('/request/1234567890'));
     });
 
@@ -161,7 +161,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
+        text: () => Promise.resolve(JSON.stringify({ job: { jobId: 123 } })),
       } as Response);
 
       // Mock the status check (GET to /request/{jobId}) - returns empty object when complete
@@ -198,7 +198,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
+        text: () => Promise.resolve(JSON.stringify({ job: { jobId: 123 } })),
       } as Response);
 
       // Mock status check that returns pending status (not empty object)
@@ -218,7 +218,7 @@ describe('OpenDota Matches API', () => {
         ok: true,
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve(JSON.stringify({ jobId: 'test-job-123' })),
+        text: () => Promise.resolve(JSON.stringify({ job: { jobId: 123 } })),
       } as Response);
 
       // Mock status check that returns job not found (should continue polling)
