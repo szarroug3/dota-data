@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Target, Trophy, Users } from 'lucide-react';
+import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Trophy, Users } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import React from 'react';
@@ -59,7 +59,6 @@ const Navigation = () => {
     { id: 'dashboard', label: 'Dashboard', icon: <Building />, path: '/dashboard' },
     { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
     { id: 'player-stats', label: 'Player Stats', icon: <BarChart />, path: '/player-stats' },
-    { id: 'draft-suggestions', label: 'Draft Suggestions', icon: <Target />, path: '/draft-suggestions' },
   ];
 
   return (

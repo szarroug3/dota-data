@@ -17,7 +17,7 @@ import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-con
 import type { SteamLeague } from '@/types/external-apis/steam';
 import { updateMapItemError } from '@/utils/error-handling';
 import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
-import { generateTeamKey } from '@/utils/team-helpers';
+import { createInitialTeamData, generateTeamKey } from '@/utils/team-helpers';
 
 import {
   createAddAllManualMatches,
@@ -247,6 +247,22 @@ async function handleTeamSummaryOperation(
   }
 }
 
+// Local helper to ensure a placeholder team exists before loading begins
+function ensurePlaceholderTeam(
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
+  teamKey: string,
+  teamId: number,
+  leagueId: number,
+): void {
+  setTeams((prev) => {
+    const m = new Map(prev);
+    if (!m.has(teamKey)) {
+      m.set(teamKey, createInitialTeamData(teamId, leagueId));
+    }
+    return m;
+  });
+}
+
 function useAddTeamCore(
   teams: Map<string, TeamData>,
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
@@ -288,6 +304,11 @@ function useAddTeamCore(
       const operationKey = createTeamLeagueOperationKey(teamId, leagueId);
       const teamKey = generateTeamKey(teamId, leagueId);
       if (!force && teams.has(teamKey)) return;
+
+      // Ensure an initial placeholder team exists so loading state and UI spinner appear immediately
+      ensurePlaceholderTeam(setTeams, teamKey, teamId, leagueId);
+
+      // Set map item loading (safe if item already exists, no-op otherwise)
       setMapItemLoading(setTeamsForLoading, teamKey);
       try {
         const transformedTeam = await handleTeamSummaryOperation(
@@ -303,9 +324,17 @@ function useAddTeamCore(
           configContext.setActiveTeam({ teamId, leagueId });
           const teamMatches = teamDataFetching.findTeamMatchesInLeague(leagueId, teamId);
           const existing = teams.get(teamKey);
+
+          // Seed optimistic team matches into team state immediately (for UI)
           seedOptimisticTeamMatches(teamKey, teamMatches, existing, leagueId);
-          seedOptimisticMatchContext(teamMatches);
+
+          // Process matches (loads matches and triggers player loading)
           await processTeamMatches(teamKey, teamMatches, existing, teamId);
+
+          // Now ensure match context has optimistic entries for any still-missing matches
+          // This avoids racing against the processing calls above
+          seedOptimisticMatchContext(teamMatches);
+
           configContext.setActiveTeam({ teamId, leagueId });
         }
       } catch (error) {

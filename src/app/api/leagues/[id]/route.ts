@@ -51,7 +51,7 @@ function handleLeagueError(error: Error, leagueId: string): ApiErrorResponse {
  * /api/leagues/{id}:
  *   get:
  *     summary: Fetch Steam league match history (fully aggregated)
- *     description: Retrieves league information from Steam Web API (GetMatchHistory) using league_id. The backend aggregates all pages server-side and returns a single unmodified-style Steam payload: { result: { status, num_results, total_results, results_remaining: 0, matches[] } }.
+ *     description: Retrieves league information from Steam Web API (GetMatchHistory) using league_id. The backend aggregates all pages server-side and returns a single combined Steam payload including matches with results_remaining set to 0.
  *     tags:
  *       - Leagues
  *     parameters:

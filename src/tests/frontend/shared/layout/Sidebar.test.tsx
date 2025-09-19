@@ -211,7 +211,6 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Match History')).toBeInTheDocument();
     expect(screen.getByText('Player Stats')).toBeInTheDocument();
-    expect(screen.getByText('Draft Suggestions')).toBeInTheDocument();
   });
 
   it('does not render quick links items when no active team', () => {
@@ -263,7 +262,6 @@ describe('AppSidebar', () => {
     expect(screen.getByTestId('building-icon')).toBeInTheDocument();
     expect(screen.getByTestId('clock-icon')).toBeInTheDocument();
     expect(screen.getByTestId('bar-chart-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('target-icon')).toBeInTheDocument();
 
     // Quick links icons - these might not be rendered if no active team
     // expect(screen.getByTestId('users-icon')).toBeInTheDocument();

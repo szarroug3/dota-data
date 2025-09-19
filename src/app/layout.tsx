@@ -12,8 +12,8 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Dota Scout Assistant - Team Performance Analytics',
-  description: 'Comprehensive Dota 2 performance analytics, match history, player statistics, and draft suggestions.',
-  keywords: 'Dota 2, team performance, match history, player stats, draft suggestions',
+  description: 'Comprehensive Dota 2 performance analytics, match history, and player statistics.',
+  keywords: 'Dota 2, team performance, match history, player stats',
   authors: [{ name: 'Dota Scout Assistant Team' }],
   robots: 'index, follow',
   openGraph: {

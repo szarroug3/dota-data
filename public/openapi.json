@@ -543,238 +543,6 @@
           }
         }
       },
-      "DraftSuggestions": {
-        "type": "object",
-        "properties": {
-          "teamStrengths": {
-            "type": "object",
-            "properties": {
-              "carry": {
-                "type": "string"
-              },
-              "mid": {
-                "type": "string"
-              },
-              "support": {
-                "type": "string"
-              },
-              "offlane": {
-                "type": "string"
-              }
-            }
-          },
-          "teamWeaknesses": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "phaseRecommendations": {
-            "type": "object",
-            "properties": {
-              "first": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "heroes": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string"
-                        },
-                        "role": {
-                          "type": "string"
-                        },
-                        "reason": {
-                          "type": "string"
-                        },
-                        "synergy": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "counters": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "pickPriority": {
-                          "type": "string"
-                        },
-                        "winRate": {
-                          "type": "number"
-                        },
-                        "games": {
-                          "type": "number"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "second": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "heroes": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string"
-                        },
-                        "role": {
-                          "type": "string"
-                        },
-                        "reason": {
-                          "type": "string"
-                        },
-                        "synergy": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "counters": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "pickPriority": {
-                          "type": "string"
-                        },
-                        "winRate": {
-                          "type": "number"
-                        },
-                        "games": {
-                          "type": "number"
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "third": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "heroes": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string"
-                        },
-                        "role": {
-                          "type": "string"
-                        },
-                        "reason": {
-                          "type": "string"
-                        },
-                        "synergy": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "counters": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "pickPriority": {
-                          "type": "string"
-                        },
-                        "winRate": {
-                          "type": "number"
-                        },
-                        "games": {
-                          "type": "number"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "metaCounters": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "hero": {
-                  "type": "string"
-                },
-                "counter": {
-                  "type": "string"
-                },
-                "reason": {
-                  "type": "string"
-                },
-                "effectiveness": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "recentDrafts": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "date": {
-                  "type": "string"
-                },
-                "opponent": {
-                  "type": "string"
-                },
-                "result": {
-                  "type": "string"
-                },
-                "picks": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "bans": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "notes": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      },
       "TeamAnalysis": {
         "type": "object",
         "properties": {
@@ -1917,8 +1685,8 @@
     },
     "/api/leagues/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 league data for Dota Scout Assistant",
-        "description": "Retrieves league information from Steam Web API (GetMatchHistory) using league_id. Preserves Steam payload under steam.result.matches so clients can derive team match IDs and sides.",
+        "summary": "Fetch Steam league match history (fully aggregated)",
+        "description": "Retrieves league information from Steam Web API (GetMatchHistory) using league_id. The backend aggregates all pages server-side and returns a single combined Steam payload including matches with results_remaining set to 0.",
         "tags": ["Leagues"],
         "parameters": [
           {
@@ -1938,25 +1706,6 @@
               "default": false
             },
             "description": "Force refresh of cached data"
-          },
-          {
-            "in": "query",
-            "name": "includeMatches",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Include matches data in the response"
-          },
-          {
-            "in": "query",
-            "name": "view",
-            "schema": {
-              "type": "string",
-              "enum": ["full", "summary"],
-              "default": "full"
-            },
-            "description": "Data view mode (full=all data, summary=basic info)"
           }
         ],
         "responses": {
@@ -1967,36 +1716,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "steam": {
+                    "result": {
                       "type": "object",
                       "properties": {
-                        "result": {
-                          "type": "object",
-                          "properties": {
-                            "status": {
-                              "type": "integer"
-                            },
-                            "matches": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "match_id": {
-                                    "type": "integer"
-                                  },
-                                  "radiant_team_id": {
-                                    "type": "integer"
-                                  },
-                                  "dire_team_id": {
-                                    "type": "integer"
-                                  }
-                                }
+                        "status": {
+                          "type": "integer"
+                        },
+                        "num_results": {
+                          "type": "integer"
+                        },
+                        "total_results": {
+                          "type": "integer"
+                        },
+                        "results_remaining": {
+                          "type": "integer"
+                        },
+                        "matches": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "match_id": {
+                                "type": "integer"
+                              },
+                              "radiant_team_id": {
+                                "type": "integer"
+                              },
+                              "dire_team_id": {
+                                "type": "integer"
                               }
                             }
                           }
@@ -2006,19 +1753,15 @@
                   }
                 },
                 "example": {
-                  "id": "17805",
-                  "name": "League 17805",
-                  "steam": {
-                    "result": {
-                      "status": 1,
-                      "matches": [
-                        {
-                          "match_id": 8465523307,
-                          "radiant_team_id": 8654939,
-                          "dire_team_id": 9849961
-                        }
-                      ]
-                    }
+                  "result": {
+                    "status": 1,
+                    "matches": [
+                      {
+                        "match_id": 8465523307,
+                        "radiant_team_id": 8654939,
+                        "dire_team_id": 9849961
+                      }
+                    ]
                   }
                 }
               }
@@ -2157,6 +1900,86 @@
         }
       }
     },
+    "/api/leagues": {
+      "get": {
+        "summary": "Fetch OpenDota leagues list",
+        "description": "Returns the full list of leagues from OpenDota. Frontend filters this list by leagueid to find a league name. Supports forcing a refresh of the cached list.",
+        "tags": ["Leagues"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Force refresh of cached leagues list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved leagues list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leagues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "leagueid": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "leagues": [
+                    {
+                      "leagueid": 17805,
+                      "name": "The International 2024"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "error": "Failed to fetch leagues from OpenDota",
+                  "status": 500,
+                  "details": "Unknown error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/matches/{id}/parse": {
       "post": {
         "summary": "Parse a Dota 2 match",
@@ -2171,15 +1994,6 @@
               "type": "string"
             },
             "description": "Match ID (numeric string)"
-          },
-          {
-            "in": "query",
-            "name": "timeout",
-            "schema": {
-              "type": "integer",
-              "default": 60000
-            },
-            "description": "Maximum time to wait for parsing completion (in milliseconds)"
           }
         ],
         "responses": {
@@ -2624,8 +2438,8 @@
     },
     "/api/teams/{id}": {
       "get": {
-        "summary": "Fetch and process Dota 2 team data for Dota Scout Assistant",
-        "description": "Retrieves basic team info from Steam Web API (GetTeamInfoByTeamID). Returns id and name for the team.",
+        "summary": "Fetch basic Steam team info",
+        "description": "Retrieves raw team info from Steam Web API (GetTeamInfoByTeamID) and returns id and name.",
         "tags": ["Teams"],
         "parameters": [
           {
@@ -2677,7 +2491,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved team data (Steam format)",
+            "description": "Successfully retrieved team data",
             "content": {
               "application/json": {
                 "schema": {
