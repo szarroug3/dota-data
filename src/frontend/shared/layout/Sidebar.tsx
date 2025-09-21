@@ -1,7 +1,19 @@
 'use client';
 
-import { BarChart, Building, ChevronLeft, ChevronRight, Clock, Moon, Sun, Trophy, Users } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  BarChart,
+  Building,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Clipboard,
+  Link,
+  Moon,
+  Sun,
+  Trophy,
+  Users,
+} from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import React from 'react';
 
@@ -21,6 +33,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Switch } from '@/components/ui/switch';
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import type { Serializable } from '@/frontend/contexts/share-context';
+import { useShareContext } from '@/frontend/contexts/share-context';
 import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 
 import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
@@ -55,6 +69,8 @@ const Title = ({ open }: { open: boolean }) => {
 const Navigation = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { isShareMode, shareKey } = useShareContext();
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Building />, path: '/dashboard' },
     { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
@@ -69,9 +85,18 @@ const Navigation = () => {
       <SidebarMenu className="overflow-hidden">
         {navigationItems.map((item) => {
           const isActive = pathname === item.path;
+          const handleClick = () => {
+            if (isShareMode && shareKey) {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set('config', shareKey);
+              router.push(`${item.path}?${params.toString()}`);
+            } else {
+              router.push(item.path);
+            }
+          };
           return (
             <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton onClick={() => router.push(item.path)} className={isActive ? 'bg-accent' : ''}>
+              <SidebarMenuButton onClick={handleClick} className={isActive ? 'bg-accent' : ''}>
                 {React.cloneElement(item.icon, {
                   className: isActive ? 'text-primary' : '',
                 })}
@@ -256,6 +281,57 @@ const PreferredSiteSwitch = ({ open }: { open: boolean }) => {
  * Settings section containing theme and site preferences
  */
 const Settings = ({ open }: { open: boolean }) => {
+  const { createShare } = useShareContext();
+  const { getTeams, activeTeam, getGlobalManualMatches, getGlobalManualPlayers } = useConfigContext();
+  const [copied, setCopied] = React.useState(false);
+  const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleShare = async () => {
+    const teamsMap = getTeams();
+    const teamsObject: Record<string, Serializable> = {};
+    teamsMap.forEach((value, key) => {
+      teamsObject[key] = JSON.parse(JSON.stringify(value)) as Serializable;
+    });
+    const data = {
+      teams: teamsObject,
+      activeTeam: activeTeam || null,
+      globalManualMatches: getGlobalManualMatches(),
+      globalManualPlayers: getGlobalManualPlayers(),
+    };
+    const key = await createShare(data);
+    if (key) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('config', key);
+      const text = url.toString();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      setCopied(true);
+      copyTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 3000);
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <SidebarGroup>
       <div className="flex justify-center">
@@ -267,6 +343,21 @@ const Settings = ({ open }: { open: boolean }) => {
       <SidebarMenu className="flex flex-col items-center gap-2 overflow-hidden">
         <ThemeSwitch open={open} />
         <PreferredSiteSwitch open={open} />
+        <SidebarMenuItem>
+          {open ? (
+            <SidebarMenuButton onClick={handleShare} tooltip={copied ? 'Copied!' : 'Share'}>
+              {copied ? <Clipboard className="w-5 h-5 text-emerald-500" /> : <Link className="w-5 h-5" />}
+              <span className="truncate">{copied ? 'Copied' : 'Share'}</span>
+              <span className="sr-only" role="status" aria-live="polite">
+                {copied ? 'Link copied to clipboard' : ''}
+              </span>
+            </SidebarMenuButton>
+          ) : (
+            <SidebarMenuButton onClick={handleShare} tooltip={copied ? 'Copied!' : 'Share'}>
+              {copied ? <Clipboard className="w-5 h-5 text-emerald-500" /> : <Link className="w-5 h-5" />}
+            </SidebarMenuButton>
+          )}
+        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );
