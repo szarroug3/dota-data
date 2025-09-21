@@ -58,7 +58,7 @@ export function processPlayerRank(rankTier: number, leaderboardRank?: number): P
   // Herald to Divine ranks (1-79)
   const medalTiers = ['Herald', 'Guardian', 'Crusader', 'Archon', 'Legend', 'Ancient', 'Divine'];
 
-  const tier = Math.floor((rankTier - 1) / 10);
+  const tier = Math.floor(rankTier / 10) - 1;
   const stars = rankTier % 10;
 
   if (tier >= 0 && tier < medalTiers.length) {
