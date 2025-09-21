@@ -7,7 +7,6 @@ import { useConstantsContext } from '@/frontend/contexts/constants-context';
 import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
 import { AddPlayerSheet } from '@/frontend/players/components/stateless/AddPlayerSheet';
 import { EditPlayerSheet } from '@/frontend/players/components/stateless/EditPlayerSheet';
-import { EmptyStateContent } from '@/frontend/players/components/stateless/EmptyStateContent';
 import { ErrorContent } from '@/frontend/players/components/stateless/ErrorContent';
 import {
   ResizablePlayerLayout,
@@ -37,16 +36,6 @@ import { validatePlayerId } from '@/utils/validation';
 
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from './PlayerListView';
-
-function getPlayerStatsEmptyState(players: Player[], selectedTeamId: { teamId: number; leagueId: number } | null) {
-  if (!selectedTeamId) {
-    return <EmptyStateContent type="no-selection" />;
-  }
-  if (players.length === 0) {
-    return <EmptyStateContent type="no-teams" />;
-  }
-  return null;
-}
 
 function PlayerSheetsContainer({
   players,
@@ -129,7 +118,8 @@ function PlayerStatsPageInner(): React.ReactElement {
 
   // Team-scoped player filtering
   const teamPlayerIds = useTeamPlayerIds(getSelectedTeam, matches);
-  const teamPlayersOnly = useFilteredTeamPlayers(players, teamPlayerIds);
+  const hasActiveTeam = Boolean(selectedTeamId);
+  const teamPlayersOnly = useFilteredTeamPlayers(players, teamPlayerIds, hasActiveTeam);
 
   const sortedPlayers = useSortedPlayersHook(teamPlayersOnly);
   const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(sortedPlayers);
@@ -154,7 +144,7 @@ function PlayerStatsPageInner(): React.ReactElement {
 
   const editActions = usePlayerEditActions({
     addPlayer,
-    addPlayerToTeam,
+    addPlayerToTeam: selectedTeamId ? addPlayerToTeam : undefined,
     removeManualPlayer,
     editManualPlayer,
     selectPlayer,
@@ -192,8 +182,6 @@ function PlayerStatsPageInner(): React.ReactElement {
 
   const renderContent = () => {
     if (error) return <ErrorContent error={error} />;
-    const emptyState = getPlayerStatsEmptyState(teamPlayersOnly, selectedTeamId);
-    if (emptyState) return emptyState;
     return <PlayerStatsContent {...contentProps} />;
   };
 

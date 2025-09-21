@@ -188,11 +188,19 @@ export function useTeamPlayerIds(
   }, [getSelectedTeam, matches]);
 }
 
-export function useFilteredTeamPlayers(players: Player[], teamPlayerIds: Set<number>): Player[] {
+export function useFilteredTeamPlayers(
+  players: Player[],
+  teamPlayerIds: Set<number>,
+  hasActiveTeam: boolean,
+): Player[] {
   return useMemo(() => {
+    if (!hasActiveTeam) {
+      return players;
+    }
+
     if (teamPlayerIds.size === 0) return [] as Player[];
     return players.filter((p) => teamPlayerIds.has(p.profile.profile.account_id));
-  }, [players, teamPlayerIds]);
+  }, [players, teamPlayerIds, hasActiveTeam]);
 }
 
 export function useWaitForPlayerReadySource(players: Player[]) {

@@ -33,19 +33,50 @@ type DateRangeSelection = '7days' | '30days' | 'custom';
 function getDateCutoffs(
   selection: DateRangeSelection,
   custom: { start: string | null; end: string | null },
-  referenceNowSec: number,
 ): { startCutoffSec: number | null; endCutoffSec: number | null; referenceNowSec: number } {
+  // Presets should represent whole calendar days ending yesterday (local time),
+  // so they align with the Custom date inputs that are inclusive of full days.
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const yesterdayEnd = new Date(todayStart);
+  yesterdayEnd.setMilliseconds(-1); // 23:59:59.999 of the previous day
+
+  const yesterdayEndSec = Math.floor(yesterdayEnd.getTime() / 1000);
+
   if (selection === '7days') {
-    return { startCutoffSec: referenceNowSec - 7 * 24 * 60 * 60, endCutoffSec: referenceNowSec, referenceNowSec };
+    const start = new Date(todayStart);
+    start.setDate(start.getDate() - 7);
+    return {
+      startCutoffSec: Math.floor(start.getTime() / 1000),
+      endCutoffSec: yesterdayEndSec,
+      referenceNowSec: Math.floor(now.getTime() / 1000),
+    };
   }
   if (selection === '30days') {
-    return { startCutoffSec: referenceNowSec - 30 * 24 * 60 * 60, endCutoffSec: referenceNowSec, referenceNowSec };
+    const start = new Date(todayStart);
+    start.setDate(start.getDate() - 30);
+    return {
+      startCutoffSec: Math.floor(start.getTime() / 1000),
+      endCutoffSec: yesterdayEndSec,
+      referenceNowSec: Math.floor(now.getTime() / 1000),
+    };
   }
   let startCutoffSec: number | null = null;
   let endCutoffSec: number | null = null;
-  if (custom.start) startCutoffSec = Math.floor(new Date(custom.start).getTime() / 1000);
-  if (custom.end) endCutoffSec = Math.floor((new Date(custom.end).getTime() + 24 * 60 * 60 * 1000 - 1) / 1000);
-  return { startCutoffSec, endCutoffSec, referenceNowSec };
+  if (custom.start) {
+    // Interpret start as the start of the selected day in local time
+    const startDate = new Date(custom.start);
+    startDate.setHours(0, 0, 0, 0);
+    startCutoffSec = Math.floor(startDate.getTime() / 1000);
+  }
+  if (custom.end) {
+    // Interpret end as the end of the selected day inclusively in local time
+    const endDate = new Date(custom.end);
+    endDate.setHours(23, 59, 59, 999);
+    endCutoffSec = Math.floor(endDate.getTime() / 1000);
+  }
+  return { startCutoffSec, endCutoffSec, referenceNowSec: Math.floor(now.getTime() / 1000) };
 }
 
 function filterMatchesByDateRange(
@@ -172,15 +203,7 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
     return Array.isArray(player.recentMatches) ? (player.recentMatches as OpenDotaPlayerMatches[]) : [];
   }, [player.recentMatches]);
 
-  const referenceNowSec = useMemo(() => {
-    if (!matches.length) return Math.floor(Date.now() / 1000);
-    return matches.reduce((max, m) => (m.start_time > max ? m.start_time : max), matches[0].start_time);
-  }, [matches]);
-
-  const cutoffs = useMemo(
-    () => getDateCutoffs(dateRange, customDateRange, referenceNowSec),
-    [dateRange, customDateRange, referenceNowSec],
-  );
+  const cutoffs = useMemo(() => getDateCutoffs(dateRange, customDateRange), [dateRange, customDateRange]);
 
   const filteredMatches = useMemo(() => filterMatchesByDateRange(matches, cutoffs), [matches, cutoffs]);
 

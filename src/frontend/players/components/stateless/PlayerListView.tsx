@@ -303,61 +303,18 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
   }, [players, heroes]);
 
   if (players.length === 0) {
-    return <div className="text-sm text-muted-foreground">No players found</div>;
+    return <PlayersEmptyState />;
   }
 
   if (viewMode === 'card') {
     return (
-      <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
-        {processed.map(({ player, topHeroes }) => {
-          const totalGames = player.wl.win + player.wl.lose;
-          const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
-          const isSelected = selectedPlayerId === player.profile.profile.account_id;
-          return (
-            <Card
-              key={player.profile.profile.account_id}
-              className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
-              onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex flex-col items-center space-y-3 mb-3">
-                  <PlayerAvatar
-                    player={player}
-                    avatarSize={{ width: 'w-16', height: 'h-16' }}
-                    showLink={false}
-                    preferredSite={preferredSite}
-                  />
-                  <div className="text-center w-full min-w-0 overflow-hidden">
-                    <div className="font-medium truncate">{player.profile.profile.personaname}</div>
-                    <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
-                      {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground mb-2 text-center truncate">
-                  {totalGames} games • {winRate.toFixed(1)}%
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="text-center overflow-hidden w-full">
-                    <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
-                  </div>
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <PlayerExternalSiteButton
-                      playerId={player.profile.profile.account_id}
-                      preferredSite={preferredSite}
-                      size="sm"
-                    />
-                    <RefreshButton
-                      onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)}
-                      ariaLabel={`Refresh ${player.profile.profile.personaname}`}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <PlayerCardsGrid
+        processed={processed}
+        selectedPlayerId={selectedPlayerId}
+        onSelectPlayer={onSelectPlayer}
+        onRefreshPlayer={onRefreshPlayer}
+        preferredSite={preferredSite}
+      />
     );
   }
 
@@ -383,3 +340,75 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
 };
 
 PlayerListView.displayName = 'PlayerListView';
+
+function PlayersEmptyState(): React.ReactElement {
+  return (
+    <div className="w-full flex items-center justify-center p-8 text-muted-foreground">
+      <div className="text-center">
+        <div className="text-lg font-medium mb-2">No players found</div>
+        <div className="text-sm">Try adjusting your filters or adding more players.</div>
+      </div>
+    </div>
+  );
+}
+
+const PlayerCardsGrid: React.FC<{
+  processed: Array<{ player: Player; topHeroes: Hero[] }>;
+  selectedPlayerId?: number | null;
+  onSelectPlayer?: (playerId: number) => void;
+  onRefreshPlayer?: (playerId: number) => void;
+  preferredSite: PreferredExternalSite;
+}> = ({ processed, selectedPlayerId, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
+  return (
+    <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
+      {processed.map(({ player, topHeroes }) => {
+        const totalGames = player.wl.win + player.wl.lose;
+        const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
+        const isSelected = selectedPlayerId === player.profile.profile.account_id;
+        return (
+          <Card
+            key={player.profile.profile.account_id}
+            className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
+            onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}
+          >
+            <CardContent className="p-4">
+              <div className="flex flex-col items-center space-y-3 mb-3">
+                <PlayerAvatar
+                  player={player}
+                  avatarSize={{ width: 'w-16', height: 'h-16' }}
+                  showLink={false}
+                  preferredSite={preferredSite}
+                />
+                <div className="text-center w-full min-w-0 overflow-hidden">
+                  <div className="font-medium truncate">{player.profile.profile.personaname}</div>
+                  <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
+                    {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground mb-2 text-center truncate">
+                {totalGames} games • {winRate.toFixed(1)}%
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-center overflow-hidden w-full">
+                  <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
+                </div>
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <PlayerExternalSiteButton
+                    playerId={player.profile.profile.account_id}
+                    preferredSite={preferredSite}
+                    size="sm"
+                  />
+                  <RefreshButton
+                    onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)}
+                    ariaLabel={`Refresh ${player.profile.profile.personaname}`}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
