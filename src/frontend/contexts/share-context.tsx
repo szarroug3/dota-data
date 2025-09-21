@@ -1,0 +1,135 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
+import type { TeamData } from '@/types/contexts/team-context-value';
+
+type ActiveTeam = { teamId: number; leagueId: number } | null;
+
+export type Serializable =
+  | string
+  | number
+  | boolean
+  | null
+  | Serializable[]
+  | { [key: string]: Serializable }
+  | TeamData;
+
+export interface SharePayload {
+  teams: Record<string, Serializable>;
+  activeTeam: ActiveTeam;
+  globalManualMatches: number[];
+  globalManualPlayers: number[];
+}
+
+interface ShareContextValue {
+  isShareMode: boolean;
+  shareKey: string | null;
+  payload: SharePayload | null;
+  setPayload: (payload: SharePayload) => void;
+  createShare: (partial: Partial<SharePayload>) => Promise<string | null>;
+}
+
+const ShareContext = createContext<ShareContextValue | undefined>(undefined);
+const defaultShareContext: ShareContextValue = {
+  isShareMode: false,
+  shareKey: null,
+  payload: null,
+  setPayload: () => {},
+  createShare: async () => null,
+};
+
+async function fetchSharePayload(key: string): Promise<SharePayload | null> {
+  try {
+    const res = await fetch(`/api/share/${encodeURIComponent(key)}`);
+    if (!res.ok) return null;
+    return (await res.json()) as SharePayload;
+  } catch (e) {
+    console.error('Failed to fetch share payload', e);
+    return null;
+  }
+}
+
+async function postSharePayload(key: string | null, data: SharePayload): Promise<string | null> {
+  try {
+    const res = await fetch(`/api/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: key || undefined, data }),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { key: string };
+    return json.key;
+  } catch (e) {
+    console.error('Failed to post share payload', e);
+    return null;
+  }
+}
+
+export const ShareProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const searchParams = useSearchParams();
+  const urlKey = useMemo(() => searchParams.get('config'), [searchParams]);
+
+  const [shareKey, setShareKey] = useState<string | null>(null);
+  const [payload, setPayload] = useState<SharePayload | null>(null);
+
+  const isShareMode = Boolean(urlKey);
+
+  useEffect(() => {
+    setShareKey(urlKey);
+  }, [urlKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (urlKey) {
+      fetchSharePayload(urlKey).then((data) => {
+        if (!cancelled) setPayload((prev) => (prev ? prev : data));
+      });
+    } else {
+      setPayload(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [urlKey]);
+
+  const buildMergedPayload = useCallback(
+    (partial: Partial<SharePayload>): SharePayload => ({
+      teams: payload?.teams || {},
+      activeTeam: payload?.activeTeam || null,
+      globalManualMatches: payload?.globalManualMatches || [],
+      globalManualPlayers: payload?.globalManualPlayers || [],
+      ...partial,
+    }),
+    [payload],
+  );
+
+  const createShare = useCallback(
+    async (partial: Partial<SharePayload>): Promise<string | null> => {
+      const merged = buildMergedPayload(partial);
+      const key = await postSharePayload(null, merged);
+      if (key) {
+        setPayload(merged);
+      }
+      return key;
+    },
+    [buildMergedPayload],
+  );
+
+  const value: ShareContextValue = {
+    isShareMode,
+    shareKey,
+    payload,
+    setPayload,
+    createShare,
+  };
+
+  return <ShareContext.Provider value={value}>{children}</ShareContext.Provider>;
+};
+
+export function useShareContext(): ShareContextValue {
+  const ctx = useContext(ShareContext);
+  if (!ctx) return defaultShareContext;
+  return ctx;
+}
