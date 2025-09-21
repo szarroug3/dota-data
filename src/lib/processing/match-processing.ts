@@ -56,8 +56,8 @@ export function processMatchData(
 
   // Update draft picks with correct roles
   radiantPicks.forEach((pick: HeroPick) => {
-    const player = radiantPlayers.find((p) => p.hero_id.toString() === pick.hero.id);
-    if (player) {
+    const player = radiantPlayers.find((p) => p.hero_id?.toString() === pick.hero.id);
+    if (player && typeof player.account_id === 'number') {
       const role = radiantRoleMap[player.account_id.toString()];
       if (role) {
         pick.role = role;
@@ -72,8 +72,8 @@ export function processMatchData(
   });
 
   direPicks.forEach((pick: HeroPick) => {
-    const player = direPlayers.find((p) => p.hero_id.toString() === pick.hero.id);
-    if (player) {
+    const player = direPlayers.find((p) => p.hero_id?.toString() === pick.hero.id);
+    if (player && typeof player.account_id === 'number') {
       const role = direRoleMap[player.account_id.toString()];
       if (role) {
         pick.role = role;

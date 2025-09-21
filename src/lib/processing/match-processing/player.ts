@@ -59,8 +59,17 @@ export function convertPlayer(
   items: Record<string, Item>,
   heroes: Record<string, Hero>,
 ): PlayerMatchData {
-  const hero = heroes[player.hero_id.toString()];
-  const playerHero = hero;
+  const hero = heroes[player.hero_id?.toString() as keyof typeof heroes];
+  const playerHero: Hero = hero || {
+    id: String(player.hero_id ?? ''),
+    name: '',
+    localizedName: `Hero ${player.hero_id ?? ''}`,
+    primaryAttribute: 'strength',
+    attackType: 'melee',
+    roles: [],
+    imageUrl: '',
+  };
+
   // Convert string-keyed items to number-keyed for lookup
   const numberKeyedItems: Record<number, Item> = Object.keys(items).reduce(
     (acc, key) => {
@@ -73,11 +82,15 @@ export function convertPlayer(
   const playerItems = getPlayerItems(player, numberKeyedItems);
   const stats = createPlayerStats(player);
   const heroStats = createHeroStats(player);
+
+  const accountId = typeof player.account_id === 'number' ? player.account_id : 0;
+  const roleKey = typeof player.account_id === 'number' ? player.account_id.toString() : '';
+
   return {
-    accountId: player.account_id,
-    playerName: player.personaname || `Player ${player.account_id}`,
+    accountId,
+    playerName: player.personaname || (accountId ? `Player ${accountId}` : 'Unknown Player'),
     hero: playerHero,
-    role: roleMap[player.account_id.toString()],
+    role: roleKey ? roleMap[roleKey] : undefined,
     items: playerItems,
     stats,
     heroStats,

@@ -33,7 +33,8 @@ function assignMidRoles(
 ) {
   const midPlayers = playersByLaneRole[2] || [];
   if (midPlayers.length > 0) {
-    roleMap[midPlayers[0].player.account_id.toString()] = 'Mid';
+    const key = safeKey(midPlayers[0].player.account_id);
+    if (key) roleMap[key] = 'Mid';
   }
 }
 
@@ -45,10 +46,13 @@ function assignSafeLaneRoles(
   if (safeLanePlayers.length === 0) return;
   const sortedPlayers = [...safeLanePlayers].sort((a, b) => a.supportScore - b.supportScore);
   if (safeLanePlayers.length === 1) {
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Carry';
+    const k0 = safeKey(sortedPlayers[0].player.account_id);
+    if (k0) roleMap[k0] = 'Carry';
   } else if (safeLanePlayers.length === 2) {
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Carry';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Hard Support';
+    const k0 = safeKey(sortedPlayers[0].player.account_id);
+    const k1 = safeKey(sortedPlayers[1].player.account_id);
+    if (k0) roleMap[k0] = 'Carry';
+    if (k1) roleMap[k1] = 'Hard Support';
   }
 }
 
@@ -58,26 +62,31 @@ function assignOffLaneRoles(
 ) {
   const offLanePlayers = playersByLaneRole[3] || [];
   if (offLanePlayers.length === 0) return;
+
   const sortedPlayers = [...offLanePlayers].sort((a, b) => a.supportScore - b.supportScore);
-  if (offLanePlayers.length === 1) {
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
-  } else if (offLanePlayers.length === 2) {
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Support';
-  } else if (offLanePlayers.length === 3) {
-    roleMap[sortedPlayers[0].player.account_id.toString()] = 'Offlane';
-    roleMap[sortedPlayers[1].player.account_id.toString()] = 'Support';
-    roleMap[sortedPlayers[2].player.account_id.toString()] = 'Hard Support';
-  }
+  const keys = sortedPlayers.map((p) => safeKey(p.player.account_id)).filter((k): k is string => Boolean(k));
+
+  if (keys[0]) roleMap[keys[0]] = 'Offlane';
+  if (keys[1]) roleMap[keys[1]] = 'Support';
+  if (keys[2]) roleMap[keys[2]] = 'Hard Support';
 }
 
 function assignRemainingRoles(playerAnalysis: PlayerAnalysisResult[], roleMap: Record<string, PlayerRole>) {
-  const unassigned = playerAnalysis.filter((analysis) => !roleMap[analysis.player.account_id.toString()]);
+  const unassigned = playerAnalysis.filter((analysis) => {
+    const k = safeKey(analysis.player?.account_id);
+    return !k || !roleMap[k];
+  });
   unassigned.forEach((analysis) => {
+    const key = safeKey(analysis.player?.account_id);
+    if (!key) return;
     if (analysis.player.is_roaming) {
-      roleMap[analysis.player.account_id.toString()] = 'Roaming';
+      roleMap[key] = 'Roaming';
     }
   });
+}
+
+function safeKey(accountId: number | undefined | null): string | null {
+  return typeof accountId === 'number' && Number.isFinite(accountId) ? accountId.toString() : null;
 }
 
 export function detectTeamRoles(teamPlayers: OpenDotaMatchPlayer[]): Record<string, PlayerRole> {
