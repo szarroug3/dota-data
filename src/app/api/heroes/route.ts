@@ -8,6 +8,13 @@ import { schemas } from '@/types/api-zod';
  * Handle heroes API errors
  */
 function handleHeroesError(error: Error): ApiErrorResponse {
+  if (error.message.includes('429')) {
+    return {
+      error: 'Rate limited by OpenDota API',
+      status: 429,
+      details: 'Too many requests to OpenDota API. Please try again later.',
+    };
+  }
   if (error.message.includes('Rate limited')) {
     return {
       error: 'Rate limited by OpenDota API',

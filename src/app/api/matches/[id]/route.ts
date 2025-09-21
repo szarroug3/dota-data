@@ -8,6 +8,13 @@ import { schemas } from '@/types/api-zod';
  * Handle match API errors
  */
 function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
+  if (error.message.includes('429')) {
+    return {
+      error: 'Rate limited by OpenDota API',
+      status: 429,
+      details: 'Too many requests to OpenDota API. Please try again later.',
+    };
+  }
   if (error.message.includes('Rate limited')) {
     return {
       error: 'Rate limited by OpenDota API',
