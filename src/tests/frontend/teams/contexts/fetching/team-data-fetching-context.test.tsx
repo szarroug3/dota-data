@@ -47,9 +47,12 @@ const mockLeague: SteamLeague = {
 // MSW SERVER SETUP
 // ============================================================================
 
+let team123Calls = 0;
+
 const server = setupServer(
   // Success case
   rest.get('/api/teams/123', (req, res, ctx) => {
+    team123Calls++;
     return res(ctx.json(mockTeam));
   }) as any,
   rest.get('/api/leagues/456', (req, res, ctx) => {
@@ -76,7 +79,10 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  team123Calls = 0;
+});
 afterAll(() => server.close());
 
 // ============================================================================
@@ -254,6 +260,15 @@ describe('TeamDataFetchingContext', () => {
       expect(screen.getByTestId('both-cached')).toHaveTextContent('true');
     });
 
+    it('deduplicates concurrent requests for the same team id', async () => {
+      // Trigger two concurrent team fetches
+      const btn = screen.getByTestId('fetch-team');
+      btn.click();
+      btn.click();
+      await waitFor(() => expect(screen.getByTestId('team-cached')).toHaveTextContent('true'));
+      // Only one network call to /api/teams/123 should have occurred
+      expect(team123Calls).toBe(1);
+    });
     it('should return cached data on subsequent fetches', async () => {
       // First fetch
       const fetchButton = screen.getByTestId('fetch-both');

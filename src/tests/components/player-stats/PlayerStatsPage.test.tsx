@@ -81,25 +81,10 @@ describe('PlayerStatsPage', () => {
     expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();
   });
 
-  it('initializes player list view mode from config and persists changes', () => {
-    // Preload config with preferredPlayerlistView = 'card'
-    const storedConfig = {
-      preferredExternalSite: 'dotabuff',
-      preferredMatchlistView: 'list',
-      preferredPlayerlistView: 'card',
-      theme: 'system',
-    };
-    // Set up localStorage mock used by ConfigProvider
-    (window.localStorage.getItem as jest.Mock).mockImplementation((key: string) => {
-      if (key === 'dota-scout-assistant-config') {
-        return JSON.stringify(storedConfig);
-      }
-      return null;
-    });
-
+  it('initializes player list view mode from in-memory config defaults', () => {
     renderWithProviders(<PlayerStatsPage />);
     const layout = screen.getByTestId('player-layout');
-    expect(layout).toHaveAttribute('data-view-mode', 'card');
+    expect(layout).toHaveAttribute('data-view-mode', 'list');
   });
 
   it('filters players to only those on the active team (manual or auto)', () => {

@@ -70,15 +70,18 @@ describe('AddMatchForm', () => {
   it('renders title and description', () => {
     render(<AddMatchForm {...baseProps} />);
     expect(screen.getByRole('heading', { name: 'Add New Match' })).toBeInTheDocument();
-    expect(screen.getByText(/Add a match to the active team/i)).toBeInTheDocument();
+    expect(screen.getByText(/Add a match to analyze/i)).toBeInTheDocument();
   });
 
-  it('disables submit when missing team side or invalid', () => {
-    const { rerender } = render(<AddMatchForm {...baseProps} matchId="123" teamSide="" isValid={true} />);
+  it('disables submit only when invalid id or duplicate', () => {
+    const { rerender } = render(<AddMatchForm {...baseProps} matchId="123" teamSide="" isValid={false} />);
+    expect(screen.getByRole('button', { name: 'Invalid Match ID' })).toBeDisabled();
+
+    rerender(<AddMatchForm {...baseProps} matchId="123" teamSide="" isValid={true} />);
     expect(screen.getByRole('button', { name: 'Add Match' })).toBeDisabled();
 
-    rerender(<AddMatchForm {...baseProps} matchId="123" teamSide="radiant" isValid={false} />);
-    expect(screen.getByRole('button', { name: 'Invalid Match ID' })).toBeDisabled();
+    rerender(<AddMatchForm {...baseProps} matchId="123" teamSide="radiant" isValid={true} />);
+    expect(screen.getByRole('button', { name: 'Add Match' })).toBeEnabled();
   });
 
   it('shows duplicate text when match already exists', () => {

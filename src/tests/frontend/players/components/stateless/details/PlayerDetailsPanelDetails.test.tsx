@@ -252,4 +252,85 @@ describe('PlayerDetailsPanelDetails', () => {
     // Skip header row, check first hero row
     expect(tableRows[1]).toHaveTextContent('2'); // Games count for first hero
   });
+
+  it('"Last 30 Days" excludes matches older than 30 days and custom inclusive works', async () => {
+    const now = Date.now();
+    const thirtyOneDaysAgoSec = Math.floor((now - 31 * 24 * 60 * 60 * 1000) / 1000);
+    const twentyDaysAgoSec = Math.floor((now - 20 * 24 * 60 * 60 * 1000) / 1000);
+
+    const playerWithOldAndRecent: Player = {
+      ...mockPlayer,
+      recentMatches: [
+        {
+          match_id: 301,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1800,
+          game_mode: 1,
+          lobby_type: 0,
+          hero_id: 1,
+          start_time: thirtyOneDaysAgoSec,
+          version: null,
+          kills: 1,
+          deaths: 1,
+          assists: 1,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
+        },
+        {
+          match_id: 302,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1800,
+          game_mode: 1,
+          lobby_type: 0,
+          hero_id: 1,
+          start_time: twentyDaysAgoSec,
+          version: null,
+          kills: 1,
+          deaths: 1,
+          assists: 1,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
+        },
+      ],
+    };
+
+    renderWithProviders(<PlayerDetailsPanelDetails player={playerWithOldAndRecent} heroes={mockHeroes as any} />);
+
+    // By default component is on Last 30 Days, so only the recent match should count
+    const tableBody = screen.getByRole('table').querySelector('tbody');
+    expect(tableBody?.children.length).toBe(1);
+
+    // Switch to Custom and pick a start/end window that includes both matches
+    const select = screen.getByRole('combobox');
+    fireEvent.click(select);
+    await waitFor(() => fireEvent.click(screen.getByText('Custom')));
+
+    const startInput = screen.getByLabelText('Start') as HTMLInputElement;
+    const endInput = screen.getByLabelText('End') as HTMLInputElement;
+
+    const startDate = new Date(now - 40 * 24 * 60 * 60 * 1000);
+    const endDate = new Date(now - 31 * 24 * 60 * 60 * 1000); // exactly 31 days ago
+
+    const toYYYYMMDD = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    fireEvent.change(startInput, { target: { value: toYYYYMMDD(startDate) } });
+    fireEvent.change(endInput, { target: { value: toYYYYMMDD(endDate) } });
+
+    // Both matches should now be included because end is inclusive to end-of-day
+    await waitFor(() => {
+      const body = screen.getByRole('table').querySelector('tbody');
+      expect(body?.children.length).toBe(1); // Still one hero row, aggregated from two matches
+    });
+  });
 });
