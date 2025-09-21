@@ -232,6 +232,9 @@ const useTeamApiFetching = (
   const teamCacheRef = useRef<Map<number, SteamTeam>>(new Map());
   teamCacheRef.current = teamCache;
 
+  // Track in-flight requests by teamId to deduplicate concurrent fetches
+  const inFlightRef = useRef<Map<number, Promise<SteamTeam | { error: string }>>>(new Map());
+
   const handleTeamError = useCallback(
     (teamId: number, errorMsg: string) => {
       setTeamErrors((prev) => new Map(prev).set(teamId, errorMsg));
@@ -253,10 +256,13 @@ const useTeamApiFetching = (
 
   const fetchTeamData = useCallback(
     async (teamId: number, force = false): Promise<SteamTeam | { error: string }> => {
+      // 1) Memory cache
       if (!force && teamCacheRef.current.has(teamId)) {
         const cachedTeam = teamCacheRef.current.get(teamId);
         if (cachedTeam) return cachedTeam;
       }
+
+      // 2) Persisted cache
       if (!force) {
         const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
         const persisted = getCacheItem<SteamTeam>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
@@ -265,17 +271,30 @@ const useTeamApiFetching = (
           return persisted;
         }
       }
-      try {
-        const team = await getTeam(teamId, force);
-        handleTeamSuccess(teamId, team);
-        const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
-        setCacheItem(key, team, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
-        return team;
-      } catch {
-        const errorMsg = 'Failed to fetch team data';
-        handleTeamError(teamId, errorMsg);
-        return { error: errorMsg };
-      }
+
+      // 3) In-flight deduplication
+      const existing = inFlightRef.current.get(teamId);
+      if (existing) return existing;
+
+      const requestPromise = (async (): Promise<SteamTeam | { error: string }> => {
+        try {
+          const team = await getTeam(teamId, force);
+          handleTeamSuccess(teamId, team);
+          const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
+          setCacheItem(key, team, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
+          return team;
+        } catch {
+          const errorMsg = 'Failed to fetch team data';
+          handleTeamError(teamId, errorMsg);
+          return { error: errorMsg };
+        } finally {
+          // Ensure cleanup so subsequent calls can refetch if needed
+          inFlightRef.current.delete(teamId);
+        }
+      })();
+
+      inFlightRef.current.set(teamId, requestPromise);
+      return requestPromise;
     },
     [handleTeamSuccess, handleTeamError, setTeamCache],
   );

@@ -136,6 +136,15 @@ export function DashboardPageContainer(): React.ReactElement {
   const editSheet = useEditTeamSheet(teamContext);
   const { activeTeam, handleSetActiveTeam } = useActiveTeam(teamContext);
 
+  const orderedTeams = useMemo(() => {
+    const list = Array.from(teamContext.teams.values());
+    if (!activeTeam) return list;
+    const activeIndex = list.findIndex((t) => t.team.id === activeTeam.teamId && t.league.id === activeTeam.leagueId);
+    if (activeIndex <= 0) return list;
+    const [active] = list.splice(activeIndex, 1);
+    return [active, ...list];
+  }, [teamContext.teams, activeTeam]);
+
   return (
     <>
       <AddTeamForm
@@ -150,7 +159,7 @@ export function DashboardPageContainer(): React.ReactElement {
       />
 
       <TeamList
-        teamDataList={Array.from(teamContext.teams.values())}
+        teamDataList={orderedTeams}
         activeTeam={activeTeam}
         onRefreshTeam={teamContext.refreshTeam}
         onRemoveTeam={teamContext.removeTeam}
