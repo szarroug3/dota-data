@@ -10,6 +10,7 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import { useShareContext } from '@/frontend/contexts/share-context';
 import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
 import { usePlayerContext } from '@/frontend/players/contexts/state/player-context';
 import { useTeamDataFetching } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
@@ -96,17 +97,13 @@ function calculateHighPerformingHeroes(
 // PROVIDER IMPLEMENTATION
 // ============================================================================
 
-export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) => {
-  const { teams, setTeams } = useTeamState();
-  const teamDataFetching = useTeamDataFetching();
-  const matchContext = useMatchContext();
-  const playerContext = usePlayerContext();
-  const configContext = useConfigContext();
-
-  // Track if teams have been loaded to avoid infinite loops
+function useInitializeTeams(
+  configContext: ReturnType<typeof useConfigContext>,
+  setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
+  isShareMode: boolean,
+) {
   const teamsLoadedRef = React.useRef(false);
 
-  // Load teams from localStorage on initialization (only once)
   React.useEffect(() => {
     if (!teamsLoadedRef.current) {
       const storedTeams = configContext.getTeams();
@@ -116,6 +113,25 @@ export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) =
       teamsLoadedRef.current = true;
     }
   }, [configContext, setTeams]);
+
+  React.useEffect(() => {
+    const latest = configContext.getTeams();
+    if (latest.size > 0) {
+      setTeams(latest);
+    }
+  }, [configContext, isShareMode, setTeams]);
+}
+
+export const TeamProvider: React.FC<TeamContextProviderProps> = ({ children }) => {
+  const { teams, setTeams } = useTeamState();
+  const teamDataFetching = useTeamDataFetching();
+  const matchContext = useMatchContext();
+  const playerContext = usePlayerContext();
+  const configContext = useConfigContext();
+  const { isShareMode } = useShareContext();
+
+  // Initialization & resync
+  useInitializeTeams(configContext, setTeams, isShareMode);
 
   // Get state operations including syncTeamsToStorage
   const stateOperations = useTeamStateOperations(
