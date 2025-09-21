@@ -6,6 +6,7 @@ import React from 'react';
 import { ConfigProvider } from '@/frontend/contexts/config-context';
 import { ConstantsProvider } from '@/frontend/contexts/constants-context';
 import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-data-fetching-context';
+import { ShareProvider } from '@/frontend/contexts/share-context';
 import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
 import { PlayerDataFetchingProvider } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
@@ -66,21 +67,23 @@ export function ClientRoot({ children }: ClientRootProps) {
           <PlayerDataFetchingProvider>
             <ConstantsDataFetchingProvider>
               {/* Config Context (no dependencies) */}
-              <ConfigProvider>
-                {/* Constants Context (depends on ConstantsDataFetchingContext) */}
-                <ConstantsProvider>
-                  {/* Match Context (depends on ConstantsContext) */}
-                  <MatchProvider>
-                    {/* Player Context (no dependencies) */}
-                    <PlayerProvider>
-                      {/* Team Context (depends on ConfigContext, MatchContext, PlayerContext) */}
-                      <TeamProvider>
-                        <AppContent>{children}</AppContent>
-                      </TeamProvider>
-                    </PlayerProvider>
-                  </MatchProvider>
-                </ConstantsProvider>
-              </ConfigProvider>
+              <ShareProvider>
+                <ConfigProvider>
+                  {/* Constants Context (depends on ConstantsDataFetchingContext) */}
+                  <ConstantsProvider>
+                    {/* Match Context (depends on ConstantsContext) */}
+                    <MatchProvider>
+                      {/* Player Context (no dependencies) */}
+                      <PlayerProvider>
+                        {/* Team Context (depends on ConfigContext, MatchContext, PlayerContext) */}
+                        <TeamProvider>
+                          <AppContent>{children}</AppContent>
+                        </TeamProvider>
+                      </PlayerProvider>
+                    </MatchProvider>
+                  </ConstantsProvider>
+                </ConfigProvider>
+              </ShareProvider>
             </ConstantsDataFetchingProvider>
           </PlayerDataFetchingProvider>
         </MatchDataFetchingProvider>
