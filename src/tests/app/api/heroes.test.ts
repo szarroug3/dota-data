@@ -105,6 +105,27 @@ describe('Heroes API Route', () => {
       expect(data.details).toBe('Heroes data is invalid or corrupted.');
     });
 
+    it('should return 422 when schema validation fails on shape mismatch', async () => {
+      // Provide malformed payload that will fail Zod validation in route.ts
+      const badData: any = [
+        {
+          id: '1', // wrong type
+          name: 'npc_dota_hero_antimage',
+          localized_name: 'Anti-Mage',
+          primary_attr: 'agi',
+          attack_type: 'Melee',
+          roles: 'Carry', // wrong type
+        },
+      ];
+      mockFetchOpenDotaHeroes.mockResolvedValue(badData as any as OpenDotaHero[]);
+
+      const request = new NextRequest('http://localhost:3000/api/heroes');
+      const response = await GET(request);
+      expect(response.status).toBe(422);
+      const json = await response.json();
+      expect(json.error).toBe('Invalid heroes data');
+    });
+
     it('should handle generic API errors', async () => {
       mockFetchOpenDotaHeroes.mockRejectedValue(new Error('Network error'));
 
