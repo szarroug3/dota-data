@@ -236,7 +236,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Fetch raw items data (handles caching, rate limiting, mock mode)
     const items = await fetchOpenDotaItems(force);
-    console.log(items);
 
     try {
       const validated = schemas.getApiItems.parse(items);
