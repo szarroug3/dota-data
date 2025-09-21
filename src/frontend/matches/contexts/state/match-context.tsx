@@ -7,8 +7,9 @@
  * Uses the fetching context from the new frontend path.
  */
 
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
+import { useConfigContext } from '@/frontend/contexts/config-context';
 import { useConstantsContext } from '@/frontend/contexts/constants-context';
 import { useMatchDataFetching } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import { useMatchOperations } from '@/hooks/use-match-operations';
@@ -65,8 +66,57 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
   const state = useMatchState();
   const processing = useMatchProcessing();
   const matchDataFetching = useMatchDataFetching();
+  const { getGlobalManualMatches, setGlobalManualMatches } = useConfigContext();
+  const { heroes, items } = useConstantsContext();
+  const hydratedRef = React.useRef(false);
 
   const actions = useMatchOperations(state, processing, matchDataFetching);
+
+  useEffect(() => {
+    const ready = () => Object.keys(heroes || {}).length > 0 && Object.keys(items || {}).length > 0;
+    if (hydratedRef.current || !ready()) return;
+    try {
+      const stored = getGlobalManualMatches?.() ?? [];
+      if (stored.length > 0) stored.forEach((mid) => actions.addMatch(mid));
+      hydratedRef.current = true;
+    } catch (e) {
+      console.warn('Failed to hydrate global manual matches:', e);
+    }
+  }, [actions, getGlobalManualMatches, heroes, items]);
+
+  const addMatchAndPersist = useCallback(
+    async (matchId: number) => {
+      const result = await actions.addMatch(matchId);
+      try {
+        const current = getGlobalManualMatches?.() ?? [];
+        if (!current.includes(matchId)) {
+          setGlobalManualMatches?.([...current, matchId]);
+        }
+      } catch (e) {
+        console.warn('Failed to persist global manual matches:', e);
+      }
+      return result;
+    },
+    [actions, getGlobalManualMatches, setGlobalManualMatches],
+  );
+
+  const removeMatchAndPersist = useCallback(
+    (matchId: number) => {
+      try {
+        actions.removeMatch(matchId);
+      } finally {
+        try {
+          const current = getGlobalManualMatches?.() ?? [];
+          if (current.includes(matchId)) {
+            setGlobalManualMatches?.(current.filter((id) => id !== matchId));
+          }
+        } catch (e) {
+          console.warn('Failed to update persisted global manual matches on remove:', e);
+        }
+      }
+    },
+    [actions, getGlobalManualMatches, setGlobalManualMatches],
+  );
 
   const contextValue: MatchContextValue = {
     // State
@@ -76,10 +126,10 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     isLoading: state.isLoading,
 
     // Core operations
-    addMatch: actions.addMatch,
+    addMatch: addMatchAndPersist,
     refreshMatch: actions.refreshMatch,
     parseMatch: actions.parseMatch,
-    removeMatch: actions.removeMatch,
+    removeMatch: removeMatchAndPersist,
 
     // Data access
     getMatch: (matchId: number) => {
