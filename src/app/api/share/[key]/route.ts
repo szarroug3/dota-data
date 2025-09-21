@@ -5,26 +5,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSharedPayload, setSharedPayload } from '@/app/api/share/cache';
 import { getEnv } from '@/lib/config/environment';
+import type { CacheValue } from '@/types/cache';
 
 function buildCacheKey(key: string): string {
   return `config:share:${key}`;
 }
 
-async function readMockShareFromDisk(key: string): Promise<Record<string, import('@/types/cache').CacheValue> | null> {
+async function readMockShareFromDisk(key: string): Promise<Record<string, CacheValue> | null> {
   try {
     const filePath = path.join(process.cwd(), 'mock-data', 'share', `${key}.json`);
     const file = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(file) as Record<string, import('@/types/cache').CacheValue>;
+    return JSON.parse(file) as Record<string, CacheValue>;
   } catch {
     return null;
   }
 }
 
-async function loadSharePayload(
-  cacheKey: string,
-  key: string,
-): Promise<Record<string, import('@/types/cache').CacheValue> | null> {
-  const cached = await getSharedPayload<Record<string, import('@/types/cache').CacheValue>>(cacheKey);
+async function loadSharePayload(cacheKey: string, key: string): Promise<Record<string, CacheValue> | null> {
+  const cached = await getSharedPayload<Record<string, CacheValue>>(cacheKey);
   if (cached) return cached;
 
   if (getEnv.USE_MOCK_API() || getEnv.USE_MOCK_DB()) {
