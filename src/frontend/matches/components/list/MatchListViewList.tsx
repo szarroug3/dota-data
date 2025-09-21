@@ -9,6 +9,7 @@ import { RefreshButton } from '@/frontend/matches/components/stateless/common/Re
 import { RemoveManualMatchButton } from '@/frontend/matches/components/stateless/common/RemoveManualMatchButton';
 import { EditManualMatchSheet } from '@/frontend/matches/components/stateless/EditManualMatchSheet';
 import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 import { Hero } from '@/types/contexts/constants-context-value';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
@@ -137,7 +138,7 @@ function MatchCardFooterSection({
 }: {
   match: Match;
   teamMatches?: Record<number, TeamMatchParticipation>;
-  preferredSite: import('@/types/contexts/config-context-value').PreferredExternalSite;
+  preferredSite: PreferredExternalSite;
   isManualMatch: boolean;
   onRefreshMatch: (id: number) => void;
   onOpenEdit: () => void;

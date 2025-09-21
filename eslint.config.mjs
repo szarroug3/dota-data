@@ -163,7 +163,7 @@ export default defineConfig([
       'max-depth': ['warn', { max: 4 }],
       complexity: ['warn', { max: 10 }],
 
-      // Disallow in-line require and dynamic import()
+      // Disallow in-line require and dynamic import() across the codebase
       'no-restricted-syntax': [
         'error',
         {
@@ -172,7 +172,12 @@ export default defineConfig([
         },
         {
           selector: 'ImportExpression',
-          message: 'Dynamic import() is not allowed except for code-splitting. All imports should be at the top.',
+          message: 'Dynamic import() is not allowed in the frontend. Prefer static imports at the top of the file.',
+        },
+        {
+          selector: 'TSImportType',
+          message:
+            "Inline type imports (import('...').Type) are not allowed. Use top-level `import type { ... } from '...';`.",
         },
       ],
     },

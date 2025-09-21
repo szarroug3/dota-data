@@ -9,6 +9,7 @@ import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { Player } from '@/types/contexts/player-context-value';
 import { TeamData } from '@/types/contexts/team-context-value';
+import type { PlayerDetailedStats } from '@/utils/player-statistics';
 
 export interface PlayerStats {
   player: Player;
@@ -39,7 +40,7 @@ export interface PlayerStats {
     trend: 'improving' | 'declining' | 'stable';
     lastFiveMatches: { win: boolean; kda: number }[];
   };
-  detailedStats?: import('@/utils/player-statistics').PlayerDetailedStats;
+  detailedStats?: PlayerDetailedStats;
 }
 
 export function usePlayerData() {
@@ -230,9 +231,13 @@ export const usePlayerStatsHandlers = undefined as never;
 export function usePlayerListActions(deps: {
   refreshPlayer: (id: number) => Promise<void | object | null>;
   resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;
-  setShowAddPlayerSheet: Dispatch<SetStateAction<boolean>>;
+  setShowAddPlayerSheet: SetStateAction<boolean> | Dispatch<SetStateAction<boolean>>;
 }) {
-  const { refreshPlayer, resizableLayoutRef, setShowAddPlayerSheet } = deps;
+  const { refreshPlayer, resizableLayoutRef, setShowAddPlayerSheet } = deps as {
+    refreshPlayer: (id: number) => Promise<void | object | null>;
+    resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;
+    setShowAddPlayerSheet: Dispatch<SetStateAction<boolean>>;
+  };
 
   const handleRefreshPlayer = useCallback(
     async (playerId: number) => {
