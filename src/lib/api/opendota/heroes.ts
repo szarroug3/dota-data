@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaHero } from '@/types/external-apis';
 
@@ -12,7 +13,7 @@ import { OpenDotaHero } from '@/types/external-apis';
  */
 export async function fetchOpenDotaHeroes(force = false): Promise<OpenDotaHero[]> {
   const cacheKey = 'opendota:heroes';
-  const cacheTTL = 60 * 60 * 24 * 7; // 7 days
+  const cacheTTL = CacheTtlSeconds.heroes;
   const mockFilename = path.join(process.cwd(), 'mock-data', 'heroes.json');
 
   const result = await request<OpenDotaHero[]>(

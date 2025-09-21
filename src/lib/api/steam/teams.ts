@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import type { SteamTeam } from '@/types/external-apis/steam';
 
@@ -43,7 +44,7 @@ function parseSteamTeamInfo(data: string, teamId: string): SteamTeam {
 
 export async function fetchSteamTeam(teamId: string, force = false): Promise<SteamTeam> {
   const cacheKey = `steam:team:${teamId}`;
-  const cacheTTL = 60 * 60 * 24; // 1 day
+  const cacheTTL = CacheTtlSeconds.steamTeamById;
   const mockFilename = path.join(process.cwd(), 'mock-data', 'teams', `steam-team-${teamId}.json`);
 
   const result = await request<SteamTeam>(

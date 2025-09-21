@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import {
   OpenDotaPlayer,
@@ -25,7 +26,7 @@ import {
  */
 export async function fetchOpenDotaPlayer(playerId: string, force = false): Promise<OpenDotaPlayerComprehensive> {
   const cacheKey = `opendota:player-comprehensive:${playerId}`;
-  const cacheTTL = 60 * 60 * 24; // 24 hours
+  const cacheTTL = CacheTtlSeconds.playerComprehensive;
   const mockFilename = path.join(process.cwd(), 'mock-data', 'players', `player-${playerId}-comprehensive.json`);
 
   const result = await request<OpenDotaPlayerComprehensive>(

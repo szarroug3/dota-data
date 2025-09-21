@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaItem } from '@/types/external-apis';
 
@@ -12,7 +13,7 @@ import { OpenDotaItem } from '@/types/external-apis';
  */
 export async function fetchOpenDotaItems(force = false): Promise<Record<string, OpenDotaItem>> {
   const cacheKey = 'opendota:items';
-  const cacheTTL = 60 * 60 * 24 * 30; // 30 days
+  const cacheTTL = CacheTtlSeconds.items;
   const mockFilename = path.join(process.cwd(), 'mock-data', 'items.json');
 
   const result = await request<Record<string, OpenDotaItem>>(

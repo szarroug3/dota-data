@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { getEnv } from '@/lib/config/environment';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
@@ -49,7 +50,7 @@ export async function fetchSteamLeague(
   force = false,
 ): Promise<{ result: SteamGetMatchHistoryResult }> {
   const cacheKey = `steam:league:${leagueId}`;
-  const cacheTTL = 60 * 60 * 6; // 6 hours
+  const cacheTTL = CacheTtlSeconds.steamLeagues;
   const mockFilename = path.join(process.cwd(), 'mock-data', 'leagues', `steam-league-${leagueId}.json`);
 
   const aggregator = async (): Promise<string> => {
