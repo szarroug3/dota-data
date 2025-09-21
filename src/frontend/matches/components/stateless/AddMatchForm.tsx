@@ -173,8 +173,7 @@ export function AddMatchForm({
   validationError,
   isValid,
 }: AddMatchFormProps): React.ReactElement {
-  const isFormValid = isValid && teamSide !== '';
-  const isDisabled = matchExists(matchId) || isSubmitting || !isFormValid;
+  const isDisabled = matchExists(matchId) || isSubmitting || !isValid || teamSide === '';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -197,7 +196,7 @@ export function AddMatchForm({
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Add New Match</SheetTitle>
-          <SheetDescription>Add a match to the active team&apos;s history</SheetDescription>
+          <SheetDescription>Add a match to analyze</SheetDescription>
         </SheetHeader>
 
         <div className="grid flex-1 auto-rows-min gap-6 px-4">

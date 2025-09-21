@@ -193,7 +193,7 @@ export function EditManualMatchSheet({
   duplicateError,
   isFormValid,
 }: EditManualMatchSheetProps): React.ReactElement {
-  const isDisabled = isSubmitting || !isFormValid;
+  const isDisabled = isSubmitting || !isFormValid || teamSide === '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
