@@ -13,6 +13,7 @@ export function useAppHydration() {
   const [hydrationError, setHydrationError] = useState<string | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);
   const hasHydratedRef = useRef(false);
+  const ensuredActiveTeamKeyRef = useRef<string | null>(null);
 
   const configContext = useConfigContext();
   const constantsContext = useConstantsContext();
@@ -30,60 +31,67 @@ export function useAppHydration() {
   // Increment render count
   renderCountRef.current += 1;
 
+  // Helpers to reduce complexity
+  async function fetchConstants(constantsContext: ReturnType<typeof useConstantsContext>) {
+    await Promise.all([constantsContext.fetchHeroes(), constantsContext.fetchItems()]);
+  }
+
+  async function waitForConstants(constantsContext: ReturnType<typeof useConstantsContext>) {
+    let attempts = 0;
+    const maxAttempts = 50;
+    while (
+      attempts < maxAttempts &&
+      (Object.keys(constantsContext.heroes).length === 0 || Object.keys(constantsContext.items).length === 0)
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      attempts++;
+    }
+    if (attempts >= maxAttempts) {
+      console.warn('Constants not available after waiting, proceeding anyway');
+    }
+  }
+
+  async function ensureActiveTeam(
+    configContext: ReturnType<typeof useConfigContext>,
+    teamContext: ReturnType<typeof useTeamContext>,
+  ) {
+    const active = configContext.activeTeam;
+    if (active) {
+      await teamContext.addTeam(active.teamId, active.leagueId);
+      ensuredActiveTeamKeyRef.current = `${active.teamId}-${active.leagueId}`;
+    }
+  }
+
+  async function loadTeamsAndManuals(
+    configContext: ReturnType<typeof useConfigContext>,
+    teamContext: ReturnType<typeof useTeamContext>,
+  ) {
+    const teams = configContext.getTeams();
+    if (teams && teams.size > 0) {
+      await teamContext.loadTeamsFromConfig(teams);
+    }
+    await teamContext.loadManualMatches();
+    await teamContext.loadManualPlayers();
+  }
+
   // Run hydration on mount
   useEffect(() => {
     mountCountRef.current += 1;
 
-    // Create the hydrate function inside useEffect to avoid recreation issues
     const hydrate = async () => {
-      // Prevent multiple runs
-      if (hasHydratedRef.current) {
-        return;
-      }
-
+      if (hasHydratedRef.current) return;
       try {
         setIsHydrating(true);
         setHydrationError(null);
 
-        // Step 1: Fetch constants
-        await Promise.all([
-          contextsRef.current.constantsContext.fetchHeroes(),
-          contextsRef.current.constantsContext.fetchItems(),
-        ]);
+        await fetchConstants(contextsRef.current.constantsContext);
+        await waitForConstants(contextsRef.current.constantsContext);
+        await ensureActiveTeam(contextsRef.current.configContext, contextsRef.current.teamContext);
+        await loadTeamsAndManuals(contextsRef.current.configContext, contextsRef.current.teamContext);
 
-        // Step 2: Wait for constants to be available in context state
-        // React state updates are asynchronous, so we need to wait for the context to reflect the fetched data
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max wait
-        while (
-          attempts < maxAttempts &&
-          (Object.keys(contextsRef.current.constantsContext.heroes).length === 0 ||
-            Object.keys(contextsRef.current.constantsContext.items).length === 0)
-        ) {
-          await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
-          attempts++;
-        }
-
-        if (attempts >= maxAttempts) {
-          console.warn('Constants not available after waiting, proceeding anyway');
-        }
-
-        // Step 3: Load teams from config
-        const teams = contextsRef.current.configContext.getTeams();
-        if (teams && teams.size > 0) {
-          // Delegate to team context to handle loading teams from config
-          await contextsRef.current.teamContext.loadTeamsFromConfig(teams);
-
-          // Step 4: Load manual matches and players after normal team loading
-          await contextsRef.current.teamContext.loadManualMatches();
-          await contextsRef.current.teamContext.loadManualPlayers();
-
-          // Refresh all team summaries in background
-          // This will handle summary data for non-active teams and full data for active team
-          contextsRef.current.teamContext.refreshAllTeamSummaries().catch((error) => {
-            console.warn('Background team refresh failed:', error);
-          });
-        }
+        contextsRef.current.teamContext.refreshAllTeamSummaries().catch((error) => {
+          console.warn('Background team refresh failed:', error);
+        });
 
         hasHydratedRef.current = true;
         setHasHydrated(true);
@@ -96,7 +104,23 @@ export function useAppHydration() {
     };
 
     hydrate();
-  }, []); // Empty dependency array to run only once
+  }, []);
+
+  // Ensure active team if it becomes available later (e.g., after share payload loads)
+  useEffect(() => {
+    const active = contextsRef.current.configContext.activeTeam;
+    const key = active ? `${active.teamId}-${active.leagueId}` : null;
+    if (active && ensuredActiveTeamKeyRef.current !== key) {
+      contextsRef.current.teamContext
+        .addTeam(active.teamId, active.leagueId)
+        .then(() => {
+          ensuredActiveTeamKeyRef.current = key;
+        })
+        .catch(() => {
+          // no-op; errors already handled in addTeam pipeline
+        });
+    }
+  }, [contextsRef.current.configContext.activeTeam]);
 
   return {
     isHydrating,

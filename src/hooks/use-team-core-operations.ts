@@ -334,8 +334,6 @@ function useAddTeamCore(
           // Now ensure match context has optimistic entries for any still-missing matches
           // This avoids racing against the processing calls above
           seedOptimisticMatchContext(teamMatches);
-
-          configContext.setActiveTeam({ teamId, leagueId });
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to add team';
