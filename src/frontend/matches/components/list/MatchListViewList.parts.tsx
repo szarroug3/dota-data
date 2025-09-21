@@ -129,11 +129,12 @@ export const TeamSideBadge: React.FC<{ teamSide: 'radiant' | 'dire' | undefined 
     <span className="@[450px]:hidden block">{teamSide === 'radiant' ? 'R' : 'D'}</span>
   </Badge>
 );
-export const PickOrderBadge: React.FC<{ pickOrder: string | null }> = ({ pickOrder }) => (
-  <Badge variant="secondary" className="text-xs w-fit @[300px]:block hidden">
-    <span className="@[450px]:block hidden">{pickOrder}</span>
-    <span className="@[450px]:hidden block">
-      {pickOrder === 'First Pick' ? '1P' : pickOrder === 'Second Pick' ? '2P' : 'PO'}
-    </span>
-  </Badge>
-);
+export const PickOrderBadge: React.FC<{ pickOrder: string | null }> = ({ pickOrder }) => {
+  if (!pickOrder) return null;
+  return (
+    <Badge variant="secondary" className="text-xs w-fit @[300px]:block hidden">
+      <span className="@[450px]:block hidden">{pickOrder}</span>
+      <span className="@[450px]:hidden block">{pickOrder === 'First Pick' ? '1P' : '2P'}</span>
+    </Badge>
+  );
+};

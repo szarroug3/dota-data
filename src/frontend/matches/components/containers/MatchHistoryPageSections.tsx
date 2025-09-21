@@ -12,17 +12,10 @@ import useViewMode, { type MatchListViewMode } from '@/hooks/useViewMode';
 import type { Match } from '@/types/contexts/match-context-value';
 import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
-import {
-  AddMatchFormSection,
-  getMatchHistoryEmptyState,
-  HeroSummarySection,
-  HiddenMatchesModalSection,
-} from './MatchHistorySectionsHelpers';
+import { AddMatchFormSection, HeroSummarySection, HiddenMatchesModalSection } from './MatchHistorySectionsHelpers';
 import { ResizableMatchLayout, type ResizableMatchLayoutRef } from './ResizableMatchLayout';
 
 export type MatchHistoryContentProps = {
-  teamDataList: TeamData[];
-  activeTeam: { teamId: string; leagueId: string } | null;
   hiddenMatches: Match[];
   showHiddenModal: boolean;
   setShowHiddenModal: (show: boolean) => void;
@@ -48,7 +41,7 @@ export type MatchHistoryContentProps = {
   teamSide: 'radiant' | 'dire' | '';
   setMatchId: (value: string) => void;
   setTeamSide: (value: 'radiant' | 'dire' | '') => void;
-  handleAddMatch: (matchId: string, teamSide: 'radiant' | 'dire') => Promise<void>;
+  handleAddMatch: (matchId: string, teamSide: 'radiant' | 'dire' | '') => Promise<void>;
   matchExists: (matchId: string) => boolean;
   isSubmitting: boolean;
   error?: string;
@@ -155,8 +148,6 @@ export function SummaryAndHiddenSection({
 
 export function MatchHistoryContent(props: MatchHistoryContentProps) {
   const {
-    teamDataList,
-    activeTeam,
     hiddenMatches,
     showHiddenModal,
     setShowHiddenModal,
@@ -190,9 +181,6 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
     scrollToMatch,
     onAddMatch,
   } = props;
-
-  const emptyState = getMatchHistoryEmptyState(teamDataList, activeTeam);
-  if (emptyState) return emptyState;
 
   return (
     <div className="flex flex-col gap-6">
@@ -247,13 +235,15 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
 
 function useMatchData() {
   const { getSelectedTeam } = useTeamContext();
-  const { getMatch } = useMatchContext();
+  const { getMatch, matches } = useMatchContext();
   const activeTeamMatches = useMemo(() => {
     const selectedTeam = getSelectedTeam();
-    if (!selectedTeam) return [] as Match[];
+    if (!selectedTeam) {
+      return Array.from(matches.values());
+    }
     const matchIds = Object.keys(selectedTeam.matches).map(Number);
     return matchIds.map((id) => getMatch(id)).filter((m): m is Match => m !== undefined);
-  }, [getSelectedTeam, getMatch]);
+  }, [getSelectedTeam, getMatch, matches]);
   return { activeTeamMatches };
 }
 
@@ -327,7 +317,7 @@ function useAddMatchHandler(
   scrollToMatch: (id: number) => void,
 ) {
   return useCallback(
-    async (matchId: string, teamSide: 'radiant' | 'dire') => {
+    async (matchId: string, teamSide: 'radiant' | 'dire' | '') => {
       const matchIdNum = parseInt(matchId, 10);
       if (isNaN(matchIdNum)) return;
       setShowAddMatchForm(false);
@@ -335,8 +325,9 @@ function useAddMatchHandler(
       setError(undefined);
       try {
         addMatch(matchIdNum);
-        await addMatchToTeam(matchIdNum, teamSide);
-        if (selectedTeamId) {
+        // Only link to a team when a team is active and a side is chosen
+        if (selectedTeamId && (teamSide === 'radiant' || teamSide === 'dire')) {
+          await addMatchToTeam(matchIdNum, teamSide);
           const teamKey = `${selectedTeamId.teamId}-${selectedTeamId.leagueId}`;
           const currentTeams = teams;
           const team = currentTeams.get(teamKey);
@@ -344,7 +335,9 @@ function useAddMatchHandler(
             if (!team.manualMatches) {
               team.manualMatches = {} as TeamData['manualMatches'];
             }
-            (team.manualMatches as Record<number, { side: 'radiant' | 'dire' }>)[matchIdNum] = { side: teamSide };
+            (team.manualMatches as Record<number, { side: 'radiant' | 'dire' }>)[matchIdNum] = {
+              side: teamSide as 'radiant' | 'dire',
+            };
             const updatedTeams = new Map(currentTeams);
             updatedTeams.set(teamKey, team);
             setTeams(updatedTeams);
@@ -386,13 +379,6 @@ function useSelectedMatchMemo(selectedMatchId: number | null, getMatch: (id: num
   return useMemo(() => (selectedMatchId ? getMatch(selectedMatchId) || null : null), [selectedMatchId, getMatch]);
 }
 
-function useActiveTeamMemo(selectedTeamId: { teamId: number; leagueId: number } | null) {
-  return useMemo(() => {
-    if (!selectedTeamId) return null;
-    return { teamId: selectedTeamId.teamId.toString(), leagueId: selectedTeamId.leagueId.toString() };
-  }, [selectedTeamId]);
-}
-
 function useMatchExistsCallback(
   teams: Map<string, TeamData>,
   selectedTeamId: { teamId: number; leagueId: number } | null,
@@ -412,7 +398,7 @@ function useMatchExistsCallback(
 }
 
 export function useMatchHistoryPageState(): MatchHistoryContentProps {
-  const { getAllTeams, addMatchToTeam, teams, selectedTeamId } = useTeamContext();
+  const { addMatchToTeam, teams, selectedTeamId } = useTeamContext();
   const { refreshMatch, addMatch, getMatch, selectedMatchId, setSelectedMatchId } = useMatchContext();
   const { setTeams } = useConfigContext();
   const resizableLayoutRef = React.useRef<ResizableMatchLayoutRef>(null);
@@ -437,9 +423,7 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
     const hiddenIds = new Set(hidden.hiddenMatches.map((m) => m.id));
     return activeTeamMatches.filter((m) => !hiddenIds.has(m.id));
   }, [activeTeamMatches, hidden.hiddenMatches]);
-  const teamDataList = useMemo(() => getAllTeams(), [getAllTeams]);
   const selectedMatch = useSelectedMatchMemo(selectedMatchId, getMatch);
-  const activeTeam = useActiveTeamMemo(selectedTeamId);
   const scrollToMatch = useScheduledScroll(resizableLayoutRef);
   const handleAddMatch = useAddMatchHandler(
     addMatch,
@@ -462,9 +446,16 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
   const matchExists = useMatchExistsCallback(teams, selectedTeamId);
   const selectMatch = (id: number) => setSelectedMatchId(id);
 
+  const summaryTeamMatches = React.useMemo(() => {
+    if (selectedTeamId) return teamMatches;
+    const synthetic: Record<number, TeamMatchParticipation> = {} as Record<number, TeamMatchParticipation>;
+    activeTeamMatches.forEach((m) => {
+      synthetic[m.id] = { side: 'radiant' } as TeamMatchParticipation;
+    });
+    return synthetic;
+  }, [selectedTeamId, teamMatches, activeTeamMatches]);
+
   return {
-    teamDataList,
-    activeTeam,
     hiddenMatches: hidden.hiddenMatches,
     showHiddenModal: hidden.showHiddenModal,
     setShowHiddenModal: hidden.setShowHiddenModal,
@@ -474,7 +465,7 @@ export function useMatchHistoryPageState(): MatchHistoryContentProps {
     activeTeamMatches,
     filteredMatches,
     unhiddenMatches,
-    teamMatches,
+    teamMatches: summaryTeamMatches,
     handleHideMatch: hidden.handleHideMatch,
     handleUnhideMatch: hidden.handleUnhideMatch,
     viewMode,

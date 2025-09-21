@@ -209,13 +209,16 @@ const DraftTimeline: React.FC<{
 );
 
 const getTeamDisplayNames = (teamMatch?: TeamMatchParticipation, selectedTeam?: TeamData) => {
-  const userTeamName = selectedTeam?.team.name || 'Your Team';
-  const opponentName = teamMatch?.opponentName || 'Opponent';
-  const isUserTeamRadiant = teamMatch?.side === 'radiant';
+  if (!selectedTeam || !teamMatch?.side) {
+    return { leftDisplayName: 'Radiant', rightDisplayName: 'Dire' } as const;
+  }
+  const userTeamName = selectedTeam.team.name;
+  const opponentName = teamMatch.opponentName || (teamMatch.side === 'radiant' ? 'Dire' : 'Radiant');
+  const isUserTeamRadiant = teamMatch.side === 'radiant';
   return {
-    leftDisplayName: isUserTeamRadiant ? userTeamName : opponentName || 'Radiant',
-    rightDisplayName: isUserTeamRadiant ? opponentName : userTeamName || 'Dire',
-  };
+    leftDisplayName: isUserTeamRadiant ? userTeamName : opponentName,
+    rightDisplayName: isUserTeamRadiant ? opponentName : userTeamName,
+  } as const;
 };
 
 const filterDraftPhases = (processedDraft: DraftPhase[], filter: DraftFilter) =>

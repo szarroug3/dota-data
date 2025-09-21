@@ -4,21 +4,8 @@ import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchFo
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
 import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 import { validateMatchId } from '@/utils/validation';
-
-export function getMatchHistoryEmptyState(
-  teamDataList: TeamData[],
-  activeTeam: { teamId: string; leagueId: string } | null,
-) {
-  if (teamDataList.length === 0) {
-    return <div className="p-4 text-center">No teams available</div>;
-  }
-  if (!activeTeam) {
-    return <div className="p-4 text-center">Please select a team</div>;
-  }
-  return null;
-}
 
 export function HeroSummarySection({
   visibleMatches,
@@ -73,7 +60,7 @@ export function AddMatchFormSection({
   teamSide: 'radiant' | 'dire' | '';
   setMatchId: (value: string) => void;
   setTeamSide: (value: 'radiant' | 'dire' | '') => void;
-  handleAddMatch: (matchId: string, teamSide: 'radiant' | 'dire') => Promise<void>;
+  handleAddMatch: (matchId: string, teamSide: 'radiant' | 'dire' | '') => Promise<void>;
   matchExists: (matchId: string) => boolean;
   isSubmitting: boolean;
   setShowAddMatchForm: (show: boolean) => void;
@@ -91,7 +78,7 @@ export function AddMatchFormSection({
       onMatchIdChange={setMatchId}
       onTeamSideChange={setTeamSide}
       onSubmit={async () => {
-        await handleAddMatch(matchId, teamSide as 'radiant' | 'dire');
+        await handleAddMatch(matchId, teamSide);
       }}
       matchExists={matchExists}
       isSubmitting={isSubmitting}

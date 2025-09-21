@@ -207,16 +207,20 @@ function useMatchCardState(
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const hasError = Boolean(match.error);
+
   const isManualMatch = useMemo(() => {
     const selectedTeam = getSelectedTeam();
-    if (!selectedTeam?.manualMatches) return false;
-    return match.id in selectedTeam.manualMatches;
+    if (selectedTeam?.manualMatches && match.id in selectedTeam.manualMatches) return true;
+    if (!selectedTeam) return true;
+    return false;
   }, [match.id, getSelectedTeam]);
+
   const currentTeamSide = useMemo(() => {
     if (!isManualMatch) return 'radiant' as const;
     const selectedTeam = getSelectedTeam();
     return selectedTeam?.manualMatches?.[match.id]?.side || 'radiant';
   }, [isManualMatch, match.id, getSelectedTeam]);
+
   const matchHeroes = useMemo(() => {
     const teamMatch = teamMatches?.[match.id];
     if (!teamMatch?.side) return [];
@@ -226,6 +230,7 @@ function useMatchCardState(
     if (heroes.length === 0) return [];
     return heroes as Hero[];
   }, [match, teamMatches]);
+
   return {
     config,
     getSelectedTeam,

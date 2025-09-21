@@ -52,7 +52,7 @@ const isHighPerformingHero = (
     const teamPlayers = matchData.players[matchTeamData.side] || [];
     const isWin = matchTeamData.result === 'won';
     teamPlayers.forEach((player) => {
-      if (player.hero?.id === hero.id) {
+      if (player?.hero?.id === hero.id) {
         heroStats.count++;
         heroStats.totalGames++;
         if (isWin) {
@@ -72,8 +72,9 @@ const PlayerCard: React.FC<{
   hiddenMatchIds?: Set<number>;
 }> = ({ player, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
   const isOnActiveTeamSide = player.team === teamMatch?.side;
-  const isHighPerforming =
-    isOnActiveTeamSide && isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds);
+  const isHighPerforming = isOnActiveTeamSide
+    ? isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds)
+    : false;
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">
@@ -98,7 +99,7 @@ const PlayerCard: React.FC<{
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex flex-wrap gap-1 flex-1 @[500px]:flex hidden">
+              <div className="hidden @[500px]:flex flex-wrap gap-1 flex-1">
                 {player.items.map((item, index) => (
                   <Avatar key={index} className="w-6 h-6">
                     <AvatarImage src={item.imageUrl} alt={item.name} className="object-cover object-center" />
@@ -187,16 +188,19 @@ const RadiantPlayers: React.FC<{
         </h3>
       </div>
       <div className="space-y-4">
-        {sortedRadiantPlayers.map((player) => (
-          <PlayerCard
-            key={`radiant-${player.accountId}`}
-            player={player}
-            teamMatch={teamMatch}
-            allMatches={allMatches}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
-          />
-        ))}
+        {sortedRadiantPlayers.map((player, idx) => {
+          const keyId = player.accountId && player.accountId !== 0 ? player.accountId : player.hero?.id || idx;
+          return (
+            <PlayerCard
+              key={`radiant-${keyId}`}
+              player={player}
+              teamMatch={teamMatch}
+              allMatches={allMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -229,16 +233,19 @@ const DirePlayers: React.FC<{
         </h3>
       </div>
       <div className="space-y-4">
-        {sortedDirePlayers.map((player) => (
-          <PlayerCard
-            key={`dire-${player.accountId}`}
-            player={player}
-            teamMatch={teamMatch}
-            allMatches={allMatches}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
-          />
-        ))}
+        {sortedDirePlayers.map((player, idx) => {
+          const keyId = player.accountId && player.accountId !== 0 ? player.accountId : player.hero?.id || idx;
+          return (
+            <PlayerCard
+              key={`dire-${keyId}`}
+              player={player}
+              teamMatch={teamMatch}
+              allMatches={allMatches}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+            />
+          );
+        })}
       </div>
     </div>
   );
