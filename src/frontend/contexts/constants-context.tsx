@@ -152,12 +152,6 @@ export const ConstantsProvider: React.FC<ConstantsContextProviderProps> = ({ chi
     setItemsError(null);
   }, []);
 
-  // Load constants on mount
-  React.useEffect(() => {
-    void fetchHeroes(false);
-    void fetchItems(false);
-  }, [fetchHeroes, fetchItems]);
-
   const getItemById = useCallback(
     (itemId: number | string) => {
       if (typeof itemId === 'string') {

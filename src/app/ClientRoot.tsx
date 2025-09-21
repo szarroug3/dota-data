@@ -4,7 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
 import { ConfigProvider } from '@/frontend/contexts/config-context';
-import { ConstantsProvider } from '@/frontend/contexts/constants-context';
+import { ConstantsProvider, useConstantsContext } from '@/frontend/contexts/constants-context';
 import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-data-fetching-context';
 import { ShareProvider } from '@/frontend/contexts/share-context';
 import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
@@ -22,15 +22,20 @@ interface ClientRootProps {
 
 function AppContent({ children }: ClientRootProps) {
   // Handle app hydration
-  const { isHydrating, hydrationError } = useAppHydration();
+  const { hydrationError } = useAppHydration();
+  const constants = useConstantsContext();
+
+  const haveHeroes = Object.keys(constants.heroes).length > 0;
+  const haveItems = Object.keys(constants.items).length > 0;
+  const constantsReady = haveHeroes && haveItems;
 
   // Show loading state while hydrating
-  if (isHydrating) {
+  if (!constantsReady) {
     return (
       <div className="flex items-center justify-center w-full min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading application data...</p>
+          <p className="text-muted-foreground">Loading heroes and items...</p>
         </div>
       </div>
     );

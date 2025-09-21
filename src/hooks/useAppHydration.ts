@@ -9,7 +9,6 @@ import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
  * Hook for app-wide data hydration
  */
 export function useAppHydration() {
-  const [isHydrating, setIsHydrating] = useState(false);
   const [hydrationError, setHydrationError] = useState<string | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);
   const hasHydratedRef = useRef(false);
@@ -81,7 +80,6 @@ export function useAppHydration() {
     const hydrate = async () => {
       if (hasHydratedRef.current) return;
       try {
-        setIsHydrating(true);
         setHydrationError(null);
 
         await fetchConstants(contextsRef.current.constantsContext);
@@ -95,10 +93,8 @@ export function useAppHydration() {
 
         hasHydratedRef.current = true;
         setHasHydrated(true);
-        setIsHydrating(false);
       } catch (error) {
         console.error('Hydration: failed:', error);
-        setIsHydrating(false);
         setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
       }
     };
@@ -123,7 +119,6 @@ export function useAppHydration() {
   }, [contextsRef.current.configContext.activeTeam]);
 
   return {
-    isHydrating,
     hydrationError,
     hasHydrated,
   };

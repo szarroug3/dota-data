@@ -146,6 +146,7 @@ function useHeroesApi(
   setHeroesError: React.Dispatch<React.SetStateAction<string | null>>,
 ) {
   const heroesCacheRef = useRef<OpenDotaHero[] | null>(null);
+  const heroesRequestRef = useRef<Promise<OpenDotaHero[] | { error: string }> | null>(null);
   heroesCacheRef.current = heroesCache;
 
   const handleError = useCallback(
@@ -189,9 +190,17 @@ function useHeroesApi(
       if (!force && heroesCacheRef.current !== null) {
         return heroesCacheRef.current;
       }
+      // If a request is already in-flight, reuse it to avoid duplicate network calls
+      if (!force && heroesRequestRef.current) {
+        return heroesRequestRef.current;
+      }
       try {
         const path = force ? '/api/heroes?force=true' : '/api/heroes';
-        return await processResponse(path);
+        const requestPromise = processResponse(path).finally(() => {
+          heroesRequestRef.current = null;
+        });
+        heroesRequestRef.current = requestPromise;
+        return await requestPromise;
       } catch (error) {
         const errorMsg = 'Failed to fetch heroes data';
         console.error('Error fetching heroes data:', error);
@@ -211,6 +220,7 @@ function useItemsApi(
   setItemsError: React.Dispatch<React.SetStateAction<string | null>>,
 ) {
   const itemsCacheRef = useRef<Record<string, OpenDotaItem> | null>(null);
+  const itemsRequestRef = useRef<Promise<Record<string, OpenDotaItem> | { error: string }> | null>(null);
   itemsCacheRef.current = itemsCache;
 
   const handleError = useCallback(
@@ -253,9 +263,17 @@ function useItemsApi(
       if (!force && itemsCacheRef.current !== null) {
         return itemsCacheRef.current;
       }
+      // If a request is already in-flight, reuse it to avoid duplicate network calls
+      if (!force && itemsRequestRef.current) {
+        return itemsRequestRef.current;
+      }
       try {
         const path = force ? '/api/items?force=true' : '/api/items';
-        return await processResponse(path);
+        const requestPromise = processResponse(path).finally(() => {
+          itemsRequestRef.current = null;
+        });
+        itemsRequestRef.current = requestPromise;
+        return await requestPromise;
       } catch (error) {
         const errorMsg = 'Failed to fetch items data';
         console.error('Error fetching items data:', error);

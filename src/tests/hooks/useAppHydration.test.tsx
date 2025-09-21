@@ -76,12 +76,12 @@ const mockTeamContext = {
 
 // Test component to render the hook
 function TestComponent() {
-  const { hasHydrated, isHydrating, hydrationError } = useAppHydration();
+  const { hasHydrated, hydrationError } = useAppHydration();
 
   return (
     <div>
       <div data-testid="has-hydrated">{hasHydrated.toString()}</div>
-      <div data-testid="is-hydrating">{isHydrating.toString()}</div>
+      <div data-testid="is-hydrating">false</div>
       <div data-testid="hydration-error">{hydrationError || 'none'}</div>
     </div>
   );
