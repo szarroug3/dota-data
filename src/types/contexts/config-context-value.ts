@@ -58,6 +58,12 @@ export interface ConfigContextValue {
   activeTeam: { teamId: number; leagueId: number } | null;
   setActiveTeam: (activeTeam: { teamId: number; leagueId: number } | null) => void;
 
+  getGlobalManualMatches: () => number[];
+  setGlobalManualMatches: (ids: number[]) => void;
+
+  getGlobalManualPlayers: () => number[];
+  setGlobalManualPlayers: (ids: number[]) => void;
+
   // Loading states
   isLoading: boolean;
   isSaving: boolean;
