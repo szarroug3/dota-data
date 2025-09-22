@@ -56,10 +56,6 @@ const HeroCardList = ({
   );
 };
 
-// Removed legacy mocks; local stubs above cover behavior
-
-// (Removed legacy hero-card-utils mock; local stubs above provide deterministic behavior)
-
 describe('HeroCard', () => {
   const mockOnSelect = jest.fn();
   const mockOnHide = jest.fn();

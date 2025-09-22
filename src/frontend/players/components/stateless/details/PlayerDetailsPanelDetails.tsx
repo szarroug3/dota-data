@@ -28,7 +28,7 @@ const renderHeroWithAvatar = (hero: Hero) => (
   </div>
 );
 
-type DateRangeSelection = '7days' | '30days' | 'custom';
+type DateRangeSelection = 'all' | '7days' | '30days' | 'custom';
 
 function getDateCutoffs(
   selection: DateRangeSelection,
@@ -43,6 +43,10 @@ function getDateCutoffs(
   yesterdayEnd.setMilliseconds(-1); // 23:59:59.999 of the previous day
 
   const yesterdayEndSec = Math.floor(yesterdayEnd.getTime() / 1000);
+
+  if (selection === 'all') {
+    return { startCutoffSec: null, endCutoffSec: null, referenceNowSec: Math.floor(now.getTime() / 1000) };
+  }
 
   if (selection === '7days') {
     const start = new Date(todayStart);
@@ -143,6 +147,7 @@ function HeroStatsHeaderControls({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
             <SelectItem value="7days">Last 7 Days</SelectItem>
             <SelectItem value="30days">Last 30 Days</SelectItem>
             <SelectItem value="custom">Custom</SelectItem>
@@ -193,7 +198,7 @@ interface PlayerDetailsPanelDetailsProps {
 export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player, heroes }) => {
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
-  const [dateRange, setDateRange] = useState<DateRangeSelection>('30days');
+  const [dateRange, setDateRange] = useState<DateRangeSelection>('all');
   const [customDateRange, setCustomDateRange] = useState<{ start: string | null; end: string | null }>({
     start: null,
     end: null,
@@ -222,6 +227,8 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
     return sortDirection === 'asc' ? sorted.reverse() : sorted;
   }, [unsortedRows, sortKey, sortDirection]);
 
+  const totalGames = useMemo(() => filteredMatches.length, [filteredMatches]);
+
   return (
     <div className="space-y-6">
       <HeroStatsHeaderControls
@@ -232,9 +239,14 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
       />
       <Card className="@container">
         <CardHeader className="min-w-0">
-          <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">
-            Hero Statistics
-          </CardTitle>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <CardTitle className="text-lg font-semibold text-foreground dark:text-foreground truncate">
+              Hero Statistics
+            </CardTitle>
+            <div className="text-sm text-muted-foreground" aria-label="Games in list">
+              {totalGames} games
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table className="table-fixed w-full">

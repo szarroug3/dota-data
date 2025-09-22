@@ -225,9 +225,6 @@ export function useWaitForPlayerReadySource(players: Player[]) {
   return waitForPlayerReady;
 }
 
-// Legacy handler kept for compatibility — prefer using usePlayerListActions/usePlayerEditActions
-export const usePlayerStatsHandlers = undefined as never;
-
 export function usePlayerListActions(deps: {
   refreshPlayer: (id: number) => Promise<void | object | null>;
   resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;

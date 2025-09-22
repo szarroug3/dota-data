@@ -146,6 +146,8 @@ describe('PlayerDetailsPanelDetails', () => {
     renderWithProviders(<PlayerDetailsPanelDetails player={mockPlayer} heroes={mockHeroes as any} />);
 
     expect(screen.getByText('Hero Statistics')).toBeInTheDocument();
+    // Shows games count chip
+    expect(screen.getByLabelText('Games in list')).toHaveTextContent(/games/i);
     // Should render at least one row for hero 1 aggregated from recent matches
     const table = screen.getByRole('table');
     const body = table.querySelector('tbody');
@@ -331,6 +333,70 @@ describe('PlayerDetailsPanelDetails', () => {
     await waitFor(() => {
       const body = screen.getByRole('table').querySelector('tbody');
       expect(body?.children.length).toBe(1); // Still one hero row, aggregated from two matches
+    });
+  });
+
+  it('"All Time" includes matches regardless of age', async () => {
+    const now = Date.now();
+    const ninetyDaysAgoSec = Math.floor((now - 90 * 24 * 60 * 60 * 1000) / 1000);
+    const fiveDaysAgoSec = Math.floor((now - 5 * 24 * 60 * 60 * 1000) / 1000);
+
+    const playerWithOldAndNew: Player = {
+      ...mockPlayer,
+      recentMatches: [
+        {
+          match_id: 501,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1800,
+          game_mode: 1,
+          lobby_type: 0,
+          hero_id: 1,
+          start_time: ninetyDaysAgoSec,
+          version: null,
+          kills: 2,
+          deaths: 1,
+          assists: 3,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
+        },
+        {
+          match_id: 502,
+          player_slot: 0,
+          radiant_win: true,
+          duration: 1800,
+          game_mode: 1,
+          lobby_type: 0,
+          hero_id: 1,
+          start_time: fiveDaysAgoSec,
+          version: null,
+          kills: 5,
+          deaths: 2,
+          assists: 7,
+          average_rank: null,
+          leaver_status: 0,
+          party_size: null,
+          hero_variant: null,
+        },
+      ],
+    };
+
+    renderWithProviders(<PlayerDetailsPanelDetails player={playerWithOldAndNew} heroes={mockHeroes as any} />);
+
+    // Default is Last 30 Days, so the 90-day-old match is excluded -> one hero row
+    let tableBody = screen.getByRole('table').querySelector('tbody');
+    expect(tableBody?.children.length).toBe(1);
+
+    // Switch to All Time and verify both matches aggregate into the same hero row
+    const select = screen.getByRole('combobox');
+    fireEvent.click(select);
+    await waitFor(() => fireEvent.click(screen.getByText('All Time')));
+
+    await waitFor(() => {
+      tableBody = screen.getByRole('table').querySelector('tbody');
+      expect(tableBody?.children.length).toBe(1);
     });
   });
 });
