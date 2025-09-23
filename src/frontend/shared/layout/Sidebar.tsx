@@ -368,15 +368,18 @@ const Settings = ({ open }: { open: boolean }) => {
  * Sidebar toggle button component
  */
 function Toggle() {
-  const { toggleSidebar, open, state, isMobile } = useSidebar();
+  const { toggleSidebar, open, openMobile, state, isMobile } = useSidebar();
+
+  // Use the correct state based on whether we're on mobile or desktop
+  const isOpen = isMobile ? openMobile : open;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button onClick={toggleSidebar}>{open ? <ChevronLeft /> : <ChevronRight />}</button>
+        <button onClick={toggleSidebar}>{isOpen ? <ChevronLeft /> : <ChevronRight />}</button>
       </TooltipTrigger>
       <TooltipContent side="right" align="center" hidden={state !== 'collapsed' || isMobile}>
-        {open ? 'Collapse sidebar' : 'Expand sidebar'}
+        {isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
       </TooltipContent>
     </Tooltip>
   );
@@ -386,18 +389,22 @@ function Toggle() {
  * Main sidebar component with navigation, quick links, external sites, and settings
  */
 export function AppSidebar() {
-  const { open } = useSidebar();
+  const { open, openMobile, isMobile } = useSidebar();
+
+  // On mobile, always show the full version when the sidebar is open
+  // On desktop, use the regular open state
+  const shouldShowFullVersion = isMobile ? openMobile : open;
 
   return (
     <Sidebar collapsible="icon" className="overflow-hidden">
-      <Title open={open} />
+      <Title open={shouldShowFullVersion} />
       <SidebarContent className="overflow-hidden">
         <Navigation />
         <ExternalSites />
         <QuickLinks />
       </SidebarContent>
       <SidebarFooter className="overflow-hidden">
-        <Settings open={open} />
+        <Settings open={shouldShowFullVersion} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
