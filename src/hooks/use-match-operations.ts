@@ -1,282 +1,41 @@
 import { useCallback } from 'react';
 
+import {
+  useOptimisticOperations,
+  type OptimisticOperationState,
+  type OptimisticOperationConfig,
+} from '@/frontend/lib/optimistic-operations';
 import type { MatchDataFetchingContextValue } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
+import type { AbortControllerManager } from '@/hooks/use-abort-controller';
 import type { Match, MatchProcessing, MatchState } from '@/types/contexts/match-context-value';
-import { createInitialMatchData, updateMatchError, clearMatchError } from '@/utils/match-helpers';
-
-// ============================================================================
-// OPERATION TRACKING
-// ============================================================================
-
-/**
- * Track ongoing operations per match ID
- */
-const ongoingMatchOperations = new Map<number, AbortController>();
-
-/**
- * Get or create abort controller for a match operation
- */
-function getMatchAbortController(matchId: number): AbortController {
-  // Abort any existing operation for this match
-  const existingController = ongoingMatchOperations.get(matchId);
-  if (existingController) {
-    existingController.abort();
-  }
-
-  // Create new abort controller
-  const controller = new AbortController();
-  ongoingMatchOperations.set(matchId, controller);
-  return controller;
-}
-
-/**
- * Clean up abort controller for a match
- */
-function cleanupMatchAbortController(matchId: number): void {
-  const controller = ongoingMatchOperations.get(matchId);
-  if (controller) {
-    controller.abort();
-    ongoingMatchOperations.delete(matchId);
-  }
-}
-
-/**
- * Check if a match has ongoing operations
- */
-function hasOngoingMatchOperation(matchId: number): boolean {
-  return ongoingMatchOperations.has(matchId);
-}
+import type { OpenDotaMatch } from '@/types/external-apis';
+import { createInitialMatchData } from '@/utils/match-helpers';
 
 // ============================================================================
 // HELPER FUNCTIONS FOR MATCH OPERATIONS
 // ============================================================================
 
 /**
- * Check if operation was aborted and handle silently
+ * Create operation key for match operations
  */
-function handleMatchAbortCheck(abortController: AbortController, fallbackMatch: Match | null): Match | null {
-  if (abortController.signal.aborted) {
-    // Silently handle abort - this is expected when operations are replaced
-    return fallbackMatch;
-  }
-  return null;
+function createMatchOperationKey(matchId: number): string {
+  return `match-${matchId}`;
 }
 
 /**
- * Handle error vs abort distinction for match operations
+ * Abort ongoing match operations
  */
-function handleMatchOperationError(
-  error: Error | string | object,
-  abortController: AbortController,
-  matchId: number,
-  state: MatchState,
-): Match | null {
-  // Only handle actual errors, not aborts
-  if (!abortController.signal.aborted) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to process match';
-    updateMatchError(matchId, errorMessage, state);
-  }
-  // Return optimistic match for aborted operations
-  return state.matches.get(matchId) || null;
+function abortMatchOperations(abortController: AbortControllerManager, matchId: number): void {
+  // Use the abortOperationsByPrefix method from AbortControllerManager
+  abortController.abortOperationsByPrefix(createMatchOperationKey(matchId));
 }
 
 /**
- * Create and add optimistic match to state
+ * Check if match data has changed (for optimization)
  */
-function createAndAddOptimisticMatch(matchId: number, state: MatchState): Match {
-  const optimisticMatch = createInitialMatchData(matchId);
-
-  state.setMatches((prev) => {
-    const newMatches = new Map(prev);
-    newMatches.set(matchId, optimisticMatch);
-    return newMatches;
-  });
-
-  return optimisticMatch;
-}
-
-/**
- * Update state with processed match data
- */
-function updateStateWithProcessedMatch(matchId: number, processedMatch: Match, state: MatchState): void {
-  state.setMatches((prev) => {
-    const newMatches = new Map(prev);
-    newMatches.set(matchId, processedMatch);
-    return newMatches;
-  });
-}
-
-/**
- * Fetch and process match data
- */
-async function fetchAndProcessMatch(
-  matchId: number,
-  force: boolean,
-  abortController: AbortController,
-  optimisticMatch: Match,
-  matchDataFetching: MatchDataFetchingContextValue,
-  processing: MatchProcessing,
-  state: MatchState,
-): Promise<Match | null> {
-  // Fetch match data with force parameter
-  const matchData = await matchDataFetching.fetchMatchData(matchId, force);
-
-  // Check if operation was aborted during fetch
-  const fetchAbortResult = handleMatchAbortCheck(abortController, optimisticMatch);
-  if (fetchAbortResult) return fetchAbortResult;
-
-  if ('error' in matchData) {
-    updateMatchError(matchId, matchData.error, state);
-    return null;
-  }
-
-  // Process match data
-  const processedMatch = processing.processMatchData(matchData);
-
-  // Clear any existing error state since we successfully fetched and processed the match
-  clearMatchError(matchId, state);
-
-  // Update state with fetched data
-  updateStateWithProcessedMatch(matchId, processedMatch, state);
-
-  // Note: We can't check the state immediately after update because React state updates are asynchronous
-  // The state will be updated in the next render cycle
-
-  return processedMatch;
-}
-
-// ============================================================================
-// HOOKS
-// ============================================================================
-
-function useProcessMatch(
-  state: MatchState,
-  processing: MatchProcessing,
-  matchDataFetching: MatchDataFetchingContextValue,
-) {
-  // Consolidated match operation with force parameter
-  const processMatch = useCallback(
-    async (matchId: number, force = false): Promise<Match | null> => {
-      // Check if match already exists (skip if exists and not forcing)
-      if (!force && state.matches.has(matchId)) {
-        return state.matches.get(matchId) || null;
-      }
-
-      // Check if there's already an ongoing operation for this match
-      if (hasOngoingMatchOperation(matchId)) {
-        return state.matches.get(matchId) || null;
-      }
-
-      // Get abort controller for this operation
-      const abortController = getMatchAbortController(matchId);
-
-      try {
-        state.setIsLoading(true);
-
-        // Create optimistic match data and add to state
-        const optimisticMatch = createAndAddOptimisticMatch(matchId, state);
-
-        // Check if operation was aborted
-        const abortResult = handleMatchAbortCheck(abortController, optimisticMatch);
-        if (abortResult) {
-          return abortResult;
-        }
-
-        // Fetch and process match data
-        const result = await fetchAndProcessMatch(
-          matchId,
-          force,
-          abortController,
-          optimisticMatch,
-          matchDataFetching,
-          processing,
-          state,
-        );
-
-        // If the fetch failed (result is null), return the optimistic match instead
-        if (result === null) {
-          return optimisticMatch;
-        }
-
-        return result;
-      } catch (err) {
-        return handleMatchOperationError(err as Error | string | object, abortController, matchId, state);
-      } finally {
-        state.setIsLoading(false);
-        // Clean up abort controller
-        cleanupMatchAbortController(matchId);
-      }
-    },
-    [state, processing, matchDataFetching],
-  );
-  return processMatch;
-}
-
-function useParseMatch(
-  state: MatchState,
-  processing: MatchProcessing,
-  matchDataFetching: MatchDataFetchingContextValue,
-) {
-  const parseMatch = useCallback(
-    async (matchId: number) => {
-      if (hasOngoingMatchOperation(matchId)) {
-        return;
-      }
-      const abortController = getMatchAbortController(matchId);
-      try {
-        state.setIsLoading(true);
-        if (handleMatchAbortCheck(abortController, null)) {
-          return;
-        }
-        const matchData = await matchDataFetching.fetchMatchData(matchId, true);
-        if (handleMatchAbortCheck(abortController, null)) {
-          return;
-        }
-        if ('error' in matchData) {
-          updateMatchError(matchId, matchData.error, state);
-          return;
-        }
-        const processedMatch = processing.processMatchData(matchData);
-        updateStateWithProcessedMatch(matchId, processedMatch, state);
-      } catch (err) {
-        if (!handleMatchAbortCheck(abortController, null)) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to parse match';
-          updateMatchError(matchId, errorMessage, state);
-        }
-      } finally {
-        state.setIsLoading(false);
-        cleanupMatchAbortController(matchId);
-      }
-    },
-    [state, processing, matchDataFetching],
-  );
-  return parseMatch;
-}
-
-function useRemoveAndSelect(state: MatchState) {
-  const removeMatch = useCallback(
-    (matchId: number) => {
-      cleanupMatchAbortController(matchId);
-      state.setMatches((prev) => {
-        const newMatches = new Map(prev);
-        newMatches.delete(matchId);
-        return newMatches;
-      });
-      if (state.selectedMatchId === matchId) {
-        state.setSelectedMatchId(null);
-      }
-    },
-    [state],
-  );
-
-  const selectMatch = useCallback(
-    (matchId: number) => {
-      state.setSelectedMatchId(matchId);
-    },
-    [state],
-  );
-
-  return { removeMatch, selectMatch };
+function hasMatchDataChanged(existing: Match, processed: Match): boolean {
+  // For matches, we'll do a simple comparison - can be enhanced if needed
+  return JSON.stringify(existing) !== JSON.stringify(processed);
 }
 
 export function useMatchOperations(
@@ -284,28 +43,49 @@ export function useMatchOperations(
   processing: MatchProcessing,
   matchDataFetching: MatchDataFetchingContextValue,
 ) {
-  const processMatch = useProcessMatch(state, processing, matchDataFetching);
-  const parseMatch = useParseMatch(state, processing, matchDataFetching);
-  const { removeMatch, selectMatch } = useRemoveAndSelect(state);
+  // Convert MatchState to OptimisticOperationState
+  const optimisticState: OptimisticOperationState<Match> = {
+    items: state.matches,
+    setItems: state.setMatches,
+    selectedId: state.selectedMatchId,
+    setSelectedId: state.setSelectedMatchId,
+    setIsLoading: state.setIsLoading,
+  };
 
-  const addMatch = useCallback(
-    async (matchId: number): Promise<Match | null> => {
-      return await processMatch(matchId, false);
+  // Create configuration for match operations
+  const config: OptimisticOperationConfig<Match, OpenDotaMatch> = {
+    createInitialData: createInitialMatchData,
+    processData: processing.processMatchData,
+    fetchData: matchDataFetching.fetchMatchData,
+    createOperationKey: createMatchOperationKey,
+    abortOperations: abortMatchOperations,
+    hasDataChanged: hasMatchDataChanged,
+  };
+
+  // Use the generic optimistic operations hook
+  const { addItem, refreshItem, removeItem } = useOptimisticOperations(optimisticState, config);
+
+  // Additional match-specific operations
+  const selectMatch = useCallback(
+    (matchId: number) => {
+      state.setSelectedMatchId(matchId);
     },
-    [processMatch],
+    [state],
   );
-  const refreshMatch = useCallback(
-    async (matchId: number): Promise<Match | null> => {
-      return await processMatch(matchId, true);
+
+  const parseMatch = useCallback(
+    async (matchId: number) => {
+      // Parse match is essentially a refresh with force=true
+      await refreshItem(matchId);
     },
-    [processMatch],
+    [refreshItem],
   );
 
   return {
-    addMatch,
-    refreshMatch,
+    addMatch: addItem,
+    refreshMatch: refreshItem,
     parseMatch,
-    removeMatch,
+    removeMatch: removeItem,
     selectMatch,
   };
 }
