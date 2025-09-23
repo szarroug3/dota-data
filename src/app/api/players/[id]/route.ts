@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaPlayer } from '@/lib/api/opendota/players';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
 import { schemas } from '@/types/api-zod';
 
@@ -159,7 +160,11 @@ export async function GET(
       throw new Error('Invalid player data');
     }
   } catch (error) {
-    console.error('Players API Error:', error);
+    const { id } = await params;
+    apiLogger.error(
+      'Players API Error',
+      `Failed to fetch player data for ID: ${id} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
 
     if (error instanceof Error) {
       const { id } = await params;

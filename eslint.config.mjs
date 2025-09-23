@@ -87,16 +87,8 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-empty-object-type': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
-      '@typescript-eslint/no-restricted-types': [
-        'error',
-        {
-          types: {
-            unknown: {
-              message: "Do not use 'unknown', use a more specific type.",
-            },
-          },
-        },
-      ],
+      // Allow unknown type - use responsibly with proper type narrowing
+      '@typescript-eslint/no-restricted-types': 'off',
 
       // React rules - disable the problematic ones for Next.js 13+
       'react/react-in-jsx-scope': 'off',

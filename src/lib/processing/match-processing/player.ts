@@ -74,7 +74,16 @@ export function convertPlayer(
   const numberKeyedItems: Record<number, Item> = Object.keys(items).reduce(
     (acc, key) => {
       const num = Number(key);
-      if (Number.isFinite(num)) acc[num] = items[key as keyof typeof items] as Item;
+      if (Number.isFinite(num)) {
+        // Use unknown intermediate step for safer type narrowing
+        const itemKey = key as keyof typeof items;
+        const item = items[itemKey] as unknown as Item;
+
+        // Basic validation - ensure item has required properties
+        if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
+          acc[num] = item;
+        }
+      }
       return acc;
     },
     {} as Record<number, Item>,

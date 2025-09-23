@@ -318,7 +318,16 @@ const Settings = ({ open }: { open: boolean }) => {
     const teamsMap = getTeams();
     const teamsObject: Record<string, Serializable> = {};
     teamsMap.forEach((value, key) => {
-      teamsObject[key] = JSON.parse(JSON.stringify(value)) as Serializable;
+      // Use unknown intermediate step for safer type narrowing
+      const serializedValue: unknown = JSON.parse(JSON.stringify(value));
+      const serializableValue = serializedValue as unknown as Serializable;
+
+      // Basic validation - ensure the serialized value is valid
+      if (serializableValue !== null && typeof serializableValue === 'object') {
+        teamsObject[key] = serializableValue;
+      } else {
+        console.warn(`Failed to serialize team data for key ${key}`);
+      }
     });
     const data = {
       teams: teamsObject,

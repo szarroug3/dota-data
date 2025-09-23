@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
+import { isTeamSource, isTeamMatchParticipationRecord } from '@/hooks/team-core-internals';
 import { isTeamFullyLoaded } from '@/hooks/team-loading-helpers';
 import {
   coerceManualPlayersToArray,
@@ -199,19 +200,31 @@ async function handleTeamSummaryOperation(
     ]);
     if (controller.signal.aborted) return null;
     if (handleTeamDataErrors(teamId, leagueId, teamData, leagueData, teamKey, setTeams)) return null;
-    const transformedTeam = transformTeamData(
-      teamId,
-      leagueId,
-      teamData as TeamSource,
-      (leagueData as SteamLeague | null | undefined) || undefined,
-    );
+    // Use unknown intermediate step for safer type narrowing
+    const teamDataTyped = teamData as unknown as TeamSource;
+    const leagueDataTyped = leagueData as unknown as SteamLeague | null | undefined;
+
+    // Validate types before using
+    if (!isTeamSource(teamDataTyped)) {
+      throw new Error(`Invalid team data structure for team ${teamId}`);
+    }
+
+    const transformedTeam = transformTeamData(teamId, leagueId, teamDataTyped, leagueDataTyped || undefined);
     setTeams((prev) => {
       const newTeams = new Map(prev);
       const existingTeam = newTeams.get(teamKey);
       if (existingTeam?.manualMatches) {
         transformedTeam.manualMatches = { ...existingTeam.manualMatches };
         Object.entries(existingTeam.manualMatches).forEach(([matchId, matchData]) => {
-          const matches = transformedTeam.matches as Record<string, TeamMatchParticipation>;
+          // Use unknown intermediate step for safer type narrowing
+          const matches = transformedTeam.matches as unknown as Record<string, TeamMatchParticipation>;
+
+          // Validate the matches structure
+          if (!isTeamMatchParticipationRecord(matches)) {
+            console.warn(`Invalid matches structure for team ${teamId}, skipping manual match ${matchId}`);
+            return;
+          }
+
           if (!matches[matchId]) {
             matches[matchId] = {
               matchId: parseInt(matchId),
@@ -227,9 +240,12 @@ async function handleTeamSummaryOperation(
         });
       }
       if (existingTeam?.manualPlayers) {
-        const manualArray = coerceManualPlayersToArray(
-          existingTeam.manualPlayers as number[] | Record<string, number | string> | undefined,
-        );
+        // Use unknown intermediate step for safer type narrowing
+        const manualPlayersData = existingTeam.manualPlayers as unknown as
+          | number[]
+          | Record<string, number | string>
+          | undefined;
+        const manualArray = coerceManualPlayersToArray(manualPlayersData);
         transformedTeam.manualPlayers = [...manualArray];
         if (existingTeam.players?.length) {
           const manualPlayerIds = new Set(manualArray);

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSharedPayload, setSharedPayload } from '@/app/api/share/cache';
 import { getEnv } from '@/lib/config/environment';
+import { shareLogger } from '@/lib/logger';
 import type { CacheValue } from '@/types/cache';
 
 function buildCacheKey(key: string): string {
@@ -15,7 +16,18 @@ async function readMockShareFromDisk(key: string): Promise<Record<string, CacheV
   try {
     const filePath = path.join(process.cwd(), 'mock-data', 'share', `${key}.json`);
     const file = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(file) as Record<string, CacheValue>;
+
+    // Use unknown intermediate step for safer type narrowing
+    const parsedData: unknown = JSON.parse(file);
+    const shareData = parsedData as unknown as Record<string, CacheValue>;
+
+    // Basic validation - ensure it's an object
+    if (!shareData || typeof shareData !== 'object') {
+      console.warn(`Invalid share data structure for key ${key}`);
+      return null;
+    }
+
+    return shareData;
   } catch {
     return null;
   }
@@ -86,6 +98,24 @@ async function loadSharePayload(cacheKey: string, key: string): Promise<Record<s
  *         description: Internal server error
  */
 
+/**
+ * Handle share retrieval errors
+ */
+function handleShareError(error: unknown, key: string): NextResponse {
+  shareLogger.error(
+    'Share GET error',
+    `Failed to retrieve shared payload for key: ${key} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+  );
+  return NextResponse.json(
+    {
+      error: 'Failed to retrieve share payload',
+      status: 500,
+      details: error instanceof Error ? error.message : 'Unknown error',
+    },
+    { status: 500 },
+  );
+}
+
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ key: string }> | { key: string } },
@@ -102,14 +132,8 @@ export async function GET(
     if (!payload) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(payload);
   } catch (error) {
-    console.error('Share GET error:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to retrieve share payload',
-        status: 500,
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 },
-    );
+    const resolved = 'then' in context.params ? await context.params : context.params;
+    const key = resolved.key;
+    return handleShareError(error, key);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaItems } from '@/lib/api/opendota/items';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
 import { schemas } from '@/types/api-zod';
 
@@ -252,7 +253,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       throw new Error('Failed to parse items data');
     }
   } catch (error) {
-    console.error('Items API Error:', error);
+    apiLogger.error(
+      'Items API Error',
+      `Failed to fetch items data - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
 
     if (error instanceof Error) {
       const errorResponse = handleItemsError(error);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaHeroes } from '@/lib/api/opendota/heroes';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
 import { schemas } from '@/types/api-zod';
 
@@ -221,7 +222,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       throw new Error('Failed to parse heroes data');
     }
   } catch (error) {
-    console.error('Heroes API Error:', error);
+    apiLogger.error(
+      'Heroes API Error',
+      `Failed to fetch heroes data - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
 
     if (error instanceof Error) {
       const errorResponse = handleHeroesError(error);

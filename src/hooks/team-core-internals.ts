@@ -28,6 +28,36 @@ function isErrorResult(value: TeamResult | LeagueResult): value is ErrorResult {
   return Boolean(value) && typeof value === 'object' && value !== null && 'error' in (value as Record<string, string>);
 }
 
+// Type guards for safer type narrowing
+export function isTeamSource(value: unknown): value is TeamSource {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    (typeof (value as Record<string, unknown>).id === 'string' ||
+      typeof (value as Record<string, unknown>).id === 'number')
+  );
+}
+
+export function isTeamMatchParticipationRecord(value: unknown): value is Record<string, TeamMatchParticipation> {
+  if (typeof value !== 'object' || value === null) return false;
+
+  const record = value as Record<string, unknown>;
+  return Object.values(record).every(
+    (match) =>
+      typeof match === 'object' &&
+      match !== null &&
+      'matchId' in match &&
+      'result' in match &&
+      'duration' in match &&
+      'opponentName' in match &&
+      'leagueId' in match &&
+      'startTime' in match &&
+      'side' in match,
+  );
+}
+
 function getErrorMessage(input: TeamResult | LeagueResult, defaultMsg: string): string | null {
   if (input == null) return defaultMsg;
   if (isErrorResult(input)) return input.error || defaultMsg;
@@ -177,19 +207,31 @@ export async function handleTeamSummaryOperation(
     ]);
     if (controller.signal.aborted) return null;
     if (handleTeamDataErrors(teamId, leagueId, teamData, leagueData, teamKey, setTeams)) return null;
-    const transformedTeam = transformTeamData(
-      teamId,
-      leagueId,
-      teamData as TeamSource,
-      (leagueData as SteamLeague | null | undefined) || undefined,
-    );
+    // Use unknown intermediate step for safer type narrowing
+    const teamDataTyped = teamData as unknown as TeamSource;
+    const leagueDataTyped = leagueData as unknown as SteamLeague | null | undefined;
+
+    // Validate types before using
+    if (!isTeamSource(teamDataTyped)) {
+      throw new Error(`Invalid team data structure for team ${teamId}`);
+    }
+
+    const transformedTeam = transformTeamData(teamId, leagueId, teamDataTyped, leagueDataTyped || undefined);
     setTeams((prev) => {
       const newTeams = new Map(prev);
       const existingTeam = newTeams.get(teamKey);
       if (existingTeam?.manualMatches) {
         transformedTeam.manualMatches = { ...existingTeam.manualMatches };
         Object.entries(existingTeam.manualMatches).forEach(([matchId, matchData]) => {
-          const matches = transformedTeam.matches as Record<string, TeamMatchParticipation>;
+          // Use unknown intermediate step for safer type narrowing
+          const matches = transformedTeam.matches as unknown as Record<string, TeamMatchParticipation>;
+
+          // Validate the matches structure
+          if (!isTeamMatchParticipationRecord(matches)) {
+            console.warn(`Invalid matches structure for team ${teamId}, skipping manual match ${matchId}`);
+            return;
+          }
+
           if (!matches[matchId]) {
             matches[matchId] = {
               matchId: parseInt(matchId),
@@ -205,9 +247,12 @@ export async function handleTeamSummaryOperation(
         });
       }
       if (existingTeam?.manualPlayers) {
-        const manualArray = coerceManualPlayersToArray(
-          existingTeam.manualPlayers as number[] | Record<string, number | string> | undefined,
-        );
+        // Use unknown intermediate step for safer type narrowing
+        const manualPlayersData = existingTeam.manualPlayers as unknown as
+          | number[]
+          | Record<string, number | string>
+          | undefined;
+        const manualArray = coerceManualPlayersToArray(manualPlayersData);
         transformedTeam.manualPlayers = [...manualArray];
         if (existingTeam.players?.length) {
           const manualPlayerIds = new Set(manualArray);

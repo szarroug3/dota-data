@@ -40,11 +40,37 @@ const defaultShareContext: ShareContextValue = {
   createShare: async () => null,
 };
 
+// Type guard for SharePayload validation
+function isSharePayload(data: unknown): data is SharePayload {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'teams' in data &&
+    'activeTeam' in data &&
+    'globalManualMatches' in data &&
+    'globalManualPlayers' in data &&
+    typeof (data as Record<string, unknown>).teams === 'object' &&
+    Array.isArray((data as Record<string, unknown>).globalManualMatches) &&
+    Array.isArray((data as Record<string, unknown>).globalManualPlayers)
+  );
+}
+
 async function fetchSharePayload(key: string): Promise<SharePayload | null> {
   try {
     const res = await fetch(`/api/share/${encodeURIComponent(key)}`);
     if (!res.ok) return null;
-    return (await res.json()) as SharePayload;
+
+    // Use unknown intermediate step for safer type narrowing
+    const responseData: unknown = await res.json();
+    const shareData = responseData as unknown as SharePayload;
+
+    // Validate the response structure
+    if (!isSharePayload(shareData)) {
+      console.warn(`Invalid share payload structure for key ${key}`);
+      return null;
+    }
+
+    return shareData;
   } catch (e) {
     console.error('Failed to fetch share payload', e);
     return null;
