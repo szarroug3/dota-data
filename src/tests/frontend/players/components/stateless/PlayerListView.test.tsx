@@ -276,6 +276,7 @@ describe('PlayerListView', () => {
       const erroredCard = screen.getByRole('button', { name: /Error: Custom error message/i });
       expect(erroredCard).toBeInTheDocument();
       expect(erroredCard).toHaveClass('border-destructive');
+      expect(screen.getByRole('alert')).toHaveTextContent('Custom error message');
     });
   });
 });

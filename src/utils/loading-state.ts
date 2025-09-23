@@ -84,6 +84,23 @@ export function clearLoading<T extends DataWithLoading>(setData: Dispatch<SetSta
 // ============================================================================
 
 /**
+ * Run an async operation while automatically toggling a specific Map item's loading state
+ * to true before the operation and false after it completes (or errors).
+ */
+export async function withMapItemLoading<K, T extends DataWithLoading>(
+  setMap: Dispatch<SetStateAction<Map<K, T>>>,
+  key: K,
+  operation: () => Promise<void> | void,
+): Promise<void> {
+  setMapItemLoading(setMap, key);
+  try {
+    await operation();
+  } finally {
+    clearMapItemLoading(setMap, key);
+  }
+}
+
+/**
  * Check if an item is loading
  */
 export function isLoading<T extends DataWithLoading>(item: T): boolean {

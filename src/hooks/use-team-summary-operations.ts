@@ -12,7 +12,6 @@ import { generateTeamKey } from '@/lib/processing/team-processing';
 import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
 import { handleOperationError } from '@/utils/error-handling';
-import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { createInitialTeamData, updateTeamError } from '@/utils/team-helpers';
 
 // ============================================================================
@@ -94,28 +93,8 @@ export function useRefreshTeamSummary(
           return;
         }
 
-        // Set loading state using Map utility
-        setMapItemLoading(state.setTeams, teamKey);
-
-        // Note: fetchTeamSummary doesn't exist in the current team data fetching context
-        // This would need to be implemented or we'd use a different method
-        // For now, we'll simulate the operation
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate async operation
-
-        // Check for abort
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        // For now, we'll just clear the loading state since fetchTeamSummary doesn't exist
-        // In a real implementation, this would process the summary data
-        const updatedTeamData: TeamData = {
-          ...existingTeam,
-          isLoading: false,
-        };
-
-        // Update team in state and persist in one step to avoid stale state
-        updateTeamInStateAndPersist(teamKey, updatedTeamData, state, configContext);
+        if (controller.signal.aborted) return;
+        updateTeamInStateAndPersist(teamKey, existingTeam, state, configContext);
       } catch (error) {
         const fallbackData = handleSummaryOperationError(
           error as Error | string | object,
@@ -127,9 +106,6 @@ export function useRefreshTeamSummary(
         );
         updateTeamInStateAndPersist(teamKey, fallbackData, state, configContext);
       } finally {
-        // Clear loading state using Map utility
-        clearMapItemLoading(state.setTeams, teamKey);
-
         abortController.cleanupAbortController(operationKey);
       }
     },

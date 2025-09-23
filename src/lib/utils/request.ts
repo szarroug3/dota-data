@@ -25,7 +25,6 @@ async function getFromAPI(requestFn: () => Promise<string>, mockFilename: string
   const response = await requestFn();
   if (getEnv.WRITE_REAL_DATA_TO_MOCK()) {
     const folder = path.dirname(mockFilename);
-    console.log('writing real data to mock', mockFilename);
     await fs.mkdir(folder, { recursive: true });
     await fs.writeFile(mockFilename, response, 'utf-8');
   }

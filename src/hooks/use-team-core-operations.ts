@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
+import { isTeamFullyLoaded, useTeamLoadingWatcher } from '@/hooks/team-loading-helpers';
 import {
   coerceManualPlayersToArray,
   mergePlayersUniqueByAccountId,
@@ -308,7 +309,7 @@ function useAddTeamCore(
       // Ensure an initial placeholder team exists so loading state and UI spinner appear immediately
       ensurePlaceholderTeam(setTeams, teamKey, teamId, leagueId);
 
-      // Set map item loading (safe if item already exists, no-op otherwise)
+      // Manually control loading so we only clear when ALL matches and players are loaded
       setMapItemLoading(setTeamsForLoading, teamKey);
       try {
         const transformedTeam = await handleTeamSummaryOperation(
@@ -334,11 +335,16 @@ function useAddTeamCore(
           // Now ensure match context has optimistic entries for any still-missing matches
           // This avoids racing against the processing calls above
           seedOptimisticMatchContext(teamMatches);
+
+          // If all referenced matches and players are fully loaded, clear loading now
+          const allMatchIds = teamMatches.map((t) => t.matchId);
+          if (isTeamFullyLoaded(teamId, allMatchIds, matchContext, playerContext)) {
+            clearMapItemLoading(setTeamsForLoading, teamKey);
+          }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to add team';
         updateMapItemError(setTeams, teamKey, errorMessage);
-      } finally {
         clearMapItemLoading(setTeamsForLoading, teamKey);
       }
     },
@@ -352,6 +358,8 @@ function useAddTeamCore(
       configContext,
       abortController,
       setTeams,
+      matchContext,
+      playerContext,
     ],
   );
 }
@@ -483,6 +491,8 @@ export function useTeamCoreOperations(
   const manualMatchesOps = useManualMatchesOps(teams, setTeams, matchContext, selectedTeamId);
   const manualPlayersOps = useManualPlayersOps(teams, playerContext);
   const manualTeamsOps = useManualTeamsOps(setTeams);
+
+  useTeamLoadingWatcher(teams, setTeamsForLoading, matchContext, playerContext);
 
   return {
     addTeam,

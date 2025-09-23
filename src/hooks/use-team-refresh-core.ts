@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
+import { isTeamFullyLoaded } from '@/hooks/team-loading-helpers';
 import {
   processTeamMatchesAndUpdateTeam,
   seedOptimisticMatchesInMatchContext,
@@ -62,9 +63,17 @@ export function useRefreshTeamCore(
             matchContext,
             playerContext,
           );
+
+          const allMatchIds = teamMatches.map((t) => t.matchId);
+          if (isTeamFullyLoaded(teamId, allMatchIds, matchContext, playerContext)) {
+            clearMapItemLoading(setTeamsForLoading, teamKey);
+          }
+        } else {
+          clearMapItemLoading(setTeamsForLoading, teamKey);
         }
-      } finally {
+      } catch (e) {
         clearMapItemLoading(setTeamsForLoading, teamKey);
+        throw e;
       }
     },
     [

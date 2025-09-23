@@ -15,6 +15,24 @@ interface TeamCardProps {
   onEditTeam: (teamId: number, leagueId: number) => void;
 }
 
+function haveNamesLoaded(teamName: string, leagueName: string): boolean {
+  return !teamName.startsWith('Loading ') && !leagueName.startsWith('Loading ');
+}
+
+function areAllMatchesProcessed(matches: TeamData['matches']): boolean {
+  const matchList = Object.values(matches || {});
+  if (matchList.length === 0) return true;
+  // Consider a match processed only when duration > 0 (real data loaded)
+  return matchList.every((m) => (m?.duration || 0) > 0);
+}
+
+function isStatsReady(teamData: TeamData, teamName: string, leagueName: string): boolean {
+  const hasMatches = Object.keys(teamData.matches || {}).length > 0;
+  const allProcessed = areAllMatchesProcessed(teamData.matches);
+  const namesLoaded = haveNamesLoaded(teamName, leagueName);
+  return (hasMatches && allProcessed) || (!hasMatches && namesLoaded);
+}
+
 interface TeamInformationProps {
   teamData: TeamData;
   isActive: boolean;
@@ -23,16 +41,18 @@ interface TeamInformationProps {
   hasError: boolean;
 }
 
-const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, teamName, leagueName, hasError }) => {
-  const getTeamStats = () => {
-    if (hasError || !teamData.performance) {
-      return null;
-    }
-    const { totalMatches, overallWinRate } = teamData.performance;
-    return { totalMatches, overallWinRate };
+function getTeamStatsForDisplay(teamData: TeamData, hasError: boolean, isLoading: boolean, statsReady: boolean) {
+  if (hasError || isLoading || !teamData.performance || !statsReady) return null;
+  return {
+    totalMatches: teamData.performance.totalMatches,
+    overallWinRate: teamData.performance.overallWinRate,
   };
+}
 
-  const stats = getTeamStats();
+const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, teamName, leagueName, hasError }) => {
+  const isLoading = Boolean(teamData.isLoading);
+  const statsReady = isStatsReady(teamData, teamName, leagueName);
+  const stats = getTeamStatsForDisplay(teamData, hasError, isLoading, statsReady);
 
   return (
     <div className="flex-1 min-w-0">
@@ -45,7 +65,7 @@ const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, t
               Active
             </Badge>
           )}
-          {teamData.isLoading && (
+          {isLoading && (
             <div
               className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary flex-shrink-0"
               role="status"
@@ -65,11 +85,17 @@ const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, t
 
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground truncate">{leagueName}</p>
-        {!hasError && stats && (
+        {!hasError && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{stats.totalMatches} matches</span>
-            <span>•</span>
-            <span>{stats.overallWinRate.toFixed(1)}% win rate</span>
+            {stats ? (
+              <>
+                <span>{stats.totalMatches} matches</span>
+                <span>•</span>
+                <span>{stats.overallWinRate.toFixed(1)}% win rate</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground/50">Loading stats...</span>
+            )}
           </div>
         )}
         {hasError && <p className="text-xs text-destructive">{teamData.error}</p>}

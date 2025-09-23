@@ -70,14 +70,20 @@ function MatchInfo({
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
         )}
       </div>
-      <div className="text-sm text-muted-foreground truncate">
-        <span className="@[350px]:inline hidden">
-          {formatDate(match.date)} • {formatDuration(match.duration)}
-        </span>
-        <span className="@[280px]:inline @[350px]:hidden hidden">{formatDate(match.date)}</span>
-        <span className="@[220px]:inline @[280px]:hidden hidden">{formatDate(match.date)}</span>
-        <span className="@[220px]:hidden">{formatDate(match.date)}</span>
-      </div>
+      {hasError ? (
+        <div className="text-sm text-destructive truncate" role="alert">
+          {match.error}
+        </div>
+      ) : (
+        <div className="text-sm text-muted-foreground truncate">
+          <span className="@[350px]:inline hidden">
+            {formatDate(match.date)} • {formatDuration(match.duration)}
+          </span>
+          <span className="@[280px]:inline @[350px]:hidden hidden">{formatDate(match.date)}</span>
+          <span className="@[220px]:inline @[280px]:hidden hidden">{formatDate(match.date)}</span>
+          <span className="@[220px]:hidden">{formatDate(match.date)}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,6 @@ import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { TeamData } from '@/types/contexts/team-context-value';
 import type { SteamLeague, SteamTeam } from '@/types/external-apis/steam';
 import { handleOperationError } from '@/utils/error-handling';
-import { clearMapItemLoading, setMapItemLoading } from '@/utils/loading-state';
 import { updateTeamError } from '@/utils/team-helpers';
 
 // ============================================================================
@@ -172,16 +171,12 @@ export function useProcessTeamData(
         const initialTeamData = createInitialTeamData(teamId, leagueId);
         addNewTeamToState(teamKey, initialTeamData, state);
 
-        // Set loading state using Map utility
-        setMapItemLoading(state.setTeams, teamKey);
-
-        // Fetch team and league data
+        // Fetch team and league data (no isLoading toggle here)
         const [teamResult, leagueResult] = await Promise.all([
           teamDataFetching.fetchTeamData(teamId, force),
           teamDataFetching.fetchLeagueData(leagueId, force),
         ]);
 
-        // Check if operation was aborted
         if (controller.signal.aborted) {
           return;
         }
@@ -213,9 +208,6 @@ export function useProcessTeamData(
         );
         updateTeamInState(teamKey, fallbackData, state);
       } finally {
-        // Clear loading state using Map utility
-        clearMapItemLoading(state.setTeams, teamKey);
-
         abortController.cleanupAbortController(operationKey);
       }
     },

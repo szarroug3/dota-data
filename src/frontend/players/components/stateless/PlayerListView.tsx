@@ -154,7 +154,11 @@ function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; total
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
         )}
       </div>
-      {!hasError && (
+      {hasError ? (
+        <div className="text-sm text-destructive truncate" role="alert">
+          {player.error}
+        </div>
+      ) : (
         <>
           <InfoOrPlaceholder show={showData}>
             {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}

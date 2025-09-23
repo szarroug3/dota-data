@@ -46,15 +46,12 @@ function loadTeamsFromStorage(): Map<string, TeamData> {
   if (!isLocalStorageAvailable()) return new Map();
   const teamsData = getParsedData<{ [key: string]: TeamData }>(STORAGE_KEYS.TEAMS);
   if (teamsData) {
-    const sanitized = new Map<string, TeamData>();
+    const restored = new Map<string, TeamData>();
     Object.entries(teamsData).forEach(([key, value]) => {
       const next: TeamData = { ...value };
-      if (typeof (next as { isLoading?: boolean }).isLoading !== 'undefined') {
-        (next as { isLoading?: boolean }).isLoading = false;
-      }
-      sanitized.set(key, next);
+      restored.set(key, next);
     });
-    return sanitized;
+    return restored;
   }
   return new Map();
 }
@@ -84,9 +81,6 @@ function toTeamsMapFromPayload(payload: SharePayload | null): Map<string, TeamDa
   Object.entries(payload.teams).forEach(([key, value]) => {
     if (isTeamDataLike(value)) {
       const next: TeamData = { ...(value as TeamData) };
-      if (typeof (next as { isLoading?: boolean }).isLoading !== 'undefined') {
-        (next as { isLoading?: boolean }).isLoading = false;
-      }
       entries.push([key, next]);
     }
   });

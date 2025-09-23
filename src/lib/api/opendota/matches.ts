@@ -97,7 +97,6 @@ export async function parseOpenDotaMatchWithJobPolling(matchId: string, timeout 
     try {
       // Check parse status using jobId
       const statusResponse = await checkOpenDotaParseStatus(jobId);
-      console.log(statusResponse);
 
       // If parsing is complete, fetch the parsed match data
       if (isParseComplete(statusResponse)) {

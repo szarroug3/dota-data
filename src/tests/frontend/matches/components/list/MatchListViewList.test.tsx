@@ -338,4 +338,30 @@ describe('MatchListViewList', () => {
       expect(hideButtons.length).toBeGreaterThan(0);
     });
   });
+
+  it('shows error message inline when match has an error and prevents selection', () => {
+    const errorMatch: Match = {
+      ...mockMatches[0],
+      id: 999,
+      error: 'Failed to fetch match data',
+      isLoading: false,
+    } as Match;
+
+    const onSelectMatch = jest.fn();
+    render(
+      <MatchListViewList {...defaultProps} matches={[errorMatch]} onSelectMatch={onSelectMatch} teamMatches={{}} />,
+    );
+
+    // Title still shows Match {id}
+    expect(screen.getByText('Match 999')).toBeInTheDocument();
+    // Error text is shown in the subtitle area
+    expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch match data');
+
+    // Clicking should not trigger selection when errored
+    const card = screen.getByRole('button');
+    if (card) {
+      fireEvent.click(card);
+    }
+    expect(onSelectMatch).not.toHaveBeenCalled();
+  });
 });
