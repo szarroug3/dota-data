@@ -45,13 +45,19 @@ function parseSteamTeamInfo(data: string, teamId: string): SteamTeam {
 export async function fetchSteamTeam(teamId: string, force = false): Promise<SteamTeam> {
   const cacheKey = `steam:team:${teamId}`;
   const cacheTTL = CacheTtlSeconds.steamTeamById;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'teams', `steam-team-${teamId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'teams',
+    `steam-team-${teamId}.json`,
+  );
 
   const result = await request<SteamTeam>(
     'steam',
     () => fetchTeamInfoFromSteam(teamId),
     (data: string) => parseSteamTeamInfo(data, teamId),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,

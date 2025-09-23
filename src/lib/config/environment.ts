@@ -129,7 +129,7 @@ function docsMockConfig() {
 ### WRITE_REAL_DATA_TO_MOCK
 - **Type**: boolean
 - **Default**: false
-- **Description**: Write real API responses to mock data files
+- **Description**: Write real API responses to mock-data/external-data files and cache data to mock-data/cached-data files
 `;
 }
 function docsExternalApiConfig() {

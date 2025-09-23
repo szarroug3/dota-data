@@ -98,7 +98,7 @@ function toSerializable(data: SharePayload): ShareSerializable {
 async function writeMockShare(key: string, value: ShareSerializable): Promise<void> {
   if (!getEnv.WRITE_REAL_DATA_TO_MOCK()) return;
   try {
-    const folder = path.join(process.cwd(), 'mock-data', 'share');
+    const folder = path.join(process.cwd(), 'mock-data', 'external-data', 'share');
     await fs.mkdir(folder, { recursive: true });
     const filePath = path.join(folder, `${key}.json`);
     await fs.writeFile(filePath, JSON.stringify(value, null, 2), 'utf-8');

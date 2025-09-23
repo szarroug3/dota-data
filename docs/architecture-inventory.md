@@ -43,8 +43,8 @@
   - `heroes`, `items`, `leagues`, `matches`, `players`, `teams`, plus `cache/invalidate` and `share`.
 - Validation: PARTIAL
   - Uses Zod schemas via `src/types/api-zod` in `items`, `players`, `teams`, `matches`. `heroes` returns raw without explicit parse.
-- Rate limiting: GAP
-  - Types defined in `src/types/rate-limit.ts`, but no concrete rate limit middleware/service usage found in routes.
+- Rate limiting: MATCHES
+  - Redis-based rate limiter implemented in `src/lib/rate-limiter.ts` with memory fallback. Integrated into OpenDota API helpers (`players.ts`, `matches.ts`) with 1.2s minimum delay and sliding window limits.
 - Caching: MATCHES
   - Centralized `src/lib/cache-service.ts` with `cache-backends/redis.ts` and `memory.ts`. `share/cache.ts` and invalidate route present.
 - Error handling: MATCHES
@@ -118,28 +118,27 @@
 
 ### Notable Gaps / Deviations
 
-- Backend rate limiting not wired: Types exist in `src/types/rate-limit.ts`, but no middleware/service usage detected in API routes.
 - Heroes route lacks explicit Zod validation: `src/app/api/heroes/route.ts` returns fetched data without `schemas.getApiHeroes.parse`.
-- Minimal backend shaping vs. “no guessing”: Currently acceptable, but ensure future logic keeps normalization only.
-- Dynamic imports
-  - Found dynamic import usage in a few frontend files (via `import(` pattern). Consider refactoring to static imports per guideline if feasible.
+- Minimal backend shaping vs. "no guessing": Currently acceptable, but ensure future logic keeps normalization only.
+- Dynamic imports: RESOLVED
+  - ESLint rule added to disallow dynamic imports. All instances converted to static imports.
 
 ### Code Quality Review (Scan)
 
-- Duplicated fetching patterns: MATCHES (intentional abstraction but could be DRY-er)
-  - `team-data-fetching-context.tsx`, `match-data-fetching-context.tsx`, and `player-data-fetching-context.tsx` repeat similar cache/error/in-flight-dedupe patterns. Consider extracting a small generic helper (e.g., createFetchingCache<T>) to reduce duplication while keeping family-specific hooks thin.
+- Duplicated fetching patterns: RESOLVED
+  - Generic `fetchWithMemoryAndStorage` helper extracted to `src/frontend/lib/fetch-cache.ts`. All fetching contexts migrated to use the shared helper.
 
-- Optimistic op patterns duplicated: PARTIAL
-  - `use-match-operations.ts` and `use-player-operations.ts` have very similar shapes for optimistic entity creation, abort handling, and error mapping. A tiny shared helper (returning guards and cleanup) could cut boilerplate.
+- Optimistic op patterns duplicated: RESOLVED
+  - Generic `useOptimisticOperations` hook extracted to `src/frontend/lib/optimistic-operations.ts`. Match and player operations hooks refactored to use the shared helper.
 
-- Legacy/unused code: MATCHES (flagged for removal)
-  - `usePlayerStatsHandlers` in `src/frontend/players/hooks/usePlayerStatsPage.ts` is explicitly `undefined as never` and commented as legacy. Safe to remove to reduce noise.
+- Legacy/unused code: RESOLVED
+  - `usePlayerStatsHandlers` removed from `src/frontend/players/hooks/usePlayerStatsPage.ts`.
 
 - Error handling consistency: MATCHES
   - Route error helpers unified and now detect both explicit "Rate limited" and numeric 429 messages.
 
-- Logging granularity: PARTIAL
-  - `console.error` used across routes and contexts; acceptable for now. If logs get noisy on Vercel, consider a simple tagged logger to adjust levels per environment.
+- Logging granularity: RESOLVED
+  - Tagged logger implemented in `src/lib/logger.ts` with log levels and service tags. All API routes migrated from `console.error` to tagged logger.
 
 - Unused TTL defaults: MATCHES
   - Centralized TTLs added at `src/lib/cache-ttls.ts`; all API modules now reference constants. Frontend local cache TTLs remain independently managed in `src/frontend/lib/cache` (OK by design).
@@ -147,11 +146,14 @@
 - File size/complexity checks: MATCHES
   - Largest modules (e.g., `use-player-operations.ts`, `use-match-operations.ts`, `team-data-fetching-context.tsx`) are readable but long. Future refactors: split helpers (abort/optimistic/cache writes) into co-located files to lower cognitive load.
 
-### Suggested Refactors (Non-blocking)
+### Completed Refactors
 
-- Extract generic fetch/cache helper for fetching contexts to remove repetition.
-- Consolidate optimistic operation helpers shared by matches/players.
-- Remove `usePlayerStatsHandlers` legacy export.
+- ✅ Extract generic fetch/cache helper for fetching contexts to remove repetition.
+- ✅ Consolidate optimistic operation helpers shared by matches/players.
+- ✅ Remove `usePlayerStatsHandlers` legacy export.
+- ✅ Implement Redis-based rate limiting with memory fallback.
+- ✅ Add tagged logger with service-specific tags and log levels.
+- ✅ Add ESLint rule to disallow dynamic imports and convert all instances to static imports.
 
 ### Strong Alignments
 

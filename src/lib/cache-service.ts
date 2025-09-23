@@ -1,5 +1,7 @@
+import { FileCacheBackend } from '@/lib/cache-backends/file';
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
+import { getEnv } from '@/lib/config/environment';
 import { CacheBackend, CacheStats, CacheValue } from '@/types/cache';
 
 // One-time log guard to avoid noisy logs from multiple instantiations
@@ -14,29 +16,33 @@ export class CacheService implements CacheBackend {
   constructor() {
     this.fallbackBackend = new MemoryCacheBackend();
 
-    const shouldUseRedis = this.shouldUseRedis();
+    const backendType = this.selectBackend();
 
-    if (shouldUseRedis) {
+    if (backendType === 'redis') {
       this.backend = new RedisCacheBackend();
     } else {
-      this.backend = this.fallbackBackend;
+      this.backend = new FileCacheBackend();
     }
   }
 
   private isMockMode(): boolean {
-    return process.env.USE_MOCK_API === 'true' || process.env.USE_MOCK_DB === 'true';
+    return getEnv.USE_MOCK_API() || getEnv.USE_MOCK_DB();
   }
 
-  private shouldUseRedis(): boolean {
+  private selectBackend(): 'redis' | 'file' {
     const isMock = this.isMockMode();
-    if (isMock) return false;
+
+    if (isMock) {
+      return 'file'; // Use file backend for mock mode
+    }
 
     const hasUpstash = Boolean(process.env.UPSTASH_REDIS_REST_URL) && Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
     if (!hasUpstash) {
-      if (process.env.NODE_ENV === 'test') return false;
+      if (process.env.NODE_ENV === 'test') return 'file'; // Use file backend for tests
       throw new Error('Upstash Redis credentials missing: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
     }
-    return true;
+
+    return 'redis';
   }
 
   async get<T>(key: string): Promise<T | null> {
@@ -125,13 +131,13 @@ export class CacheService implements CacheBackend {
   }
 
   /**
-   * Get the backend type (redis or memory)
+   * Get the backend type (redis or file)
    */
-  getBackendType(): 'redis' | 'memory' {
+  getBackendType(): 'redis' | 'file' {
     if (this.backend instanceof RedisCacheBackend) {
       return 'redis';
     }
-    return 'memory';
+    return 'file';
   }
 
   /**

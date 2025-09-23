@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { rateLimiter } from '@/lib/rate-limiter';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaMatch } from '@/types/external-apis';
 
@@ -14,13 +15,19 @@ import { OpenDotaMatch } from '@/types/external-apis';
 export async function fetchOpenDotaMatch(matchId: string, force = false): Promise<OpenDotaMatch> {
   const cacheKey = `opendota:match:${matchId}`;
   const cacheTTL = 60 * 60 * 24 * 14; // 14 days
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'matches', `match-${matchId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'matches',
+    `match-${matchId}.json`,
+  );
 
   const result = await request<OpenDotaMatch>(
     'opendota',
     () => fetchMatchFromOpenDota(matchId),
     (data: string) => parseOpenDotaMatchData(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,
@@ -147,13 +154,19 @@ export async function parseOpenDotaMatchWithJobPolling(matchId: string, timeout 
 export async function fetchParsedOpenDotaMatch(matchId: string, force = false): Promise<OpenDotaMatch> {
   const cacheKey = `opendota:match:${matchId}`;
   const cacheTTL = 60 * 60 * 24 * 14; // 14 days
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'matches', `parsed-match-${matchId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'matches',
+    `parsed-match-${matchId}.json`,
+  );
 
   const result = await request<OpenDotaMatch>(
     'opendota',
     () => fetchMatchFromOpenDota(matchId),
     (data: string) => parseOpenDotaMatchData(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,
@@ -227,6 +240,9 @@ async function fetchMatchFromOpenDota(matchId: string): Promise<string> {
   const url = `https://api.opendota.com/api/matches/${matchId}`;
 
   try {
+    // Wait for rate limit clearance before making request
+    await rateLimiter.waitForClearance('opendota');
+
     const response = await requestWithRetry('GET', url);
 
     if (!response.ok) {
@@ -249,6 +265,9 @@ async function initiateParseRequest(matchId: string): Promise<string> {
   const url = `https://api.opendota.com/api/request/${matchId}`;
 
   try {
+    // Wait for rate limit clearance before making request
+    await rateLimiter.waitForClearance('opendota');
+
     const response = await requestWithRetry('POST', url);
 
     if (!response.ok) {
@@ -274,6 +293,9 @@ async function checkParseStatus(jobId: string): Promise<string> {
   const url = `https://api.opendota.com/api/request/${jobId}`;
 
   try {
+    // Wait for rate limit clearance before making request
+    await rateLimiter.waitForClearance('opendota');
+
     const response = await requestWithRetry('GET', url);
     if (!response.ok) {
       if (response.status === 404) {

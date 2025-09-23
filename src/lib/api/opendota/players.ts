@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { CacheTtlSeconds } from '@/lib/cache-ttls';
+import { rateLimiter } from '@/lib/rate-limiter';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import {
   OpenDotaPlayer,
@@ -27,13 +28,19 @@ import {
 export async function fetchOpenDotaPlayer(playerId: string, force = false): Promise<OpenDotaPlayerComprehensive> {
   const cacheKey = `opendota:player-comprehensive:${playerId}`;
   const cacheTTL = CacheTtlSeconds.playerComprehensive;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'players', `player-${playerId}-comprehensive.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'players',
+    `player-${playerId}-comprehensive.json`,
+  );
 
   const result = await request<OpenDotaPlayerComprehensive>(
     'opendota',
     () => fetchAllPlayerDataFromOpenDota(playerId),
     (data: string) => parseOpenDotaPlayerComprehensive(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,
@@ -51,10 +58,12 @@ export async function fetchOpenDotaPlayer(playerId: string, force = false): Prom
  */
 async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string> {
   const baseUrl = process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api';
-  const delayMs = 1100;
 
-  // Helper to fetch and parse JSON
+  // Helper to fetch and parse JSON with rate limiting
   async function fetchJson(url: string) {
+    // Wait for rate limit clearance before making request
+    await rateLimiter.waitForClearance('opendota');
+
     const response = await requestWithRetry('GET', url);
     if (!response.ok) {
       throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
@@ -62,26 +71,17 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
     return await response.json();
   }
 
-  // Helper to add delay
-  function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   // 1. Profile
   const profile: OpenDotaPlayer = await fetchJson(`${baseUrl}/players/${playerId}`);
-  await delay(delayMs);
 
   // 2. Heroes (used by frontend)
   const heroes: OpenDotaPlayerHero[] = await fetchJson(`${baseUrl}/players/${playerId}/heroes`);
-  await delay(delayMs);
 
   // 3. Matches (recentMatches used by frontend)
   const recentMatches: OpenDotaPlayerMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/matches`);
-  await delay(delayMs);
 
   // 4. Win/Loss (used by frontend)
   const wl: OpenDotaPlayerWL = await fetchJson(`${baseUrl}/players/${playerId}/wl`);
-  await delay(delayMs);
 
   const comprehensiveData = {
     profile,

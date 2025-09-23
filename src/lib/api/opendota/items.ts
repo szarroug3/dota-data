@@ -14,13 +14,13 @@ import { OpenDotaItem } from '@/types/external-apis';
 export async function fetchOpenDotaItems(force = false): Promise<Record<string, OpenDotaItem>> {
   const cacheKey = 'opendota:items';
   const cacheTTL = CacheTtlSeconds.items;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'items.json');
+  const externalDataFilename = path.join(process.cwd(), 'mock-data', 'external-data', 'items.json');
 
   const result = await request<Record<string, OpenDotaItem>>(
     'opendota',
     () => fetchItemsFromOpenDota(),
     (data: string) => parseOpenDotaItems(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,

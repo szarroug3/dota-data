@@ -18,34 +18,9 @@ export type RateLimitBackendType = 'redis' | 'memory';
  */
 export interface RateLimitBackend {
   /**
-   * Check if a request is allowed within the rate limit
+   * Wait for rate limit clearance before making a request
    */
-  checkLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult>;
-
-  /**
-   * Get current usage for a key
-   */
-  getUsage(key: string): Promise<RateLimitUsage>;
-
-  /**
-   * Reset rate limit for a key
-   */
-  reset(key: string): Promise<boolean>;
-
-  /**
-   * Set a custom retry delay for a service
-   */
-  setRetryDelay(service: string, delay: number): Promise<void>;
-
-  /**
-   * Get retry delay for a service
-   */
-  getRetryDelay(service: string): Promise<number>;
-
-  /**
-   * Get rate limit statistics
-   */
-  getStats(): Promise<RateLimitStats>;
+  waitForClearance(service: ExternalService): Promise<void>;
 
   /**
    * Check if the backend is healthy
@@ -54,56 +29,13 @@ export interface RateLimitBackend {
 }
 
 /**
- * Rate limit configuration
+ * Rate limit configuration for a service
  */
 export interface RateLimitConfig {
-  window: number; // Window size in seconds
-  max: number; // Maximum requests per window
-  service: string; // Service identifier
-  identifier?: string; // Optional identifier for the key
-}
-
-/**
- * Rate limit result
- */
-export interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetTime: number;
-  retryAfter?: number;
-  service: string;
-  key: string;
-}
-
-/**
- * Rate limit usage information
- */
-export interface RateLimitUsage {
-  current: number;
-  limit: number;
-  window: number;
-  resetTime: number;
-  remaining: number;
-}
-
-/**
- * Rate limit statistics
- */
-export interface RateLimitStats {
-  totalChecks: number;
-  allowed: number;
-  blocked: number;
-  services: Record<
-    string,
-    {
-      checks: number;
-      allowed: number;
-      blocked: number;
-      averageResponseTime: number;
-    }
-  >;
-  backend: RateLimitBackendType;
-  uptime: number;
+  service: ExternalService;
+  minDelayMs: number; // Minimum delay between requests in milliseconds
+  windowMs: number; // Rate limit window in milliseconds
+  maxRequests: number; // Maximum requests per window
 }
 
 // ============================================================================
@@ -114,58 +46,11 @@ export interface RateLimitStats {
  * Rate limit service configuration
  */
 export interface RateLimitServiceConfig {
-  useRedis: boolean;
   redisUrl?: string;
   fallbackToMemory: boolean;
-  defaultWindow: number;
-  defaultMax: number;
-  retryDelayMultiplier: number;
-  maxRetryDelay: number;
-}
-
-/**
- * Rate limit service interface
- */
-export interface RateLimitService {
-  /**
-   * Check if a request is allowed within the rate limit
-   */
-  checkLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult>;
-
-  /**
-   * Get current usage for a key
-   */
-  getUsage(key: string): Promise<RateLimitUsage>;
-
-  /**
-   * Reset rate limit for a key
-   */
-  reset(key: string): Promise<boolean>;
-
-  /**
-   * Set a custom retry delay for a service
-   */
-  setRetryDelay(service: string, delay: number): Promise<void>;
-
-  /**
-   * Get retry delay for a service
-   */
-  getRetryDelay(service: string): Promise<number>;
-
-  /**
-   * Get rate limit statistics
-   */
-  getStats(): Promise<RateLimitStats>;
-
-  /**
-   * Check if the service is healthy
-   */
-  isHealthy(): Promise<boolean>;
-
-  /**
-   * Get the current backend type
-   */
-  getBackendType(): RateLimitBackendType;
+  defaultMinDelayMs: number;
+  defaultWindowMs: number;
+  defaultMaxRequests: number;
 }
 
 // ============================================================================
@@ -178,19 +63,21 @@ export interface RateLimitService {
 export type ExternalService = 'opendota' | 'steam';
 
 /**
- * Service-specific rate limit configuration
- */
-export interface ServiceRateLimitConfig {
-  opendota: RateLimitConfig;
-  steam: RateLimitConfig;
-}
-
-/**
  * Default rate limit configurations for each service
  */
-export const DEFAULT_SERVICE_LIMITS: ServiceRateLimitConfig = {
-  opendota: { window: 60, max: 60, service: 'opendota' },
-  steam: { window: 60, max: 60, service: 'steam' },
+export const DEFAULT_SERVICE_LIMITS: Record<ExternalService, RateLimitConfig> = {
+  opendota: {
+    service: 'opendota',
+    minDelayMs: 1200, // 1.2 seconds between requests
+    windowMs: 60 * 1000, // 1 minute window
+    maxRequests: 50, // Conservative limit for free tier
+  },
+  steam: {
+    service: 'steam',
+    minDelayMs: 1000, // 1 second between requests
+    windowMs: 60 * 1000, // 1 minute window
+    maxRequests: 60,
+  },
 };
 
 // ============================================================================
@@ -200,83 +87,14 @@ export const DEFAULT_SERVICE_LIMITS: ServiceRateLimitConfig = {
 /**
  * Rate limit error types
  */
-export type RateLimitErrorType =
-  | 'connection_failed'
-  | 'timeout'
-  | 'invalid_config'
-  | 'service_unavailable'
-  | 'network_error';
+export type RateLimitErrorType = 'connection_failed' | 'timeout' | 'service_unavailable' | 'network_error';
 
 /**
  * Rate limit error interface
  */
 export interface RateLimitError extends Error {
   type: RateLimitErrorType;
-  service: string;
-  key?: string;
+  service: ExternalService;
   retryable: boolean;
   retryAfter?: number;
-}
-
-// ============================================================================
-// RATE LIMIT UTILITY TYPES
-// ============================================================================
-
-/**
- * Rate limit key builder interface
- */
-export interface RateLimitKeyBuilder {
-  /**
-   * Build a rate limit key for a service and identifier
-   */
-  build(service: ExternalService, identifier: string): string;
-
-  /**
-   * Build a pattern for rate limit operations
-   */
-  buildPattern(service: ExternalService, pattern: string): string;
-
-  /**
-   * Parse a rate limit key to extract components
-   */
-  parse(key: string): {
-    service: ExternalService;
-    identifier: string;
-  } | null;
-}
-
-/**
- * Rate limit window types
- */
-export type RateLimitWindow = 'sliding' | 'fixed';
-
-/**
- * Rate limit algorithm configuration
- */
-export interface RateLimitAlgorithm {
-  type: RateLimitWindow;
-  precision: number; // Precision in seconds for sliding window
-}
-
-/**
- * Rate limit retry configuration
- */
-export interface RateLimitRetryConfig {
-  maxRetries: number;
-  baseDelay: number;
-  maxDelay: number;
-  backoffMultiplier: number;
-}
-
-/**
- * Rate limit monitoring event
- */
-export interface RateLimitEvent {
-  timestamp: string;
-  service: ExternalService;
-  key: string;
-  allowed: boolean;
-  remaining: number;
-  responseTime: number;
-  error?: string;
 }

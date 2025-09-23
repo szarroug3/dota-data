@@ -17,16 +17,16 @@ async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boo
   return await cache.get<T>(cacheKey);
 }
 
-async function getFromMock(mockFilename: string): Promise<string> {
-  return await fs.readFile(mockFilename, 'utf-8');
+async function getFromExternalData(externalDataFilename: string): Promise<string> {
+  return await fs.readFile(externalDataFilename, 'utf-8');
 }
 
-async function getFromAPI(requestFn: () => Promise<string>, mockFilename: string): Promise<string> {
+async function getFromAPI(requestFn: () => Promise<string>, externalDataFilename: string): Promise<string> {
   const response = await requestFn();
   if (getEnv.WRITE_REAL_DATA_TO_MOCK()) {
-    const folder = path.dirname(mockFilename);
+    const folder = path.dirname(externalDataFilename);
     await fs.mkdir(folder, { recursive: true });
-    await fs.writeFile(mockFilename, response, 'utf-8');
+    await fs.writeFile(externalDataFilename, response, 'utf-8');
   }
   return response;
 }
@@ -48,7 +48,7 @@ export async function request<T>(
   service: keyof typeof mockServices,
   requestFn: () => Promise<string>,
   processingFn: (data: string) => T,
-  mockFilename: string,
+  externalDataFilename: string,
   force: boolean = false,
   cacheTTL: number = 60 * 60,
   cacheKey: string,
@@ -61,11 +61,21 @@ export async function request<T>(
   }
 
   let data: string | null = null;
+
+  // Always call requestFn first (which includes rate limiting)
+  const apiData = await getFromAPI(requestFn, externalDataFilename);
+
   if (mockServices[service]) {
-    data = await getFromMock(mockFilename);
+    // In mock mode, try to read from external data first, fallback to API data
+    try {
+      data = await getFromExternalData(externalDataFilename);
+    } catch {
+      data = apiData;
+    }
   } else {
-    data = await getFromAPI(requestFn, mockFilename);
+    data = apiData;
   }
+
   return await processData(data, processingFn, cache, cacheKey, cacheTTL);
 }
 

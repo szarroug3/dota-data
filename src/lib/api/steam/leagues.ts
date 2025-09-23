@@ -51,7 +51,13 @@ export async function fetchSteamLeague(
 ): Promise<{ result: SteamGetMatchHistoryResult }> {
   const cacheKey = `steam:league:${leagueId}`;
   const cacheTTL = CacheTtlSeconds.steamLeagues;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'leagues', `steam-league-${leagueId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'leagues',
+    `steam-league-${leagueId}.json`,
+  );
 
   const aggregator = async (): Promise<string> => {
     let aggregatedMatches: SteamMatchSummary[] = [];
@@ -92,7 +98,7 @@ export async function fetchSteamLeague(
     'steam',
     aggregator,
     (data: string) => JSON.parse(data) as { result: SteamGetMatchHistoryResult },
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,

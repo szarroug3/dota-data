@@ -25,7 +25,7 @@ export type CacheValue = string | number | boolean | null | CacheValue[] | { [ke
 /**
  * Cache backend type enumeration
  */
-export type CacheBackendType = 'redis' | 'memory';
+export type CacheBackendType = 'redis' | 'memory' | 'file';
 
 /**
  * Cache backend interface that all cache implementations must implement

@@ -14,7 +14,7 @@ function buildCacheKey(key: string): string {
 
 async function readMockShareFromDisk(key: string): Promise<Record<string, CacheValue> | null> {
   try {
-    const filePath = path.join(process.cwd(), 'mock-data', 'share', `${key}.json`);
+    const filePath = path.join(process.cwd(), 'mock-data', 'external-data', 'share', `${key}.json`);
     const file = await fs.readFile(filePath, 'utf-8');
 
     // Use unknown intermediate step for safer type narrowing
