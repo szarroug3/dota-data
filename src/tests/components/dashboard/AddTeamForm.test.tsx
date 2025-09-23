@@ -129,8 +129,16 @@ describe('AddTeamForm', () => {
       />,
     );
 
-    expect(screen.getByText('Find this in Dotabuff team URLs')).toBeInTheDocument();
-    expect(screen.getByText('Find this in Dotabuff league URLs')).toBeInTheDocument();
+    expect(
+      screen.getByText((content, element) => {
+        return element?.textContent === 'Find this in Dotabuff team URLs';
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText((content, element) => {
+        return element?.textContent === 'Find this in Dotabuff league URLs';
+      }),
+    ).toBeInTheDocument();
   });
 
   it('should render submit button with proper attributes', () => {

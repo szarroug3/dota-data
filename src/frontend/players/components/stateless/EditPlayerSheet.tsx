@@ -41,7 +41,7 @@ interface FormFieldInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
-  helpText: string;
+  helpText: React.ReactNode;
   error?: string;
   isValid: boolean;
 }
@@ -134,7 +134,29 @@ function EditPlayerForm({
         value={playerId}
         onChange={setPlayerId}
         disabled={isSubmitting}
-        helpText="Find this in Dotabuff or OpenDota player URLs"
+        helpText={
+          <>
+            Find this in{' '}
+            <a
+              href="https://dotabuff.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              Dotabuff
+            </a>{' '}
+            or{' '}
+            <a
+              href="https://opendota.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              OpenDota
+            </a>{' '}
+            player URLs
+          </>
+        }
         error={combinedError}
         isValid={isFieldValid}
       />

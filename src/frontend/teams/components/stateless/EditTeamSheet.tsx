@@ -76,7 +76,33 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder,
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          {id === 'teamId' ? 'Find this in Dotabuff team URLs' : 'Find this in Dotabuff league URLs'}
+          {id === 'teamId' ? (
+            <>
+              Find this in{' '}
+              <a
+                href="https://dotabuff.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 underline"
+              >
+                Dotabuff
+              </a>{' '}
+              team URLs
+            </>
+          ) : (
+            <>
+              Find this in{' '}
+              <a
+                href="https://dotabuff.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 underline"
+              >
+                Dotabuff
+              </a>{' '}
+              league URLs
+            </>
+          )}
         </p>
       )}
     </FormField>

@@ -26,7 +26,7 @@ interface FormFieldInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
-  helpText: string;
+  helpText: React.ReactNode;
   error?: string;
   isValid: boolean;
 }
@@ -148,7 +148,20 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               value={teamId}
               onChange={onTeamIdChange}
               disabled={isSubmitting}
-              helpText="Find this in Dotabuff team URLs"
+              helpText={
+                <>
+                  Find this in{' '}
+                  <a
+                    href="https://dotabuff.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 underline"
+                  >
+                    Dotabuff
+                  </a>{' '}
+                  team URLs
+                </>
+              }
               error={shouldShowTeamError}
               isValid={!validation.errors.teamId}
             />
@@ -159,7 +172,20 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
               value={leagueId}
               onChange={onLeagueIdChange}
               disabled={isSubmitting}
-              helpText="Find this in Dotabuff league URLs"
+              helpText={
+                <>
+                  Find this in{' '}
+                  <a
+                    href="https://dotabuff.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 underline"
+                  >
+                    Dotabuff
+                  </a>{' '}
+                  league URLs
+                </>
+              }
               error={shouldShowLeagueError}
               isValid={!validation.errors.leagueId}
             />

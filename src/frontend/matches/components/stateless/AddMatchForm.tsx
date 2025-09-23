@@ -41,7 +41,7 @@ interface FormFieldInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
-  helpText: string;
+  helpText: React.ReactNode;
   error?: string;
   isValid: boolean;
 }
@@ -132,7 +132,29 @@ function AddMatchFields({
         value={matchId}
         onChange={onMatchIdChange}
         disabled={isSubmitting}
-        helpText="Find this in Dotabuff match URLs"
+        helpText={
+          <>
+            Find this in{' '}
+            <a
+              href="https://dotabuff.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              Dotabuff
+            </a>{' '}
+            or{' '}
+            <a
+              href="https://opendota.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              OpenDota
+            </a>{' '}
+            match URLs
+          </>
+        }
         error={shouldShowMatchError}
         isValid={isValid}
       />
