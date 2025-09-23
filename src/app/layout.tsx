@@ -35,14 +35,11 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground`}>
         <ErrorBoundary>
-          <SidebarProvider defaultOpen={defaultOpen}>
+          <SidebarProvider>
             <ClientRoot>{children}</ClientRoot>
           </SidebarProvider>
         </ErrorBoundary>
