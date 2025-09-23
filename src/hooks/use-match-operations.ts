@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import type { MatchDataFetchingContextValue } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
 import type { Match, MatchProcessing, MatchState } from '@/types/contexts/match-context-value';
-import { createInitialMatchData, updateMatchError } from '@/utils/match-helpers';
+import { createInitialMatchData, updateMatchError, clearMatchError } from '@/utils/match-helpers';
 
 // ============================================================================
 // OPERATION TRACKING
@@ -133,8 +133,14 @@ async function fetchAndProcessMatch(
   // Process match data
   const processedMatch = processing.processMatchData(matchData);
 
+  // Clear any existing error state since we successfully fetched and processed the match
+  clearMatchError(matchId, state);
+
   // Update state with fetched data
   updateStateWithProcessedMatch(matchId, processedMatch, state);
+
+  // Note: We can't check the state immediately after update because React state updates are asynchronous
+  // The state will be updated in the next render cycle
 
   return processedMatch;
 }

@@ -160,39 +160,92 @@ export async function processTeamMatchesAndUpdateTeam(
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
 ): Promise<void> {
-  const matchProcessingPromises = teamMatches.map(({ matchId, side }) => {
+  const allMatchesReady = teamMatches.every(({ matchId }) => {
+    const match = matchContext.getMatch(matchId);
+    return match && !match.isLoading;
+  });
+
+  if (!allMatchesReady) {
+    return;
+  }
+
+  const matchProcessingPromises = teamMatches.map(async ({ matchId, side }) => {
     const isManualMatch = existing?.manualMatches?.[matchId];
     const knownSide = (isManualMatch?.side as 'radiant' | 'dire' | undefined) ?? side ?? undefined;
-    return processMatchAndExtractPlayers(matchId, teamId, matchContext, playerContext, knownSide);
+
+    const processedMatch = await processMatchAndExtractPlayers(
+      matchId,
+      teamId,
+      matchContext,
+      playerContext,
+      knownSide,
+      true,
+    );
+
+    // Use the processed match data directly - no need to check context state
+    const hasError = processedMatch === null;
+    const error = hasError ? 'Failed to process match' : undefined;
+
+    return {
+      matchId,
+      processedMatch,
+      hasError,
+      error,
+    };
   });
-  const processedMatches = await Promise.all(matchProcessingPromises);
+  const matchResults = await Promise.all(matchProcessingPromises);
   setTeams((prev) => {
     const newTeams = new Map(prev);
     const team = newTeams.get(teamKey);
     if (team) {
       const updatedMatches: Record<number, TeamMatchParticipation> = { ...team.matches };
-      processedMatches.forEach((processedMatch) => {
+
+      matchResults.forEach(({ matchId, processedMatch, hasError, error }) => {
         if (processedMatch) {
           updatedMatches[processedMatch.matchId] = processedMatch;
+        } else if (hasError) {
+          updatedMatches[matchId] = {
+            matchId,
+            result: 'unknown' as 'won' | 'lost' | 'unknown',
+            duration: 0,
+            opponentName: 'Unknown',
+            leagueId: '',
+            startTime: 0,
+            side: 'radiant' as const, // Default side
+            pickOrder: null,
+            error: error, // Store the error for display
+          };
         }
       });
-      const matchesArray = Object.values(updatedMatches);
-      const totalWins = matchesArray.filter((m) => m.result === 'won').length;
-      const totalLosses = matchesArray.filter((m) => m.result === 'lost').length;
+
+      const successfulMatches = matchResults
+        .filter(({ processedMatch }) => processedMatch !== null)
+        .map(({ processedMatch }) => processedMatch!);
+
+      const totalWins = successfulMatches.filter((m) => m.result === 'won').length;
+      const totalLosses = successfulMatches.filter((m) => m.result === 'lost').length;
+      const erroredMatchesCount = matchResults.filter(
+        ({ hasError, processedMatch }) => hasError || processedMatch === null,
+      ).length;
       const averageMatchDuration =
-        matchesArray.reduce((sum: number, m) => sum + (m.duration || 0), 0) / (matchesArray.length || 1);
-      newTeams.set(teamKey, {
+        successfulMatches.reduce((sum: number, m) => sum + (m.duration || 0), 0) / (successfulMatches.length || 1);
+
+      const updatedTeam = {
         ...team,
+        isLoading: false, // Set loading to false after processing matches
         matches: updatedMatches,
         performance: {
           ...team.performance,
-          totalMatches: matchesArray.length,
+          totalMatches: matchResults.length,
           totalWins,
           totalLosses,
-          overallWinRate: matchesArray.length > 0 ? (totalWins / matchesArray.length) * 100 : 0,
+          overallWinRate: successfulMatches.length > 0 ? (totalWins / successfulMatches.length) * 100 : 0,
           averageMatchDuration,
+          erroredMatches: erroredMatchesCount,
         },
-      });
+      };
+
+      newTeams.set(teamKey, updatedTeam);
     }
     return newTeams;
   });

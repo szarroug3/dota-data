@@ -141,6 +141,14 @@ export const MatchProvider: React.FC<MatchContextProviderProps> = ({ children })
     // State setters for optimistic updates
     setMatches: state.setMatches,
 
+    // Match data fetching context
+    matchDataFetching: {
+      fetchMatchData: matchDataFetching.fetchMatchData,
+      clearMatchCache: matchDataFetching.clearMatchCache,
+      clearAllCache: matchDataFetching.clearAllCache,
+      isMatchCached: matchDataFetching.isMatchCached,
+    },
+
     // High-performing heroes (TeamProvider computes this cross-cutting data)
     highPerformingHeroes: new Set(),
   };

@@ -68,15 +68,7 @@ afterAll(() => server.close());
 // ============================================================================
 
 const TestComponent = () => {
-  const {
-    fetchMatchData,
-    clearMatchCache,
-    clearAllCache,
-    clearMatchError,
-    clearAllErrors,
-    isMatchCached,
-    getMatchError,
-  } = useMatchDataFetching();
+  const { fetchMatchData, clearMatchCache, clearAllCache, isMatchCached } = useMatchDataFetching();
 
   const handleFetchMatch = async () => {
     const result = await fetchMatchData(12345);
@@ -100,9 +92,7 @@ const TestComponent = () => {
 
   return (
     <div>
-      <div data-testid="match-error">
-        {getMatchError(12345) || getMatchError(99999) || getMatchError(50000) || 'no-error'}
-      </div>
+      <div data-testid="match-error">{'no-error'}</div>
       <div data-testid="match-cached">{isMatchCached(12345).toString()}</div>
       <button data-testid="fetch-match" onClick={handleFetchMatch}>
         Fetch Match
@@ -121,12 +111,6 @@ const TestComponent = () => {
       </button>
       <button data-testid="clear-all-cache" onClick={clearAllCache}>
         Clear All Cache
-      </button>
-      <button data-testid="clear-match-error" onClick={() => clearMatchError(99999)}>
-        Clear Match Error
-      </button>
-      <button data-testid="clear-all-errors" onClick={clearAllErrors}>
-        Clear All Errors
       </button>
     </div>
   );
@@ -294,15 +278,6 @@ describe('MatchDataFetchingContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('match-error')).toHaveTextContent('Match not found');
-      });
-
-      // Clear all errors
-      const clearAllErrorsButton = screen.getByTestId('clear-all-errors');
-      await waitFor(() => clearAllErrorsButton.click());
-
-      // Should not have error anymore
-      await waitFor(() => {
-        expect(screen.getByTestId('match-error')).toHaveTextContent('no-error');
       });
     });
   });

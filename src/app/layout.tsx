@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import { cookies } from 'next/headers';
 
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';

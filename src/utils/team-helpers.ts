@@ -42,6 +42,7 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: {
         picks: [],
         bans: [],

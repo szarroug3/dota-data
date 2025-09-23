@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import type { TeamDataFetchingContextValue } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
-import { isTeamFullyLoaded, useTeamLoadingWatcher } from '@/hooks/team-loading-helpers';
+import { isTeamFullyLoaded } from '@/hooks/team-loading-helpers';
 import {
   coerceManualPlayersToArray,
   mergePlayersUniqueByAccountId,
@@ -10,6 +10,7 @@ import {
   seedOptimisticTeamMatchesInTeamsMap,
 } from '@/hooks/team-operations-helpers';
 import { createTeamLeagueOperationKey, useAbortController } from '@/hooks/use-abort-controller';
+import { useTeamMatchWatcher } from '@/hooks/use-team-match-watcher';
 import { useRefreshTeamCore } from '@/hooks/use-team-refresh-core';
 import type { ConfigContextValue } from '@/types/contexts/config-context-value';
 import type { MatchContextValue } from '@/types/contexts/match-context-value';
@@ -73,6 +74,7 @@ function createErrorTeamData(teamId: number, leagueId: number, error: string): T
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -114,6 +116,7 @@ function transformTeamData(
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -285,11 +288,6 @@ function useAddTeamCore(
     [setTeams],
   );
 
-  const seedOptimisticMatchContext = useCallback(
-    (teamMatches: Array<{ matchId: number }>) => seedOptimisticMatchesInMatchContext(matchContext, teamMatches),
-    [matchContext],
-  );
-
   const processTeamMatches = useCallback(
     async (
       teamKey: string,
@@ -329,14 +327,12 @@ function useAddTeamCore(
           // Seed optimistic team matches into team state immediately (for UI)
           seedOptimisticTeamMatches(teamKey, teamMatches, existing, leagueId);
 
+          // Seed optimistic matches into match context immediately (for processing)
+          seedOptimisticMatchesInMatchContext(matchContext, teamMatches);
+
           // Process matches (loads matches and triggers player loading)
           await processTeamMatches(teamKey, teamMatches, existing, teamId);
 
-          // Now ensure match context has optimistic entries for any still-missing matches
-          // This avoids racing against the processing calls above
-          seedOptimisticMatchContext(teamMatches);
-
-          // If all referenced matches and players are fully loaded, clear loading now
           const allMatchIds = teamMatches.map((t) => t.matchId);
           if (isTeamFullyLoaded(teamId, allMatchIds, matchContext, playerContext)) {
             clearMapItemLoading(setTeamsForLoading, teamKey);
@@ -353,7 +349,6 @@ function useAddTeamCore(
       setTeamsForLoading,
       teamDataFetching,
       seedOptimisticTeamMatches,
-      seedOptimisticMatchContext,
       processTeamMatches,
       configContext,
       abortController,
@@ -477,7 +472,7 @@ export function useTeamCoreOperations(
     playerContext,
     configContext,
   );
-  const refreshTeam = useRefreshTeamCore(
+  const refreshTeamCore = useRefreshTeamCore(
     teams,
     setTeams,
     setTeamsForLoading,
@@ -486,13 +481,25 @@ export function useTeamCoreOperations(
     playerContext,
     handleTeamSummaryOperation,
   );
+
+  const refreshTeam = useCallback(
+    async (teamId: number, leagueId: number): Promise<void> => {
+      return refreshTeamCore(teamId, leagueId);
+    },
+    [refreshTeamCore],
+  );
   const removeTeam = useRemoveTeamCore(selectedTeamId, setTeams, configContext);
   const editTeam = useEditTeamCore(removeTeam, addTeam);
   const manualMatchesOps = useManualMatchesOps(teams, setTeams, matchContext, selectedTeamId);
   const manualPlayersOps = useManualPlayersOps(teams, playerContext);
   const manualTeamsOps = useManualTeamsOps(setTeams);
 
-  useTeamLoadingWatcher(teams, setTeamsForLoading, matchContext, playerContext);
+  useTeamMatchWatcher({
+    teams,
+    setTeams,
+    matchContext,
+    playerContext,
+  });
 
   return {
     addTeam,

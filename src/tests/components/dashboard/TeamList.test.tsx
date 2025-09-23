@@ -29,6 +29,7 @@ describe('TeamList', () => {
         totalWins: 3,
         totalLosses: 2,
         overallWinRate: 60,
+        erroredMatches: 0,
         heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
         draftStats: {
           firstPickCount: 0,
@@ -68,6 +69,7 @@ describe('TeamList', () => {
         totalWins: 2,
         totalLosses: 1,
         overallWinRate: 67,
+        erroredMatches: 0,
         heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
         draftStats: {
           firstPickCount: 0,

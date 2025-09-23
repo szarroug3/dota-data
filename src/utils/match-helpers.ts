@@ -53,6 +53,34 @@ export function updateMatchError(
 }
 
 /**
+ * Clear match error in state
+ */
+export function clearMatchError(
+  matchId: number,
+  state: {
+    matches: Map<number, Match>;
+    setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
+  },
+) {
+  const existingMatch = state.matches.get(matchId);
+
+  if (existingMatch) {
+    // Update existing match to remove error
+    const updatedMatch: Match = {
+      ...existingMatch,
+      error: undefined,
+      isLoading: false,
+    };
+
+    state.setMatches((prev) => {
+      const newMatches = new Map(prev);
+      newMatches.set(matchId, updatedMatch);
+      return newMatches;
+    });
+  }
+}
+
+/**
  * Set match loading state
  */
 export function setMatchLoading(

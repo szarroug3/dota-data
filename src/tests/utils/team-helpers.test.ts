@@ -456,6 +456,7 @@ describe('Team Helpers', () => {
           totalWins: 0,
           totalLosses: 0,
           overallWinRate: 0,
+          erroredMatches: 0,
           heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
           draftStats: {
             firstPickCount: 0,
@@ -540,6 +541,7 @@ describe('Team Helpers', () => {
           totalWins: 3,
           totalLosses: 2,
           overallWinRate: 60,
+          erroredMatches: 0,
           heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
           draftStats: {
             firstPickCount: 0,

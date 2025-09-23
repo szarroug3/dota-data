@@ -104,51 +104,76 @@ export function createTeamPlayerFromOpenDota(player: OpenDotaPlayerComprehensive
 /**
  * Process match and extract players for team
  */
+function validateMatch(match: Match | null, matchId: number, teamId: number): boolean {
+  if (!match) {
+    console.warn(`Match ${matchId} not found for team ${teamId}`);
+    return false;
+  }
+
+  if (match.isLoading) {
+    return false;
+  }
+
+  if (match.error) {
+    console.warn(`Match ${matchId} has error for team ${teamId}: ${match.error}`);
+    return false;
+  }
+
+  return true;
+}
+
+function processPlayersFromMatch(
+  match: Match,
+  teamSide: 'radiant' | 'dire',
+  playerContext: PlayerContextValue,
+): Promise<void> {
+  const playerIds = extractPlayersFromMatchSide(match, teamSide);
+  return Promise.all(playerIds.map((playerId) => playerContext.addPlayer(playerId))).then(() => {});
+}
+
+function createMatchParticipation(
+  matchId: number,
+  match: Match,
+  teamSide: 'radiant' | 'dire',
+  pickOrder: 'first' | 'second' | null,
+): TeamMatchParticipation {
+  const opponentName = teamSide === 'radiant' ? match.dire.name : match.radiant.name;
+
+  return {
+    matchId,
+    result: (match.result === teamSide ? 'won' : 'lost') as 'won' | 'lost',
+    duration: match.duration,
+    opponentName: opponentName || '',
+    leagueId: '',
+    startTime: new Date(match.date).getTime(),
+    side: teamSide,
+    pickOrder,
+  };
+}
+
 export async function processMatchAndExtractPlayers(
   matchId: number,
   teamId: number,
   matchContext: MatchContextValue,
   playerContext: PlayerContextValue,
   knownTeamSide?: 'radiant' | 'dire',
+  forceRefresh = false,
 ): Promise<TeamMatchParticipation | null> {
   try {
-    // Get match data
-    const match = await matchContext.addMatch(matchId);
-    if (!match) {
-      console.warn(`Match ${matchId} not found for team ${teamId}`);
+    const match = forceRefresh ? await matchContext.refreshMatch(matchId) : await matchContext.addMatch(matchId);
+
+    if (!validateMatch(match, matchId, teamId)) {
       return null;
     }
 
-    // Determine team side - use known side for manual matches, otherwise determine from match data
-    const teamSide = knownTeamSide || determineTeamSideFromMatch(match, teamId);
+    // At this point, match is guaranteed to be non-null due to validateMatch
+    const validMatch = match!;
+    const teamSide = knownTeamSide || determineTeamSideFromMatch(validMatch, teamId);
+    const pickOrder = validMatch.pickOrder?.[teamSide] || null;
 
-    // Determine pick order for the team
-    const pickOrder = match.pickOrder?.[teamSide] || null;
+    await processPlayersFromMatch(validMatch, teamSide, playerContext);
 
-    // Extract player IDs from the team's side
-    const playerIds = extractPlayersFromMatchSide(match, teamSide);
-
-    // Add players to context (this will trigger data fetching)
-    for (const playerId of playerIds) {
-      await playerContext.addPlayer(playerId);
-    }
-
-    // Get opponent name from match data
-    const opponentName = teamSide === 'radiant' ? match.dire.name : match.radiant.name;
-
-    // Return match participation data
-    return {
-      // Required fields for TeamMatchParticipation
-      matchId,
-      result: match.result === teamSide ? 'won' : 'lost',
-      duration: match.duration,
-      opponentName: opponentName || '', // Get opponent name from match data
-      leagueId: '', // Will be populated from team data if available
-      startTime: new Date(match.date).getTime(), // Convert date string to timestamp
-      // Additional fields for TeamMatchParticipation
-      side: teamSide,
-      pickOrder,
-    };
+    return createMatchParticipation(matchId, validMatch, teamSide, pickOrder);
   } catch (error) {
     console.error(`Error processing match ${matchId} for team ${teamId}:`, error);
     return null;
@@ -250,6 +275,7 @@ export function createInitialTeamData(teamId: number, leagueId: number): TeamDat
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: {
         picks: [],
         bans: [],

@@ -49,6 +49,7 @@ export function createErrorTeamData(teamId: number, leagueId: number, error: str
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -90,6 +91,7 @@ export function transformTeamData(
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
+      erroredMatches: 0,
       heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
       draftStats: {
         firstPickCount: 0,
@@ -163,7 +165,10 @@ export async function handleTeamSummaryOperation(
   setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>,
 ): Promise<TeamData | null> {
   const teamKey = generateTeamKey(teamId, leagueId);
-  if (abortController.hasOngoingOperation(createTeamLeagueOperationKey(teamId, leagueId))) return null;
+
+  if (abortController.hasOngoingOperation(createTeamLeagueOperationKey(teamId, leagueId))) {
+    return null;
+  }
   const controller = abortController.getAbortController(operationKey);
   try {
     const [teamData, leagueData] = await Promise.all([
@@ -210,8 +215,9 @@ export async function handleTeamSummaryOperation(
           transformedTeam.players = mergePlayersUniqueByAccountId(transformedTeam.players, manualPlayers);
         }
       }
-      if (existingTeam && typeof (existingTeam as { isLoading?: boolean }).isLoading !== 'undefined') {
-        (transformedTeam as { isLoading?: boolean }).isLoading = (existingTeam as { isLoading?: boolean }).isLoading;
+      // Preserve loading state from existing team
+      if (existingTeam && 'isLoading' in existingTeam) {
+        (transformedTeam as { isLoading?: boolean }).isLoading = existingTeam.isLoading;
       }
       newTeams.set(teamKey, transformedTeam);
       return newTeams;
@@ -244,6 +250,7 @@ export function ensurePlaceholderTeam(
           totalWins: 0,
           totalLosses: 0,
           overallWinRate: 0,
+          erroredMatches: 0,
           heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
           draftStats: {
             firstPickCount: 0,

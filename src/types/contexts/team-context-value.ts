@@ -52,13 +52,14 @@ export interface TeamData {
 
 export interface TeamMatchParticipation {
   matchId: number;
-  result: 'won' | 'lost';
+  result: 'won' | 'lost' | 'unknown';
   duration: number;
   opponentName: string;
   leagueId: string;
   startTime: number;
   side: 'radiant' | 'dire' | null;
   pickOrder: 'first' | 'second' | null;
+  error?: string;
 }
 
 export interface TeamPlayer {
@@ -94,6 +95,7 @@ export interface TeamPerformance {
   totalWins: number;
   totalLosses: number;
   overallWinRate: number;
+  erroredMatches: number;
 
   // Hero usage statistics
   heroUsage: HeroUsageStats;

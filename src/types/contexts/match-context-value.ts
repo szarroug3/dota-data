@@ -233,6 +233,14 @@ export interface MatchContextValue {
   // State setters for optimistic updates
   setMatches: React.Dispatch<React.SetStateAction<Map<number, Match>>>;
 
+  // Match data fetching context
+  matchDataFetching: {
+    fetchMatchData: (matchId: number, force?: boolean) => Promise<OpenDotaMatch | { error: string }>;
+    clearMatchCache: (matchId?: number) => void;
+    clearAllCache: () => void;
+    isMatchCached: (matchId: number) => boolean;
+  };
+
   // High-performing heroes (calculated once, used by multiple components)
   highPerformingHeroes: Set<string>; // Set of hero IDs that are high-performing
 }

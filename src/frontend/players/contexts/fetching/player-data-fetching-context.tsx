@@ -15,6 +15,7 @@ import {
   getCacheKey,
   setCacheItem,
 } from '@/frontend/lib/cache';
+import { fetchWithMemoryAndStorage, type InFlightMap } from '@/frontend/lib/fetch-cache';
 import { getPlayer } from '@/frontend/players/api/players';
 import type { OpenDotaPlayerComprehensive } from '@/types/external-apis';
 
@@ -102,6 +103,7 @@ const usePlayerApiFetching = (
 ) => {
   const cacheRef = useRef<Map<number, OpenDotaPlayerComprehensive>>(playerCache);
   cacheRef.current = playerCache;
+  const inFlightRef = useRef<InFlightMap<number, OpenDotaPlayerComprehensive>>(new Map());
 
   const handlePlayerSuccess = useCallback(
     (playerId: number, player: OpenDotaPlayerComprehensive) => {
@@ -117,27 +119,30 @@ const usePlayerApiFetching = (
 
   const fetchPlayerData = useCallback(
     async (playerId: number, force = false): Promise<OpenDotaPlayerComprehensive | { error: string }> => {
-      if (!force && cacheRef.current.has(playerId)) {
-        const cachedPlayer = cacheRef.current.get(playerId);
-        if (cachedPlayer) return cachedPlayer;
-      }
-      if (!force) {
-        const key = getCacheKey(`player:${playerId}`, CACHE_VERSION);
-        const persisted = getCacheItem<OpenDotaPlayerComprehensive>(key, {
-          version: CACHE_VERSION,
-          ttlMs: CacheTtl.players,
-        });
-        if (persisted) {
-          setPlayerCache((prev) => new Map(prev).set(playerId, persisted));
-          return persisted;
-        }
-      }
       try {
-        const player = await getPlayer(playerId, force);
-        handlePlayerSuccess(playerId, player);
-        const key = getCacheKey(`player:${playerId}`, CACHE_VERSION);
-        setCacheItem(key, player, { version: CACHE_VERSION, ttlMs: CacheTtl.players });
-        return player;
+        const result = await fetchWithMemoryAndStorage<number, OpenDotaPlayerComprehensive>({
+          id: playerId,
+          force,
+          inMemoryMap: cacheRef.current,
+          setInMemory: (updater) => setPlayerCache((prev) => updater(prev)),
+          inFlight: inFlightRef.current,
+          getPersisted: (id) =>
+            getCacheItem<OpenDotaPlayerComprehensive>(getCacheKey(`player:${id}`, CACHE_VERSION), {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.players,
+            }),
+          setPersisted: (id, value) =>
+            setCacheItem(getCacheKey(`player:${id}`, CACHE_VERSION), value, {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.players,
+            }),
+          loader: async (id, f) => {
+            const player = await getPlayer(id, f);
+            handlePlayerSuccess(id, player);
+            return player;
+          },
+        });
+        return result;
       } catch {
         const errorMsg = 'Failed to fetch player data';
         setPlayerErrors((prev) => new Map(prev).set(playerId, errorMsg));

@@ -22,6 +22,7 @@ const mockTeamData: TeamData = {
     totalWins: 3,
     totalLosses: 2,
     overallWinRate: 60,
+    erroredMatches: 0,
     heroUsage: {
       picks: [],
       bans: [],

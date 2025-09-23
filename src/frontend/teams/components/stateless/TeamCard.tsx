@@ -19,18 +19,14 @@ function haveNamesLoaded(teamName: string, leagueName: string): boolean {
   return !teamName.startsWith('Loading ') && !leagueName.startsWith('Loading ');
 }
 
-function areAllMatchesProcessed(matches: TeamData['matches']): boolean {
-  const matchList = Object.values(matches || {});
-  if (matchList.length === 0) return true;
-  // Consider a match processed only when duration > 0 (real data loaded)
-  return matchList.every((m) => (m?.duration || 0) > 0);
-}
-
 function isStatsReady(teamData: TeamData, teamName: string, leagueName: string): boolean {
-  const hasMatches = Object.keys(teamData.matches || {}).length > 0;
-  const allProcessed = areAllMatchesProcessed(teamData.matches);
   const namesLoaded = haveNamesLoaded(teamName, leagueName);
-  return (hasMatches && allProcessed) || (!hasMatches && namesLoaded);
+  const isNotLoading = !teamData.isLoading;
+
+  // Stats are ready if:
+  // 1. Team names are loaded
+  // 2. Team is not loading
+  return namesLoaded && isNotLoading;
 }
 
 interface TeamInformationProps {
@@ -42,10 +38,21 @@ interface TeamInformationProps {
 }
 
 function getTeamStatsForDisplay(teamData: TeamData, hasError: boolean, isLoading: boolean, statsReady: boolean) {
-  if (hasError || isLoading || !teamData.performance || !statsReady) return null;
+  if (hasError || isLoading || !statsReady) return null;
+
+  // If no performance data, show 0 stats
+  if (!teamData.performance) {
+    return {
+      totalMatches: 0,
+      overallWinRate: 0,
+      erroredMatches: 0,
+    };
+  }
+
   return {
     totalMatches: teamData.performance.totalMatches,
     overallWinRate: teamData.performance.overallWinRate,
+    erroredMatches: teamData.performance.erroredMatches || 0,
   };
 }
 
@@ -92,6 +99,12 @@ const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, t
                 <span>{stats.totalMatches} matches</span>
                 <span>•</span>
                 <span>{stats.overallWinRate.toFixed(1)}% win rate</span>
+                {stats.erroredMatches > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-destructive">{stats.erroredMatches} failed</span>
+                  </>
+                )}
               </>
             ) : (
               <span className="text-muted-foreground/50">Loading stats...</span>

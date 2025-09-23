@@ -19,6 +19,7 @@ import {
   getCacheKey,
   setCacheItem,
 } from '@/frontend/lib/cache';
+import { fetchWithMemoryAndStorage, type InFlightMap } from '@/frontend/lib/fetch-cache';
 import { getTeam } from '@/frontend/teams/api/teams';
 import type { SteamTeam } from '@/types/external-apis/steam';
 
@@ -231,9 +232,7 @@ const useTeamApiFetching = (
 ) => {
   const teamCacheRef = useRef<Map<number, SteamTeam>>(new Map());
   teamCacheRef.current = teamCache;
-
-  // Track in-flight requests by teamId to deduplicate concurrent fetches
-  const inFlightRef = useRef<Map<number, Promise<SteamTeam | { error: string }>>>(new Map());
+  const inFlightRef = useRef<InFlightMap<number, SteamTeam>>(new Map());
 
   const handleTeamError = useCallback(
     (teamId: number, errorMsg: string) => {
@@ -256,45 +255,35 @@ const useTeamApiFetching = (
 
   const fetchTeamData = useCallback(
     async (teamId: number, force = false): Promise<SteamTeam | { error: string }> => {
-      // 1) Memory cache
-      if (!force && teamCacheRef.current.has(teamId)) {
-        const cachedTeam = teamCacheRef.current.get(teamId);
-        if (cachedTeam) return cachedTeam;
+      try {
+        const result = await fetchWithMemoryAndStorage<number, SteamTeam>({
+          id: teamId,
+          force,
+          inMemoryMap: teamCacheRef.current,
+          setInMemory: (updater) => setTeamCache((prev) => updater(prev)),
+          inFlight: inFlightRef.current,
+          getPersisted: (id) =>
+            getCacheItem<SteamTeam>(getCacheKey(`team:${id}`, CACHE_VERSION), {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.teams,
+            }),
+          setPersisted: (id, value) =>
+            setCacheItem(getCacheKey(`team:${id}`, CACHE_VERSION), value, {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.teams,
+            }),
+          loader: async (id, f) => {
+            const team = await getTeam(id, f);
+            handleTeamSuccess(id, team);
+            return team;
+          },
+        });
+        return result;
+      } catch {
+        const errorMsg = 'Failed to fetch team data';
+        handleTeamError(teamId, errorMsg);
+        return { error: errorMsg };
       }
-
-      // 2) Persisted cache
-      if (!force) {
-        const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
-        const persisted = getCacheItem<SteamTeam>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
-        if (persisted) {
-          setTeamCache((prev) => new Map(prev).set(teamId, persisted));
-          return persisted;
-        }
-      }
-
-      // 3) In-flight deduplication
-      const existing = inFlightRef.current.get(teamId);
-      if (existing) return existing;
-
-      const requestPromise = (async (): Promise<SteamTeam | { error: string }> => {
-        try {
-          const team = await getTeam(teamId, force);
-          handleTeamSuccess(teamId, team);
-          const key = getCacheKey(`team:${teamId}`, CACHE_VERSION);
-          setCacheItem(key, team, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
-          return team;
-        } catch {
-          const errorMsg = 'Failed to fetch team data';
-          handleTeamError(teamId, errorMsg);
-          return { error: errorMsg };
-        } finally {
-          // Ensure cleanup so subsequent calls can refetch if needed
-          inFlightRef.current.delete(teamId);
-        }
-      })();
-
-      inFlightRef.current.set(teamId, requestPromise);
-      return requestPromise;
     },
     [handleTeamSuccess, handleTeamError, setTeamCache],
   );
@@ -309,6 +298,7 @@ const useLeagueApiFetching = (
 ) => {
   const leagueCacheRef = useRef<Map<number, SteamLeague>>(new Map());
   leagueCacheRef.current = leagueCache;
+  const inFlightRef = useRef<InFlightMap<number, SteamLeague>>(new Map());
 
   const handleLeagueError = useCallback(
     (leagueId: number, errorMsg: string) => {
@@ -331,24 +321,30 @@ const useLeagueApiFetching = (
 
   const fetchLeagueData = useCallback(
     async (leagueId: number, force = false): Promise<SteamLeague | { error: string }> => {
-      if (!force && leagueCacheRef.current.has(leagueId)) {
-        const cachedLeague = leagueCacheRef.current.get(leagueId);
-        if (cachedLeague) return cachedLeague;
-      }
-      if (!force) {
-        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
-        const persisted = getCacheItem<SteamLeague>(key, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
-        if (persisted) {
-          setLeagueCache((prev) => new Map(prev).set(leagueId, persisted));
-          return persisted;
-        }
-      }
       try {
-        const league = await getLeague(leagueId, force);
-        handleLeagueSuccess(leagueId, league);
-        const key = getCacheKey(`league:${leagueId}`, CACHE_VERSION);
-        setCacheItem(key, league, { version: CACHE_VERSION, ttlMs: CacheTtl.teams });
-        return league;
+        const result = await fetchWithMemoryAndStorage<number, SteamLeague>({
+          id: leagueId,
+          force,
+          inMemoryMap: leagueCacheRef.current,
+          setInMemory: (updater) => setLeagueCache((prev) => updater(prev)),
+          inFlight: inFlightRef.current,
+          getPersisted: (id) =>
+            getCacheItem<SteamLeague>(getCacheKey(`league:${id}`, CACHE_VERSION), {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.teams,
+            }),
+          setPersisted: (id, value) =>
+            setCacheItem(getCacheKey(`league:${id}`, CACHE_VERSION), value, {
+              version: CACHE_VERSION,
+              ttlMs: CacheTtl.teams,
+            }),
+          loader: async (id, f) => {
+            const league = await getLeague(id, f);
+            handleLeagueSuccess(id, league);
+            return league;
+          },
+        });
+        return result;
       } catch {
         const errorMsg = 'Failed to fetch league data';
         handleLeagueError(leagueId, errorMsg);
