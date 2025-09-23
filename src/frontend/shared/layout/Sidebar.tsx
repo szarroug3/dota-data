@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 import {
   Sidebar,
@@ -67,7 +67,7 @@ const Title = ({ open }: { open: boolean }) => {
 /**
  * Navigation section with main app navigation items
  */
-const Navigation = () => {
+const NavigationContent = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -108,6 +108,33 @@ const Navigation = () => {
         })}
       </SidebarMenu>
     </SidebarGroup>
+  );
+};
+
+/**
+ * Navigation section wrapped in Suspense boundary
+ */
+const Navigation = () => {
+  return (
+    <Suspense
+      fallback={
+        <SidebarGroup>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
+            Navigation
+          </SidebarGroupLabel>
+          <SidebarMenu className="overflow-hidden">
+            <SidebarMenuItem>
+              <SidebarMenuButton disabled>
+                <Building className="animate-pulse" />
+                <span className="truncate">Loading...</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      }
+    >
+      <NavigationContent />
+    </Suspense>
   );
 };
 

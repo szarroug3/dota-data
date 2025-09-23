@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, Suspense } from 'react';
 
 import type { TeamData } from '@/types/contexts/team-context-value';
 
@@ -67,7 +67,7 @@ async function postSharePayload(key: string | null, data: SharePayload): Promise
   }
 }
 
-export const ShareProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ShareProviderContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const searchParams = useSearchParams();
   const urlKey = useMemo(() => searchParams.get('config'), [searchParams]);
 
@@ -126,6 +126,14 @@ export const ShareProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return <ShareContext.Provider value={value}>{children}</ShareContext.Provider>;
+};
+
+export const ShareProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <Suspense fallback={<ShareContext.Provider value={defaultShareContext}>{children}</ShareContext.Provider>}>
+      <ShareProviderContent>{children}</ShareProviderContent>
+    </Suspense>
+  );
 };
 
 export function useShareContext(): ShareContextValue {
