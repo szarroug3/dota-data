@@ -32,6 +32,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
@@ -96,7 +97,7 @@ const Navigation = () => {
           };
           return (
             <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton onClick={handleClick} className={isActive ? 'bg-accent' : ''}>
+              <SidebarMenuButton onClick={handleClick} className={isActive ? 'bg-accent' : ''} tooltip={item.label}>
                 {React.cloneElement(item.icon, {
                   className: isActive ? 'text-primary' : '',
                 })}
@@ -136,7 +137,7 @@ const ExternalSites = () => {
       <SidebarMenu className="overflow-hidden">
         {externalSites.map((site) => (
           <SidebarMenuItem key={site.id}>
-            <SidebarMenuButton onClick={() => window.open(site.url, '_blank')}>
+            <SidebarMenuButton onClick={() => window.open(site.url, '_blank')} tooltip={site.label}>
               {site.icon} <span className="truncate">{site.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -182,7 +183,7 @@ const QuickLinks = () => {
       <SidebarMenu className="overflow-hidden">
         {quickLinks.map((link) => (
           <SidebarMenuItem key={link.id}>
-            <SidebarMenuButton onClick={() => window.open(link.url, '_blank')}>
+            <SidebarMenuButton onClick={() => window.open(link.url, '_blank')} tooltip={link.label}>
               {link.icon} <span className="truncate">{link.label}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -367,9 +368,18 @@ const Settings = ({ open }: { open: boolean }) => {
  * Sidebar toggle button component
  */
 function Toggle() {
-  const { toggleSidebar, open } = useSidebar();
+  const { toggleSidebar, open, state, isMobile } = useSidebar();
 
-  return <button onClick={toggleSidebar}>{open ? <ChevronLeft /> : <ChevronRight />}</button>;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button onClick={toggleSidebar}>{open ? <ChevronLeft /> : <ChevronRight />}</button>
+      </TooltipTrigger>
+      <TooltipContent side="right" align="center" hidden={state !== 'collapsed' || isMobile}>
+        {open ? 'Collapse sidebar' : 'Expand sidebar'}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 /**
