@@ -3,7 +3,7 @@ description: Ensure the correct Node version is active before running any pnpm c
 alwaysApply: true
 ---
 
-- If you run a pnpm command and see that you got an error about node, run nvm use then rerun the command.
+- If you run a pnpm command and see that you got an error about node, run `nvm use` then rerun the command.
 
 <example>
 pnpm test

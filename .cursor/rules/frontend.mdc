@@ -1,7 +1,0 @@
----
-description: Only frontend files may be modified by the Frontend Developer
-globs: src/app/**, src/components/**, src/contexts/**, src/hooks/**, src/lib/client/**, src/styles/**, src/types/**, src/tests/**, src/lib/shared/**
-alwaysApply: false
----
-
-The Frontend Developer may only modify frontend folders. Do not edit backend code or server logic.

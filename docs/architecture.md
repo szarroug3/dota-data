@@ -5,7 +5,7 @@
 - **Separation of concerns**: Frontend UI lives in `src/frontend/`; backend API routes live in `src/app/api/`. They interact only via HTTP.
 - **Shared contracts**: Cross-cutting types and schemas live in `src/types/`; shared utilities in `src/lib/`. Client code does not import server-only modules.
 - **Accessibility**: UI adheres to WCAG 2.1, semantic HTML, ARIA where appropriate, keyboard and screen reader support.
-- **Code quality**: Zero lint warnings, strict typing (no `any`/`unknown`), no dynamic imports; imports at file top; camelCase.
+- **Code quality**: Zero lint warnings, strict typing (no `any`), no dynamic imports; imports at file top; camelCase.
 - **No backend guessing**: API routes retrieve and organize data only; no inferred calculations beyond shaping responses.
 
 ### Directory Structure (high level)
@@ -15,45 +15,183 @@
 - **Frontend libs**: `src/frontend/lib/api-client/`, `src/frontend/lib/cache/`
 - **Shared libraries**: `src/lib/`
 - **Types & validation**: `src/types/` and `src/types/api-zod/`
-- **Mock/real fixtures**: `mock-data/`, `real-data/`
+- **Mock fixtures**: `mock-data/`
 - **Tests**: `src/tests/`
 
 ### Data Flow
 
-1. Frontend stateful pages consume state management contexts per family (Teams, Matches, Players, Constants).
-2. State contexts call their corresponding data fetching contexts to retrieve data.
-3. Fetching contexts call the frontend API client, which calls backend routes under `src/app/api/*`.
-4. Backend routes call external APIs and/or cache, validate/shape, then return JSON.
-5. Constants (heroes/items) are fetched via backend and cached; frontend uses them to translate IDs to names.
+1. **Single Data Context**: `AppDataProvider` is the single source of truth for all team/match/player data
+2. **Generic State Management**: Uses `EntityStateManager<T, K>` instances for teams, matches, and players
+3. **Entity Managers**: Each `EntityStateManager` coordinates `LoadingStateManager`, `DataFetchingManager`, and `ErrorManager`
+4. **API Layer**: `DataFetchingManager` calls frontend API client, which calls backend routes under `src/app/api/*`
+5. **Backend Processing**: Backend routes call external APIs and/or cache, validate inputs, then return pass-through data
+6. **Constants Management**: Heroes/items/leagues fetched via `ConstantsProvider` and used for ID translation
+7. **Persistence**: Essential data persisted to localStorage for app hydration (teams list, global matches/players, selection state, user preferences)
+
+> **📋 For detailed data flow scenarios**: See `docs/data-flow-analysis.md` for comprehensive analysis of all 21 data flow scenarios including app hydration, team management, match/player operations, and error handling patterns.
+
+### Context Architecture
+
+The application uses a **single data context architecture** with supporting contexts:
+
+#### Main Data Context
+
+- **`AppDataProvider`** - **Single source of truth** for all team/match/player data
+  - Manages teams, matches, and players using generic state management
+  - Handles selection state (selected team/match/player)
+  - Pre-computes team-scoped data for UI consumption
+  - Provides all CRUD operations for entities
+  - Manages localStorage persistence
+
+#### Supporting Contexts
+
+1. **`ThemeProvider`** - Theme management (next-themes)
+2. **`ConstantsDataFetchingProvider`** - Constants data fetching orchestration
+3. **`ShareProvider`** - Share mode functionality and URL state
+4. **`ConfigProvider`** - Configuration and localStorage abstraction
+5. **`ConstantsProvider`** - Static reference data (heroes, items, leagues)
+
+#### Architecture Principle
+
+**All UI data flows through `AppDataProvider`** - components should use `useAppData()` to access any team/match/player data needed for display. The supporting contexts handle infrastructure concerns (theming, constants, configuration) but do not contain application data.
+
+#### AppDataProvider Interface
+
+The `AppDataProvider` exposes a comprehensive interface through `useAppData()`:
+
+**Data Access:**
+
+- `selectedTeam`, `selectedTeamId` - Currently selected team
+- `teams` - All teams array
+- `teamMatches`, `teamPlayers` - Pre-computed team-scoped data
+- `allMatches`, `allPlayers` - All matches/players for global views
+- `selectedMatch`, `selectedPlayer` - Currently selected match/player
+
+**Operations:**
+
+- `addTeam()`, `refreshTeam()`, `removeTeam()` - Team management
+- `addMatch()`, `refreshMatch()`, `removeMatch()` - Match management
+- `addPlayer()`, `refreshPlayer()`, `removePlayer()` - Player management
+- `setSelectedTeam()`, `setSelectedMatch()`, `setSelectedPlayer()` - Selection
+
+**State:**
+
+- `isLoading` - Global loading state
+- `error` - Global error state
+- `highPerformingHeroes` - Pre-computed hero performance data
+
+**Usage Pattern:**
+
+```typescript
+function MyComponent() {
+  const { selectedTeam, teamMatches, addTeam, isLoading } = useAppData();
+
+  // All data and operations available in one hook
+}
+```
+
+### Single Context Implementation
+
+The `AppDataProvider` implements a single context architecture that serves as the single source of truth for all application data:
+
+#### Data Persistence Strategy
+
+**Persisted to localStorage (for app hydration):**
+
+- Teams list and configurations
+- Match/player IDs and basic metadata (for app state tracking)
+- Selected team/match/player IDs
+- User preferences and settings
+- Any manual matches/players added by user
+
+**Not persisted (fetched fresh on demand):**
+
+- Full match details (large datasets, fetched from API with caching)
+- Full player details (large datasets, fetched from API with caching)
+- League data (cached by backend, fetched fresh)
+- Constants data (heroes, items - cached by backend)
+- External API data that can be re-fetched
+
+This approach balances performance with storage efficiency, ensuring fast app startup while avoiding localStorage bloat. Only essential state (IDs, selections, user data) is persisted; detailed data is fetched on demand with backend caching.
+
+#### Generic State Management
+
+The `AppDataProvider` uses a fully generic state management system that eliminates all violations of the single source of truth principle:
+
+#### Core Infrastructure (`src/lib/state/core/`)
+
+- **LoadingStateManager**: Centralized loading state management with subscription system
+- **DataFetchingManager**: Centralized data fetching with caching, deduplication, and retry logic
+- **ErrorManager**: Centralized error state management with subscription system
+- **EntityStateManager<T, K>**: Generic state manager for any entity type with configuration-driven approach
+
+#### State Manager Factory (`src/lib/state/core/state-manager-factory.ts`)
+
+- **StateManagerFactory**: Factory pattern for creating configured entity managers
+- **TeamStateManager**: Configured for team entities using EntityStateManager<TeamData, string>
+- **MatchStateManager**: Configured for match entities using EntityStateManager<Match, number>
+- **PlayerStateManager**: Configured for player entities using EntityStateManager<Player, number>
+
+#### AppDataProvider Integration
+
+- **Single Context**: `AppDataProvider` integrates all three entity managers (teams, matches, players)
+- **Unified API**: Components use `useAppData()` hook to access all data and operations
+- **Pre-computed Data**: Team-scoped matches and players calculated automatically
+- **Selection State**: Centralized management of selected team/match/player
+- **Persistence**: Automatic localStorage save/restore for essential data (teams list, global matches/players, selection state, user preferences)
+
+#### Benefits Achieved
+
+- **Single Source of Truth**: All team/match/player data managed in one context
+- **Simplified Component Logic**: Components use single `useAppData()` hook instead of multiple contexts
+- **Pre-computed Data**: Team-scoped matches/players calculated automatically, no manual filtering
+- **Unified API**: Consistent interface for all entity operations across teams, matches, and players
+- **Selective Persistence**: Essential data (teams list, global matches/players, selection state) automatically saved to and restored from localStorage
+- **Type Safety**: Generic types ensure compile-time safety with configuration-driven behavior
+- **Performance**: Centralized caching, deduplication, and optimized re-renders
+- **Maintainability**: Single context to debug, test, and maintain instead of multiple contexts
 
 ### Backend (`src/app/api/`)
 
 - **Responsibilities**
   - Single entry point for all external API calls.
-  - Validate inputs/outputs (Zod schemas in `src/types/api-zod/`).
+  - Validate inputs only (Zod schemas in `src/types/api-zod/`).
   - Apply rate limiting per `src/types/rate-limit.ts` as configured.
   - Coordinate caching via `src/lib/cache-service.ts` and `src/lib/cache-backends/*` when applicable.
-  - Return normalized, typed responses; avoid business calculations.
+  - Return pass-through data from external APIs; avoid business calculations.
 - **Conventions**
   - One route group per family: `teams`, `players`, `matches`, `constants`.
   - Error handling maps to consistent JSON error shapes; no thrown errors swallowed silently.
   - Keep route handlers thin; move reusable logic to `src/lib/`.
 
+#### Backend Types & Data Handling
+
+- **Data Flow Principle**: Routes should get data and return it without modifying it
+- **Type Naming Convention**: Types for each service should be named `[Service][Type]`
+  - Example: A list of Steam matches would be `SteamMatches`
+  - Example: A single Steam match would be `SteamMatch`
+- **Validation Requirements**: All routes must include Zod validation for inputs only (since outputs are pass-through data from external APIs)
+- **Mock Data Strategy**:
+  - `mock-data/cached-data/` - Used to mock Redis cache responses
+  - `mock-data/external-data/` - Used to mock data coming from external services
+  - Mock data should mirror the structure and format of real external API responses
+
 ### Frontend (`src/frontend/`)
 
-- **Layering per family (Teams, Matches, Players, Constants)**
-  - Data fetching context: orchestrates calls to the typed API client; never calls `fetch` or external APIs directly.
-  - State management context: feature-scoped source of truth (derived data, selections, caches); calls the fetching context and exposes UI-ready state.
-  - Stateful page component: page-level orchestration and ephemeral view state only (filters, dialogs, layout); consumes the state context and passes props.
-  - Stateless components: presentational only; props-in, no internal state.
+- **Single Data Context Architecture**
+  - **AppDataProvider**: Single source of truth for all team/match/player data
+  - **Components**: Use `useAppData()` hook to access all data and operations
+  - **Pre-computed Data**: Team-scoped matches/players calculated automatically
+  - **Stateful pages**: Page-level orchestration and ephemeral view state (filters, dialogs, layout)
+  - **Stateless components**: Presentational only; props-in, no internal state
 - **Import boundaries**
-  - Stateless components cannot import contexts or API.
-  - Stateful pages import state contexts only.
-  - State contexts import fetching contexts only.
-  - Fetching contexts import typed API clients only (API client owns low-level `fetch`, headers, errors, and Zod validation).
-  - Only API clients talk to backend routes.
+  - Stateless components: Cannot import contexts or API directly
+  - Stateful pages: Import `useAppData()` and supporting contexts only
+  - AppDataProvider: Integrates with generic state managers and API clients
+  - API clients: Own low-level `fetch`, headers, errors, and Zod validation
+  - Only API clients talk to backend routes
 - **Accessibility & UI**
-  - Use shadcn components and Tailwind theme tokens; ensure keyboard/screen reader support.
+  - Use shadcn components and Tailwind theme tokens; ensure keyboard/screen reader support
 
 ### Families
 
@@ -82,10 +220,30 @@
 - **Location**: `src/frontend/constants/`
 - **Rules**: Hero and item metadata retrieved via backend, cached, and used to translate IDs to names.
 
+- Domain types used by UI (from `src/types/contexts/constants-context-value.ts`)
+  - `Hero`:
+    - `id: string`, `name: string`, `localizedName: string`
+    - `primaryAttribute: 'str' | 'agi' | 'int'`, `attackType: 'melee' | 'ranged'`
+    - `roles: string[]`, `legs: number`
+  - `Item`:
+    - `id: string`, `name: string`, `localizedName: string`
+    - `cost: number`, `secretShop: boolean`, `sideShop: boolean`, `recipe: boolean`
+  - `League`:
+    - `id: number`, `name: string`, `description?: string`
+    - `url?: string`, `startDate?: string`, `endDate?: string`
+
+- Derived data the state context must provide
+  - `heroes: Map<string, Hero>` (key: hero ID)
+  - `items: Map<string, Item>` (key: item ID)
+  - `leagues: Map<number, League>` (key: league ID)
+  - `getHero(id: string): Hero | undefined`
+  - `getItem(id: string): Item | undefined`
+  - `getLeague(id: number): League | undefined`
+
 ### Types & Validation
 
 - **Types**: Swagger/OpenAPI-generated types live in `src/types/api.ts` (or split modules under `src/types/` if expanded). Domain/view types are colocated under `src/types/**`.
-- **Validation**: Zod schemas in `src/types/api-zod/`. Validate at backend boundaries; API clients validate responses before exposing to contexts.
+- **Validation**: Zod schemas in `src/types/api-zod/`. Validate at backend boundaries only (inputs); API clients pass through responses without validation.
 
 ### Caching
 
@@ -209,7 +367,7 @@ This appendix enumerates data required by presentational components so contexts 
     - `teamData: TeamData`, `isActive: boolean`
     - callbacks: same as `TeamList`
     - Renders `teamData.performance.totalMatches`, `performance.overallWinRate` when no error
-  - `dashboard/EditTeamModal` (sheet)
+  - `dashboard/EditTeamSheet` (sheet)
     - `isOpen`, `onClose()`, `currentTeamId`, `currentLeagueId`
     - `onSave(oldTeamId, oldLeagueId, newTeamId, newLeagueId) Promise<void>`
     - `teamExists(teamId, leagueId) boolean`
@@ -235,4 +393,71 @@ This appendix enumerates data required by presentational components so contexts 
     - Processed data for UI:
       - `processedDraft?: DraftPhase[]`
       - `processedEvents?: GameEvent[]`
-      - `
+      - `processedStatistics?: ProcessedMatchStatistics`
+
+- Stateless components and their props
+  - `matches/AddMatchForm` (sheet)
+    - `isOpen: boolean`, `onClose: () => void`
+    - `matchId: string`, `teamSide: 'radiant' | 'dire' | ''`
+    - `onMatchIdChange(value)`, `onTeamSideChange(value)`
+    - `onSubmit: () => Promise<void> | void`
+    - `matchExists(matchId: string) boolean`
+    - `isSubmitting?: boolean`, `error?: string`, `validationError?: string`, `isValid: boolean`
+  - `matches/HiddenMatchesModal` (dialog)
+    - `hiddenMatches: Match[]`, `onUnhide(matchId: number) void`, `onClose: () => void`
+    - `teamMatches?: Record<number, TeamMatchParticipation>`
+  - `matches/ResizableMatchLayout` (layout)
+    - `filters: MatchFilters`, `onFiltersChange(filters) void`
+    - `activeTeamMatches: Match[]`, `teamMatches: Record<number, TeamMatchParticipation>`
+    - `visibleMatches: Match[]`, `filteredMatches: Match[]`, `unhiddenMatches: Match[]`
+    - `onHideMatch(id: number) void`, `onRefreshMatch(id: number) void`
+    - `viewMode: 'list'|'card'`, `setViewMode(mode) void`
+    - `selectedMatchId: number | null`, `onSelectMatch(id: number) void`
+    - `hiddenMatchesCount: number`, `onShowHiddenMatches() void`
+    - `hiddenMatchIds: Set<number>`, `selectedMatch: Match | null`
+    - `matchDetailsViewMode: 'draft'|'players'|'events'`, `setMatchDetailsViewMode(mode) void`
+    - `onScrollToMatch(id: number) void`, `onAddMatch() void`
+
+- Derived data the state context must provide
+  - `matches: Map<number, Match>` (key: match ID)
+  - `selectedMatchId: number | null`
+  - `getMatch(id: number): Match | undefined`
+  - `addMatch(id: number): Promise<Match | null>`
+  - `refreshMatch(id: number): Promise<void>`
+  - `removeMatch(id: number): void`
+
+#### Players family
+
+- Domain types used by UI (from `src/types/contexts/player-context-value.ts`)
+  - `Player`:
+    - `id: number`, `name: string`, `accountId: number`
+    - `teamContext?: TeamPlayerContext` (team-scoped stats)
+    - `overallStats?: PlayerOverallStats` (global stats)
+    - `heroStats: Record<string, PlayerHeroStats>` (per-hero performance)
+    - `recentMatches: PlayerMatchData[]` (recent match history)
+    - `preferredRoles: string[]` (most played roles)
+    - `isManual?: boolean` (manually added player)
+
+- Stateless components and their props
+  - `players/AddPlayerSheet` (sheet)
+    - `isOpen: boolean`, `onClose: () => void`
+    - `playerId: string`, `onPlayerIdChange(value: string) void`
+    - `onSubmit: () => Promise<void> | void`
+    - `playerExists(playerId: string) boolean`
+    - `isSubmitting?: boolean`, `error?: string`, `validationError?: string`, `isValid: boolean`
+  - `players/EditPlayerSheet` (sheet)
+    - `isOpen: boolean`, `onClose: () => void`
+    - `playerId: number`, `currentName: string`
+    - `onNameChange(value: string) void`
+    - `onSave: (playerId: number, newName: string) Promise<void>`
+    - `onRemove: (playerId: number) Promise<void>`
+    - `isSubmitting?: boolean`, `error?: string`
+
+- Derived data the state context must provide
+  - `players: Map<number, Player>` (key: player ID)
+  - `selectedPlayerId: number | null`
+  - `getPlayer(id: number): Player | undefined`
+  - `addPlayer(id: number): Promise<Player | null>`
+  - `refreshPlayer(id: number): Promise<void>`
+  - `removePlayer(id: number): void`
+  - `updatePlayerName(id: number, name: string): Promise<void>`

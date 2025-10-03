@@ -1,6 +1,0 @@
----
-globs: api/**,lib/server/**, middleware/**, src/api/**, src/lib/api/**, src/lib/cache-backends/**, src/lib/rate-limit-backends/**, src/lib/queue-backends/**, src/lib/server/**, src/tests/**, src/types/**, src/lib/shared/**
-alwaysApply: false
----
-
-The Backend Developer may only modify backend folders. Do not change any frontend code or documentation unless explicitly assigned.
