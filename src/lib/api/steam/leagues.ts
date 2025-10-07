@@ -97,7 +97,17 @@ export async function fetchSteamLeague(
   const result = await request<{ result: SteamGetMatchHistoryResult }>(
     'steam',
     aggregator,
-    (data: string) => JSON.parse(data) as { result: SteamGetMatchHistoryResult },
+    (data: string) => {
+      const parsed = JSON.parse(data) as { result: SteamGetMatchHistoryResult };
+
+      // Check if league exists - Steam API returns status 15 for invalid leagues
+      // or status 1 with 0 total_results for leagues with no matches yet
+      if (parsed.result.status === 15) {
+        throw new Error(`Data Not Found: League ${leagueId} does not exist or is not accessible`);
+      }
+
+      return parsed;
+    },
     externalDataFilename,
     force,
     cacheTTL,

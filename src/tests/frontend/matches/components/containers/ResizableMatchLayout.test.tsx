@@ -1,11 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
+import type { Match } from '@/frontend/lib/app-data-types';
 import { ResizableMatchLayout } from '@/frontend/matches/components/containers/ResizableMatchLayout';
 import { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
 import { MatchListViewMode } from '@/frontend/matches/components/list/MatchListView';
-import type { Match } from '@/types/contexts/match-context-value';
 
 // Mock the Resizable components since they use browser APIs
 jest.mock('@/components/ui/resizable', () => ({

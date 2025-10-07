@@ -2,9 +2,8 @@ import { AlertCircle } from 'lucide-react';
 import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import type { Hero } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
-import type { Hero } from '@/types/contexts/constants-context-value';
 
 export interface HeroIndicatorProps {
   count: number;
@@ -23,15 +22,16 @@ export const HeroIndicator: React.FC<HeroIndicatorProps> = ({ count, avatarSize 
 
 export interface HeroAvatarsProps {
   heroes: Hero[];
+  highPerformingHeroes: Set<string>;
   avatarSize?: { width: string; height: string };
   className?: string;
 }
 export const HeroAvatars: React.FC<HeroAvatarsProps> = ({
   heroes,
+  highPerformingHeroes,
   avatarSize = { width: 'w-8', height: 'h-8' },
   className = '',
 }) => {
-  const { highPerformingHeroes } = useTeamContext();
   const totalHeroes = heroes.length;
   const renderLargeContainer = () => (
     <div className="@[400px]:flex hidden">

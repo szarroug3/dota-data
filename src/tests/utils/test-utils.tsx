@@ -2,12 +2,9 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
+import { AppDataProvider } from '@/contexts/app-data-context';
 import { ConfigProvider } from '@/frontend/contexts/config-context';
 import { ThemeContextProvider } from '@/frontend/contexts/theme-context';
-import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
-import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
-import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
-import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
 
 // In tests we don't need hero context wiring here; keep wrapper lean
 const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
@@ -55,15 +52,9 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <ConfigProvider>
         <ThemeContextProvider>
-          <TeamProvider>
-            <MatchDataFetchingProvider>
-              <MatchProvider>
-                <PlayerProvider>
-                  <HeroProvider>{children}</HeroProvider>
-                </PlayerProvider>
-              </MatchProvider>
-            </MatchDataFetchingProvider>
-          </TeamProvider>
+          <AppDataProvider>
+            <HeroProvider>{children}</HeroProvider>
+          </AppDataProvider>
         </ThemeContextProvider>
       </ConfigProvider>
     </ThemeProvider>

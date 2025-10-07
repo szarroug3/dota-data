@@ -1,10 +1,10 @@
 'use client';
 
-import React, { Suspense, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 
+import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
+import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
 import { AddPlayerSheet } from '@/frontend/players/components/stateless/AddPlayerSheet';
 import { EditPlayerSheet } from '@/frontend/players/components/stateless/EditPlayerSheet';
 import { ErrorContent } from '@/frontend/players/components/stateless/ErrorContent';
@@ -22,23 +22,19 @@ import {
   usePlayerViewModes as usePlayerViewModesHook,
   useSortedPlayers as useSortedPlayersHook,
   useTeamPlayerIds,
+  useTeamPlayerOperations,
   useWaitForPlayerReadySource,
 } from '@/frontend/players/hooks/usePlayerStatsPage';
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 import { LoadingSkeleton } from '@/frontend/shared/layout/LoadingSkeleton';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
 import { validatePlayerId } from '@/utils/validation';
 
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from './PlayerListView';
 
 function PlayerSheetsContainer({
-  players,
+  teamPlayerIds,
   showAddPlayerSheet,
   setShowAddPlayerSheet,
   addPlayerId,
@@ -53,7 +49,7 @@ function PlayerSheetsContainer({
   setEditError,
   editActions,
 }: {
-  players: Player[];
+  teamPlayerIds: Set<number>;
   showAddPlayerSheet: boolean;
   setShowAddPlayerSheet: (open: boolean) => void;
   addPlayerId: string;
@@ -79,7 +75,7 @@ function PlayerSheetsContainer({
         setAddPlayerId('');
         setShowAddPlayerSheet(false);
       }}
-      players={players}
+      teamPlayerIds={teamPlayerIds}
       showEditPlayerSheet={showEditPlayerSheet}
       setShowEditPlayerSheet={setShowEditPlayerSheet}
       editPlayerIdInput={editPlayerIdInput}
@@ -108,16 +104,25 @@ function PlayerSheetsContainer({
 
 function PlayerStatsPageInner(): React.ReactElement {
   const { players, error, addPlayer, refreshPlayer } = usePlayerDataHook();
-  const { heroes } = useConstantsContext();
-  const { selectedTeamId, addPlayerToTeam, getSelectedTeam, removeManualPlayer, editManualPlayer } = useTeamContext();
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+  if (!selectedTeamId) {
+    throw new Error('No selected team ID');
+  }
+  const getSelectedTeam = useCallback(() => {
+    const team = appData.getTeam(selectedTeamId);
+    if (!team) {
+      throw new Error('No selected team found');
+    }
+    return team;
+  }, [appData, selectedTeamId]);
   const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelectionHook();
   const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModesHook();
   const preferredSite: PreferredExternalSite = useConfigContext().config.preferredExternalSite;
-  const { matches } = useMatchContext();
-  const matchesArray = useMemo(() => Array.from(matches.values()), [matches]);
+  const matchesArray = useMemo(() => Array.from(appData.matches.values()), [appData.matches]);
 
   // Team-scoped player filtering
-  const teamPlayerIds = useTeamPlayerIds(getSelectedTeam, matches);
+  const teamPlayerIds = useTeamPlayerIds();
   const hasActiveTeam = Boolean(selectedTeamId);
   const teamPlayersOnly = useFilteredTeamPlayers(players, teamPlayerIds, hasActiveTeam);
 
@@ -125,8 +130,7 @@ function PlayerStatsPageInner(): React.ReactElement {
   const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(sortedPlayers);
   const manualPlayerIds = useMemo(() => {
     const selectedTeam = getSelectedTeam();
-    const manual = selectedTeam?.manualPlayers ?? [];
-    return new Set<number>(manual);
+    return new Set<number>(selectedTeam.manualPlayerIds);
   }, [getSelectedTeam]);
 
   const resizableLayoutRef = useRef<ResizablePlayerLayoutRef | null>(null);
@@ -141,6 +145,7 @@ function PlayerStatsPageInner(): React.ReactElement {
   const [editError, setEditError] = useState<string | undefined>();
 
   const waitForPlayerReady = useWaitForPlayerReadySource(players);
+  const { addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamPlayerOperations();
 
   const editActions = usePlayerEditActions({
     addPlayer,
@@ -174,7 +179,7 @@ function PlayerStatsPageInner(): React.ReactElement {
     manualPlayerIds,
     handleEditManualPlayer: (playerId: number) => setShowEditPlayerSheet({ open: true, playerId }),
     handleRemoveManualPlayer: editActions.handleRemoveManualPlayer,
-    heroes,
+    heroes: appData.heroes,
     preferredSite,
     matchesArray,
     selectedTeam: getSelectedTeam(),
@@ -189,7 +194,7 @@ function PlayerStatsPageInner(): React.ReactElement {
     <ErrorBoundary>
       <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>{renderContent()}</Suspense>
       <PlayerSheetsContainer
-        players={players}
+        teamPlayerIds={teamPlayerIds}
         showAddPlayerSheet={showAddPlayerSheet}
         setShowAddPlayerSheet={setShowAddPlayerSheet}
         addPlayerId={addPlayerId}
@@ -256,10 +261,10 @@ function PlayerStatsContent({
   manualPlayerIds: Set<number>;
   handleEditManualPlayer: (playerId: number) => void;
   handleRemoveManualPlayer: (playerId: number) => void;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
   matchesArray: Match[];
-  selectedTeam: TeamData | null | undefined;
+  selectedTeam: Team;
 }) {
   return (
     <ResizablePlayerLayout
@@ -277,7 +282,7 @@ function PlayerStatsContent({
       onSelectPlayer={selectPlayer}
       hiddenPlayersCount={hiddenPlayers.length}
       onShowHiddenPlayers={() => setShowHiddenModal(true)}
-      hiddenPlayerIds={new Set(hiddenPlayers.map((p) => p.profile.profile.account_id))}
+      hiddenPlayerIds={new Set(hiddenPlayers.map((p) => p.accountId))}
       selectedPlayer={selectedPlayer}
       playerDetailsViewMode={playerDetailsViewMode}
       setPlayerDetailsViewMode={setPlayerDetailsViewMode}
@@ -299,7 +304,7 @@ function PlayerSheets({
   addPlayerId,
   setAddPlayerId,
   onSubmitAdd,
-  players,
+  teamPlayerIds,
   showEditPlayerSheet,
   setShowEditPlayerSheet,
   editPlayerIdInput,
@@ -315,7 +320,7 @@ function PlayerSheets({
   addPlayerId: string;
   setAddPlayerId: (val: string) => void;
   onSubmitAdd: () => Promise<void>;
-  players: Player[];
+  teamPlayerIds: Set<number>;
   showEditPlayerSheet: { open: boolean; playerId: number | null };
   setShowEditPlayerSheet: (s: { open: boolean; playerId: number | null }) => void;
   editPlayerIdInput: string;
@@ -347,7 +352,7 @@ function PlayerSheets({
         isDuplicate={(() => {
           const idNum = parseInt(addPlayerId, 10);
           if (!Number.isFinite(idNum)) return false;
-          return players.some((p) => p.profile.profile.account_id === idNum);
+          return teamPlayerIds.has(idNum);
         })()}
         isValid={addPlayerId.trim().length > 0 && validatePlayerId(addPlayerId).isValid}
       />
@@ -370,7 +375,7 @@ function PlayerSheets({
           const currentId = showEditPlayerSheet.playerId ?? 0;
           if (!Number.isFinite(nextId)) return false;
           if (nextId === currentId) return false;
-          return players.some((p) => p.profile.profile.account_id === nextId);
+          return teamPlayerIds.has(nextId);
         })()}
         isValid={editPlayerIdInput.trim().length > 0 && validatePlayerId(editPlayerIdInput).isValid}
       />

@@ -1,11 +1,7 @@
 import path from 'path';
 
 import { request, requestWithRetry } from '@/lib/utils/request';
-
-export interface OpendotaLeague {
-  leagueid?: number;
-  name?: string;
-}
+import type { OpenDotaLeague } from '@/types/external-apis/opendota';
 
 function buildOpendotaLeaguesUrl(): string {
   return 'https://api.opendota.com/api/leagues';
@@ -20,17 +16,17 @@ async function fetchLeagues(): Promise<string> {
   return await res.text();
 }
 
-export async function fetchLeaguesFromOpendota(force = false): Promise<OpendotaLeague[]> {
+export async function fetchLeaguesFromOpendota(force = false): Promise<OpenDotaLeague[]> {
   const cacheKey = `opendota:leagues`;
   const cacheTTL = 60 * 60 * 12; // 12 hours
   const mockFilename = path.join(process.cwd(), 'mock-data', 'leagues', 'opendota-leagues.json');
 
-  const result = await request<OpendotaLeague[] | null>(
+  const result = await request<OpenDotaLeague[] | null>(
     'opendota',
     () => fetchLeagues(),
     (data: string) => {
       try {
-        return JSON.parse(data) as OpendotaLeague[];
+        return JSON.parse(data) as OpenDotaLeague[];
       } catch (err) {
         throw new Error(`Failed to parse OpenDota leagues list: ${err}`);
       }

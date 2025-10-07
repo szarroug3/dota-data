@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAppData } from '@/contexts/app-data-context';
+import type { Hero, Match, Player } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { OpenDotaPlayerMatches } from '@/types/external-apis';
 
 type SortKey = 'games' | 'winRate' | 'name';
 
@@ -84,34 +83,63 @@ function getDateCutoffs(
 }
 
 function filterMatchesByDateRange(
-  matches: OpenDotaPlayerMatches[],
+  matches: Match[],
   cutoffs: { startCutoffSec: number | null; endCutoffSec: number | null },
-): OpenDotaPlayerMatches[] {
+): Match[] {
   const { startCutoffSec, endCutoffSec } = cutoffs;
   return matches.filter((m) => {
-    if (startCutoffSec !== null && m.start_time < startCutoffSec) return false;
-    if (endCutoffSec !== null && m.start_time > endCutoffSec) return false;
+    // Defensive check: ensure match is defined and has date
+    if (!m || !m.date) return false;
+
+    const matchStartTimeSec = new Date(m.date).getTime() / 1000;
+    if (startCutoffSec !== null && matchStartTimeSec < startCutoffSec) return false;
+    if (endCutoffSec !== null && matchStartTimeSec > endCutoffSec) return false;
     return true;
   });
 }
 
+function findPlayerInMatch(match: Match, accountId: number): { heroId: number; isWin: boolean } | null {
+  // Check radiant players
+  const radiantPlayer = match.players.radiant.find((p) => p.accountId === accountId);
+  if (radiantPlayer) {
+    return {
+      heroId: radiantPlayer.hero.id,
+      isWin: match.result === 'radiant',
+    };
+  }
+
+  // Check dire players
+  const direPlayer = match.players.dire.find((p) => p.accountId === accountId);
+  if (direPlayer) {
+    return {
+      heroId: direPlayer.hero.id,
+      isWin: match.result === 'dire',
+    };
+  }
+
+  return null;
+}
+
 function buildHeroRows(
-  filtered: OpenDotaPlayerMatches[],
-  heroesMap: Record<string, Hero>,
+  filtered: Match[],
+  heroesMap: Map<number, Hero>,
+  accountId: number,
 ): Array<{ hero: Hero; games: number; winRate: number }> {
-  const byHero: Record<string, { games: number; wins: number }> = {};
+  const byHero: Record<number, { games: number; wins: number }> = {};
   for (const match of filtered) {
-    const heroId = match.hero_id.toString();
-    const isRadiantPlayer = match.player_slot < 128;
-    const isWin = match.radiant_win ? isRadiantPlayer : !isRadiantPlayer;
+    const playerData = findPlayerInMatch(match, accountId);
+    if (!playerData) continue;
+
+    const { heroId, isWin } = playerData;
     if (!byHero[heroId]) byHero[heroId] = { games: 0, wins: 0 };
     byHero[heroId].games += 1;
     if (isWin) byHero[heroId].wins += 1;
   }
   return Object.entries(byHero)
-    .map(([heroId, agg]) => {
+    .map(([heroIdStr, agg]) => {
+      const heroId = parseInt(heroIdStr, 10);
       const hero =
-        heroesMap[heroId] ||
+        heroesMap.get(heroId) ||
         ({
           id: heroId,
           name: `npc_dota_hero_${heroId}`,
@@ -190,12 +218,11 @@ function HeroStatsHeaderControls({
 
 interface PlayerDetailsPanelDetailsProps {
   player: Player;
-  _allPlayers?: Player[];
-  _hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
 }
 
 export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player, heroes }) => {
+  const appData = useAppData();
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
   const [dateRange, setDateRange] = useState<DateRangeSelection>('all');
@@ -205,14 +232,20 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
   });
 
   const matches = useMemo(() => {
-    return Array.isArray(player.recentMatches) ? (player.recentMatches as OpenDotaPlayerMatches[]) : [];
-  }, [player.recentMatches]);
+    // Load matches from appData using player's recentMatchIds
+    return player.recentMatchIds
+      .map((matchId) => appData.getMatch(matchId))
+      .filter((match): match is Match => match != null); // Filter out null and undefined
+  }, [player.recentMatchIds, appData]);
 
   const cutoffs = useMemo(() => getDateCutoffs(dateRange, customDateRange), [dateRange, customDateRange]);
 
   const filteredMatches = useMemo(() => filterMatchesByDateRange(matches, cutoffs), [matches, cutoffs]);
 
-  const unsortedRows = useMemo(() => buildHeroRows(filteredMatches, heroes), [filteredMatches, heroes]);
+  const unsortedRows = useMemo(
+    () => buildHeroRows(filteredMatches, heroes, player.accountId),
+    [filteredMatches, heroes, player.accountId],
+  );
 
   const rows = useMemo(() => {
     const comparator = (

@@ -1,8 +1,7 @@
 import React from 'react';
 
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { useShouldVirtualize } from '@/hooks/use-virtualization';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { MatchListViewList } from './MatchListViewList';
 import { MatchListViewListVirtualized } from './MatchListViewListVirtualized';
@@ -14,7 +13,9 @@ interface MatchListViewListWrapperProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   className?: string;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   forceVirtualization?: boolean;
   virtualizationThreshold?: number;
   virtualizedHeight?: number;
@@ -29,6 +30,8 @@ export const MatchListViewListWrapper: React.FC<MatchListViewListWrapperProps> =
   onRefreshMatch,
   className,
   teamMatches,
+  hiddenMatchIds,
+  allMatches,
   forceVirtualization,
   virtualizationThreshold = 50,
   virtualizedHeight = 600,
@@ -62,6 +65,8 @@ export const MatchListViewListWrapper: React.FC<MatchListViewListWrapperProps> =
       onRefreshMatch={onRefreshMatch}
       className={className}
       teamMatches={teamMatches}
+      hiddenMatchIds={hiddenMatchIds}
+      allMatches={allMatches}
     />
   );
 };

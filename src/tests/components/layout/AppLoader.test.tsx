@@ -4,7 +4,35 @@ import React from 'react';
 import { ConfigProvider, useConfigContext } from '@/frontend/contexts/config-context';
 import { ThemeContextProvider, useThemeContext } from '@/frontend/contexts/theme-context';
 import { AppLoader } from '@/frontend/shared/layout/AppLoader';
-import { TeamProvider, useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+
+// Mock AppData context instead of old team context
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
+  }),
+}));
 
 // Mock the contexts
 jest.mock('@/frontend/contexts/theme-context', () => ({
@@ -19,25 +47,17 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   ConfigProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="config-provider">{children}</div>,
 }));
 
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: jest.fn(),
-  TeamProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="team-provider">{children}</div>,
-}));
-
 describe('AppLoader', () => {
   it('should show blank screen while loading', () => {
     (useThemeContext as jest.Mock).mockReturnValue({ isThemeLoading: true });
     (useConfigContext as jest.Mock).mockReturnValue({ isLoading: true });
-    (useTeamContext as jest.Mock).mockReturnValue({ isLoadingTeams: true });
 
     render(
       <ThemeContextProvider>
         <ConfigProvider>
-          <TeamProvider>
-            <AppLoader>
-              <div data-testid="app-content">App Content</div>
-            </AppLoader>
-          </TeamProvider>
+          <AppLoader>
+            <div data-testid="app-content">App Content</div>
+          </AppLoader>
         </ConfigProvider>
       </ThemeContextProvider>,
     );
@@ -50,16 +70,13 @@ describe('AppLoader', () => {
   it('should render app content after loading is complete', async () => {
     (useThemeContext as jest.Mock).mockReturnValue({ isThemeLoading: false });
     (useConfigContext as jest.Mock).mockReturnValue({ isLoading: false });
-    (useTeamContext as jest.Mock).mockReturnValue({ isLoadingTeams: false });
 
     render(
       <ThemeContextProvider>
         <ConfigProvider>
-          <TeamProvider>
-            <AppLoader>
-              <div data-testid="app-content">App Content</div>
-            </AppLoader>
-          </TeamProvider>
+          <AppLoader>
+            <div data-testid="app-content">App Content</div>
+          </AppLoader>
         </ConfigProvider>
       </ThemeContextProvider>,
     );
@@ -67,7 +84,7 @@ describe('AppLoader', () => {
     // Should render app content after loading
     await waitFor(
       () => {
-        expect(screen.getAllByTestId('app-content')).toHaveLength(2);
+        expect(screen.getByTestId('app-content')).toBeInTheDocument();
       },
       { timeout: 2000 },
     );

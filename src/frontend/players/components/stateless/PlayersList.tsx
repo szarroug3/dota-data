@@ -4,9 +4,8 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
 
 import { PlayerListView, type PlayerListViewMode } from './PlayerListView';
 
@@ -70,7 +69,7 @@ interface PlayersListProps {
   onRemovePlayer?: (playerId: number) => void;
   hiddenPlayerIds?: Set<number>;
   onScrollToPlayer?: (playerId: number) => void;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
 }
 
@@ -118,7 +117,7 @@ interface PlayersListContentProps {
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
   hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
 }
 

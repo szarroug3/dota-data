@@ -1,39 +1,25 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import type { Player } from '@/frontend/lib/app-data-types';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
-import type { Player } from '@/types/contexts/player-context-value';
 
 const basePlayer = (overrides: Partial<Player> = {}): Player => ({
+  accountId: 40927904,
   profile: {
-    profile: {
-      account_id: 40927904,
-      personaname: 'Test Player',
-      name: null,
-      plus: false,
-      cheese: 0,
-      steamid: '0',
-      avatar: '',
-      avatarmedium: '',
-      avatarfull: '',
-      profileurl: '',
-      last_login: '',
-      loccountrycode: '',
-      status: null,
-      fh_unavailable: false,
-      is_contributor: false,
-      is_subscriber: false,
-    },
-    rank_tier: 0,
-    leaderboard_rank: 0,
+    name: 'Test Player',
+    personaname: 'Test Player',
+    rank_tier: 10,
   },
-  counts: { leaver_status: {}, game_mode: {}, lobby_type: {}, lane_role: {}, region: {}, patch: {} },
-  heroes: [],
-  rankings: [],
-  ratings: [],
-  recentMatches: [],
-  totals: { np: 0, fantasy: 0, cosmetic: 0, all_time: 0, ranked: 0, turbo: 0, matched: 0 },
-  wl: { win: 0, lose: 0 },
-  wardMap: { obs: {}, sen: {} },
+  heroStats: [],
+  overallStats: {
+    wins: 0,
+    losses: 0,
+    totalGames: 0,
+    winRate: 0,
+  },
+  recentMatchIds: [],
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
   ...overrides,
 });
 

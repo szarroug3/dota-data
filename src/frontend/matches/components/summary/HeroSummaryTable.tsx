@@ -6,12 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import type { Hero, HeroPick, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { cn } from '@/lib/utils';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { HeroPick, Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface HeroSummary {
   heroId: string;
@@ -25,10 +21,11 @@ interface HeroSummary {
 }
 interface HeroSummaryTableProps {
   matches: Match[];
-  teamMatches: Record<number, TeamMatchParticipation>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  allMatches: Match[];
   showHighPerformersOnly?: boolean;
   className?: string;
+  highPerformingHeroes?: Set<string>;
 }
 type SortField = 'name' | 'count' | 'winRate';
 type SortDirection = 'asc' | 'desc';
@@ -43,15 +40,15 @@ function getHeroPicksForSide(match: Match, teamMatchData: TeamMatchParticipation
 
 function aggregateHeroes(
   matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   isActiveTeam: boolean,
   heroes: Hero[],
 ): HeroSummary[] {
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number; roles: Record<string, number> }> =
+  const heroCounts: Record<number, { count: number; wins: number; totalGames: number; roles: Record<string, number> }> =
     {};
   if (matches.length === 0) return [];
   matches.forEach((match) => {
-    const teamMatchData = teamMatches[match.id];
+    const teamMatchData = teamMatches.get(match.id);
     if (!teamMatchData || !teamMatchData.side) return;
     const heroPicks = getHeroPicksForSide(match, teamMatchData, isActiveTeam);
     heroPicks.forEach((pick) => {
@@ -59,14 +56,15 @@ function aggregateHeroes(
       const entry = heroCounts[heroId] || (heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0, roles: {} });
       entry.count++;
       entry.totalGames++;
-      if (pick.role) entry.roles[pick.role] = (entry.roles[pick.role] || 0) + 1;
+      if (pick.role) entry.roles[pick.role.role] = (entry.roles[pick.role.role] || 0) + 1;
       if (teamMatchData.side === match.result) entry.wins++;
     });
   });
-  return Object.entries(heroCounts).map(([heroId, stats]) => {
+  return Object.entries(heroCounts).map(([heroIdStr, stats]) => {
+    const heroId = Number(heroIdStr);
     const heroData = heroes.find((h) => h.id === heroId);
     return {
-      heroId,
+      heroId: String(heroId),
       heroName: heroData?.localizedName || `Hero ${heroId}`,
       heroImage: heroData?.imageUrl,
       count: stats.count,
@@ -78,7 +76,7 @@ function aggregateHeroes(
   });
 }
 
-function getBansForSide(match: Match, teamMatchData: TeamMatchParticipation, isActiveTeam: boolean): string[] {
+function getBansForSide(match: Match, teamMatchData: TeamMatchParticipation, isActiveTeam: boolean): Hero[] {
   const draft = match.draft || ({ radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] } as Match['draft']);
   return isActiveTeam
     ? teamMatchData.side === 'radiant'
@@ -91,28 +89,29 @@ function getBansForSide(match: Match, teamMatchData: TeamMatchParticipation, isA
 
 function aggregateBans(
   matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   isActiveTeam: boolean,
   heroes: Hero[],
 ): HeroSummary[] {
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number }> = {};
+  const heroCounts: Record<number, { count: number; wins: number; totalGames: number }> = {};
   if (matches.length === 0) return [];
   matches.forEach((match) => {
-    const teamMatchData = teamMatches[match.id];
+    const teamMatchData = teamMatches.get(match.id);
     if (!teamMatchData || !teamMatchData.side) return;
-    const heroIds = getBansForSide(match, teamMatchData, isActiveTeam);
-    heroIds.forEach((heroId) => {
-      if (!heroCounts[heroId]) heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0 };
-      heroCounts[heroId].count++;
-      heroCounts[heroId].totalGames++;
+    const bannedHeroes = getBansForSide(match, teamMatchData, isActiveTeam);
+    bannedHeroes.forEach((hero) => {
+      if (!heroCounts[hero.id]) heroCounts[hero.id] = { count: 0, wins: 0, totalGames: 0 };
+      heroCounts[hero.id].count++;
+      heroCounts[hero.id].totalGames++;
       const isWin = teamMatchData.side === match.result;
-      if (isWin) heroCounts[heroId].wins++;
+      if (isWin) heroCounts[hero.id].wins++;
     });
   });
-  return Object.entries(heroCounts).map(([heroId, stats]) => {
+  return Object.entries(heroCounts).map(([heroIdStr, stats]) => {
+    const heroId = Number(heroIdStr);
     const heroData = heroes.find((h) => h.id === heroId);
     return {
-      heroId,
+      heroId: String(heroId),
       heroName: heroData?.localizedName || `Hero ${heroId}`,
       heroImage: heroData?.imageUrl,
       count: stats.count,
@@ -414,9 +413,22 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({
   teamMatches,
   showHighPerformersOnly,
   className,
+  highPerformingHeroes = new Set(),
 }) => {
-  const { highPerformingHeroes } = useTeamContext();
-  const { heroes } = useConstantsContext();
+  // Build heroes array from match data (heroes are already embedded in matches)
+  const heroesArray = useMemo(() => {
+    const heroMap = new Map<number, Hero>();
+    matches.forEach((match) => {
+      // Collect heroes from picks
+      match.draft.radiantPicks.forEach((pick) => heroMap.set(pick.hero.id, pick.hero));
+      match.draft.direPicks.forEach((pick) => heroMap.set(pick.hero.id, pick.hero));
+      // Collect heroes from bans
+      match.draft.radiantBans.forEach((hero) => heroMap.set(hero.id, hero));
+      match.draft.direBans.forEach((hero) => heroMap.set(hero.id, hero));
+    });
+    return Array.from(heroMap.values());
+  }, [matches]);
+
   const [activeTeamSort, setActiveTeamSort] = useState<{ field: SortField; direction: SortDirection }>({
     field: 'winRate',
     direction: 'desc',
@@ -435,7 +447,6 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({
   });
   const [activeTeamPicksToggle, setActiveTeamPicksToggle] = useState(false);
   if (matches.length === 0) return <NoMatchesNotice className={className} />;
-  const heroesArray = Object.values(heroes);
   const activeTeamPicks = aggregateHeroes(matches, teamMatches, true, heroesArray);
   const opponentTeamPicks = aggregateHeroes(matches, teamMatches, false, heroesArray);
   const activeTeamBans = aggregateBans(matches, teamMatches, true, heroesArray);

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
 import { MatchDetailsPanelEvents } from '@/frontend/matches/components/details/MatchDetailsPanelEvents';
 import { MatchDetailsPanelHeader } from '@/frontend/matches/components/details/MatchDetailsPanelHeader';
 import { MatchDetailsPanelPlayers } from '@/frontend/matches/components/details/MatchDetailsPanelPlayers';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 export type MatchDetailsPanelMode = 'draft' | 'players' | 'events';
 
@@ -14,12 +13,12 @@ type DraftFilter = 'picks' | 'bans' | 'both';
 
 interface MatchDetailsPanelProps {
   match: Match;
-  teamMatch: TeamMatchParticipation;
+  teamMatch: TeamMatchMetadata | undefined;
   viewMode: MatchDetailsPanelMode;
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchMetadata>;
+  hiddenMatchIds: Set<number>;
 }
 
 export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
@@ -27,9 +26,9 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   teamMatch,
   viewMode,
   onViewModeChange,
-  allMatches = [],
-  teamMatches = {},
-  hiddenMatchIds = new Set(),
+  allMatches,
+  teamMatches,
+  hiddenMatchIds,
 }) => {
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
   return (
@@ -64,7 +63,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
         )}
         {viewMode === 'events' && (
           <div className="space-y-4">
-            <MatchDetailsPanelEvents match={match} teamMatch={teamMatch} />
+            <MatchDetailsPanelEvents match={match} />
           </div>
         )}
       </CardContent>

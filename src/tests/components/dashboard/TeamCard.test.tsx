@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
 import { TeamCard } from '@/frontend/teams/components/stateless/TeamCard';
-import type { TeamData } from '@/types/contexts/team-context-value';
 
-const mockTeamData: TeamData = {
+const mockTeamData: TeamDisplayData = {
   team: {
     id: 12345,
     name: 'Team Liquid',

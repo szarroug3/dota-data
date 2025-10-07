@@ -4,7 +4,7 @@
  * Utility functions for player data processing and error handling
  */
 
-import type { Player } from '@/types/contexts/player-context-value';
+import type { Player } from '@/frontend/lib/app-data-types';
 
 // ============================================================================
 // ERROR HANDLING
@@ -89,57 +89,22 @@ export function setPlayerLoading(
  */
 export function createInitialPlayerData(playerId: number): Player {
   return {
+    accountId: playerId,
     profile: {
-      profile: {
-        account_id: playerId,
-        personaname: `Loading ${playerId}`,
-        name: `Loading ${playerId}`,
-        plus: false,
-        cheese: 0,
-        steamid: '',
-        avatar: '',
-        avatarmedium: '',
-        avatarfull: '',
-        profileurl: '',
-        last_login: '',
-        loccountrycode: '',
-        status: null,
-        fh_unavailable: false,
-        is_contributor: false,
-        is_subscriber: false,
-      },
+      name: `Loading ${playerId}`,
+      personaname: `Loading ${playerId}`,
       rank_tier: 0,
-      leaderboard_rank: 0,
     },
-    counts: {
-      leaver_status: {},
-      game_mode: {},
-      lobby_type: {},
-      lane_role: {},
-      region: {},
-      patch: {},
+    heroStats: [],
+    overallStats: {
+      wins: 0,
+      losses: 0,
+      totalGames: 0,
+      winRate: 0,
     },
-    heroes: [],
-    rankings: [],
-    ratings: [],
-    recentMatches: [],
-    totals: {
-      np: 0,
-      fantasy: 0,
-      cosmetic: 0,
-      all_time: 0,
-      ranked: 0,
-      turbo: 0,
-      matched: 0,
-    },
-    wl: {
-      win: 0,
-      lose: 0,
-    },
-    wardMap: {
-      obs: {},
-      sen: {},
-    },
+    recentMatchIds: [],
     isLoading: true,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   };
 }

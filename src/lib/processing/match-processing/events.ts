@@ -1,5 +1,4 @@
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { EventType, MatchEvent } from '@/types/contexts/match-context-value';
+import type { Hero, EventType, MatchEvent } from '@/frontend/lib/app-data-types';
 import type { OpenDotaMatch, OpenDotaMatchPlayer } from '@/types/external-apis';
 
 function getSideFromPlayerSlot(playerSlot?: number): 'radiant' | 'dire' {

@@ -1,7 +1,6 @@
 import React from 'react';
 
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 import { MatchListViewCard } from './MatchListViewCard';
 import { MatchListViewList } from './MatchListViewList';
@@ -15,9 +14,9 @@ interface MatchListViewProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
 }
 

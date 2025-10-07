@@ -110,7 +110,8 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
 }) => {
   const validation = validateTeamForm(teamId, leagueId);
 
-  const isDisabled = teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim();
+  const isDisabled =
+    teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim() || !validation.isValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

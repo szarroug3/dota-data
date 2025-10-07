@@ -1,5 +1,4 @@
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { HeroPick } from '@/types/contexts/match-context-value';
+import type { Hero, HeroPick } from '@/frontend/lib/app-data-types';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 export function determinePickOrder(matchData: OpenDotaMatch): {

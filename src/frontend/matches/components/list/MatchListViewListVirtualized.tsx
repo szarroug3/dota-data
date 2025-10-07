@@ -1,8 +1,7 @@
 import React, { useCallback } from 'react';
 import { FixedSizeList as List } from 'react-window';
 
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 import { MatchCard } from './MatchListViewList';
 
@@ -13,9 +12,10 @@ interface MatchListViewVirtualizedProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   className?: string;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
   height?: number;
   itemHeight?: number;
+  highPerformingHeroes?: Set<string>;
 }
 
 const DEFAULT_ITEM_HEIGHT = 120;
@@ -31,6 +31,7 @@ export const MatchListViewListVirtualized: React.FC<MatchListViewVirtualizedProp
   teamMatches,
   height = DEFAULT_HEIGHT,
   itemHeight = DEFAULT_ITEM_HEIGHT,
+  highPerformingHeroes = new Set(),
 }) => {
   const renderMatchItem = useCallback(
     ({ index, style }: { index: number; style: React.CSSProperties }) => {
@@ -44,11 +45,12 @@ export const MatchListViewListVirtualized: React.FC<MatchListViewVirtualizedProp
             onHideMatch={onHideMatch}
             onRefreshMatch={onRefreshMatch}
             teamMatches={teamMatches}
+            highPerformingHeroes={highPerformingHeroes}
           />
         </div>
       );
     },
-    [matches, selectedMatchId, onSelectMatch, onHideMatch, onRefreshMatch, teamMatches],
+    [matches, selectedMatchId, onSelectMatch, onHideMatch, onRefreshMatch, teamMatches, highPerformingHeroes],
   );
 
   if (matches.length === 0) {

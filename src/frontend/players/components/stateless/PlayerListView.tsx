@@ -2,13 +2,12 @@ import { Pencil, Trash2 } from 'lucide-react';
 import React, { useMemo } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import { PlayerExternalSiteButton } from '@/frontend/players/components/stateless/PlayerExternalSiteButton';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
 import { processPlayerRank } from '@/utils/player-statistics';
 
 export type PlayerListViewMode = 'list' | 'card';
@@ -23,14 +22,13 @@ interface PlayerListViewProps {
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
   hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
 }
 
-function getTopHeroes(player: Player, heroes: Record<string, Hero>): Hero[] {
-  if (!player.heroes) return [];
-  const top = [...player.heroes].sort((a, b) => b.games - a.games).slice(0, 5);
-  return top.map((h) => heroes[h.hero_id.toString()]).filter(Boolean) as Hero[];
+function getTopHeroes(player: Player, heroes: Map<number, Hero>): Hero[] {
+  const top = [...player.heroStats].sort((a, b) => b.games - a.games).slice(0, 5);
+  return top.map((h) => heroes.get(h.heroId)).filter(Boolean) as Hero[];
 }
 
 function renderRank(rankTier?: number | null, leaderboardRank?: number | null): React.ReactNode {
@@ -123,11 +121,11 @@ function PlayerActions({
 }) {
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-      <PlayerExternalSiteButton playerId={player.profile.profile.account_id} preferredSite={preferredSite} size="sm" />
+      <PlayerExternalSiteButton playerId={player.accountId} preferredSite={preferredSite} size="sm" />
       {onRefresh && !player.error && (
         <RefreshButton
-          onClick={() => onRefresh(player.profile.profile.account_id)}
-          ariaLabel={`Refresh ${player.profile.profile.personaname}`}
+          onClick={() => onRefresh(player.accountId)}
+          ariaLabel={`Refresh ${player.profile.personaname}`}
         />
       )}
     </div>
@@ -149,7 +147,7 @@ function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; total
   return (
     <div className="min-w-0 @[120px]:block hidden">
       <div className="font-semibold truncate flex items-center gap-2">
-        <span>{showLoading ? `Loading ${player.profile.profile.account_id}` : player.profile.profile.personaname}</span>
+        <span>{showLoading ? `Loading ${player.accountId}` : player.profile.personaname}</span>
         {showLoading && (
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
         )}
@@ -212,6 +210,19 @@ function ManualPlayerActions({
   );
 }
 
+function getCardClassName(isSelected: boolean, hasError: boolean): string {
+  const base = 'transition-all';
+  const selected = isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md';
+  const error = hasError ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer';
+  return `${base} ${selected} ${error}`;
+}
+
+function getAriaLabel(player: Player): string {
+  return player.error
+    ? `${player.profile.personaname} - Error: ${player.error}`
+    : `Select ${player.profile.personaname}`;
+}
+
 const ListRow: React.FC<{
   player: Player;
   isSelected: boolean;
@@ -233,21 +244,19 @@ const ListRow: React.FC<{
   onRemovePlayer,
   preferredSite,
 }) => {
-  const totalGames = player.wl.win + player.wl.lose;
-  const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
+  const totalGames = player.overallStats.totalGames;
+  const winRate = player.overallStats.winRate;
   const handleSelect = () => {
-    if (!player.error) onSelect?.(player.profile.profile.account_id);
+    if (!player.error) onSelect?.(player.accountId);
   };
-  const aria = player.error
-    ? `${player.profile.profile.personaname} - Error: ${player.error}`
-    : `Select ${player.profile.profile.personaname}`;
+
   return (
     <Card
-      className={`transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'} ${player.error ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer'}`}
+      className={getCardClassName(isSelected, Boolean(player.error))}
       onClick={handleSelect}
       role="button"
       tabIndex={player.error ? -1 : 0}
-      aria-label={aria}
+      aria-label={getAriaLabel(player)}
     >
       <CardContent className="py-0 @container" style={{ containerType: 'inline-size' }}>
         <div className="flex items-center justify-between gap-3 min-w-0">
@@ -270,10 +279,9 @@ const ListRow: React.FC<{
               <div className="@[120px]:flex hidden">
                 <PlayerActions player={player} onRefresh={onRefresh} preferredSite={preferredSite} />
               </div>
-              {/* Placeholder to keep alignment when actions are hidden below 120px */}
               <div className="@[120px]:hidden flex w-10 h-8" aria-hidden="true" />
               <ManualPlayerActions
-                playerId={player.profile.profile.account_id}
+                playerId={player.accountId}
                 isManual={isManual}
                 onEditPlayer={onEditPlayer}
                 onRemovePlayer={onRemovePlayer}
@@ -325,14 +333,14 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
   return (
     <div className="grid gap-2 w-full">
       {processed.map(({ player, topHeroes }) => (
-        <div key={player.profile.profile.account_id} data-player-id={player.profile.profile.account_id}>
+        <div key={player.accountId} data-player-id={player.accountId}>
           <ListRow
             player={player}
-            isSelected={selectedPlayerId === player.profile.profile.account_id}
+            isSelected={selectedPlayerId === player.accountId}
             onSelect={onSelectPlayer}
             topHeroes={topHeroes}
             onRefresh={onRefreshPlayer}
-            isManual={manualPlayerIds?.has(player.profile.profile.account_id)}
+            isManual={manualPlayerIds?.has(player.accountId)}
             onEditPlayer={onEditPlayer}
             onRemovePlayer={onRemovePlayer}
             preferredSite={preferredSite}
@@ -356,6 +364,71 @@ function PlayersEmptyState(): React.ReactElement {
   );
 }
 
+function PlayerCardActions({
+  player,
+  onRefreshPlayer,
+  preferredSite,
+}: {
+  player: Player;
+  onRefreshPlayer?: (playerId: number) => void;
+  preferredSite: PreferredExternalSite;
+}) {
+  return (
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <PlayerExternalSiteButton playerId={player.accountId} preferredSite={preferredSite} size="sm" />
+      <RefreshButton
+        onClick={() => onRefreshPlayer?.(player.accountId)}
+        ariaLabel={`Refresh ${player.profile.personaname}`}
+      />
+    </div>
+  );
+}
+
+const PlayerCard: React.FC<{
+  player: Player;
+  topHeroes: Hero[];
+  isSelected: boolean;
+  onSelectPlayer?: (playerId: number) => void;
+  onRefreshPlayer?: (playerId: number) => void;
+  preferredSite: PreferredExternalSite;
+}> = ({ player, topHeroes, isSelected, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
+  const totalGames = player.overallStats.totalGames;
+  const winRate = player.overallStats.winRate;
+
+  return (
+    <Card
+      className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
+      onClick={() => onSelectPlayer?.(player.accountId)}
+    >
+      <CardContent className="p-4">
+        <div className="flex flex-col items-center space-y-3 mb-3">
+          <PlayerAvatar
+            player={player}
+            avatarSize={{ width: 'w-16', height: 'h-16' }}
+            showLink={false}
+            preferredSite={preferredSite}
+          />
+          <div className="text-center w-full min-w-0 overflow-hidden">
+            <div className="font-medium truncate">{player.profile.personaname}</div>
+            <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
+              {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
+            </div>
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground mb-2 text-center truncate">
+          {totalGames} games • {winRate.toFixed(1)}%
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-center overflow-hidden w-full">
+            <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
+          </div>
+          <PlayerCardActions player={player} onRefreshPlayer={onRefreshPlayer} preferredSite={preferredSite} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const PlayerCardsGrid: React.FC<{
   processed: Array<{ player: Player; topHeroes: Hero[] }>;
   selectedPlayerId?: number | null;
@@ -365,54 +438,17 @@ const PlayerCardsGrid: React.FC<{
 }> = ({ processed, selectedPlayerId, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
   return (
     <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
-      {processed.map(({ player, topHeroes }) => {
-        const totalGames = player.wl.win + player.wl.lose;
-        const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
-        const isSelected = selectedPlayerId === player.profile.profile.account_id;
-        return (
-          <Card
-            key={player.profile.profile.account_id}
-            className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
-            onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}
-          >
-            <CardContent className="p-4">
-              <div className="flex flex-col items-center space-y-3 mb-3">
-                <PlayerAvatar
-                  player={player}
-                  avatarSize={{ width: 'w-16', height: 'h-16' }}
-                  showLink={false}
-                  preferredSite={preferredSite}
-                />
-                <div className="text-center w-full min-w-0 overflow-hidden">
-                  <div className="font-medium truncate">{player.profile.profile.personaname}</div>
-                  <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
-                    {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
-                  </div>
-                </div>
-              </div>
-              <div className="text-xs text-muted-foreground mb-2 text-center truncate">
-                {totalGames} games • {winRate.toFixed(1)}%
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="text-center overflow-hidden w-full">
-                  <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
-                </div>
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <PlayerExternalSiteButton
-                    playerId={player.profile.profile.account_id}
-                    preferredSite={preferredSite}
-                    size="sm"
-                  />
-                  <RefreshButton
-                    onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)}
-                    ariaLabel={`Refresh ${player.profile.profile.personaname}`}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+      {processed.map(({ player, topHeroes }) => (
+        <PlayerCard
+          key={player.accountId}
+          player={player}
+          topHeroes={topHeroes}
+          isSelected={selectedPlayerId === player.accountId}
+          onSelectPlayer={onSelectPlayer}
+          onRefreshPlayer={onRefreshPlayer}
+          preferredSite={preferredSite}
+        />
+      ))}
     </div>
   );
 };

@@ -17,6 +17,9 @@ export interface EnvironmentConfig {
   USE_MOCK_STEAM: boolean;
   USE_MOCK_DB: boolean;
   WRITE_REAL_DATA_TO_MOCK: boolean;
+  MOCK_API_DELAY_MS?: number;
+  MOCK_API_DELAY_OPENDOTA_MS?: number;
+  MOCK_API_DELAY_STEAM_MS?: number;
 
   // External API Configuration
   OPENDOTA_API_KEY?: string;
@@ -35,12 +38,21 @@ function getCoreConfig() {
 }
 
 function getMockConfig() {
+  const parseDelay = (value: string | undefined): number | undefined => {
+    if (!value) return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+  };
+
   return {
     USE_MOCK_API: process.env.USE_MOCK_API === 'true',
     USE_MOCK_OPENDOTA: process.env.USE_MOCK_OPENDOTA === 'true',
     USE_MOCK_STEAM: process.env.USE_MOCK_STEAM === 'true',
     USE_MOCK_DB: process.env.USE_MOCK_DB === 'true',
     WRITE_REAL_DATA_TO_MOCK: process.env.WRITE_REAL_DATA_TO_MOCK === 'true',
+    MOCK_API_DELAY_MS: parseDelay(process.env.MOCK_API_DELAY_MS),
+    MOCK_API_DELAY_OPENDOTA_MS: parseDelay(process.env.MOCK_API_DELAY_OPENDOTA_MS),
+    MOCK_API_DELAY_STEAM_MS: parseDelay(process.env.MOCK_API_DELAY_STEAM_MS),
   };
 }
 
@@ -130,6 +142,21 @@ function docsMockConfig() {
 - **Type**: boolean
 - **Default**: false
 - **Description**: Write real API responses to mock-data/external-data files and cache data to mock-data/cached-data files
+
+### MOCK_API_DELAY_MS
+- **Type**: number (milliseconds)
+- **Default**: undefined
+- **Description**: Artificial latency applied to all mock API responses
+
+### MOCK_API_DELAY_OPENDOTA_MS
+- **Type**: number (milliseconds)
+- **Default**: undefined
+- **Description**: Artificial latency applied to OpenDota mock responses (overrides MOCK_API_DELAY_MS)
+
+### MOCK_API_DELAY_STEAM_MS
+- **Type**: number (milliseconds)
+- **Default**: undefined
+- **Description**: Artificial latency applied to Steam mock responses (overrides MOCK_API_DELAY_MS)
 `;
 }
 function docsExternalApiConfig() {
@@ -202,6 +229,9 @@ export const getEnv = {
   USE_MOCK_STEAM: () => envConfig.USE_MOCK_STEAM,
   USE_MOCK_DB: () => envConfig.USE_MOCK_DB,
   WRITE_REAL_DATA_TO_MOCK: () => envConfig.WRITE_REAL_DATA_TO_MOCK,
+  MOCK_API_DELAY_MS: () => envConfig.MOCK_API_DELAY_MS,
+  MOCK_API_DELAY_OPENDOTA_MS: () => envConfig.MOCK_API_DELAY_OPENDOTA_MS,
+  MOCK_API_DELAY_STEAM_MS: () => envConfig.MOCK_API_DELAY_STEAM_MS,
   OPENDOTA_API_KEY: () => envConfig.OPENDOTA_API_KEY,
   STEAM_API_KEY: () => envConfig.STEAM_API_KEY,
   CI: () => envConfig.CI,

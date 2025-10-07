@@ -1,4 +1,4 @@
-import type { Hero } from '@/types/contexts/constants-context-value';
+import type { Hero } from '@/frontend/lib/app-data-types';
 import { getTopHeroesFromRecentMatches } from '@/utils/player-statistics';
 
 describe('getTopHeroesFromRecentMatches', () => {

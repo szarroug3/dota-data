@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
+import type { Hero } from '@/frontend/lib/app-data-types';
 
 export interface HeroAvatarProps {
   hero?: Hero;

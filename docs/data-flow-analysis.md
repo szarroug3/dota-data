@@ -50,32 +50,28 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 1. `useAppHydration` runs on mount
 2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
 3. Store constants data in ConstantsContext (or AppContext if preferred)
-4. Find league name in the league data from `/api/leagues`
-5. Call `/api/teams/[id]` to get team name
-6. Call `/api/leagues/[id]` to get all matches for the league (store for future use)
-7. Find all matches where the team participated in the league
-8. For each match found: call `/api/matches/[id]` and `/api/players/[id]` for team's players
-9. Hydration complete
+4. Call `appData.loadFromStorage()` to hydrate teams, matches, and players from localStorage (global team ensured, active team selected immediately)
+5. UI renders using the stored team metadata while `refreshTeam` starts in the background for the active team (fetches `/api/teams/[id]`, `/api/leagues/[id]`, `/api/matches/[id]`, `/api/players/[id]`)
+6. Manual match and player IDs from storage are loaded (`loadAllManualMatches`, `loadAllManualPlayers`)
+7. When the active team's refresh finishes, hydration is considered complete (no other teams to refresh)
 
 **Expected Behavior:**
 
 - Constants data (heroes, items, leagues) loads in parallel
-- Team name loads from `/api/teams/[id]`
-- Team is marked as active in app data context
-- League matches load from `/api/leagues/[id]` and stored for future use
-- Team's matches and players load individually
-- App data context contains team name, match data, and player data
-- No changes made to localStorage
+- Stored team, match, and player metadata appear immediately after hydration from localStorage
+- Active team is marked in app data context using stored selection
+- Active team refresh runs in the background; once complete, match and player data are replaced with fresh API responses
+- Manual matches/players trigger background fetches for their full payloads
+- LocalStorage is updated only if the selected team changes during hydration
 
 **Cache State:**
 
 - Heroes: Fresh (loaded via parallel API calls)
 - Items: Fresh (loaded via parallel API calls)
 - Leagues: Fresh (loaded via parallel API calls)
-- League Matches: Fresh (loaded via `/api/leagues/[id]`, stored for future use)
-- Team: Fresh (loaded via `/api/teams/[id]`)
-- Team Matches: Fresh (loaded via `/api/matches/[id]` for each match)
-- Team Players: Fresh (loaded via `/api/players/[id]` for each player)
+- Team metadata: Hydrated from localStorage immediately, then refreshed via `/api/teams/[id]`
+- Team Matches: Hydrated from localStorage metadata, refreshed via `/api/matches/[id]`
+- Team Players: Hydrated from localStorage metadata, refreshed via `/api/players/[id]`
 
 ---
 
@@ -93,43 +89,32 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 1. `useAppHydration` runs on mount
 2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
 3. Store constants data in ConstantsContext (or AppContext if preferred)
-4. **Load Active Team:**
-   - Find league name in the league data from `/api/leagues`
-   - Call `/api/teams/[id]` to get team name
-   - Call `/api/leagues/[id]` to get all matches for the league (store for future use)
-   - Find all matches where the team participated in the league
-   - For each match found: call `/api/matches/[id]` and `/api/players/[id]` for team's players
-   - Mark team as active in app data context
-5. **Load Inactive Team:**
-   - Find league name in the league data from `/api/leagues`
-   - Call `/api/teams/[id]` to get team name
-   - Call `/api/leagues/[id]` to get all matches for the league (store for future use)
-   - Find all matches where the team participated in the league
-   - For each match found: call `/api/matches/[id]` and `/api/players/[id]` for team's players
-   - Do NOT mark team as active
-6. Hydration complete
+4. Call `appData.loadFromStorage()` to hydrate both teams (and their match/player metadata) from localStorage, ensure the global team, and set the previously selected active team
+5. UI immediately renders using stored metadata; `refreshTeam` starts for the active team first
+6. After the active team's refresh resolves, remaining teams refresh in parallel in the background
+7. Manual matches and players trigger background loads via `loadAllManualMatches` and `loadAllManualPlayers`
 
 **Expected Behavior:**
 
 - Constants data (heroes, items, leagues) loads in parallel
-- Active team loads first and is marked as active in app data context
-- Inactive team loads second with same process but is not marked as active
-- Both teams' matches and players load individually
-- App data context contains both teams' data
-- No changes made to localStorage
+- Both teams appear instantly using localStorage metadata
+- Active team remains selected and begins refreshing immediately
+- Inactive team refresh waits until the active team completes, then runs in parallel with other queued teams
+- App data context holds stored match/player summaries until fresh API data arrives
+- LocalStorage is rewritten only if the selected team changes or new metadata is produced during refresh
 
 **Cache State:**
 
 - Heroes: Fresh (loaded via parallel API calls)
 - Items: Fresh (loaded via parallel API calls)
 - Leagues: Fresh (loaded via parallel API calls)
-- League Matches: Fresh (loaded via `/api/leagues/[id]` for each league, stored for future use)
-- Active Team: Fresh (loaded via `/api/teams/[id]`)
-- Active Team Matches: Fresh (loaded via `/api/matches/[id]` for each match)
-- Active Team Players: Fresh (loaded via `/api/players/[id]` for each player)
-- Inactive Team: Fresh (loaded via `/api/teams/[id]`)
-- Inactive Team Matches: Fresh (loaded via `/api/matches/[id]` for each match)
-- Inactive Team Players: Fresh (loaded via `/api/players/[id]` for each player)
+- League Matches: Fresh (loaded via `/api/leagues/[id]`, cached for reuse)
+- Active Team metadata: Hydrated immediately, refreshed via `/api/teams/[id]`
+- Active Team Matches: Hydrated immediately, refreshed via `/api/matches/[id]`
+- Active Team Players: Hydrated immediately, refreshed via `/api/players/[id]`
+- Inactive Team metadata: Hydrated immediately, refreshed after active team completes
+- Inactive Team Matches: Hydrated immediately, refreshed via `/api/matches/[id]` in background
+- Inactive Team Players: Hydrated immediately, refreshed via `/api/players/[id]` in background
 
 ---
 
@@ -914,74 +899,6 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 - Cache Backend: Cleared of relevant entries
 - App Data Context: Cleared of relevant entities
 - localStorage: Cleared of relevant data
-
----
-
-## Potential Issues Identified
-
-### 1. Double Refresh Issue
-
-- **Problem**: `refreshInactiveTeams` might refresh active team twice
-- **Location**: `useAppHydration.ts`
-- **Status**: Fixed by skipping active team in `refreshInactiveTeams`
-
-### 2. Infinite Loop Issue
-
-- **Problem**: Background refresh might trigger repeatedly
-- **Location**: `useAppHydration.ts` and context providers
-- **Status**: Fixed by using `useCallback` and proper dependency arrays
-
-### 3. Race Condition Issue
-
-- **Problem**: Multiple simultaneous requests for same data
-- **Location**: `DataFetchingManager` and `EntityStateManager`
-- **Status**: Fixed by request deduplication in `DataFetchingManager`
-
-### 4. Cache TTL Issue
-
-- **Problem**: Cache TTL not properly enforced
-- **Location**: Cache service and `EntityStateManager`
-- **Status**: Fixed by centralized TTL management in `EntityStateManager`
-
-### 5. Error State Issue
-
-- **Problem**: Errors not properly cleared on refresh
-- **Location**: `ErrorManager` and `EntityStateManager`
-- **Status**: Fixed by centralized error management in `ErrorManager`
-
-### 6. State Synchronization Issue
-
-- **Problem**: State not properly synchronized between components
-- **Location**: Various contexts
-- **Status**: Fixed by single source of truth in `EntityStateManager`
-
----
-
-## Recommendations
-
-### Implemented Improvements
-
-1. **Request Deduplication**: ✅ Implemented in `DataFetchingManager`
-2. **Centralized Error Handling**: ✅ Implemented in `ErrorManager`
-3. **Centralized Loading States**: ✅ Implemented in `LoadingStateManager`
-4. **Single Source of Truth**: ✅ Implemented in `EntityStateManager`
-5. **Centralized Data Fetching**: ✅ Implemented in `DataFetchingManager`
-6. **Generic State Management**: ✅ Implemented with `EntityStateManager<T, K>`
-7. **Context Integration**: ✅ Implemented with React context providers
-8. **Cache TTL Management**: ✅ Implemented with centralized TTL constants
-
-### Future Enhancements
-
-1. **Add Retry Logic**: Automatic retry for failed requests with exponential backoff
-2. **Add Performance Monitoring**: Track request times and success rates
-3. **Add User Feedback**: Better error messages and loading states
-4. **Add Offline Support**: Handle offline scenarios gracefully
-5. **Add Data Validation**: Validate data before storing in cache
-6. **Add Cleanup Logic**: Clean up unused data and resources
-7. **Add Rate Limiting**: Implement rate limiting for external API calls
-8. **Add Caching Strategy**: Implement more sophisticated caching strategies
-9. **Add Error Recovery**: Implement automatic error recovery mechanisms
-10. **Add Testing**: Add comprehensive unit and integration tests
 
 ---
 

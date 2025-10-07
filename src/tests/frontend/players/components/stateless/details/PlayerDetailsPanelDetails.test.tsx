@@ -1,10 +1,62 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import { ConstantsProvider } from '@/frontend/contexts/constants-context';
-import { ConstantsDataFetchingProvider } from '@/frontend/contexts/constants-data-fetching-context';
+import type { Player } from '@/frontend/lib/app-data-types';
 import { PlayerDetailsPanelDetails } from '@/frontend/players/components/stateless/details/PlayerDetailsPanelDetails';
-import type { Player } from '@/types/contexts/player-context-value';
+
+// Mock AppData context instead of constants context
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map([
+      [
+        1,
+        {
+          id: 1,
+          name: 'npc_dota_hero_antimage',
+          localizedName: 'Anti-Mage',
+          primaryAttribute: 'agility',
+          attackType: 'melee',
+          roles: [],
+          imageUrl: '',
+        },
+      ],
+      [
+        2,
+        {
+          id: 2,
+          name: 'npc_dota_hero_axe',
+          localizedName: 'Axe',
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: [],
+          imageUrl: '',
+        },
+      ],
+    ]),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
+  }),
+}));
 
 // Mock the HeroAvatar component
 jest.mock('@/frontend/matches/components/stateless/common/HeroAvatar', () => ({
@@ -128,13 +180,7 @@ const mockPlayer: Player = {
   wardMap: { obs: {}, sen: {} },
 };
 
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <ConstantsDataFetchingProvider>
-      <ConstantsProvider>{component}</ConstantsProvider>
-    </ConstantsDataFetchingProvider>,
-  );
-};
+const renderWithProviders = (component: React.ReactElement) => render(component);
 
 describe('PlayerDetailsPanelDetails', () => {
   beforeEach(() => {

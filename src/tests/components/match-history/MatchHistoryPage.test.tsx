@@ -7,19 +7,9 @@ import React from 'react';
 
 import { ConfigProvider } from '@/frontend/contexts/config-context';
 import { MatchHistoryPage } from '@/frontend/matches/components/containers/MatchHistoryPage';
-import { MatchDataFetchingProvider } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
-import { MatchProvider } from '@/frontend/matches/contexts/state/match-context';
-import { PlayerDataFetchingProvider } from '@/frontend/players/contexts/fetching/player-data-fetching-context';
-import { PlayerProvider } from '@/frontend/players/contexts/state/player-context';
-import { TeamDataFetchingProvider } from '@/frontend/teams/contexts/fetching/team-data-fetching-context';
-import { TeamProvider } from '@/frontend/teams/contexts/state/team-context';
 
 // Remove data coordinator dependency (no longer used)
 const DataCoordinatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
-
-// Remove hero contexts from test since not required by the page after split
-const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
-const HeroDataFetchingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
 // Mock the match history components
 jest.mock('@/frontend/matches/components/list/MatchListView', () => ({
@@ -89,191 +79,84 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
   ),
 }));
 
-// Mock constants context expected by HeroSummaryTable
-jest.mock('@/frontend/contexts/constants-context', () => ({
-  useConstantsContext: () => ({
-    heroes: { 1: { id: 1, name: 'Hero' } },
-    items: { 1: { id: 1, name: 'Item' } },
-    fetchHeroes: jest.fn(),
-    fetchItems: jest.fn(),
-    isLoading: false,
-    error: null,
-  }),
-  ConstantsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-// Mock the hero context to prevent API calls during tests
-// No hero contexts needed in this test
-
-// Mock the team context to provide some teams for testing
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    teamDataList: [
-      {
-        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
-        league: { id: 'league1', name: 'Test League' },
-        matches: [
-          {
-            id: 'match1',
-            teamId: 'team1',
-            leagueId: 'league1',
-            opponent: 'Opponent',
-            result: 'win',
-            date: '2024-01-01',
-            duration: 1800,
-            teamSide: 'radiant',
-            pickOrder: 'first',
-            players: [],
-            heroes: [],
-          },
-        ],
-        players: [],
-        summary: {
-          totalMatches: 1,
-          totalWins: 1,
-          totalLosses: 0,
-          overallWinRate: 100,
-          lastMatchDate: '2024-01-01',
-          averageMatchDuration: 1800,
-          totalPlayers: 0,
-        },
-      },
-    ],
-    activeTeam: { teamId: 'team1', leagueId: 'league1' },
-    selectedTeamId: { teamId: 1, leagueId: 1 },
-    teams: new Map<string, any>([
+// Mock AppData context instead of old contexts
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map([
       [
-        '1-1',
+        'team1',
         {
-          team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
-          league: { id: 'league1', name: 'Test League' },
-          matches: { 123: { side: 'radiant', pickOrder: 'first' } },
-          players: [],
-          manualMatches: {},
-          summary: {
-            totalMatches: 1,
-            totalWins: 1,
+          teamId: 'team1',
+          leagueId: 'league1',
+          name: 'Test Team',
+          leagueName: 'Test League',
+          isLoading: false,
+          performance: {
+            totalMatches: 0,
+            totalWins: 0,
             totalLosses: 0,
-            overallWinRate: 100,
-            lastMatchDate: '2024-01-01',
-            averageMatchDuration: 1800,
-            totalPlayers: 0,
+            overallWinRate: 0,
+            currentWinStreak: 0,
+            currentLoseStreak: 0,
+            averageMatchDuration: 0,
+            averageKills: 0,
+            averageDeaths: 0,
+            averageGold: 0,
+            averageExperience: 0,
           },
         },
       ],
     ]),
-    isLoading: false,
-    error: null,
-    addTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    setActiveTeam: jest.fn(),
-    refreshTeam: jest.fn(),
-    getTeamMatchesForLeague: jest.fn(),
-    getTeamPlayersForLeague: jest.fn(),
-    teamExists: jest.fn(),
-    clearError: jest.fn(),
-    getSelectedTeam: () => ({
-      team: { id: 'team1', name: 'Test Team' },
-      league: { id: 'league1', name: 'Test League' },
-      matches: { 123: { side: 'radiant', pickOrder: 'first' } },
-      manualMatches: {},
-      manualPlayers: [],
-      players: [],
-      performance: {} as any,
-    }),
-    addMatchToTeam: jest.fn().mockResolvedValue(undefined),
-    getAllTeams: () => [
-      {
-        team: { id: 'team1', name: 'Test Team', leagueId: 'league1', isActive: true, isLoading: false },
-        league: { id: 'league1', name: 'Test League' },
-        matches: [
-          {
-            id: 'match1',
-            teamId: 'team1',
-            leagueId: 'league1',
-            opponent: 'Opponent',
-            result: 'win',
-            date: '2024-01-01',
-            duration: 1800,
-            teamSide: 'radiant',
-            pickOrder: 'first',
-            players: [],
-            heroes: [],
-          },
-        ],
-        players: [],
-        summary: {
-          totalMatches: 1,
-          totalWins: 1,
-          totalLosses: 0,
-          overallWinRate: 100,
-          lastMatchDate: '2024-01-01',
-          averageMatchDuration: 1800,
-          totalPlayers: 0,
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map([
+      [
+        1,
+        {
+          id: 1,
+          name: 'Hero',
+          localizedName: 'Hero',
+          primaryAttribute: 'strength',
+          attackType: 'melee',
+          roles: [],
+          imageUrl: '',
         },
-      },
-    ],
+      ],
+    ]),
+    items: new Map([
+      [
+        1,
+        {
+          id: 1,
+          name: 'Item',
+          localizedName: 'Item',
+          cost: 0,
+          secretShop: false,
+          sideShop: false,
+          recipe: false,
+          imageUrl: '',
+        },
+      ],
+    ]),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
   }),
-  TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-// Mock the match context to provide matches
-jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
-  useMatchContext: () => ({
-    matches: [
-      {
-        id: 'match1',
-        teamId: 'team1',
-        leagueId: 'league1',
-        opponent: 'Opponent',
-        result: 'win',
-        date: '2024-01-01',
-        duration: 1800,
-        teamSide: 'radiant',
-        pickOrder: 'first',
-        players: [],
-        heroes: [],
-      },
-    ],
-    filteredMatches: [],
-    selectedMatchId: null,
-    selectedMatch: null,
-    hiddenMatchIds: [],
-    filters: {
-      dateRange: { start: null, end: null },
-      result: 'all',
-      opponent: '',
-      heroes: [],
-      players: [],
-      duration: { min: null, max: null },
-    },
-    heroStatsGrid: {},
-    preferences: {
-      defaultView: 'list',
-      showHiddenMatches: false,
-      autoRefresh: false,
-      refreshInterval: 30,
-      showAdvancedStats: false,
-    },
-    isLoadingMatches: false,
-    isLoadingMatchDetails: false,
-    isLoadingHeroStats: false,
-    matchesError: null,
-    matchDetailsError: null,
-    heroStatsError: null,
-    setFilters: jest.fn(),
-    selectMatch: jest.fn(),
-    hideMatch: jest.fn(),
-    showMatch: jest.fn(),
-    addMatches: jest.fn(),
-    refreshMatches: jest.fn(),
-    refreshMatchDetails: jest.fn(),
-    refreshHeroStats: jest.fn(),
-    clearErrors: jest.fn(),
-    updatePreferences: jest.fn(),
-    getMatch: (id: number) => ({ id, teamId: 'team1', leagueId: 'league1' }),
-  }),
-  MatchProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock useViewMode to simulate localStorage preference and allow state updates
@@ -307,23 +190,7 @@ jest.mock('@/hooks/useViewMode', () => {
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <ConfigProvider>
-      <TeamDataFetchingProvider>
-        <MatchDataFetchingProvider>
-          <PlayerDataFetchingProvider>
-            <HeroDataFetchingProvider>
-              <TeamProvider>
-                <MatchProvider>
-                  <PlayerProvider>
-                    <HeroProvider>
-                      <DataCoordinatorProvider>{component}</DataCoordinatorProvider>
-                    </HeroProvider>
-                  </PlayerProvider>
-                </MatchProvider>
-              </TeamProvider>
-            </HeroDataFetchingProvider>
-          </PlayerDataFetchingProvider>
-        </MatchDataFetchingProvider>
-      </TeamDataFetchingProvider>
+      <DataCoordinatorProvider>{component}</DataCoordinatorProvider>
     </ConfigProvider>,
   );
 };

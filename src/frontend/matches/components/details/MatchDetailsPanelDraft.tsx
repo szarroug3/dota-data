@@ -3,13 +3,10 @@ import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
+import { useAppData } from '@/contexts/app-data-context';
+import type { DraftPhase, Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import { Match } from '@/types/contexts/match-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
-import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import { getTeamDisplayNames } from '@/frontend/matches/utils/match-name-helpers';
 
 interface MatchDetailsPanelDraftProps {
   match?: Match;
@@ -17,17 +14,12 @@ interface MatchDetailsPanelDraftProps {
   filter?: DraftFilter;
   onFilterChange?: (filter: DraftFilter) => void;
   className?: string;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
 }
+
 type DraftFilter = 'picks' | 'bans' | 'both';
-interface DraftPhase {
-  phase: 'ban' | 'pick';
-  team: 'radiant' | 'dire';
-  hero: string;
-  time: number;
-}
 
 const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFilter) => void }> = ({
   filter,
@@ -69,13 +61,13 @@ const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFi
 const isHighPerformingHero = (
   hero: Hero,
   allMatches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   hiddenMatchIds: Set<number>,
 ): boolean => {
   const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
   allMatches.forEach((matchData) => {
     if (hiddenMatchIds.has(matchData.id)) return;
-    const matchTeamData = teamMatches[matchData.id];
+    const matchTeamData = teamMatches.get(matchData.id);
     if (!matchTeamData?.side) return;
     const teamPlayers = matchData.players[matchTeamData.side] || [];
     const isWin = matchTeamData.result === 'won';
@@ -93,7 +85,7 @@ const isHighPerformingHero = (
 };
 
 const DraftEntryRow: React.FC<{
-  hero: Hero | undefined;
+  hero: Hero;
   heroName: string;
   phase: DraftPhase;
   isHighPerforming: boolean;
@@ -120,15 +112,14 @@ const DraftEntryRow: React.FC<{
 
 const DraftEntry: React.FC<{
   phase: DraftPhase;
-  heroes: Record<string, Hero>;
   team: 'radiant' | 'dire';
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ phase, heroes, team, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
-  const hero = heroes[phase.hero];
-  const heroName = hero?.localizedName || `Hero ${phase.hero}`;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+}> = ({ phase, team, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
+  const hero = phase.hero;
+  const heroName = hero.localizedName || `Hero ${hero.id}`;
   const isTeamPhase = phase.team === team;
   const isOnActiveTeamSide = team === teamMatch?.side;
   const isPick = phase.phase === 'pick';
@@ -139,23 +130,21 @@ const DraftEntry: React.FC<{
 
 const DraftTimeline: React.FC<{
   filteredDraft: DraftPhase[];
-  heroes: Record<string, Hero>;
   leftDisplayName: string;
   rightDisplayName: string;
   isRadiantWin: boolean;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
 }> = ({
   filteredDraft,
-  heroes,
   leftDisplayName,
   rightDisplayName,
   isRadiantWin,
   teamMatch,
   allMatches = [],
-  teamMatches = {},
+  teamMatches,
   hiddenMatchIds = new Set(),
 }) => (
   <div>
@@ -181,7 +170,6 @@ const DraftTimeline: React.FC<{
           <DraftEntry
             key={`radiant-${phase.time ?? index}`}
             phase={phase}
-            heroes={heroes}
             team="radiant"
             teamMatch={teamMatch}
             allMatches={allMatches}
@@ -195,7 +183,6 @@ const DraftTimeline: React.FC<{
           <DraftEntry
             key={`dire-${phase.time ?? index}`}
             phase={phase}
-            heroes={heroes}
             team="dire"
             teamMatch={teamMatch}
             allMatches={allMatches}
@@ -207,19 +194,6 @@ const DraftTimeline: React.FC<{
     </div>
   </div>
 );
-
-const getTeamDisplayNames = (teamMatch?: TeamMatchParticipation, selectedTeam?: TeamData) => {
-  if (!selectedTeam || !teamMatch?.side) {
-    return { leftDisplayName: 'Radiant', rightDisplayName: 'Dire' } as const;
-  }
-  const userTeamName = selectedTeam.team.name;
-  const opponentName = teamMatch.opponentName || (teamMatch.side === 'radiant' ? 'Dire' : 'Radiant');
-  const isUserTeamRadiant = teamMatch.side === 'radiant';
-  return {
-    leftDisplayName: isUserTeamRadiant ? userTeamName : opponentName,
-    rightDisplayName: isUserTeamRadiant ? opponentName : userTeamName,
-  } as const;
-};
 
 const filterDraftPhases = (processedDraft: DraftPhase[], filter: DraftFilter) =>
   processedDraft.filter((phase) => {
@@ -233,19 +207,29 @@ const DraftSummary: React.FC<{
   teamMatch?: TeamMatchParticipation;
   filter: DraftFilter;
   onFilterChange: (filter: DraftFilter) => void;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ match, teamMatch, filter, onFilterChange, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
-  const { heroes } = useConstantsContext();
-  const { getSelectedTeam } = useTeamContext();
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+}> = ({ match, teamMatch, filter, onFilterChange, allMatches, teamMatches, hiddenMatchIds }) => {
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  const selectedTeam = appData.getTeam(selectedTeamId);
+  if (!selectedTeam) {
+    throw new Error(`Selected team ${selectedTeamId} not found`);
+  }
+
   if (!match?.processedDraft)
     return <div className="text-center text-muted-foreground py-8">No draft data available</div>;
+
+  if (!teamMatch)
+    return <div className="text-center text-muted-foreground py-8">No team participation data available</div>;
+
   const { processedDraft } = match;
   const isRadiantWin = match.result === 'radiant';
-  const selectedTeam = getSelectedTeam();
-  const { leftDisplayName, rightDisplayName } = getTeamDisplayNames(teamMatch, selectedTeam);
+  const { leftDisplayName, rightDisplayName } = getTeamDisplayNames(teamMatch, selectedTeam, match);
   const filteredDraft = filterDraftPhases(processedDraft, filter);
+
   return (
     <div className="space-y-4">
       <FilterButtons filter={filter} setFilter={onFilterChange} />
@@ -253,7 +237,6 @@ const DraftSummary: React.FC<{
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border transform -translate-x-1/2"></div>
         <DraftTimeline
           filteredDraft={filteredDraft}
-          heroes={heroes}
           leftDisplayName={leftDisplayName}
           rightDisplayName={rightDisplayName}
           isRadiantWin={isRadiantWin}
@@ -274,7 +257,7 @@ export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
   onFilterChange = () => {},
   className,
   allMatches = [],
-  teamMatches = {},
+  teamMatches,
   hiddenMatchIds = new Set(),
 }) => {
   if (!match) return <div className="text-center text-muted-foreground py-8">No match data available</div>;

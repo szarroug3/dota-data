@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data-types';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // Mock the child components
 jest.mock('@/frontend/matches/components/details/MatchDetailsPanelDraft', () => ({

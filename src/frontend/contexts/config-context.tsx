@@ -11,8 +11,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import type { Serializable, SharePayload } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
+import type { Team } from '@/frontend/lib/app-data-types';
 import type { AppConfig, ConfigContextProviderProps, ConfigContextValue } from '@/types/contexts/config-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
 import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage';
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
@@ -41,14 +41,14 @@ function saveToStorage<T>(key: string, value: T): void {
   }
 }
 
-function loadTeamsFromStorage(): Map<string, TeamData> {
+function loadTeamsFromStorage(): Map<string, Team> {
   if (typeof window === 'undefined') return new Map();
   if (!isLocalStorageAvailable()) return new Map();
-  const teamsData = getParsedData<{ [key: string]: TeamData }>(STORAGE_KEYS.TEAMS);
+  const teamsData = getParsedData<{ [key: string]: Team }>(STORAGE_KEYS.TEAMS);
   if (teamsData) {
-    const restored = new Map<string, TeamData>();
+    const restored = new Map<string, Team>();
     Object.entries(teamsData).forEach(([key, value]) => {
-      const next: TeamData = { ...value };
+      const next: Team = { ...value };
       restored.set(key, next);
     });
     return restored;
@@ -56,7 +56,7 @@ function loadTeamsFromStorage(): Map<string, TeamData> {
   return new Map();
 }
 
-function saveTeamsToStorage(teams: Map<string, TeamData>): void {
+function saveTeamsToStorage(teams: Map<string, Team>): void {
   if (typeof window === 'undefined') return;
   if (!isLocalStorageAvailable()) return;
   const teamsObject = Object.fromEntries(teams);
@@ -75,19 +75,19 @@ const getDefaultConfig = (): AppConfig => ({
 
 // removed: config is now in-memory only
 
-function toTeamsMapFromPayload(payload: SharePayload | null): Map<string, TeamData> {
+function toTeamsMapFromPayload(payload: SharePayload | null): Map<string, Team> {
   if (!payload || !payload.teams) return new Map();
-  const entries: Array<[string, TeamData]> = [];
+  const entries: Array<[string, Team]> = [];
   Object.entries(payload.teams).forEach(([key, value]) => {
-    if (isTeamDataLike(value)) {
-      const next: TeamData = { ...(value as TeamData) };
+    if (isTeamLike(value)) {
+      const next: Team = { ...(value as Team) };
       entries.push([key, next]);
     }
   });
   return new Map(entries);
 }
 
-function isTeamDataLike(value: Serializable | null | undefined): value is TeamData {
+function isTeamLike(value: Serializable | null | undefined): value is Team {
   if (!value) return false;
   const obj = value as Record<string, Serializable>;
   return (
@@ -149,16 +149,16 @@ function useTeamAccessors(
     },
     [payload],
   );
-  const getTeams = useCallback((): Map<string, TeamData> => {
+  const getTeams = useCallback((): Map<string, Team> => {
     return isShareMode ? toTeamsMapFromPayload(payload) : loadTeamsFromStorage();
   }, [isShareMode, payload]);
 
   const setTeams = useCallback(
-    (teams: Map<string, TeamData>) => {
+    (teams: Map<string, Team>) => {
       if (isShareMode) {
         // In share mode, persist to in-memory share payload only (no localStorage)
         if (!setSharePayload) return;
-        const teamsObject = Object.fromEntries(teams) as Record<string, TeamData>;
+        const teamsObject = Object.fromEntries(teams) as Record<string, Team>;
         setTimeout(() => setSharePayload(coercePayload({ teams: teamsObject })), 0);
         return;
       }
@@ -175,14 +175,14 @@ function useGlobalManualAccessors(
   payload: {
     globalManualMatches?: number[];
     globalManualPlayers?: number[];
-    teams?: Record<string, TeamData>;
+    teams?: Record<string, Team>;
     activeTeam?: { teamId: number; leagueId: number } | null;
   } | null,
   setSharePayload: ((p: SharePayload) => void) | null,
 ) {
   const coercePayload = useCallback(
     (base: Partial<SharePayload> = {}): SharePayload => {
-      const teams = (payload && (payload as { teams?: Record<string, TeamData> }).teams) || {};
+      const teams = (payload && (payload as { teams?: Record<string, Team> }).teams) || {};
       const activeTeam =
         (payload as { activeTeam?: { teamId: number; leagueId: number } | null } | null)?.activeTeam || null;
       const globalManualMatches = (payload as { globalManualMatches?: number[] } | null)?.globalManualMatches || [];
@@ -307,7 +307,7 @@ export function ConfigProvider({ children }: ConfigContextProviderProps) {
       setActiveTeamState(newActiveTeam);
       if (isShareMode) {
         if (setPayload) {
-          const teams = (payload && (payload as { teams?: Record<string, TeamData> }).teams) || {};
+          const teams = (payload && (payload as { teams?: Record<string, Team> }).teams) || {};
           const globalManualMatches = (payload as { globalManualMatches?: number[] } | null)?.globalManualMatches || [];
           const globalManualPlayers = (payload as { globalManualPlayers?: number[] } | null)?.globalManualPlayers || [];
           setTimeout(

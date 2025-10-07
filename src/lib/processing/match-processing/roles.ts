@@ -1,4 +1,4 @@
-import type { PlayerRole } from '@/types/contexts/team-context-value';
+import type { PlayerRole } from '@/frontend/lib/app-data-types';
 import type { OpenDotaMatchPlayer } from '@/types/external-apis';
 
 interface PlayerAnalysisResult {

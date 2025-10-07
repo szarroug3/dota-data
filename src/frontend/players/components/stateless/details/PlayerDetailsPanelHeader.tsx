@@ -4,8 +4,8 @@ import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Player } from '@/frontend/lib/app-data-types';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
-import type { Player } from '@/types/contexts/player-context-value';
 import { processPlayerRank } from '@/utils/player-statistics';
 
 import type { PlayerDetailsPanelMode } from './PlayerDetailsPanel';
@@ -52,7 +52,7 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
   onViewModeChange,
   className = '',
 }) => {
-  const playerRank = processPlayerRank(player.profile.rank_tier || 0, player.profile.leaderboard_rank);
+  const playerRank = processPlayerRank(player.profile.rank_tier, player.profile.leaderboard_rank);
 
   return (
     <div className={`flex items-center justify-between gap-2 min-w-0 ${className}`}>
@@ -75,7 +75,7 @@ export const PlayerDetailsPanelHeader: React.FC<PlayerDetailsPanelHeaderProps> =
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
             <h2 className="text-lg font-semibold text-foreground dark:text-foreground truncate @[190px]:block hidden">
-              {player.profile.profile.personaname}
+              {player.profile.personaname}
             </h2>
             {playerRank && (
               <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate hidden @[190px]:flex items-center gap-1">

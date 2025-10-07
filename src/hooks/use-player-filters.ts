@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import type { Player } from '@/types/contexts/player-context-value';
+import type { Player } from '@/frontend/lib/app-data-types';
 
 export interface PlayerFilters {
   search: string;
@@ -16,8 +16,8 @@ function buildComparator(filters: PlayerFilters) {
   switch (filters.sortBy) {
     case 'name':
       return (a: Player, b: Player) => {
-        const av = a.profile.profile.personaname.toLowerCase();
-        const bv = b.profile.profile.personaname.toLowerCase();
+        const av = a.profile.personaname.toLowerCase();
+        const bv = b.profile.personaname.toLowerCase();
         return flip(compareStrings(av, bv));
       };
     case 'rank':
@@ -28,28 +28,30 @@ function buildComparator(filters: PlayerFilters) {
       };
     case 'games':
       return (a: Player, b: Player) => {
-        const av = a.wl.win + a.wl.lose || 0;
-        const bv = b.wl.win + b.wl.lose || 0;
+        const av = a.heroStats.reduce((sum, hero) => sum + hero.games, 0);
+        const bv = b.heroStats.reduce((sum, hero) => sum + hero.games, 0);
         return flip(compareNumbers(av, bv));
       };
     case 'winRate':
       return (a: Player, b: Player) => {
-        const aGames = a.wl.win + a.wl.lose || 1;
-        const bGames = b.wl.win + b.wl.lose || 1;
-        const av = (a.wl.win / aGames) * 100;
-        const bv = (b.wl.win / bGames) * 100;
+        const aGames = a.heroStats.reduce((sum, hero) => sum + hero.games, 0) || 1;
+        const bGames = b.heroStats.reduce((sum, hero) => sum + hero.games, 0) || 1;
+        const aWins = a.heroStats.reduce((sum, hero) => sum + hero.wins, 0);
+        const bWins = b.heroStats.reduce((sum, hero) => sum + hero.wins, 0);
+        const av = (aWins / aGames) * 100;
+        const bv = (bWins / bGames) * 100;
         return flip(compareNumbers(av, bv));
       };
     case 'heroes':
       return (a: Player, b: Player) => {
-        const av = a.heroes?.length || 0;
-        const bv = b.heroes?.length || 0;
+        const av = a.heroStats.length;
+        const bv = b.heroStats.length;
         return flip(compareNumbers(av, bv));
       };
     default:
       return (a: Player, b: Player) => {
-        const av = (a.profile.profile.personaname || '').toLowerCase();
-        const bv = (b.profile.profile.personaname || '').toLowerCase();
+        const av = a.profile.personaname.toLowerCase();
+        const bv = b.profile.personaname.toLowerCase();
         return flip(compareStrings(av, bv));
       };
   }
@@ -70,8 +72,8 @@ export function usePlayerFilters(players: Player[]) {
     const searchTerm = filters.search.trim().toLowerCase();
     const filtered = searchTerm
       ? players.filter((player) => {
-          const persona = player.profile.profile.personaname?.toLowerCase?.() || '';
-          const realName = player.profile.profile.name ? player.profile.profile.name.toLowerCase() : '';
+          const persona = player.profile.personaname.toLowerCase();
+          const realName = player.profile.name.toLowerCase();
           return persona.includes(searchTerm) || realName.includes(searchTerm);
         })
       : players;

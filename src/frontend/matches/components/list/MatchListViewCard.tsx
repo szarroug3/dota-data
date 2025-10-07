@@ -1,7 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import type { Hero, Match, Team } from '@/frontend/lib/app-data-types';
+import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage-manager';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';
 import { ExternalSiteButton } from '@/frontend/matches/components/stateless/common/ExternalSiteButton';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
@@ -9,11 +12,8 @@ import { HideButton } from '@/frontend/matches/components/stateless/common/HideB
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { RemoveManualMatchButton } from '@/frontend/matches/components/stateless/common/RemoveManualMatchButton';
 import { EditManualMatchSheet } from '@/frontend/matches/components/stateless/EditManualMatchSheet';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import { getOpponentName } from '@/frontend/matches/utils/match-name-helpers';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 import { validateMatchId } from '@/utils/validation';
 
 const useResponsiveGrid = () => {
@@ -53,29 +53,25 @@ function onCardClick(hasError: boolean, onSelect: (id: number) => void, matchId:
   }
 }
 
-function isDuplicateInFormTeam(
-  teamMatch: TeamMatchParticipation | undefined,
-  currentMatchId: number,
-  newMatchId: number,
-): boolean {
-  if (!teamMatch) return false;
-  const map = { [currentMatchId]: teamMatch } as Record<number, TeamMatchParticipation>;
+function isDuplicateInFormTeam(teamMatch: StoredMatchData, currentMatchId: number, newMatchId: number): boolean {
+  const map = { [currentMatchId]: teamMatch } as Record<number, StoredMatchData>;
   return newMatchId in map;
 }
 
-function isDuplicateInManual(selectedTeam: TeamData | undefined, newMatchId: number): boolean {
-  return Boolean(selectedTeam?.manualMatches && newMatchId in (selectedTeam.manualMatches || {}));
+function isDuplicateInManual(selectedTeam: Team, newMatchId: number): boolean {
+  const matchData = selectedTeam.matches.get(newMatchId);
+  return matchData?.isManual || false;
 }
 
-function isDuplicateInMatches(selectedTeam: TeamData | undefined, newMatchId: number): boolean {
-  return Boolean(selectedTeam?.matches && newMatchId in (selectedTeam.matches || {}));
+function isDuplicateInMatches(selectedTeam: Team, newMatchId: number): boolean {
+  return selectedTeam.matches.has(newMatchId);
 }
 
 function computeDuplicateError(
   newMatchId: number,
   currentMatchId: number,
-  teamMatch: TeamMatchParticipation | undefined,
-  selectedTeam: TeamData | undefined,
+  teamMatch: StoredMatchData,
+  selectedTeam: Team,
 ): string | undefined {
   if (!Number.isFinite(newMatchId) || newMatchId === currentMatchId) return undefined;
   const duplicate =
@@ -92,8 +88,9 @@ interface MatchListViewCardProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   className?: string;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, StoredMatchData>;
   onScrollToMatch?: (matchId: number) => void;
+  highPerformingHeroes?: Set<string>;
 }
 
 interface MatchCardProps {
@@ -102,15 +99,130 @@ interface MatchCardProps {
   onSelectMatch: (matchId: number) => void;
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
-  teamMatch?: TeamMatchParticipation;
+  teamMatch: StoredMatchData;
   onScrollToMatch?: (matchId: number) => void;
+  highPerformingHeroes: Set<string>;
 }
 
-function useEditManualMatchForm(
-  matchId: number,
-  teamMatch: TeamMatchParticipation | undefined,
-  selectedTeam: TeamData | undefined,
+/**
+ * Hook for handling manual match operations (remove/edit)
+ */
+function useManualMatchHandlers(
+  match: Match,
+  selectedTeamId: string,
+  appData: ReturnType<typeof useAppData>,
+  form: ReturnType<typeof useEditManualMatchForm>,
+  onScrollToMatch?: (matchId: number) => void,
+  onSelectMatch?: (matchId: number) => void,
 ) {
+  const handleRemoveManualMatch = useCallback(() => {
+    appData.removeManualMatchFromTeam(match.id, selectedTeamId);
+  }, [appData, match.id, selectedTeamId]);
+
+  const handleEditManualMatch = useCallback(
+    async (newMatchId: number) => {
+      form.setShowEditSheet(false);
+      form.setIsSubmitting(true);
+      form.setError(undefined);
+      try {
+        // Validate that side is selected
+        if (form.teamSide !== 'radiant' && form.teamSide !== 'dire') {
+          form.setError('Please select a team side (Radiant or Dire)');
+          return;
+        }
+
+        // Atomic swap to prevent flickering
+        // Pass the user-selected side from the form
+        await appData.editManualMatchToTeam(match.id, newMatchId, selectedTeamId, form.teamSide);
+        onScrollToMatch?.(newMatchId);
+        onSelectMatch?.(newMatchId);
+      } catch (err) {
+        form.setError(err instanceof Error ? err.message : 'Failed to edit match');
+        console.error('Failed to edit match:', err);
+      } finally {
+        form.setIsSubmitting(false);
+      }
+    },
+    [form, selectedTeamId, appData, match.id, onScrollToMatch, onSelectMatch],
+  );
+
+  const submitEdit = useCallback(async () => {
+    if (!form.isFormValid) return;
+    const newId = parseInt(form.matchIdString, 10);
+    await handleEditManualMatch(newId);
+  }, [form.isFormValid, form.matchIdString, handleEditManualMatch]);
+
+  return { handleRemoveManualMatch, handleEditManualMatch, submitEdit };
+}
+
+/**
+ * Hook to prepare all MatchCard data and handlers
+ * Extracts complexity from the main component
+ */
+function useMatchCardData(
+  match: Match,
+  teamMatch: StoredMatchData,
+  onScrollToMatch?: (matchId: number) => void,
+  onSelectMatch?: (matchId: number) => void,
+) {
+  const { config } = useConfigContext();
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+  const selectedTeam = appData.getTeam(selectedTeamId);
+
+  if (!selectedTeam) {
+    throw new Error(`Selected team ${selectedTeamId} not found`);
+  }
+
+  const form = useEditManualMatchForm(match.id, teamMatch, selectedTeam);
+  const handlers = useManualMatchHandlers(match, selectedTeamId, appData, form, onScrollToMatch, onSelectMatch);
+
+  const hasError = Boolean(match.error);
+  const isLoading = Boolean(match.isLoading);
+  const isManualMatch = useMemo(() => {
+    const matchData = selectedTeam.matches.get(match.id);
+    return matchData?.isManual || false;
+  }, [match.id, selectedTeam]);
+
+  const matchHeroes = useMemo(() => {
+    const side = teamMatch.side;
+    const heroesMap = appData.heroes;
+
+    if (side && match.players?.[side]?.length) {
+      return match.players[side]
+        .map((player) => player.hero)
+        .filter((hero): hero is Hero => Boolean(hero));
+    }
+
+    return (teamMatch.heroes || []).map((storedHero) => resolveStoredHero(storedHero, heroesMap));
+  }, [appData.heroes, match, teamMatch]);
+
+  return {
+    config,
+    form,
+    handlers,
+    hasError,
+    isLoading,
+    isManualMatch,
+    matchHeroes,
+  };
+}
+
+function resolveStoredHero(storedHero: StoredHero, heroesMap: Map<number, Hero>): Hero {
+  const hero = heroesMap.get(storedHero.id);
+  if (hero) {
+    return hero;
+  }
+
+  return {
+    id: storedHero.id,
+    name: storedHero.name,
+    localizedName: storedHero.localizedName,
+    imageUrl: storedHero.imageUrl,
+  } as Hero;
+}
+
+function useEditManualMatchForm(matchId: number, teamMatch: StoredMatchData, selectedTeam: Team) {
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -122,7 +234,8 @@ function useEditManualMatchForm(
   // keep in sync when prop changes
   useEffect(() => {
     setMatchIdString(matchId.toString());
-    const side = selectedTeam?.manualMatches?.[matchId]?.side || 'radiant';
+    const matchData = selectedTeam.matches.get(matchId);
+    const side = matchData?.side || 'radiant';
     setTeamSide(side);
   }, [matchId, selectedTeam]);
 
@@ -163,51 +276,14 @@ function MatchCard({
   onRefreshMatch,
   teamMatch,
   onScrollToMatch,
+  highPerformingHeroes,
 }: MatchCardProps) {
-  const { config } = useConfigContext();
-  const { getSelectedTeam, removeManualMatch, editManualMatch } = useTeamContext();
-  const selectedTeam = getSelectedTeam();
-  const form = useEditManualMatchForm(match.id, teamMatch, selectedTeam);
-
-  const hasError = Boolean(match.error);
-  const isLoading = Boolean(match.isLoading);
-
-  const isManualMatch = useMemo(
-    () => Boolean(selectedTeam?.manualMatches && match.id in selectedTeam.manualMatches),
-    [match.id, selectedTeam],
+  const { config, form, handlers, hasError, isLoading, isManualMatch, matchHeroes } = useMatchCardData(
+    match,
+    teamMatch,
+    onScrollToMatch,
+    onSelectMatch,
   );
-
-  const matchHeroes = useMemo(() => {
-    if (!teamMatch?.side) return [];
-    const teamPlayers = match.players[teamMatch.side] || [];
-    return teamPlayers.map((player) => player.hero).filter((hero): hero is Hero => hero !== undefined && hero !== null);
-  }, [match, teamMatch]);
-
-  const handleRemoveManualMatch = () => {
-    removeManualMatch(match.id);
-  };
-
-  const handleEditManualMatch = async (newMatchId: number, teamSide: 'radiant' | 'dire') => {
-    form.setShowEditSheet(false);
-    form.setIsSubmitting(true);
-    form.setError(undefined);
-    try {
-      await editManualMatch(match.id, newMatchId, teamSide);
-      onScrollToMatch?.(newMatchId);
-      onSelectMatch(newMatchId);
-    } catch (err) {
-      form.setError(err instanceof Error ? err.message : 'Failed to edit match');
-      console.error('Failed to edit match:', err);
-    } finally {
-      form.setIsSubmitting(false);
-    }
-  };
-
-  const submitEdit = async () => {
-    if (!form.isFormValid) return;
-    const newId = parseInt(form.matchIdString, 10);
-    await handleEditManualMatch(newId, form.teamSide as 'radiant' | 'dire');
-  };
 
   return (
     <Card
@@ -215,25 +291,30 @@ function MatchCard({
       onClick={() => onCardClick(hasError, onSelectMatch, match.id)}
       role="button"
       tabIndex={hasError ? -1 : 0}
-      aria-label={getCardAriaLabel(hasError, match.id, match.error, teamMatch?.opponentName ?? `Match ${match.id}`)}
+      aria-label={getCardAriaLabel(hasError, match.id, match.error, getOpponentName(match, teamMatch))}
     >
       <CardContent className="p-4 h-[140px] relative">
         <MatchCardHeader
           isLoading={isLoading}
           hasError={hasError}
-          title={isLoading && !hasError ? `Loading ${match.id}` : (teamMatch?.opponentName ?? `Match ${match.id}`)}
+          title={isLoading && !hasError ? `Loading ${match.id}` : getOpponentName(match, teamMatch)}
         />
-        <MatchCenter isLoading={isLoading} hasError={hasError} heroes={matchHeroes} />
+        <MatchCenter
+          isLoading={isLoading}
+          hasError={hasError}
+          heroes={matchHeroes}
+          highPerformingHeroes={highPerformingHeroes}
+        />
 
         <ActionButtonsRow
           isManualMatch={isManualMatch}
           matchId={match.id}
-          opponentName={teamMatch?.opponentName ?? `Match ${match.id}`}
+          opponentName={getOpponentName(match, teamMatch)}
           preferredSite={config.preferredExternalSite}
           onRefreshMatch={onRefreshMatch}
           onHideMatch={onHideMatch}
           onOpenEdit={() => form.setShowEditSheet(true)}
-          onRemoveManual={handleRemoveManualMatch}
+          onRemoveManual={handlers.handleRemoveManualMatch}
         />
       </CardContent>
 
@@ -244,7 +325,7 @@ function MatchCard({
         teamSide={form.teamSide}
         onChangeMatchId={form.setMatchIdString}
         onChangeTeamSide={form.setTeamSide}
-        onSubmit={submitEdit}
+        onSubmit={handlers.submitEdit}
         isSubmitting={form.isSubmitting}
         error={form.error}
         validationError={form.validationError}
@@ -263,13 +344,27 @@ function MatchCardHeader({ title }: { isLoading: boolean; hasError: boolean; tit
   );
 }
 
-function MatchCenter({ isLoading, hasError, heroes }: { isLoading: boolean; hasError: boolean; heroes: Hero[] }) {
+function MatchCenter({
+  isLoading,
+  hasError,
+  heroes,
+  highPerformingHeroes,
+}: {
+  isLoading: boolean;
+  hasError: boolean;
+  heroes: Hero[];
+  highPerformingHeroes: Set<string>;
+}) {
   return (
     <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 transform flex h-8 items-center justify-center">
       {isLoading && !hasError ? (
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       ) : (
-        <HeroAvatars heroes={heroes} avatarSize={{ width: 'w-8', height: 'h-8' }} />
+        <HeroAvatars
+          heroes={heroes}
+          highPerformingHeroes={highPerformingHeroes}
+          avatarSize={{ width: 'w-8', height: 'h-8' }}
+        />
       )}
     </div>
   );
@@ -277,10 +372,12 @@ function MatchCenter({ isLoading, hasError, heroes }: { isLoading: boolean; hasE
 
 function HeroAvatars({
   heroes,
+  highPerformingHeroes,
   avatarSize = { width: 'w-8', height: 'h-8' },
   className = '',
 }: {
   heroes: Hero[];
+  highPerformingHeroes: Set<string>;
   avatarSize?: { width: string; height: string };
   className?: string;
 }) {
@@ -289,30 +386,55 @@ function HeroAvatars({
     <div className={`-space-x-1 @[100px]:flex hidden ${className}`}>
       <div className="@[300px]:flex hidden">
         {heroes.slice(0, 5).map((hero) => (
-          <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
+          <HeroAvatar
+            key={hero.id}
+            hero={hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+          />
         ))}
       </div>
       <div className="@[250px]:flex @[300px]:hidden hidden">
         {heroes.slice(0, 3).map((hero) => (
-          <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
+          <HeroAvatar
+            key={hero.id}
+            hero={hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+          />
         ))}
         {totalHeroes > 3 && <HeroIndicator count={totalHeroes - 3} avatarSize={avatarSize} />}
       </div>
       <div className="@[200px]:flex @[250px]:hidden hidden">
         {heroes.slice(0, 2).map((hero) => (
-          <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
+          <HeroAvatar
+            key={hero.id}
+            hero={hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+          />
         ))}
         {totalHeroes > 2 && <HeroIndicator count={totalHeroes - 2} avatarSize={avatarSize} />}
       </div>
       <div className="@[100px]:flex @[200px]:hidden hidden">
         {heroes.slice(0, 1).map((hero) => (
-          <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
+          <HeroAvatar
+            key={hero.id}
+            hero={hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+          />
         ))}
         {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
       </div>
       <div className="@[100px]:hidden flex">
         {heroes.slice(0, 1).map((hero) => (
-          <HeroAvatar key={hero.id} hero={hero} avatarSize={avatarSize} />
+          <HeroAvatar
+            key={hero.id}
+            hero={hero}
+            avatarSize={avatarSize}
+            isHighPerforming={highPerformingHeroes.has(hero.id.toString())}
+          />
         ))}
         {totalHeroes > 1 && <HeroIndicator count={totalHeroes - 1} avatarSize={avatarSize} />}
       </div>
@@ -376,8 +498,9 @@ const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
   onHideMatch,
   onRefreshMatch,
   className = '',
-  teamMatches = {},
+  teamMatches,
   onScrollToMatch,
+  highPerformingHeroes = new Set(),
 }) => {
   const { containerRef, columns } = useResponsiveGrid();
 
@@ -387,19 +510,29 @@ const MatchListViewCard: React.FC<MatchListViewCardProps> = ({
       className={`grid gap-2 ${className}`}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
-      {matches.map((match) => (
-        <div key={match.id} data-match-id={match.id}>
-          <MatchCard
-            match={match}
-            selectedMatchId={selectedMatchId}
-            onSelectMatch={onSelectMatch}
-            onHideMatch={onHideMatch}
-            onRefreshMatch={onRefreshMatch}
-            teamMatch={teamMatches[match.id]}
-            onScrollToMatch={onScrollToMatch}
-          />
-        </div>
-      ))}
+      {matches.map((match) => {
+        const teamMatch = teamMatches.get(match.id);
+        if (!teamMatch) {
+          throw new Error(
+            `Match ${match.id} has no team participation metadata. This should never happen - all matches in the match list should have participation data.`,
+          );
+        }
+
+        return (
+          <div key={match.id} data-match-id={match.id}>
+            <MatchCard
+              match={match}
+              selectedMatchId={selectedMatchId}
+              onSelectMatch={onSelectMatch}
+              onHideMatch={onHideMatch}
+              onRefreshMatch={onRefreshMatch}
+              teamMatch={teamMatch}
+              onScrollToMatch={onScrollToMatch}
+              highPerformingHeroes={highPerformingHeroes}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };

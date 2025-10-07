@@ -4,8 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 import { MatchListView, type MatchListViewMode } from './MatchListView';
 
@@ -52,9 +51,9 @@ interface MatchesListProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
 }
@@ -95,7 +94,7 @@ interface MatchesListContentProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
   hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
@@ -194,7 +193,7 @@ const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
       onSelectMatch,
       hiddenMatchesCount = 0,
       onShowHiddenMatches,
-      teamMatches = {},
+      teamMatches,
       hiddenMatchIds = new Set(),
       allMatches = [],
       onScrollToMatch,

@@ -1,8 +1,7 @@
 import { render, screen } from '@testing-library/react';
 
+import type { Player, Hero } from '@/frontend/lib/app-data-types';
 import { PlayerListView, type PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
 
 // Mock the contexts
 jest.mock('@/frontend/contexts/config-context', () => ({

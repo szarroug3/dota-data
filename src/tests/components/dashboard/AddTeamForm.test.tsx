@@ -47,11 +47,11 @@ describe('AddTeamForm', () => {
     expect(submitButton).toBeDisabled();
   });
 
-  it('should enable the Add button when both fields are filled', () => {
+  it('should enable the Add button when both fields are filled with valid IDs', () => {
     render(
       <AddTeamForm
-        teamId="team-liquid"
-        leagueId="esl-pro-league"
+        teamId="9517508"
+        leagueId="16435"
         onTeamIdChange={mockOnTeamIdChange}
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
@@ -233,8 +233,8 @@ describe('AddTeamForm', () => {
     const user = userEvent.setup();
     render(
       <AddTeamForm
-        teamId="test-team"
-        leagueId="test-league"
+        teamId="9517508"
+        leagueId="16435"
         onTeamIdChange={mockOnTeamIdChange}
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
@@ -245,7 +245,7 @@ describe('AddTeamForm', () => {
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
     await user.click(submitButton);
 
-    expect(mockOnAddTeam).toHaveBeenCalledWith('test-team', 'test-league');
+    expect(mockOnAddTeam).toHaveBeenCalledWith('9517508', '16435');
     expect(mockOnTeamIdChange).toHaveBeenCalledWith('');
     expect(mockOnLeagueIdChange).toHaveBeenCalledWith('');
   });
@@ -380,8 +380,8 @@ describe('AddTeamForm', () => {
   it('should align buttons to the right', () => {
     render(
       <AddTeamForm
-        teamId="test-team"
-        leagueId="test-league"
+        teamId="9517508"
+        leagueId="16435"
         onTeamIdChange={mockOnTeamIdChange}
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
@@ -391,5 +391,114 @@ describe('AddTeamForm', () => {
 
     const actionsContainer = screen.getByRole('button', { name: 'Add Team' }).closest('.flex');
     expect(actionsContainer).toHaveClass('justify-end');
+  });
+
+  it('should disable the Add button when team ID has validation errors', () => {
+    render(
+      <AddTeamForm
+        teamId="0"
+        leagueId="16435"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it('should disable the Add button when league ID has validation errors', () => {
+    render(
+      <AddTeamForm
+        teamId="9517508"
+        leagueId="0"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it('should disable the Add button when team ID is not a positive number', () => {
+    render(
+      <AddTeamForm
+        teamId="-123"
+        leagueId="16435"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it('should disable the Add button when team ID is not numeric', () => {
+    render(
+      <AddTeamForm
+        teamId="abc123"
+        leagueId="16435"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    expect(submitButton).toBeDisabled();
+  });
+
+  it('should not call onAddTeam when form is submitted with invalid team ID', async () => {
+    const user = userEvent.setup();
+    render(
+      <AddTeamForm
+        teamId="0"
+        leagueId="16435"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+
+    const submitButton = screen.getByRole('button', { name: 'Add Team' });
+    await user.click(submitButton);
+
+    expect(mockOnAddTeam).not.toHaveBeenCalled();
+  });
+
+  it('should show error message for invalid team ID', () => {
+    render(
+      <AddTeamForm
+        teamId="0"
+        leagueId="16435"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+
+    expect(screen.getByText('Team ID must be a positive number')).toBeInTheDocument();
+  });
+
+  it('should show error message for invalid league ID', () => {
+    render(
+      <AddTeamForm
+        teamId="9517508"
+        leagueId="0"
+        onTeamIdChange={mockOnTeamIdChange}
+        onLeagueIdChange={mockOnLeagueIdChange}
+        onAddTeam={mockOnAddTeam}
+        teamExists={mockTeamExists}
+      />,
+    );
+
+    expect(screen.getByText('League ID must be a positive number')).toBeInTheDocument();
   });
 });

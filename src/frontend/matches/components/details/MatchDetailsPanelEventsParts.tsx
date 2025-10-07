@@ -2,7 +2,7 @@ import { Check, Coins, Skull, Zap } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 
-import { EventDetails, GameEvent, Match } from '@/types/contexts/match-context-value';
+import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data-types';
 
 export interface ChartDataPoint {
   time: number;
@@ -233,7 +233,7 @@ export function TeamfightPlayersTable({ details, match }: { details: NonNullable
           <span className="inline-block w-12 text-right">XP</span>
         </div>
       </div>
-      {details.playerDetails?.map((player, index) => {
+      {details.playerDetails?.map((player, index: number) => {
         const data = deriveTeamfightRowData(player, match);
         return <TeamfightPlayerRowSimple key={index} data={data} />;
       })}
@@ -270,11 +270,23 @@ function computeTeamfightTotals(playerDetails: NonNullable<EventDetails['playerD
   const initial = { gold: 0, xp: 0 } as { gold: number; xp: number };
   if (!playerDetails || playerDetails.length === 0) return { radiant: initial, dire: initial };
   const radiant = playerDetails
-    .filter((p) => p.playerIndex < 5)
-    .reduce((acc, p) => ({ gold: acc.gold + p.goldDelta, xp: acc.xp + p.xpDelta }), initial);
+    .filter((p: { playerIndex: number }) => p.playerIndex < 5)
+    .reduce(
+      (acc: { gold: number; xp: number }, p: { goldDelta: number; xpDelta: number }) => ({
+        gold: acc.gold + p.goldDelta,
+        xp: acc.xp + p.xpDelta,
+      }),
+      initial,
+    );
   const dire = playerDetails
-    .filter((p) => p.playerIndex >= 5)
-    .reduce((acc, p) => ({ gold: acc.gold + p.goldDelta, xp: acc.xp + p.xpDelta }), initial);
+    .filter((p: { playerIndex: number }) => p.playerIndex >= 5)
+    .reduce(
+      (acc: { gold: number; xp: number }, p: { goldDelta: number; xpDelta: number }) => ({
+        gold: acc.gold + p.goldDelta,
+        xp: acc.xp + p.xpDelta,
+      }),
+      initial,
+    );
   return { radiant, dire };
 }
 

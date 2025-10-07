@@ -3,11 +3,10 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'rec
 
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip } from '@/components/ui/chart';
+import { useAppData } from '@/contexts/app-data-context';
+import { GameEvent, Match } from '@/frontend/lib/app-data-types';
+import { processMatchData } from '@/frontend/lib/match-loader';
 import { parseMatch as apiParseMatch } from '@/frontend/matches/api/matches';
-import { useMatchDataFetching } from '@/frontend/matches/contexts/fetching/match-data-fetching-context';
-import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
-import { GameEvent, Match } from '@/types/contexts/match-context-value';
-import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import {
   ChartDataPoint,
@@ -19,7 +18,6 @@ import {
 
 interface MatchDetailsPanelEventsProps {
   match?: Match;
-  teamMatch?: TeamMatchParticipation;
   className?: string;
 }
 
@@ -282,26 +280,24 @@ function PerformanceChart({ match, onParse, isParsing }: { match?: Match; onPars
 
 PerformanceChart.displayName = 'PerformanceChart';
 
-export const MatchDetailsPanelEvents: React.FC<MatchDetailsPanelEventsProps> = ({
-  match,
-  teamMatch: _teamMatch,
-  className,
-}) => {
-  const { refreshMatch } = useMatchContext();
-  const { clearMatchCache } = useMatchDataFetching();
+export const MatchDetailsPanelEvents: React.FC<MatchDetailsPanelEventsProps> = ({ match, className }) => {
+  const appData = useAppData();
   const [isParsing, setIsParsing] = React.useState(false);
 
   const handleParse = React.useCallback(async () => {
     if (!match) return;
     try {
       setIsParsing(true);
-      await apiParseMatch(match.id);
-      clearMatchCache(match.id);
-      await refreshMatch(match.id);
+      // Parse match and get the updated data from OpenDota
+      const parsedMatchData = await apiParseMatch(match.id);
+      // Process the raw match data and update it in appData
+      const processedMatch = processMatchData(parsedMatchData, appData.heroes, appData.items);
+      // Update the match in appData (this triggers React re-render)
+      appData.addMatch(processedMatch);
     } finally {
       setIsParsing(false);
     }
-  }, [match, clearMatchCache, refreshMatch]);
+  }, [match, appData]);
 
   if (!match) {
     return (

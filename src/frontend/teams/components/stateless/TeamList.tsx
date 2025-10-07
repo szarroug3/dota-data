@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
 
 import { TeamCard } from './TeamCard';
 
 interface TeamListProps {
-  teamDataList: TeamData[];
+  teamDataList: TeamDisplayData[];
   activeTeam: { teamId: number; leagueId: number } | null;
   onRemoveTeam: (teamId: number, leagueId: number) => Promise<void> | void;
   onRefreshTeam: (teamId: number, leagueId: number) => Promise<void> | void;

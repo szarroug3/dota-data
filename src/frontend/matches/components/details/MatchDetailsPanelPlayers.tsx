@@ -4,18 +4,17 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Match, PlayerMatchData } from '@/frontend/lib/app-data-types';
+import type { Hero, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
-import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface MatchDetailsPanelPlayersProps {
   match?: Match;
   teamMatch?: TeamMatchParticipation;
   className?: string;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
 }
 
 function getTeamDisplayNames(match?: Match): { radiantName: string; direName: string } {
@@ -41,13 +40,13 @@ function getPlayersFromMatch(match?: Match): PlayerWithTeam[] {
 const isHighPerformingHero = (
   hero: Hero,
   allMatches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   hiddenMatchIds: Set<number>,
 ): boolean => {
   const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
   allMatches.forEach((matchData) => {
     if (hiddenMatchIds.has(matchData.id)) return;
-    const matchTeamData = teamMatches[matchData.id];
+    const matchTeamData = teamMatches.get(matchData.id);
     if (!matchTeamData?.side) return;
     const teamPlayers = matchData.players[matchTeamData.side] || [];
     const isWin = matchTeamData.result === 'won';
@@ -67,10 +66,10 @@ const isHighPerformingHero = (
 const PlayerCard: React.FC<{
   player: PlayerWithTeam;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ player, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+}> = ({ player, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
   const isOnActiveTeamSide = player.team === teamMatch?.side;
   const isHighPerforming = isOnActiveTeamSide
     ? isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds)
@@ -90,7 +89,7 @@ const PlayerCard: React.FC<{
                 <h3 className="font-medium truncate @[510px]:block hidden">{player.playerName}</h3>
                 {player.role && (
                   <Badge variant="secondary" className="text-xs flex-shrink-0 @[235px]:block hidden">
-                    {player.role}
+                    {player.role.role}
                   </Badge>
                 )}
               </div>
@@ -163,9 +162,9 @@ const RadiantPlayers: React.FC<{
   isWinner: boolean;
   match?: Match;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
 }> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
   const radiantPlayers = players.filter((p) => p.team === 'radiant');
   const sortedRadiantPlayers = match?.draft?.radiantPicks
@@ -212,9 +211,9 @@ const DirePlayers: React.FC<{
   isWinner: boolean;
   match?: Match;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  allMatches: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
 }> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
   const direPlayers = players.filter((p) => p.team === 'dire');
   const sortedDirePlayers = match?.draft?.direPicks
@@ -255,7 +254,7 @@ export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> =
   match,
   teamMatch,
   allMatches = [],
-  teamMatches = {},
+  teamMatches,
   hiddenMatchIds = new Set(),
 }) => {
   const players = getPlayersFromMatch(match);

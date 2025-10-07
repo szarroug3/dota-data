@@ -1,26 +1,34 @@
 import { render, screen } from '@testing-library/react';
 
+import type { Player, Hero, Match } from '@/frontend/lib/app-data-types';
 import { PlayerDetailsPanelTeam } from '@/frontend/players/components/stateless/details/PlayerDetailsPanelTeamView';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
 
-// Mock dependent contexts to avoid requiring full provider trees
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    getSelectedTeam: () => null,
-  }),
-}));
-
-jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
-  useMatchContext: () => ({
+// Mock AppData context instead of old contexts
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
     matches: new Map(),
-  }),
-}));
-
-jest.mock('@/frontend/contexts/constants-context', () => ({
-  useConstantsContext: () => ({
-    heroes: {},
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
   }),
 }));
 

@@ -1,18 +1,16 @@
 import React, { useMemo, useState } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import type { Hero, Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';
 import { ExternalSiteButton } from '@/frontend/matches/components/stateless/common/ExternalSiteButton';
 import { HideButton } from '@/frontend/matches/components/stateless/common/HideButton';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { RemoveManualMatchButton } from '@/frontend/matches/components/stateless/common/RemoveManualMatchButton';
 import { EditManualMatchSheet } from '@/frontend/matches/components/stateless/EditManualMatchSheet';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 import { ErrorBadge, HeroAvatars, PickOrderBadge, ResultBadge, TeamSideBadge } from './MatchListViewList.parts';
 
@@ -34,10 +32,11 @@ interface MatchListViewProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   className?: string;
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchMetadata>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
+  highPerformingHeroes?: Set<string>;
 }
 
 function MatchInfo({
@@ -47,10 +46,10 @@ function MatchInfo({
 }: {
   match: Match;
   onSelectMatch: (matchId: number) => void;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchMetadata>;
 }) {
-  const teamMatch = teamMatches?.[match.id];
-  const opponentName = teamMatch?.opponentName || `Match ${match.id}`;
+  const teamMatch = teamMatches.get(match.id);
+  const opponentName = teamMatch?.opponentName || 'Unknown';
   const hasError = Boolean(match.error);
   const isLoading = Boolean(match.isLoading);
   return (
@@ -88,9 +87,13 @@ function MatchInfo({
   );
 }
 
-const didActiveTeamWin = (teamMatch: TeamMatchParticipation | undefined): boolean => teamMatch?.result === 'won';
-const getPickOrder = (teamMatch: TeamMatchParticipation | undefined): string | null =>
-  !teamMatch?.pickOrder ? null : teamMatch.pickOrder === 'first' ? 'First Pick' : 'Second Pick';
+const didActiveTeamWin = (teamMatch: TeamMatchMetadata | undefined): boolean => teamMatch?.result === 'won';
+
+const getPickOrder = (match: Match, teamMatch: TeamMatchMetadata | undefined): string | null => {
+  if (!match.pickOrder || !teamMatch) return null;
+  const pickOrder = match.pickOrder[teamMatch.side];
+  return pickOrder === 'first' ? 'First Pick' : pickOrder === 'second' ? 'Second Pick' : null;
+};
 
 const MatchBadgesContent: React.FC<{
   hasError: boolean;
@@ -109,14 +112,14 @@ const MatchBadgesContent: React.FC<{
   return <>{badges}</>;
 };
 
-const MatchBadges: React.FC<{ match: Match; teamMatches?: Record<number, TeamMatchParticipation> }> = ({
+const MatchBadges: React.FC<{ match: Match; teamMatches: Map<number, TeamMatchMetadata> }> = ({
   match,
   teamMatches,
 }) => {
-  const teamMatch = teamMatches?.[match.id];
+  const teamMatch = teamMatches.get(match.id);
   const teamWon = didActiveTeamWin(teamMatch);
-  const pickOrder = getPickOrder(teamMatch);
-  const teamSide = (teamMatch?.side ?? undefined) as 'radiant' | 'dire' | undefined;
+  const pickOrder = getPickOrder(match, teamMatch);
+  const teamSide = teamMatch?.side;
   const hasError = Boolean(match.error);
   const isLoading = Boolean(match.isLoading);
   return (
@@ -143,7 +146,7 @@ function MatchCardFooterSection({
   onHideMatch,
 }: {
   match: Match;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchMetadata>;
   preferredSite: PreferredExternalSite;
   isManualMatch: boolean;
   onRefreshMatch: (id: number) => void;
@@ -179,8 +182,9 @@ interface MatchCardProps {
   onSelectMatch: (matchId: number) => void;
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
-  teamMatches?: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchMetadata>;
   onScrollToMatch?: (matchId: number) => void;
+  highPerformingHeroes: Set<string>;
 }
 
 const getHeroesFromDraft = (match: Match, teamSide: 'radiant' | 'dire'): Hero[] => {
@@ -191,12 +195,11 @@ const getHeroesFromDraft = (match: Match, teamSide: 'radiant' | 'dire'): Hero[] 
 
 function useMatchCardState(
   match: Match,
-  teamMatches?: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchMetadata>,
 ): {
   config: ReturnType<typeof useConfigContext>['config'];
-  getSelectedTeam: ReturnType<typeof useTeamContext>['getSelectedTeam'];
-  removeManualMatch: ReturnType<typeof useTeamContext>['removeManualMatch'];
-  editManualMatch: ReturnType<typeof useTeamContext>['editManualMatch'];
+  appData: ReturnType<typeof useAppData>;
+  selectedTeamId: string;
   showEditSheet: boolean;
   setShowEditSheet: (b: boolean) => void;
   isSubmitting: boolean;
@@ -209,27 +212,34 @@ function useMatchCardState(
   matchHeroes: Hero[];
 } {
   const { config } = useConfigContext();
-  const { getSelectedTeam, removeManualMatch, editManualMatch } = useTeamContext();
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const hasError = Boolean(match.error);
 
   const isManualMatch = useMemo(() => {
-    const selectedTeam = getSelectedTeam();
-    if (selectedTeam?.manualMatches && match.id in selectedTeam.manualMatches) return true;
-    if (!selectedTeam) return true;
-    return false;
-  }, [match.id, getSelectedTeam]);
+    const selectedTeam = appData.getTeam(selectedTeamId);
+    if (!selectedTeam) {
+      throw new Error(`Selected team ${selectedTeamId} not found`);
+    }
+    const matchMetadata = selectedTeam.matches.get(match.id);
+    return matchMetadata?.isManual ?? false;
+  }, [match.id, appData, selectedTeamId]);
 
   const currentTeamSide = useMemo(() => {
     if (!isManualMatch) return 'radiant' as const;
-    const selectedTeam = getSelectedTeam();
-    return selectedTeam?.manualMatches?.[match.id]?.side || 'radiant';
-  }, [isManualMatch, match.id, getSelectedTeam]);
+    const selectedTeam = appData.getTeam(selectedTeamId);
+    if (!selectedTeam) {
+      throw new Error(`Selected team ${selectedTeamId} not found`);
+    }
+    const matchMetadata = selectedTeam.matches.get(match.id);
+    return matchMetadata?.side || 'radiant';
+  }, [isManualMatch, match.id, appData, selectedTeamId]);
 
   const matchHeroes = useMemo(() => {
-    const teamMatch = teamMatches?.[match.id];
+    const teamMatch = teamMatches.get(match.id);
     if (!teamMatch?.side) return [];
     const teamPlayers = match.players[teamMatch.side] || [];
     let heroes = teamPlayers.map((player) => player.hero).filter((hero) => hero);
@@ -240,9 +250,8 @@ function useMatchCardState(
 
   return {
     config,
-    getSelectedTeam,
-    removeManualMatch,
-    editManualMatch,
+    appData,
+    selectedTeamId,
     showEditSheet,
     setShowEditSheet,
     isSubmitting,
@@ -273,12 +282,13 @@ function useMatchCardHandlers(
       onSelectMatch(match.id);
     }
   };
-  const handleEditManualMatch = async (newMatchId: number, teamSide: 'radiant' | 'dire') => {
+  const handleEditManualMatch = async (newMatchId: number) => {
     deps.setShowEditSheet(false);
     deps.setIsSubmitting(true);
     deps.setError(undefined);
     try {
-      await deps.editManualMatch(match.id, newMatchId, teamSide);
+      // Pass the current team side (user's selected side for this match)
+      await deps.appData.editManualMatchToTeam(match.id, newMatchId, deps.selectedTeamId, deps.currentTeamSide);
       onScrollToMatch?.(newMatchId);
       onSelectMatch(newMatchId);
     } catch (err) {
@@ -299,6 +309,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onRefreshMatch,
   teamMatches,
   onScrollToMatch,
+  highPerformingHeroes,
 }) => {
   const state = useMatchCardState(match, teamMatches);
   const { handleClick, handleKeyDown, handleEditManualMatch } = useMatchCardHandlers(
@@ -320,7 +331,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between gap-2 min-w-0">
             <MatchInfo match={match} onSelectMatch={onSelectMatch} teamMatches={teamMatches} />
-            <HeroAvatars heroes={state.matchHeroes} avatarSize={{ width: 'w-8', height: 'h-8' }} />
+            <HeroAvatars
+              heroes={state.matchHeroes}
+              highPerformingHeroes={highPerformingHeroes}
+              avatarSize={{ width: 'w-8', height: 'h-8' }}
+            />
           </div>
           <MatchCardFooterSection
             match={match}
@@ -329,7 +344,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             isManualMatch={state.isManualMatch}
             onRefreshMatch={onRefreshMatch}
             onOpenEdit={() => state.setShowEditSheet(true)}
-            onRemoveManual={() => state.removeManualMatch(match.id)}
+            onRemoveManual={() => {
+              state.appData.removeManualMatchFromTeam(match.id, state.selectedTeamId);
+            }}
             onHideMatch={onHideMatch}
           />
         </div>
@@ -341,7 +358,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
         teamSide={state.currentTeamSide}
         onChangeMatchId={() => {}}
         onChangeTeamSide={() => {}}
-        onSubmit={() => handleEditManualMatch(match.id, state.currentTeamSide as 'radiant' | 'dire')}
+        onSubmit={() => handleEditManualMatch(match.id)}
         isSubmitting={state.isSubmitting}
         error={state.error}
         validationError={undefined}
@@ -361,6 +378,7 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
   className,
   teamMatches,
   onScrollToMatch,
+  highPerformingHeroes = new Set(),
 }) => {
   if (matches.length === 0) {
     return (
@@ -384,6 +402,7 @@ export const MatchListViewList: React.FC<MatchListViewProps> = ({
             onRefreshMatch={onRefreshMatch}
             teamMatches={teamMatches}
             onScrollToMatch={onScrollToMatch}
+            highPerformingHeroes={highPerformingHeroes}
           />
         </div>
       ))}

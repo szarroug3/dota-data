@@ -36,7 +36,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data-types';
+import { useAppData } from '@/hooks/use-app-data';
 
 import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
 /**
@@ -178,24 +179,29 @@ const ExternalSites = () => {
  * Quick links section for external team and league pages
  */
 const QuickLinks = () => {
-  const { getSelectedTeam } = useTeamContext();
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+  const activeTeam = appData.getTeam(selectedTeamId);
 
-  const activeTeam = getSelectedTeam();
+  if (!activeTeam) {
+    throw new Error(`Selected team ${selectedTeamId} not found`);
+  }
 
-  if (!activeTeam) return null;
+  // Don't show quick links for the global team
+  if (activeTeam.isGlobal) return null;
 
   const quickLinks = [
     {
       id: 'team-page',
       label: 'Team Page',
       icon: <Users />,
-      url: `https://dotabuff.com/teams/${activeTeam.team.id}`,
+      url: `https://dotabuff.com/teams/${activeTeam.teamId}`,
     },
     {
       id: 'league-page',
       label: 'League Page',
       icon: <Trophy />,
-      url: `https://dotabuff.com/esports/leagues/${activeTeam.league.id}`,
+      url: `https://dotabuff.com/esports/leagues/${activeTeam.leagueId}`,
     },
   ];
 
@@ -310,7 +316,8 @@ const PreferredSiteSwitch = ({ open }: { open: boolean }) => {
  */
 const Settings = ({ open }: { open: boolean }) => {
   const { createShare } = useShareContext();
-  const { getTeams, activeTeam, getGlobalManualMatches, getGlobalManualPlayers } = useConfigContext();
+  const { getTeams, activeTeam } = useConfigContext();
+  const appData = useAppData();
   const [copied, setCopied] = React.useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -329,11 +336,21 @@ const Settings = ({ open }: { open: boolean }) => {
         console.warn(`Failed to serialize team data for key ${key}`);
       }
     });
+
+    // Get global manual items from the global team in appData
+    const globalTeam = appData.getTeam(GLOBAL_TEAM_KEY);
+    if (!globalTeam) {
+      throw new Error('Global team not found - this should never happen');
+    }
     const data = {
       teams: teamsObject,
       activeTeam: activeTeam || null,
-      globalManualMatches: getGlobalManualMatches(),
-      globalManualPlayers: getGlobalManualPlayers(),
+      globalManualMatches: Array.from(globalTeam.matches.entries())
+        .filter(([, matchData]) => matchData.isManual)
+        .map(([matchId]) => matchId),
+      globalManualPlayers: Array.from(globalTeam.players.entries())
+        .filter(([, playerData]) => playerData.isManual)
+        .map(([playerId]) => playerId),
     };
     const key = await createShare(data);
     if (key) {

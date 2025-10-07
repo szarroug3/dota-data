@@ -7,57 +7,34 @@ import { renderWithProviders, screen } from '@/tests/utils/test-utils';
 // This test ensures the page renders list content even when the player context is in a loading state,
 // leaving per-player loading to individual cards.
 
-// Provide player context mock with a loading state and one player
-jest.mock('@/frontend/players/contexts/state/player-context', () => {
-  const helpers = jest.requireActual('@/utils/player-helpers');
-  return {
-    usePlayerContext: () => {
-      const players = new Map<number, ReturnType<typeof helpers.createInitialPlayerData>>();
-      players.set(123456789, helpers.createInitialPlayerData(123456789));
-      players.set(999999999, helpers.createInitialPlayerData(999999999));
-      return {
-        players,
-        selectedPlayerId: null,
-        setSelectedPlayerId: jest.fn(),
-        isLoading: true,
-        addPlayer: jest.fn(),
-        refreshPlayer: jest.fn(),
-        removePlayer: jest.fn(),
-        getPlayer: jest.fn(),
-        getPlayers: jest.fn(),
-      };
-    },
-    PlayerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  };
-});
-
-jest.mock('@/frontend/teams/contexts/state/team-context', () => {
-  return {
-    useTeamContext: () => ({
-      selectedTeamId: { teamId: 1, leagueId: 1 },
-      addPlayerToTeam: jest.fn(),
-      getSelectedTeam: () => ({ manualPlayers: [123456789], matches: {} }),
-      removeManualPlayer: jest.fn(),
-      editManualPlayer: jest.fn(),
-    }),
-    TeamProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  };
-});
-
-// Provide a minimal constants context so MatchProvider can mount
-jest.mock('@/frontend/contexts/constants-context', () => {
-  return {
-    useConstantsContext: () => ({
-      heroes: {},
-      items: {},
-      fetchHeroes: jest.fn(),
-      fetchItems: jest.fn(),
-      isLoading: false,
-      error: null,
-    }),
-    ConstantsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  };
-});
+// Mock AppData context instead of constants context
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
+  }),
+}));
 
 // Mock ResizablePlayerLayout to render a deterministic marker
 jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () => ({

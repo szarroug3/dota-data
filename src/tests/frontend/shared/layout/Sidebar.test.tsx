@@ -20,21 +20,32 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   }),
 }));
 
-// Mock team context (correct path)
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    teamDataList: [],
-    activeTeam: null,
+// Mock AppData context instead of old team context
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
     addTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    refreshTeam: jest.fn(),
     updateTeam: jest.fn(),
-    setActiveTeam: jest.fn(),
-    teamExists: jest.fn(),
-    clearGlobalError: jest.fn(),
-    getGlobalError: jest.fn(),
-    isInitialized: jest.fn(),
-    getSelectedTeam: () => null,
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
   }),
 }));
 

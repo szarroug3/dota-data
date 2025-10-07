@@ -1,22 +1,17 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { Hero, Match, Player, Team, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { TeamData, TeamMatchParticipation } from '@/types/contexts/team-context-value';
 import { processPlayerDetailedStats, type TeamHeroStats } from '@/utils/player-statistics';
 
 interface PlayerDetailsPanelTeamProps {
   player: Player;
-  _allPlayers?: Player[];
-  _hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   matchesArray: Match[];
-  selectedTeam: TeamData | null | undefined;
+  selectedTeam: Team;
 }
 
 type PlayerTeamStats = {
@@ -30,7 +25,7 @@ type PlayerTeamStats = {
 
 function getPlayerParticipatedMatches(
   matchesArray: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Record<number, TeamMatchMetadata>,
   accountId: number,
 ) {
   return matchesArray.filter((match) => {
@@ -97,7 +92,7 @@ function computeAverages(
 }
 
 function computePlayerTeamStats(
-  selectedTeam: TeamData | undefined | null,
+  selectedTeam: Team | undefined | null,
   playerParticipatedMatches: Match[],
   accountId: number,
 ): PlayerTeamStats | null {
@@ -258,15 +253,27 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
 
 export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = React.memo(
   ({ player, heroes, matchesArray, selectedTeam }) => {
-    const teamMatches = selectedTeam?.matches || {};
-    const teamStats = selectedTeam ? processPlayerDetailedStats(player, selectedTeam, matchesArray, heroes) : null;
-    const accountId = player.profile.profile.account_id;
+    // Convert StoredMatchData to TeamMatchMetadata for UI display
+    const teamMatches: Record<number, TeamMatchMetadata> = {};
+    selectedTeam.matches.forEach((matchData, matchId) => {
+      teamMatches[matchId] = {
+        side: matchData.side,
+        result: matchData.result,
+        opponentName: matchData.opponentName,
+        isManual: matchData.isManual,
+        isHidden: matchData.isHidden,
+      };
+    });
+    const accountId = player.accountId;
     const playerParticipatedMatches = getPlayerParticipatedMatches(matchesArray, teamMatches, accountId);
     const playerTeamStats = computePlayerTeamStats(selectedTeam, playerParticipatedMatches, accountId);
-    const sortedTeamHeroes: TeamHeroStats[] = useMemo(() => {
-      if (!teamStats) return [] as TeamHeroStats[];
-      return [...teamStats.teamHeroes].sort((a, b) => a.games - b.games);
-    }, [teamStats]);
+
+    // Convert heroes Map to Record for processPlayerDetailedStats
+    const heroesData = Object.fromEntries(Array.from(heroes.entries()).map(([id, hero]) => [id.toString(), hero]));
+
+    const teamStats = processPlayerDetailedStats(player, matchesArray, heroesData);
+
+    const sortedTeamHeroes: TeamHeroStats[] = teamStats.teamHeroes || [];
 
     return (
       <div className="space-y-6">

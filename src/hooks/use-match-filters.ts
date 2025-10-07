@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 // ============================================================================
 // FILTER TYPES
@@ -87,13 +86,23 @@ function applyTeamSideFilter(teamMatch: TeamMatchParticipation | undefined, filt
   return teamMatch.side === filters.teamSide;
 }
 
-function applyPickOrderFilter(teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
-  if (filters.pickOrder === 'all' || !teamMatch?.side) return true;
+function applyPickOrderFilter(
+  match: Match,
+  teamMatch: TeamMatchParticipation | undefined,
+  filters: MatchFilters,
+): boolean {
+  if (filters.pickOrder === 'all') return true;
 
-  const teamPickOrder = teamMatch.pickOrder;
-  if (!teamPickOrder) return true;
+  // If teamMatch is missing, we can't filter - exclude it
+  if (!teamMatch) return false;
 
-  return filters.pickOrder === teamPickOrder;
+  // Get pick order from match data
+  const matchPickOrder = match.pickOrder?.[teamMatch.side];
+
+  // If match has no pick order data, exclude it (we need this info to filter)
+  if (!matchPickOrder) return false;
+
+  return matchPickOrder === filters.pickOrder;
 }
 
 function applyHeroesFilter(
@@ -105,10 +114,22 @@ function applyHeroesFilter(
 
   // Get heroes played by the team in this match from player data
   const teamPlayers = match.players[teamMatch.side] || [];
-  const playedHeroes = teamPlayers.map((player) => player.hero.id.toString()).filter((id): id is string => !!id);
+  const playedHeroes = teamPlayers
+    .map((player) => player.hero?.id)
+    .filter((id): id is number => typeof id === 'number')
+    .map((id) => id.toString());
+
+  if (filters.heroesPlayed.some((heroId) => playedHeroes.includes(heroId))) {
+    return true;
+  }
+
+  if (teamMatch.heroes && teamMatch.heroes.length > 0) {
+    const storedHeroIds = teamMatch.heroes.map((hero) => hero.id.toString());
+    return filters.heroesPlayed.some((heroId) => storedHeroIds.includes(heroId));
+  }
 
   // Check if any of the filtered heroes were played
-  return filters.heroesPlayed.some((heroId) => playedHeroes.includes(heroId));
+  return false;
 }
 
 function applyOpponentFilter(teamMatch: TeamMatchParticipation | undefined, filters: MatchFilters): boolean {
@@ -126,7 +147,7 @@ function applyHighPerformersFilter(
   teamMatch: TeamMatchParticipation | undefined,
   filters: MatchFilters,
   allMatches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   hiddenMatchIds: Set<number>,
 ): boolean {
   if (!filters.highPerformersOnly || !teamMatch?.side) return true;
@@ -139,7 +160,7 @@ function applyHighPerformersFilter(
     // Skip manually hidden matches
     if (hiddenMatchIds.has(matchData.id)) return;
 
-    const matchTeamData = teamMatches[matchData.id];
+    const matchTeamData = teamMatches.get(matchData.id);
     if (!matchTeamData?.side) return;
 
     const teamPlayers = matchData.players[matchTeamData.side] || [];
@@ -177,16 +198,16 @@ function applyHighPerformersFilter(
 
 function applyAllFiltersExceptHighPerformers(
   match: Match,
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   filters: MatchFilters,
 ): boolean {
-  const teamMatch = teamMatches[match.id];
+  const teamMatch = teamMatches.get(match.id);
 
   return (
     applyDateRangeFilter(match, filters) &&
     applyResultFilter(teamMatch, filters) &&
     applyTeamSideFilter(teamMatch, filters) &&
-    applyPickOrderFilter(teamMatch, filters) &&
+    applyPickOrderFilter(match, teamMatch, filters) &&
     applyHeroesFilter(match, teamMatch, filters) &&
     applyOpponentFilter(teamMatch, filters)
   );
@@ -194,12 +215,12 @@ function applyAllFiltersExceptHighPerformers(
 
 function applyAllFilters(
   match: Match,
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   filters: MatchFilters,
   allMatches: Match[],
   hiddenMatchIds: Set<number>,
 ): boolean {
-  const teamMatch = teamMatches[match.id];
+  const teamMatch = teamMatches.get(match.id);
 
   return (
     applyAllFiltersExceptHighPerformers(match, teamMatches, filters) &&
@@ -213,7 +234,7 @@ function applyAllFilters(
 
 function getFilterStats(
   matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   filters: MatchFilters,
   hiddenMatchIds: Set<number>,
 ): FilterStats {
@@ -226,28 +247,28 @@ function getFilterStats(
   const filterBreakdown = {
     dateRange: matches.filter((match) => applyDateRangeFilter(match, filters)).length,
     result: matches.filter((match) => {
-      const teamMatch = teamMatches[match.id];
+      const teamMatch = teamMatches.get(match.id);
       return applyResultFilter(teamMatch, filters);
     }).length,
     teamSide: matches.filter((match) => {
-      const teamMatch = teamMatches[match.id];
+      const teamMatch = teamMatches.get(match.id);
       return applyTeamSideFilter(teamMatch, filters);
     }).length,
     pickOrder: matches.filter((match) => {
-      const teamMatch = teamMatches[match.id];
-      return applyPickOrderFilter(teamMatch, filters);
+      const teamMatch = teamMatches.get(match.id);
+      return applyPickOrderFilter(match, teamMatch, filters);
     }).length,
     heroesPlayed: matches.filter((match) => {
-      const teamMatch = teamMatches[match.id];
+      const teamMatch = teamMatches.get(match.id);
       return applyHeroesFilter(match, teamMatch, filters);
     }).length,
     opponent: matches.filter((match) => {
-      const teamMatch = teamMatches[match.id];
+      const teamMatch = teamMatches.get(match.id);
       return applyOpponentFilter(teamMatch, filters);
     }).length,
     highPerformersOnly: (() => {
       return matches.filter((match) => {
-        const teamMatch = teamMatches[match.id];
+        const teamMatch = teamMatches.get(match.id);
         return applyHighPerformersFilter(match, teamMatch, filters, matches, teamMatches, hiddenMatchIds);
       }).length;
     })(),
@@ -266,7 +287,7 @@ function getFilterStats(
 
 export function useMatchFilters(
   matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
+  teamMatches: Map<number, TeamMatchParticipation>,
   filters: MatchFilters,
   hiddenMatchIds: Set<number> = new Set(),
 ) {

@@ -10,6 +10,12 @@ const mockServices = {
   steam: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_STEAM(),
 };
 
+const defaultMockDelay = getEnv.MOCK_API_DELAY_MS() ?? 0;
+const mockDelays: Record<keyof typeof mockServices, number> = {
+  opendota: getEnv.MOCK_API_DELAY_OPENDOTA_MS() ?? defaultMockDelay,
+  steam: getEnv.MOCK_API_DELAY_STEAM_MS() ?? defaultMockDelay,
+};
+
 async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boolean): Promise<T | null> {
   if (force) {
     return null;
@@ -61,22 +67,29 @@ export async function request<T>(
   }
 
   let data: string | null = null;
+  const useMock = mockServices[service];
 
-  // Always call requestFn first (which includes rate limiting)
-  const apiData = await getFromAPI(requestFn, externalDataFilename);
+  await applyMockDelay(service, useMock);
 
-  if (mockServices[service]) {
-    // In mock mode, try to read from external data first, fallback to API data
+  if (useMock) {
     try {
       data = await getFromExternalData(externalDataFilename);
     } catch {
-      data = apiData;
+      data = await getFromAPI(requestFn, externalDataFilename);
     }
   } else {
-    data = apiData;
+    data = await getFromAPI(requestFn, externalDataFilename);
   }
 
   return await processData(data, processingFn, cache, cacheKey, cacheTTL);
+}
+
+async function applyMockDelay(service: keyof typeof mockServices, useMock: boolean): Promise<void> {
+  if (!useMock) return;
+  const delay = mockDelays[service] ?? defaultMockDelay;
+  if (delay && delay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
 }
 
 export async function requestWithRetry(

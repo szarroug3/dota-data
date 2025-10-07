@@ -1,6 +1,4 @@
-import type { Hero, Item } from '@/types/contexts/constants-context-value';
-import type { PlayerMatchData } from '@/types/contexts/match-context-value';
-import type { PlayerRole } from '@/types/contexts/team-context-value';
+import type { Hero, Item, PlayerMatchData, PlayerRole } from '@/frontend/lib/app-data-types';
 import type { OpenDotaMatchPlayer } from '@/types/external-apis';
 
 export function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>): Item[] {
@@ -53,33 +51,35 @@ function createHeroStats(player: OpenDotaMatchPlayer): PlayerMatchData['heroStat
   };
 }
 
-export function convertPlayer(
-  player: OpenDotaMatchPlayer,
-  roleMap: Record<string, PlayerRole>,
-  items: Record<string, Item>,
-  heroes: Record<string, Hero>,
-): PlayerMatchData {
+/**
+ * Get player's hero with fallback
+ */
+function getPlayerHero(player: OpenDotaMatchPlayer, heroes: Record<string, Hero>): Hero {
   const hero = heroes[player.hero_id?.toString() as keyof typeof heroes];
-  const playerHero: Hero = hero || {
-    id: String(player.hero_id ?? ''),
-    name: '',
-    localizedName: `Hero ${player.hero_id ?? ''}`,
-    primaryAttribute: 'strength',
-    attackType: 'melee',
-    roles: [],
-    imageUrl: '',
-  };
+  return (
+    hero || {
+      id: String(player.hero_id ?? ''),
+      name: '',
+      localizedName: `Hero ${player.hero_id ?? ''}`,
+      primaryAttribute: 'strength',
+      attackType: 'melee',
+      roles: [],
+      imageUrl: '',
+    }
+  );
+}
 
-  // Convert string-keyed items to number-keyed for lookup
-  const numberKeyedItems: Record<number, Item> = Object.keys(items).reduce(
+/**
+ * Convert string-keyed items to number-keyed for lookup
+ */
+function convertItemsToNumberKeyed(items: Record<string, Item>): Record<number, Item> {
+  return Object.keys(items).reduce(
     (acc, key) => {
       const num = Number(key);
       if (Number.isFinite(num)) {
-        // Use unknown intermediate step for safer type narrowing
         const itemKey = key as keyof typeof items;
         const item = items[itemKey] as unknown as Item;
 
-        // Basic validation - ensure item has required properties
         if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
           acc[num] = item;
         }
@@ -88,18 +88,43 @@ export function convertPlayer(
     },
     {} as Record<number, Item>,
   );
+}
+
+/**
+ * Get player's role information
+ */
+function getPlayerRole(
+  player: OpenDotaMatchPlayer,
+  roleMap: Record<string, PlayerRole>,
+): { role: string; lane: number } | undefined {
+  const accountId = typeof player.account_id === 'number' ? player.account_id : 0;
+  const roleKey = accountId.toString();
+
+  if (!roleKey || !roleMap[roleKey]) return undefined;
+
+  return { role: roleMap[roleKey] || 'Unknown', lane: 0 };
+}
+
+export function convertPlayer(
+  player: OpenDotaMatchPlayer,
+  roleMap: Record<string, PlayerRole>,
+  items: Record<string, Item>,
+  heroes: Record<string, Hero>,
+): PlayerMatchData {
+  const playerHero = getPlayerHero(player, heroes);
+  const numberKeyedItems = convertItemsToNumberKeyed(items);
   const playerItems = getPlayerItems(player, numberKeyedItems);
   const stats = createPlayerStats(player);
   const heroStats = createHeroStats(player);
+  const role = getPlayerRole(player, roleMap);
 
   const accountId = typeof player.account_id === 'number' ? player.account_id : 0;
-  const roleKey = typeof player.account_id === 'number' ? player.account_id.toString() : '';
 
   return {
     accountId,
-    playerName: player.personaname || (accountId ? `Player ${accountId}` : 'Unknown Player'),
+    playerName: player.personaname || `Player ${accountId}`,
     hero: playerHero,
-    role: roleKey ? roleMap[roleKey] : undefined,
+    role,
     items: playerItems,
     stats,
     heroStats,

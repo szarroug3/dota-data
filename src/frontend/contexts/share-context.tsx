@@ -3,18 +3,11 @@
 import { useSearchParams } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, Suspense } from 'react';
 
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Team } from '@/frontend/lib/app-data-types';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 
-export type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | Serializable[]
-  | { [key: string]: Serializable }
-  | TeamData;
+export type Serializable = string | number | boolean | null | Serializable[] | { [key: string]: Serializable } | Team;
 
 export interface SharePayload {
   teams: Record<string, Serializable>;

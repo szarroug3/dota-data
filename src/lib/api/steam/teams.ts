@@ -38,8 +38,12 @@ async function fetchTeamInfoFromSteam(teamId: string): Promise<string> {
 function parseSteamTeamInfo(data: string, teamId: string): SteamTeam {
   const json = JSON.parse(data) as SteamTeamInfoResponse;
   const team = json.result?.teams?.[0];
-  const name = team?.name || `Team ${teamId}`;
-  return { id: String(teamId), name } as SteamTeam;
+
+  if (!team || !team.name) {
+    throw new Error(`Data Not Found: Team ${teamId} does not exist`);
+  }
+
+  return { id: String(teamId), name: team.name } as SteamTeam;
 }
 
 export async function fetchSteamTeam(teamId: string, force = false): Promise<SteamTeam> {

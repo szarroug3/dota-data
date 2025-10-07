@@ -4,10 +4,10 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
 
 interface TeamCardProps {
-  teamData: TeamData;
+  teamData: TeamDisplayData;
   isActive: boolean;
   onRemoveTeam: (teamId: number, leagueId: number) => Promise<void> | void;
   onRefreshTeam: (teamId: number, leagueId: number) => Promise<void> | void;
@@ -15,51 +15,28 @@ interface TeamCardProps {
   onEditTeam: (teamId: number, leagueId: number) => void;
 }
 
-function haveNamesLoaded(teamName: string, leagueName: string): boolean {
-  return !teamName.startsWith('Loading ') && !leagueName.startsWith('Loading ');
-}
-
-function isStatsReady(teamData: TeamData, teamName: string, leagueName: string): boolean {
-  const namesLoaded = haveNamesLoaded(teamName, leagueName);
-  const isNotLoading = !teamData.isLoading;
-
-  // Stats are ready if:
-  // 1. Team names are loaded
-  // 2. Team is not loading
-  return namesLoaded && isNotLoading;
-}
-
 interface TeamInformationProps {
-  teamData: TeamData;
+  teamData: TeamDisplayData;
   isActive: boolean;
   teamName: string;
   leagueName: string;
   hasError: boolean;
 }
 
-function getTeamStatsForDisplay(teamData: TeamData, hasError: boolean, isLoading: boolean, statsReady: boolean) {
-  if (hasError || isLoading || !statsReady) return null;
+function getTeamStatsForDisplay(teamData: TeamDisplayData, hasError: boolean, isLoading: boolean) {
+  if (hasError || isLoading) return null;
 
-  // If no performance data, show 0 stats
-  if (!teamData.performance) {
-    return {
-      totalMatches: 0,
-      overallWinRate: 0,
-      erroredMatches: 0,
-    };
-  }
-
+  // Performance is always set (defaulted to 0s in formatter)
   return {
     totalMatches: teamData.performance.totalMatches,
     overallWinRate: teamData.performance.overallWinRate,
-    erroredMatches: teamData.performance.erroredMatches || 0,
+    erroredMatches: teamData.performance.erroredMatches,
   };
 }
 
 const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, teamName, leagueName, hasError }) => {
   const isLoading = Boolean(teamData.isLoading);
-  const statsReady = isStatsReady(teamData, teamName, leagueName);
-  const stats = getTeamStatsForDisplay(teamData, hasError, isLoading, statsReady);
+  const stats = getTeamStatsForDisplay(teamData, hasError, isLoading);
 
   return (
     <div className="flex-1 min-w-0">
@@ -118,7 +95,7 @@ const TeamInformation: React.FC<TeamInformationProps> = ({ teamData, isActive, t
 };
 
 interface TeamCardActionsProps {
-  teamData: TeamData;
+  teamData: TeamDisplayData;
   onRefreshTeam: (teamId: number, leagueId: number) => Promise<void> | void;
   onEditTeam: (teamId: number, leagueId: number) => void;
   onRemoveTeam: (teamId: number, leagueId: number) => Promise<void> | void;
@@ -132,6 +109,11 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
   onRemoveTeam,
   isLoading,
 }) => {
+  // Hide buttons for global team
+  if (teamData.isGlobal) {
+    return null;
+  }
+
   const handleRefreshTeam = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await onRefreshTeam(teamData.team.id, teamData.league.id);
@@ -186,6 +168,41 @@ const TeamCardActions: React.FC<TeamCardActionsProps> = ({
   );
 };
 
+function useTeamCardHandlers(
+  teamData: TeamDisplayData,
+  hasError: boolean,
+  onSetActiveTeam: (teamId: number, leagueId: number) => Promise<void> | void,
+) {
+  const handleSelectTeam = () => {
+    onSetActiveTeam(teamData.team.id, teamData.league.id);
+  };
+
+  const handleKeyDown = hasError
+    ? undefined
+    : (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleSelectTeam();
+        }
+      };
+
+  return { handleSelectTeam, handleKeyDown };
+}
+
+function getTeamDisplayNames(teamData: TeamDisplayData, isLoading: boolean, isGlobal: boolean) {
+  const teamName = isLoading ? `Loading ${teamData.team.id}...` : teamData.team.name || `Team ${teamData.team.id}`;
+
+  // Global team doesn't have a league
+  let leagueName = '';
+  if (!isGlobal) {
+    leagueName = isLoading
+      ? `Loading ${teamData.league.id}...`
+      : teamData.league.name || `League ${teamData.league.id}`;
+  }
+
+  return { teamName, leagueName };
+}
+
 export const TeamCard: React.FC<TeamCardProps> = ({
   teamData,
   isActive,
@@ -194,14 +211,12 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   onSetActiveTeam,
   onEditTeam,
 }) => {
-  const handleSelectTeam = () => {
-    onSetActiveTeam(teamData.team.id, teamData.league.id);
-  };
-
   const isLoading = Boolean(teamData.isLoading);
-  const teamName = teamData.team.name || `Loading ${teamData.team.id}...`;
-  const leagueName = teamData.league.name || `Loading ${teamData.league.id}...`;
   const hasError = Boolean(teamData.error);
+  const isGlobal = Boolean(teamData.isGlobal);
+
+  const { handleSelectTeam, handleKeyDown } = useTeamCardHandlers(teamData, hasError, onSetActiveTeam);
+  const { teamName, leagueName } = getTeamDisplayNames(teamData, isLoading, isGlobal);
 
   const getAriaLabel = () => {
     if (hasError) {
@@ -223,16 +238,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         onClick={hasError ? undefined : handleSelectTeam}
         role={hasError ? undefined : 'button'}
         tabIndex={hasError ? -1 : 0}
-        onKeyDown={
-          hasError
-            ? undefined
-            : (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleSelectTeam();
-                }
-              }
-        }
+        onKeyDown={handleKeyDown}
         aria-label={getAriaLabel()}
         title={getTitle()}
       >

@@ -3,15 +3,12 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
 import { PlayersList, type PlayersListRef } from '@/frontend/players/components/stateless/PlayersList';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
 
 interface ResizablePlayerLayoutProps {
   players: Player[];
@@ -34,10 +31,10 @@ interface ResizablePlayerLayoutProps {
   setPlayerDetailsViewMode: (mode: PlayerDetailsPanelMode) => void;
   onScrollToPlayer?: (playerId: number) => void;
   onAddPlayer?: () => void;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
   matchesArray: Match[];
-  selectedTeam: TeamData | null | undefined;
+  selectedTeam: Team;
 }
 
 export interface ResizablePlayerLayoutRef {
@@ -61,7 +58,7 @@ function PlayersListSection(props: {
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
   playersListRef: React.RefObject<PlayersListRef>;
 }) {
@@ -118,9 +115,9 @@ function PlayerDetailsSection(props: {
   setPlayerDetailsViewMode: (mode: PlayerDetailsPanelMode) => void;
   players: Player[];
   hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   matchesArray: Match[];
-  selectedTeam: TeamData | null | undefined;
+  selectedTeam: Team;
 }) {
   const {
     selectedPlayer,

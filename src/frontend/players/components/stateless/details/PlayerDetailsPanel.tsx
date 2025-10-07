@@ -1,10 +1,7 @@
 import React from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
 
 import { PlayerDetailsPanelDetails } from './PlayerDetailsPanelDetails';
 import { PlayerDetailsPanelHeader } from './PlayerDetailsPanelHeader';
@@ -19,9 +16,9 @@ interface PlayerDetailsPanelProps {
   onViewModeChange: (mode: PlayerDetailsPanelMode) => void;
   allPlayers?: Player[];
   hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
+  heroes: Map<number, Hero>;
   matchesArray: Match[];
-  selectedTeam: TeamData | null | undefined;
+  selectedTeam: Team;
 }
 
 export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(
@@ -53,20 +50,13 @@ export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(
           )}
           {viewMode === 'details' && (
             <div className="space-y-4">
-              <PlayerDetailsPanelDetails
-                player={player}
-                _allPlayers={allPlayers}
-                _hiddenPlayerIds={hiddenPlayerIds}
-                heroes={heroes}
-              />
+              <PlayerDetailsPanelDetails player={player} heroes={heroes} />
             </div>
           )}
           {viewMode === 'team' && (
             <div className="space-y-4">
               <PlayerDetailsPanelTeam
                 player={player}
-                _allPlayers={allPlayers}
-                _hiddenPlayerIds={hiddenPlayerIds}
                 heroes={heroes}
                 matchesArray={matchesArray}
                 selectedTeam={selectedTeam}

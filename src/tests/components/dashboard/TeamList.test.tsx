@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 
+import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
 import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
-import type { TeamData } from '@/types/contexts/team-context-value';
 
 describe('TeamList', () => {
   const mockOnRemoveTeam = jest.fn();
@@ -9,7 +9,7 @@ describe('TeamList', () => {
   const mockOnEditTeam = jest.fn();
   const mockOnSetActiveTeam = jest.fn();
 
-  const mockTeamDataList: TeamData[] = [
+  const mockTeamDataList: TeamDisplayData[] = [
     {
       team: {
         id: 9517508,
@@ -30,25 +30,8 @@ describe('TeamList', () => {
         totalLosses: 2,
         overallWinRate: 60,
         erroredMatches: 0,
-        heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-        draftStats: {
-          firstPickCount: 0,
-          secondPickCount: 0,
-          firstPickWinRate: 0,
-          secondPickWinRate: 0,
-          uniqueHeroesPicked: 0,
-          uniqueHeroesBanned: 0,
-          mostPickedHero: '',
-          mostBannedHero: '',
-        },
-        currentWinStreak: 0,
-        currentLoseStreak: 0,
-        averageMatchDuration: 1800,
-        averageKills: 0,
-        averageDeaths: 0,
-        averageGold: 0,
-        averageExperience: 0,
       },
+      isLoading: false,
     },
     {
       team: {
@@ -70,25 +53,8 @@ describe('TeamList', () => {
         totalLosses: 1,
         overallWinRate: 67,
         erroredMatches: 0,
-        heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-        draftStats: {
-          firstPickCount: 0,
-          secondPickCount: 0,
-          firstPickWinRate: 0,
-          secondPickWinRate: 0,
-          uniqueHeroesPicked: 0,
-          uniqueHeroesBanned: 0,
-          mostPickedHero: '',
-          mostBannedHero: '',
-        },
-        currentWinStreak: 0,
-        currentLoseStreak: 0,
-        averageMatchDuration: 1800,
-        averageKills: 0,
-        averageDeaths: 0,
-        averageGold: 0,
-        averageExperience: 0,
       },
+      isLoading: false,
     },
   ];
 

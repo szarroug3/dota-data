@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import { useMatchContext } from '@/frontend/matches/contexts/state/match-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data-metadata-helpers';
+import { useAppData } from '@/hooks/use-app-data';
 
 /**
  * Hook for app-wide data hydration
@@ -15,81 +14,47 @@ export function useAppHydration() {
   const ensuredActiveTeamKeyRef = useRef<string | null>(null);
 
   const configContext = useConfigContext();
-  const constantsContext = useConstantsContext();
-  const teamContext = useTeamContext();
-  const matchContext = useMatchContext();
+  const appData = useAppData();
 
-  // Store context references in refs to avoid recreation
-  const contextsRef = useRef({ configContext, constantsContext, teamContext, matchContext });
-  contextsRef.current = { configContext, constantsContext, teamContext, matchContext };
+  const contextsRef = useRef({ configContext, appData });
+  contextsRef.current = { configContext, appData };
 
-  // Track component lifecycle
-  const mountCountRef = useRef(0);
-  const renderCountRef = useRef(0);
-
-  // Increment render count
-  renderCountRef.current += 1;
-
-  // Helpers to reduce complexity
-  async function fetchConstants(constantsContext: ReturnType<typeof useConstantsContext>) {
-    await Promise.all([constantsContext.fetchHeroes(), constantsContext.fetchItems()]);
-  }
-
-  async function waitForConstants(constantsContext: ReturnType<typeof useConstantsContext>) {
-    let attempts = 0;
-    const maxAttempts = 50;
-    while (
-      attempts < maxAttempts &&
-      (Object.keys(constantsContext.heroes).length === 0 || Object.keys(constantsContext.items).length === 0)
-    ) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      attempts++;
-    }
-    if (attempts >= maxAttempts) {
-      console.warn('Constants not available after waiting, proceeding anyway');
-    }
-  }
-
-  async function ensureActiveTeam(
-    configContext: ReturnType<typeof useConfigContext>,
-    teamContext: ReturnType<typeof useTeamContext>,
-  ) {
-    const active = configContext.activeTeam;
-    if (active) {
-      await teamContext.addTeam(active.teamId, active.leagueId);
-      ensuredActiveTeamKeyRef.current = `${active.teamId}-${active.leagueId}`;
-    }
-  }
-
-  async function loadTeamsAndManuals(
-    configContext: ReturnType<typeof useConfigContext>,
-    teamContext: ReturnType<typeof useTeamContext>,
-  ) {
-    const teams = configContext.getTeams();
-    if (teams && teams.size > 0) {
-      await teamContext.loadTeamsFromConfig(teams);
-    }
-    await teamContext.loadManualMatches();
-    await teamContext.loadManualPlayers();
-  }
-
-  // Run hydration on mount
   useEffect(() => {
-    mountCountRef.current += 1;
-
     const hydrate = async () => {
       if (hasHydratedRef.current) return;
+
       try {
         setHydrationError(null);
 
-        await fetchConstants(contextsRef.current.constantsContext);
-        await waitForConstants(contextsRef.current.constantsContext);
-        await ensureActiveTeam(contextsRef.current.configContext, contextsRef.current.teamContext);
-        await loadTeamsAndManuals(contextsRef.current.configContext, contextsRef.current.teamContext);
+        if (contextsRef.current.appData.getTeams().length === 0) {
+          await contextsRef.current.appData.loadFromStorage();
+        }
 
-        contextsRef.current.teamContext.refreshAllTeamSummaries().catch((error) => {
-          console.warn('Background team refresh failed:', error);
+        await fetchConstantsIfNeeded(contextsRef.current.appData);
+        refreshTeamsCachedMetadata(contextsRef.current.appData);
+        const ensuredKey = await ensureActiveTeam(contextsRef.current.configContext, contextsRef.current.appData);
+        if (ensuredKey) {
+          ensuredActiveTeamKeyRef.current = ensuredKey;
+        }
+
+        const { activeTeam, otherTeams } = getRefreshTargets(contextsRef.current.appData);
+
+        if (activeTeam) {
+          try {
+            await contextsRef.current.appData.refreshTeam(activeTeam.teamId, activeTeam.leagueId);
+          } catch (error) {
+            console.error(`Hydration: failed to refresh active team ${activeTeam.teamKey}`, error);
+          }
+        }
+
+        otherTeams.forEach(({ teamKey, teamId, leagueId }) => {
+          contextsRef.current.appData
+            .refreshTeam(teamId, leagueId)
+            .catch((error) => console.error(`Hydration: failed to refresh team ${teamKey}`, error));
         });
+
+        await contextsRef.current.appData.loadAllManualMatches();
+        await contextsRef.current.appData.loadAllManualPlayers();
 
         hasHydratedRef.current = true;
         setHasHydrated(true);
@@ -102,24 +67,62 @@ export function useAppHydration() {
     hydrate();
   }, []);
 
-  // Ensure active team if it becomes available later (e.g., after share payload loads)
   useEffect(() => {
     const active = contextsRef.current.configContext.activeTeam;
     const key = active ? `${active.teamId}-${active.leagueId}` : null;
     if (active && ensuredActiveTeamKeyRef.current !== key) {
-      contextsRef.current.teamContext
-        .addTeam(active.teamId, active.leagueId)
-        .then(() => {
-          ensuredActiveTeamKeyRef.current = key;
-        })
-        .catch(() => {
-          // no-op; errors already handled in addTeam pipeline
-        });
+      contextsRef.current.appData.loadTeam(active.teamId, active.leagueId).then(() => {
+        ensuredActiveTeamKeyRef.current = key;
+      });
     }
   }, [contextsRef.current.configContext.activeTeam]);
 
   return {
     hydrationError,
     hasHydrated,
+  };
+}
+
+async function fetchConstantsIfNeeded(appData: ReturnType<typeof useAppData>): Promise<void> {
+  const tasks: Array<Promise<unknown>> = [];
+
+  if (appData.heroes.size === 0) tasks.push(appData.loadHeroesData());
+  if (appData.items.size === 0) tasks.push(appData.loadItemsData());
+  if (appData.leagues.size === 0) tasks.push(appData.loadLeaguesData());
+
+  if (tasks.length > 0) {
+    await Promise.all(tasks);
+  }
+}
+
+async function ensureActiveTeam(
+  configContext: ReturnType<typeof useConfigContext>,
+  appData: ReturnType<typeof useAppData>,
+): Promise<string | null> {
+  const active = configContext.activeTeam;
+  if (active) {
+    await appData.loadTeam(active.teamId, active.leagueId);
+    return `${active.teamId}-${active.leagueId}`;
+  }
+
+  return null;
+}
+
+function getRefreshTargets(appData: ReturnType<typeof useAppData>): {
+  activeTeam: { teamKey: string; teamId: number; leagueId: number } | null;
+  otherTeams: Array<{ teamKey: string; teamId: number; leagueId: number }>;
+} {
+  const teams = appData.getTeams();
+  const refreshable = teams.filter((team) => !team.isGlobal && team.teamId && team.leagueId);
+  const activeTeam = refreshable.find((team) => team.id === appData.state.selectedTeamId) ?? null;
+  const otherTeams = refreshable
+    .filter((team) => !activeTeam || team.id !== activeTeam.id)
+    .map((team) => ({ teamKey: team.id, teamId: team.teamId, leagueId: team.leagueId }));
+
+  return {
+    activeTeam: activeTeam
+      ? { teamKey: activeTeam.id, teamId: activeTeam.teamId, leagueId: activeTeam.leagueId }
+      : null,
+    otherTeams,
   };
 }

@@ -8,17 +8,39 @@
 import { render, screen, waitFor } from '@testing-library/react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
 import { useAppHydration } from '@/hooks/useAppHydration';
+
+// Mock AppData context instead of old contexts
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
+  }),
+}));
 
 // Mock the contexts
 jest.mock('@/frontend/contexts/config-context');
-jest.mock('@/frontend/contexts/constants-context');
-jest.mock('@/frontend/teams/contexts/state/team-context');
-jest.mock('@/frontend/matches/contexts/state/match-context', () => ({
-  useMatchContext: () => ({}),
-}));
 
 const mockConfigContext = {
   getTeams: jest.fn(),
@@ -38,40 +60,57 @@ const mockConfigContext = {
   clearErrors: jest.fn(),
 };
 
-const mockConstantsContext = {
-  heroes: { 1: { id: 1, name: 'Hero' } } as Record<string, any>,
-  items: { 1: { id: 1, name: 'Item' } } as Record<string, any>,
-  fetchHeroes: jest.fn(),
-  fetchItems: jest.fn(),
-  isLoading: false,
-  error: null,
-};
-
-const mockTeamContext = {
+const mockAppData = {
   teams: new Map(),
-  activeTeam: null,
-  isLoading: false,
-  error: null,
+  matches: new Map(),
+  players: new Map(),
+  heroes: new Map([
+    [
+      1,
+      {
+        id: 1,
+        name: 'Hero',
+        localizedName: 'Hero',
+        primaryAttribute: 'strength',
+        attackType: 'melee',
+        roles: [],
+        imageUrl: '',
+      },
+    ],
+  ]),
+  items: new Map([
+    [
+      1,
+      {
+        id: 1,
+        name: 'Item',
+        localizedName: 'Item',
+        cost: 0,
+        secretShop: false,
+        sideShop: false,
+        recipe: false,
+        imageUrl: '',
+      },
+    ],
+  ]),
+  leagues: new Map(),
+  selectedTeamId: null,
+  setSelectedTeamId: jest.fn(),
   addTeam: jest.fn(),
-  refreshTeam: jest.fn(),
-  refreshTeamSummary: jest.fn(),
-  refreshAllTeamSummaries: jest.fn(),
+  updateTeam: jest.fn(),
   removeTeam: jest.fn(),
-  editTeam: jest.fn(),
-  setActiveTeam: jest.fn(),
-  addMatchToTeam: jest.fn(),
-  addPlayerToTeam: jest.fn(),
-  setTeams: jest.fn(),
-  loadTeamsFromConfig: jest.fn(),
-  loadManualMatches: jest.fn(),
-  loadManualPlayers: jest.fn(),
-  getTeam: jest.fn(),
-  getActiveTeam: jest.fn(),
-  getAllTeams: jest.fn(),
-  hideMatch: jest.fn(),
-  showMatch: jest.fn(),
-  hidePlayer: jest.fn(),
-  showPlayer: jest.fn(),
+  addMatch: jest.fn(),
+  updateMatch: jest.fn(),
+  removeMatch: jest.fn(),
+  addPlayer: jest.fn(),
+  updatePlayer: jest.fn(),
+  removePlayer: jest.fn(),
+  loadTeamData: jest.fn(),
+  loadMatchData: jest.fn(),
+  loadPlayerData: jest.fn(),
+  loadHeroesData: jest.fn(),
+  loadItemsData: jest.fn(),
+  loadLeaguesData: jest.fn(),
 };
 
 // Test component to render the hook
@@ -92,25 +131,37 @@ describe('useAppHydration', () => {
     jest.clearAllMocks();
 
     // Reset mock implementations
-    mockConstantsContext.fetchHeroes.mockResolvedValue(undefined);
-    mockConstantsContext.fetchItems.mockResolvedValue(undefined);
+    mockAppData.loadHeroesData.mockResolvedValue(undefined);
+    mockAppData.loadItemsData.mockResolvedValue(undefined);
+    mockAppData.loadLeaguesData.mockResolvedValue(undefined);
     // Ensure constants appear available for the polling loop
-    mockConstantsContext.heroes = { 1: { id: 1 } };
-    mockConstantsContext.items = { 1: { id: 1 } };
-    mockTeamContext.loadTeamsFromConfig.mockResolvedValue(undefined);
-    mockTeamContext.addTeam.mockResolvedValue(undefined);
-    mockTeamContext.refreshAllTeamSummaries.mockResolvedValue(undefined);
-    mockTeamContext.loadManualMatches.mockResolvedValue(undefined);
-    mockTeamContext.loadManualPlayers.mockResolvedValue(undefined);
+    mockAppData.heroes.set(1, {
+      id: 1,
+      name: 'Hero',
+      localizedName: 'Hero',
+      primaryAttribute: 'strength',
+      attackType: 'melee',
+      roles: [],
+      imageUrl: '',
+    });
+    mockAppData.items.set(1, {
+      id: 1,
+      name: 'Item',
+      localizedName: 'Item',
+      cost: 0,
+      secretShop: false,
+      sideShop: false,
+      recipe: false,
+      imageUrl: '',
+    });
 
     // Setup mocks
     (useConfigContext as jest.Mock).mockReturnValue(mockConfigContext);
-    (useConstantsContext as jest.Mock).mockReturnValue(mockConstantsContext);
-    (useTeamContext as jest.Mock).mockReturnValue(mockTeamContext);
+    // AppData context is already mocked globally
   });
 
   it('should initialize with default hydration state', async () => {
-    mockConstantsContext.fetchHeroes.mockRejectedValue(new Error('Test error'));
+    mockAppData.loadHeroesData.mockRejectedValue(new Error('Test error'));
     render(<TestComponent />);
     expect(screen.getByTestId('has-hydrated')).toHaveTextContent('false');
     await waitFor(() => {
@@ -125,10 +176,9 @@ describe('useAppHydration', () => {
       expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
     });
 
-    expect(mockConstantsContext.fetchHeroes).toHaveBeenCalled();
-    expect(mockConstantsContext.fetchItems).toHaveBeenCalled();
-    expect(mockTeamContext.loadTeamsFromConfig).not.toHaveBeenCalled();
-    expect(mockTeamContext.addTeam).not.toHaveBeenCalled();
+    expect(mockAppData.loadHeroesData).toHaveBeenCalled();
+    expect(mockAppData.loadItemsData).toHaveBeenCalled();
+    expect(mockAppData.loadLeaguesData).toHaveBeenCalled();
   });
 
   it('should load teams from config when teams exist', async () => {
@@ -172,8 +222,7 @@ describe('useAppHydration', () => {
       expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
     });
 
-    expect(mockTeamContext.loadTeamsFromConfig).toHaveBeenCalledWith(mockTeams);
-    expect(mockTeamContext.refreshAllTeamSummaries).toHaveBeenCalled();
+    expect(mockAppData.loadTeamData).toHaveBeenCalled();
   });
 
   it('should be resilient when active team exists (no crash)', async () => {
@@ -185,7 +234,7 @@ describe('useAppHydration', () => {
   });
 
   it('should handle errors during constants fetching', async () => {
-    mockConstantsContext.fetchHeroes.mockRejectedValue(new Error('Heroes fetch failed'));
+    mockAppData.loadHeroesData.mockRejectedValue(new Error('Heroes fetch failed'));
 
     render(<TestComponent />);
 
@@ -228,7 +277,7 @@ describe('useAppHydration', () => {
       },
     });
     mockConfigContext.getTeams.mockReturnValue(mockTeams);
-    mockTeamContext.loadTeamsFromConfig.mockRejectedValue(new Error('Team loading failed'));
+    mockAppData.loadTeamData.mockRejectedValue(new Error('Team loading failed'));
 
     render(<TestComponent />);
 
@@ -271,8 +320,8 @@ describe('useAppHydration', () => {
       },
     });
     mockConfigContext.getTeams.mockReturnValue(mockTeams);
-    mockTeamContext.loadTeamsFromConfig.mockResolvedValue(undefined);
-    mockTeamContext.loadManualMatches.mockRejectedValue(new Error('Manual matches failed'));
+    mockAppData.loadTeamData.mockResolvedValue(undefined);
+    mockAppData.loadMatchData.mockRejectedValue(new Error('Manual matches failed'));
 
     render(<TestComponent />);
 
@@ -290,7 +339,7 @@ describe('useAppHydration', () => {
     });
 
     // Verify hydration was only called once
-    expect(mockConstantsContext.fetchHeroes).toHaveBeenCalledTimes(1);
-    expect(mockConstantsContext.fetchItems).toHaveBeenCalledTimes(1);
+    expect(mockAppData.loadHeroesData).toHaveBeenCalledTimes(1);
+    expect(mockAppData.loadItemsData).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,8 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data-types';
 import { MatchListViewCard } from '@/frontend/matches/components/list/MatchListViewCard';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // Mock config context used by components
 jest.mock('@/frontend/contexts/config-context', () => ({
@@ -13,12 +12,32 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   }),
 }));
 
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    getSelectedTeam: () => ({ manualMatches: {} }),
-    removeManualMatch: jest.fn(),
-    editManualMatch: jest.fn(),
-    highPerformingHeroes: new Set<string>(),
+// Mock AppData context instead of old team context
+jest.mock('@/contexts/app-data-context', () => ({
+  useAppData: () => ({
+    teams: new Map(),
+    matches: new Map(),
+    players: new Map(),
+    heroes: new Map(),
+    items: new Map(),
+    leagues: new Map(),
+    selectedTeamId: null,
+    setSelectedTeamId: jest.fn(),
+    addTeam: jest.fn(),
+    updateTeam: jest.fn(),
+    removeTeam: jest.fn(),
+    addMatch: jest.fn(),
+    updateMatch: jest.fn(),
+    removeMatch: jest.fn(),
+    addPlayer: jest.fn(),
+    updatePlayer: jest.fn(),
+    removePlayer: jest.fn(),
+    loadTeamData: jest.fn(),
+    loadMatchData: jest.fn(),
+    loadPlayerData: jest.fn(),
+    loadHeroesData: jest.fn(),
+    loadItemsData: jest.fn(),
+    loadLeaguesData: jest.fn(),
   }),
 }));
 

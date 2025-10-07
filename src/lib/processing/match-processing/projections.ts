@@ -1,4 +1,4 @@
-import type { EventType, Match, MatchEvent } from '@/types/contexts/match-context-value';
+import type { Match, MatchEvent } from '@/frontend/lib/app-data-types';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 export interface DraftPhase {
@@ -8,48 +8,9 @@ export interface DraftPhase {
   time: number;
 }
 
-export interface GameEvent {
-  type: EventType;
-  time: number;
-  description: string;
-  team?: 'radiant' | 'dire';
-}
-
 export interface TeamFightStats {
   radiant: { total: number; wins: number; losses: number };
   dire: { total: number; wins: number; losses: number };
-}
-
-function getTeamName(side: 'radiant' | 'dire' | 'neutral'): string {
-  return side === 'radiant' ? 'Radiant' : 'Dire';
-}
-
-function generateEventDescription(event: MatchEvent): string {
-  const teamName = getTeamName(event.side);
-  switch (event.type) {
-    case 'CHAT_MESSAGE_ROSHAN_KILL':
-      return `${teamName} killed Roshan`;
-    case 'CHAT_MESSAGE_AEGIS':
-      return `Aegis picked up by ${event.details.aegisHolder || 'unknown player'}`;
-    case 'building_kill':
-      return `${teamName} destroyed ${event.details.buildingType || 'building'}`;
-    case 'CHAT_MESSAGE_FIRSTBLOOD':
-      return `First Blood: ${event.details.killer || 'unknown player'} killed ${event.details.victim || 'unknown player'}`;
-    case 'team_fight':
-      return `Team Fight`;
-    default:
-      return `Event at ${event.timestamp}s`;
-  }
-}
-
-export function processGameEvents(match: Match): GameEvent[] {
-  return match.events.map((event) => ({
-    type: event.type,
-    time: event.timestamp,
-    description: generateEventDescription(event),
-    team: event.side === 'neutral' ? undefined : event.side,
-    details: event.details as never,
-  }));
 }
 
 export function processDraftData(match: Match, originalMatchData?: OpenDotaMatch): DraftPhase[] {

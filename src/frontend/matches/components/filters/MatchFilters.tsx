@@ -6,10 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 export interface MatchFilters {
   dateRange: 'all' | '7days' | '30days' | 'custom';
@@ -26,7 +23,7 @@ interface MatchFiltersProps {
   filters: MatchFilters;
   onFiltersChange: (filters: MatchFilters) => void;
   matches: Match[];
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
   className?: string;
 }
 
@@ -162,29 +159,25 @@ function HeroesPlayedFilter({
   value: string[];
   onChange: (v: string[]) => void;
   matches: Match[];
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
 }) {
-  const { heroes } = useConstantsContext();
-  const availableHeroes = Object.values(heroes);
-  const heroIdSet = new Set<string>();
+  // Build heroes map from match data (heroes are already embedded in matches)
+  const heroMap = new Map<number, Hero>();
   matches.forEach((match) => {
-    const teamMatchData = teamMatches[match.id];
+    const teamMatchData = teamMatches.get(match.id);
     if (!teamMatchData || !teamMatchData.side) return;
     if (match.draft) {
       const picks = teamMatchData.side === 'radiant' ? match.draft.radiantPicks : match.draft.direPicks;
       picks?.forEach((pick) => {
         if (pick.hero?.id) {
-          heroIdSet.add(pick.hero.id);
+          heroMap.set(pick.hero.id, pick.hero);
         }
       });
     }
   });
-  if (heroIdSet.size === 0) availableHeroes.forEach((hero) => heroIdSet.add(hero.id));
-  const playedHeroes = Array.from(heroIdSet)
-    .map((id) => availableHeroes.find((h) => h.id === id))
-    .filter((h): h is Hero => !!h)
-    .sort((a, b) => a.localizedName.localeCompare(b.localizedName));
-  const options = playedHeroes.map((hero) => ({ value: hero.id, label: hero.localizedName }));
+
+  const playedHeroes = Array.from(heroMap.values()).sort((a, b) => a.localizedName.localeCompare(b.localizedName));
+  const options = playedHeroes.map((hero) => ({ value: String(hero.id), label: hero.localizedName }));
   return (
     <div>
       <Label className="mb-2 block">Heroes Played</Label>
@@ -229,7 +222,7 @@ function OpponentFilter({
 }: {
   value: string[];
   onChange: (v: string[]) => void;
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
 }) {
   const opponentNames = useMemo(() => {
     const names = new Set<string>();

@@ -2,8 +2,8 @@ import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import type { Player } from '@/frontend/lib/app-data-types';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
 
 interface PlayerAvatarProps {
   player: Player;
@@ -30,14 +30,37 @@ function resolvePlayerUrl(accountId: number, site?: PreferredExternalSite): stri
 }
 
 function resolveImageSrc(player: Player): string {
-  return (
-    player.profile.profile.avatarfull || player.profile.profile.avatarmedium || player.profile.profile.avatar || ''
-  );
+  return player.profile?.avatarfull || player.profile?.avatar || '';
 }
 
 function AvatarImageMaybe({ src, alt }: { src: string; alt: string }) {
   if (!src || src.trim().length === 0) return null;
   return <AvatarImage src={src} alt={alt} className="object-cover object-center" />;
+}
+
+function AvatarContent({
+  width,
+  height,
+  className,
+  imageSrc,
+  personaname,
+  fallbackText,
+}: {
+  width: string;
+  height: string;
+  className: string;
+  imageSrc: string;
+  personaname: string;
+  fallbackText: string;
+}) {
+  return (
+    <Avatar
+      className={`${width} ${height} border border-background cursor-pointer hover:border-primary transition-colors ${className}`}
+    >
+      <AvatarImageMaybe src={imageSrc} alt={personaname} />
+      <AvatarFallback className="text-xs">{fallbackText}</AvatarFallback>
+    </Avatar>
+  );
 }
 
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
@@ -48,40 +71,41 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   preferredSite,
 }) => {
   const { width, height } = avatarSize;
-
-  const fallbackText = player.error ? '?' : getFallbackTextFromName(player.profile.profile.personaname || '');
-  const playerUrl = resolvePlayerUrl(player.profile.profile.account_id, preferredSite);
+  const personaname = player.profile.personaname;
+  const fallbackText = player.error ? '?' : getFallbackTextFromName(personaname);
+  const playerUrl = resolvePlayerUrl(player.accountId, preferredSite);
   const imageSrc = resolveImageSrc(player);
-  const onClick = showLink
-    ? (e: React.MouseEvent) => {
-        e.stopPropagation();
-        window.open(playerUrl, '_blank', 'noopener,noreferrer');
-      }
-    : undefined;
 
   const avatarContent = (
-    <Avatar
-      className={`${width} ${height} border border-background cursor-pointer hover:border-primary transition-colors ${className}`}
-    >
-      <AvatarImageMaybe src={imageSrc} alt={player.profile.profile.personaname || 'Player'} />
-      <AvatarFallback className="text-xs">{fallbackText}</AvatarFallback>
-    </Avatar>
+    <AvatarContent
+      width={width}
+      height={height}
+      className={className}
+      imageSrc={imageSrc}
+      personaname={personaname}
+      fallbackText={fallbackText}
+    />
   );
 
-  if (showLink) {
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onClick}
-        className="p-0 h-auto w-auto"
-        aria-label={`View ${player.profile.profile.personaname} on ${preferredSite ?? 'dotabuff'}`}
-        title={`View ${player.profile.profile.personaname} on ${preferredSite ?? 'dotabuff'}`}
-      >
-        {avatarContent}
-      </Button>
-    );
+  if (!showLink) {
+    return avatarContent;
   }
 
-  return avatarContent;
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(playerUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleClick}
+      className="p-0 h-auto w-auto"
+      aria-label={`View ${personaname} on ${preferredSite ?? 'dotabuff'}`}
+      title={`View ${personaname} on ${preferredSite ?? 'dotabuff'}`}
+    >
+      {avatarContent}
+    </Button>
+  );
 };

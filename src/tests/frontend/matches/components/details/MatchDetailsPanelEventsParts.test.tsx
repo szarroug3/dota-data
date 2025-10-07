@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 
+import type { GameEvent } from '@/frontend/lib/app-data-types';
 import {
   AdvantagesList,
   formatTime,
@@ -9,7 +10,6 @@ import {
   renderEventDot,
   type TooltipEntry,
 } from '@/frontend/matches/components/details/MatchDetailsPanelEventsParts';
-import type { GameEvent } from '@/types/contexts/match-context-value';
 
 describe('MatchDetailsPanelEventsParts helpers', () => {
   it('formatTime formats negative and positive seconds', () => {

@@ -4,10 +4,7 @@
  * Utility functions for processing player data into detailed statistics
  */
 
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Hero, Match, Player } from '@/frontend/lib/app-data-types';
 import type { OpenDotaPlayerHero } from '@/types/external-apis';
 
 // ============================================================================
@@ -249,20 +246,20 @@ export interface TeamHeroStats {
 /**
  * Process team-specific role statistics
  */
-export function processTeamRoleStats(player: Player, teamData: TeamData, matches: Match[]): TeamRoleStats[] {
+export function processTeamRoleStats(player: Player, matches: Match[]): TeamRoleStats[] {
   const roleStats: Record<string, { games: number; wins: number }> = {};
 
   // Process matches to extract role information
   matches.forEach((match) => {
-    const radiantPlayer = match.players.radiant.find((p) => p.accountId === player.profile.profile.account_id);
-    const direPlayer = match.players.dire.find((p) => p.accountId === player.profile.profile.account_id);
+    const radiantPlayer = match.players.radiant.find((p) => p.accountId === player.accountId);
+    const direPlayer = match.players.dire.find((p) => p.accountId === player.accountId);
     const matchPlayer = radiantPlayer || direPlayer;
 
-    if (!matchPlayer) {
+    if (!matchPlayer || !matchPlayer.role) {
       return;
     }
 
-    const role = matchPlayer.role || 'Unknown';
+    const role = matchPlayer.role.role;
     const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : direPlayer ? true : false;
 
     if (!roleStats[role]) {
@@ -288,7 +285,6 @@ export function processTeamRoleStats(player: Player, teamData: TeamData, matches
  */
 export function processTeamHeroStats(
   player: Player,
-  teamData: TeamData,
   matches: Match[],
   heroesData: Record<string, Hero>,
 ): TeamHeroStats[] {
@@ -303,13 +299,13 @@ export function processTeamHeroStats(
 
   // Process matches to extract hero and role information
   matches.forEach((match) => {
-    const radiantPlayer = match.players.radiant.find((p) => p.accountId === player.profile.profile.account_id);
-    const direPlayer = match.players.dire.find((p) => p.accountId === player.profile.profile.account_id);
+    const radiantPlayer = match.players.radiant.find((p) => p.accountId === player.accountId);
+    const direPlayer = match.players.dire.find((p) => p.accountId === player.accountId);
     const matchPlayer = radiantPlayer || direPlayer;
 
     if (matchPlayer) {
       const heroId = matchPlayer.hero.id.toString();
-      const role = matchPlayer.role || 'Unknown';
+      const role = matchPlayer.role?.role || 'Unknown';
       const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : direPlayer ? true : false;
 
       if (!heroStats[heroId]) {
@@ -372,49 +368,58 @@ export interface PlayerDetailedStats {
 }
 
 /**
- * Process comprehensive player statistics
+ * Calculate average KDA from matches where player participated
  */
-export function processPlayerDetailedStats(
-  player: Player,
-  teamData?: TeamData,
-  matches: Match[] = [],
-  heroesData: Record<string, Hero> = {},
-): PlayerDetailedStats {
-  const rank = processPlayerRank(player.profile.rank_tier);
-  const topHeroesAllTime = getTopHeroesByGames(player.heroes, heroesData, 5);
-  const topHeroesRecent = getTopHeroesFromRecentMatches(player.recentMatches ?? [], heroesData, 5);
-
-  const teamRoles = teamData ? processTeamRoleStats(player, teamData, matches) : [];
-  const teamHeroes = teamData ? processTeamHeroStats(player, teamData, matches, heroesData) : [];
-
-  const totalGames = player.wl.win + player.wl.lose;
-  const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
-
-  // Calculate average KDA from recent matches
+function calculateAverageKDA(player: Player, matches: Match[]): number {
   let totalKDA = 0;
   let matchCount = 0;
 
-  player.recentMatches.forEach((match) => {
-    if (match.kills !== undefined && match.deaths !== undefined && match.assists !== undefined) {
-      const kda = match.deaths > 0 ? (match.kills + match.assists) / match.deaths : match.kills + match.assists;
+  matches.forEach((match) => {
+    const radiantPlayer = match.players.radiant.find((p) => p.accountId === player.accountId);
+    const direPlayer = match.players.dire.find((p) => p.accountId === player.accountId);
+    const matchPlayer = radiantPlayer || direPlayer;
+
+    if (matchPlayer) {
+      const { kills, deaths, assists } = matchPlayer.stats;
+      const kda = deaths > 0 ? (kills + assists) / deaths : kills + assists;
       totalKDA += kda;
       matchCount++;
     }
   });
 
-  const averageKDA = matchCount > 0 ? totalKDA / matchCount : 0;
+  return matchCount > 0 ? totalKDA / matchCount : 0;
+}
+
+/**
+ * Process comprehensive player statistics
+ */
+export function processPlayerDetailedStats(
+  player: Player,
+  matches: Match[] = [],
+  heroesData: Record<string, Hero> = {},
+): PlayerDetailedStats {
+  const rank = processPlayerRank(player.profile.rank_tier, player.profile.leaderboard_rank);
+
+  // For new Player type, we don't have topHeroesAllTime or topHeroesRecent from API
+  // These would need to be computed from matches if needed
+  const topHeroesAllTime: HeroUsage[] = [];
+  const topHeroesRecent: HeroUsage[] = [];
+
+  const teamRoles = processTeamRoleStats(player, matches);
+  const teamHeroes = processTeamHeroStats(player, matches, heroesData);
+  const averageKDA = calculateAverageKDA(player, matches);
 
   return {
-    playerId: player.profile.profile.account_id,
-    playerName: player.profile.profile.personaname,
+    playerId: player.accountId,
+    playerName: player.profile.personaname,
     rank,
     topHeroesAllTime,
     topHeroesRecent,
     teamRoles,
     teamHeroes,
-    totalGames,
-    totalWins: player.wl.win,
-    winRate,
+    totalGames: player.overallStats.totalGames,
+    totalWins: player.overallStats.wins,
+    winRate: player.overallStats.winRate,
     averageKDA,
   };
 }
