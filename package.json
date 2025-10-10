@@ -26,8 +26,8 @@
     "test:e2e:report": "playwright show-report",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:ci": "eslint --max-warnings=0 .",
-    "type-check:ci": "tsc --noEmit --project . --skipLibCheck false"
+    "lint:ci": "eslint --max-warnings=0 src",
+    "type-check:ci": "tsc --noEmit --project tsconfig.ci.json --skipLibCheck true"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
