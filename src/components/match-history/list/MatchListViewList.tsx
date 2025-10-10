@@ -1,7 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import React
-import { selectMatchIdsSortedByNumericKey, selectPaginatedMatchIds } from '@/app-data/selectors/matches.selectors';
-, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
