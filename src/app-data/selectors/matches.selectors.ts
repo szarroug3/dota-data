@@ -116,3 +116,34 @@ export function selectPaginatedMatchIds(
   const start = Math.max(0, Math.floor(page) * Math.max(1, Math.floor(pageSize)));
   return ids.slice(start, start + Math.max(1, Math.floor(pageSize)));
 }
+
+export function selectVisibleMatches(all: readonly Match[], hidden: readonly ID[]): Match[] {
+  if (hidden.length === 0) return all.slice();
+  const hiddenSet = new Set(hidden);
+  return all.filter(matchRecord => !hiddenSet.has(matchRecord.id));
+}
+
+
+export interface Hero { id: ID; name?: string; localizedName?: string }
+export type HeroMap = Record<ID, Hero>;
+
+export function selectPlayedHeroOptions(matches: readonly Match[], heroes: HeroMap): { value: ID; label: string }[] {
+  const seen = new Set<ID>();
+  const options: { value: ID; label: string }[] = [];
+  for (const match of matches) {
+    const heroIds = (getAtPath(match.data, ["heroes"]) as unknown[]) || [];
+    for (const h of heroIds) {
+      if (typeof h === "number" || typeof h === "string") {
+        const id = h as ID;
+        if (!seen.has(id)) {
+          seen.add(id);
+          const hero = heroes[id];
+          const label = hero?.localizedName || hero?.name || String(id);
+          options.push({ value: id, label });
+        }
+      }
+    }
+  }
+  options.sort((a, b) => a.label.localeCompare(b.label));
+  return options;
+}

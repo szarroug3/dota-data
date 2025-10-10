@@ -182,17 +182,8 @@ function HeroesPlayedFilter({ value, onChange, matches, teamMatches }:
   }
   
   // Map to hero objects and sort alphabetically
-  const playedHeroes = Array.from(heroIdSet)
-    .map(id => availableHeroes.find(h => h.id === id))
-    .filter((h): h is Hero => !!h)
-    .sort((a, b) => a.localizedName.localeCompare(b.localizedName));
-
-  const options = playedHeroes.map(hero => ({
-    value: hero.id,
-    label: hero.localizedName
-  }));
-
-  return (
+  const options = useMemo(() => selectPlayedHeroOptions(filteredMatches, heroesById), [filteredMatches, heroesById]);
+return (
     <div>
       <Label className="mb-2 block">Heroes Played</Label>
       <MultiSelectCombobox

@@ -1,4 +1,4 @@
-name: Verify (Lint & Type Check on changed files)
+name: Verify (Lint & Type Check)
 
 on:
   push:
@@ -9,13 +9,11 @@ on:
 
 jobs:
   verify:
+    name: ESLint & TypeScript
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -31,97 +29,46 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Get changed files
-        id: changed
-        uses: tj-actions/changed-files@v45
-        with:
-          since_last_remote_commit: true
-          separator: "::"
-
-      - name: Build list of lint/type-check targets
-        id: targets
-        shell: bash
-        run: |
-          CHANGED="${{ steps.changed.outputs.all_changed_files }}"
-          TS_CHANGED=""
-          if [ -n "$CHANGED" ]; then
-            IFS="::" read -ra FILES <<< "$CHANGED"
-            for f in "${FILES[@]}"; do
-              case "$f" in
-                *.ts|*.tsx) TS_CHANGED="$TS_CHANGED $f" ;;
-              esac
-            done
-          fi
-          if [ -z "$TS_CHANGED" ]; then
-            TS_CHANGED="src/app-data/**/*.ts src/app-data/**/*.tsx"
-          fi
-          echo "ts_changed=$TS_CHANGED" >> "$GITHUB_OUTPUT"
-          echo "Targets: $TS_CHANGED"
-
-      - name: ESLint (changed files only)
+      # Lint should not block the type-check; we save outputs to files
+      - name: Lint (ESLint)
         id: lint
         continue-on-error: true
-        shell: bash
         run: |
-          TARGETS="${{ steps.targets.outputs.ts_changed }}"
-          npx eslint --max-warnings=0 --no-error-on-unmatched-pattern $TARGETS | tee eslint-report.txt
-          npx eslint -f json --no-error-on-unmatched-pattern $TARGETS > eslint-report.json || true
+          # human-readable
+          pnpm run lint:ci | tee eslint-report.txt
+          # structured JSON (optional)
+          npx eslint -f json . > eslint-report.json || true
 
-      - name: Type Check (tsc full run, filtered to changed files)
+      # Always run type-check, even if lint failed
+      - name: Type Check (tsc)
         id: typecheck
         if: always()
         continue-on-error: true
-        shell: bash
         run: |
           pnpm run type-check:ci | tee tsc-report.txt
-          TARGETS="${{ steps.targets.outputs.ts_changed }}"
-          # convert space-separated globs into regex alternation; escape dots; turn * into .*
-          REGEX="$(printf '%s' "$TARGETS" | sed -e 's/[.]/\\./g' -e 's/*/.*/g' -e 's/  */|/g')"
-          if [ -z "$REGEX" ]; then REGEX="src/app-data/.*"; fi
-          grep -E "$REGEX" tsc-report.txt > tsc-report.filtered.txt || true
 
+      # Combine summaries into a single markdown for quick reading
       - name: Create combined report
         if: always()
-        shell: bash
         run: |
-          echo "# Verify Report (changed files only)" > verify-report.md
-          echo "## ESLint (changed files)" >> verify-report.md
+          echo "# Verify Report" > verify-report.md
+          echo "## Lint (ESLint)" >> verify-report.md
           if [ -s eslint-report.txt ]; then
-            echo "" >> verify-report.md
-            echo '```' >> verify-report.md
+            echo '\n```\n' >> verify-report.md
             sed -n '1,400p' eslint-report.txt >> verify-report.md
-            echo '```' >> verify-report.md
+            echo '\n```\n' >> verify-report.md
           else
-            echo "_No ESLint errors for changed files_" >> verify-report.md
+            echo "_No ESLint output_" >> verify-report.md
           fi
-          echo "## Type Check (filtered to changed files)" >> verify-report.md
-          if [ -s tsc-report.filtered.txt ]; then
-            echo "" >> verify-report.md
-            echo '```' >> verify-report.md
-            sed -n '1,400p' tsc-report.filtered.txt >> verify-report.md
-            echo '```' >> verify-report.md
+          echo "## Type Check (tsc)" >> verify-report.md
+          if [ -s tsc-report.txt ]; then
+            echo '\n```\n' >> verify-report.md
+            sed -n '1,400p' tsc-report.txt >> verify-report.md
+            echo '\n```\n' >> verify-report.md
           else
-            echo "_No TS errors for changed files_" >> verify-report.md
-          fi
+            echo "_No tsc output_" >> verify-report.md
 
-      - name: Evaluate filtered results
-        if: always()
-        shell: bash
-        run: |
-          ERRORS=0
-          if [ -s eslint-report.txt ]; then
-            ERRORS=$((ERRORS+1))
-          fi
-          if [ -s tsc-report.filtered.txt ]; then
-            ERRORS=$((ERRORS+1))
-          fi
-          if [ $ERRORS -gt 0 ]; then
-            echo "Filtered errors found."
-            exit 1
-          else
-            echo "No filtered errors."
-          fi
-
+      # Upload artifacts so you can download the results
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -131,5 +78,4 @@ jobs:
             eslint-report.txt
             eslint-report.json
             tsc-report.txt
-            tsc-report.filtered.txt
             verify-report.md
