@@ -31,7 +31,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Determine changed files (works for PRs and pushes)
       - name: Get changed files
         id: changed
         uses: tj-actions/changed-files@v45
@@ -41,6 +40,7 @@ jobs:
 
       - name: Build list of lint/type-check targets
         id: targets
+        shell: bash
         run: |
           CHANGED="${{ steps.changed.outputs.all_changed_files }}"
           TS_CHANGED=""
@@ -52,41 +52,61 @@ jobs:
               esac
             done
           fi
-
-          # Fallback: focus on app-data if nothing detected (new files or workflow_dispatch)
           if [ -z "$TS_CHANGED" ]; then
             TS_CHANGED="src/app-data/**/*.ts src/app-data/**/*.tsx"
           fi
-
-          echo "ts_changed=$TS_CHANGED" >> $GITHUB_OUTPUT
+          echo "ts_changed=$TS_CHANGED" >> "$GITHUB_OUTPUT"
           echo "Targets: $TS_CHANGED"
 
-      # Lint only the changed files (or fallback set). Don't block type-check.
       - name: ESLint (changed files only)
         id: lint
         continue-on-error: true
+        shell: bash
         run: |
           TARGETS="${{ steps.targets.outputs.ts_changed }}"
-          # Use --no-error-on-unmatched-pattern to avoid glob issues
           npx eslint --max-warnings=0 --no-error-on-unmatched-pattern $TARGETS | tee eslint-report.txt
           npx eslint -f json --no-error-on-unmatched-pattern $TARGETS > eslint-report.json || true
 
-      # Full type-check, but filter output to only changed targets (or fallback set)
       - name: Type Check (tsc full run, filtered to changed files)
         id: typecheck
         if: always()
         continue-on-error: true
+        shell: bash
         run: |
           pnpm run type-check:ci | tee tsc-report.txt
           TARGETS="${{ steps.targets.outputs.ts_changed }}"
-          # Build a regex alternation from targets (escape slashes)
-          REGEX="$(printf '%s' "$TARGETS" | sed 's/ /|/g' | sed 's/\./\./g' | sed 's/\*/.*/g')"
+          # convert space-separated globs into regex alternation; escape dots; turn * into .*
+          REGEX="$(printf '%s' "$TARGETS" | sed -e 's/[.]/\\./g' -e 's/*/.*/g' -e 's/  */|/g')"
           if [ -z "$REGEX" ]; then REGEX="src/app-data/.*"; fi
           grep -E "$REGEX" tsc-report.txt > tsc-report.filtered.txt || true
 
-      # Decide pass/fail based on filtered results only
+      - name: Create combined report
+        if: always()
+        shell: bash
+        run: |
+          echo "# Verify Report (changed files only)" > verify-report.md
+          echo "## ESLint (changed files)" >> verify-report.md
+          if [ -s eslint-report.txt ]; then
+            echo "" >> verify-report.md
+            echo '```' >> verify-report.md
+            sed -n '1,400p' eslint-report.txt >> verify-report.md
+            echo '```' >> verify-report.md
+          else
+            echo "_No ESLint errors for changed files_" >> verify-report.md
+          fi
+          echo "## Type Check (filtered to changed files)" >> verify-report.md
+          if [ -s tsc-report.filtered.txt ]; then
+            echo "" >> verify-report.md
+            echo '```' >> verify-report.md
+            sed -n '1,400p' tsc-report.filtered.txt >> verify-report.md
+            echo '```' >> verify-report.md
+          else
+            echo "_No TS errors for changed files_" >> verify-report.md
+          fi
+
       - name: Evaluate filtered results
         if: always()
+        shell: bash
         run: |
           ERRORS=0
           if [ -s eslint-report.txt ]; then
@@ -95,29 +115,6 @@ jobs:
           if [ -s tsc-report.filtered.txt ]; then
             ERRORS=$((ERRORS+1))
           fi
-          # Create combined report
-          {
-            echo "# Verify Report (changed files only)"
-            echo "## ESLint (changed files)"
-            if [ -s eslint-report.txt ]; then
-              echo "\n\n\`\`\`"
-              sed -n '1,400p' eslint-report.txt
-              echo "
-\`\`\`"
-            else
-              echo "_No ESLint errors for changed files_"
-            fi
-            echo "## Type Check (filtered to changed files)"
-            if [ -s tsc-report.filtered.txt ]; then
-              echo "\n\n\`\`\`"
-              sed -n '1,400p' tsc-report.filtered.txt
-              echo "
-\`\`\`"
-            else
-              echo "_No TS errors for changed files_"
-            fi
-          } > verify-report.md
-          # Fail the job only if filtered errors exist
           if [ $ERRORS -gt 0 ]; then
             echo "Filtered errors found."
             exit 1
