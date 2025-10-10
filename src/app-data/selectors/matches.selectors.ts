@@ -147,3 +147,60 @@ export function selectPlayedHeroOptions(matches: readonly Match[], heroes: HeroM
   options.sort((a, b) => a.label.localeCompare(b.label));
   return options;
 }
+
+export interface HeroSummary {
+  heroId: ID;
+  count: number;
+  wins: number;
+  totalGames: number;
+}
+
+export type TeamResult = "won" | "lost" | "unknown";
+export type TeamSide = "radiant" | "dire";
+export interface TeamMatchLite {
+  side?: TeamSide;
+  result?: TeamResult;
+}
+
+/**
+ * Compute hero summaries (counts/wins) using a caller-provided extractor to get hero IDs per match.
+ * This keeps selectors decoupled from UI-specific Match shapes.
+ */
+export function selectHeroSummariesWithExtractor(
+  matches: readonly Match[],
+  teamMatches: Readonly<Record<ID, TeamMatchLite>> | undefined,
+  extract: (match: Match, side: TeamSide, context: { isActiveTeam: boolean }) => readonly (ID | { id: ID })[],
+  isActiveTeam: boolean
+): HeroSummary[] {
+  const counts = new Map<ID, { count: number; wins: number; totalGames: number }>();
+
+  for (const match of matches) {
+    const tm = teamMatches ? teamMatches[match.id] : undefined;
+    const side = tm?.side as TeamSide | undefined;
+    if (!side) continue;
+
+    const heroList = extract(match, side, { isActiveTeam });
+    const ids: ID[] = [];
+    for (const h of heroList) {
+      if (typeof h === "string" || typeof h === "number") ids.push(h as ID);
+      else if (h && typeof h === "object" && "id" in (h as any)) ids.push((h as any).id as ID);
+    }
+    if (ids.length === 0) continue;
+
+    const won = tm?.result === "won";
+
+    for (const hid of ids) {
+      const cur = counts.get(hid) || { count: 0, wins: 0, totalGames: 0 };
+      cur.count += 1;
+      cur.totalGames += 1;
+      if (won) cur.wins += 1;
+      counts.set(hid, cur);
+    }
+  }
+
+  const out: HeroSummary[] = [];
+  for (const [heroId, v] of counts.entries()) {
+    out.push({ heroId, count: v.count, wins: v.wins, totalGames: v.totalGames });
+  }
+  return out;
+}
