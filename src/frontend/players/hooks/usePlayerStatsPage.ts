@@ -3,7 +3,6 @@ import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, use
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Player } from '@/frontend/lib/app-data-types';
-import type { StoredPlayerData } from '@/frontend/lib/storage-manager';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
 import type { ResizablePlayerLayoutRef } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
@@ -44,44 +43,11 @@ export interface PlayerStats {
 export function usePlayerData() {
   const appData = useAppData();
   const selectedTeamId = appData.state.selectedTeamId;
-  const teams = appData.teams;
-  const playersMap = appData.players;
 
-  const playersArray = useMemo(() => {
-    const team = teams.get(selectedTeamId) ?? appData.getTeam(selectedTeamId);
-
-    if (!team) {
-      return Array.from(playersMap.values());
-    }
-
-    // Get player IDs for the team (from manual players, league matches, and manual matches)
-    const teamPlayerIds = appData.getTeamPlayerIds(selectedTeamId);
-
-    // Create array of players, using full data if available or creating placeholders
-    const players: Player[] = [];
-
-    for (const playerId of teamPlayerIds) {
-      const fullPlayer = appData.getPlayer(playerId);
-      if (fullPlayer) {
-        // Use full player data if available
-        players.push(fullPlayer);
-      } else {
-        // Create placeholder player from team's stored player data
-        const storedPlayerData = team.players.get(playerId);
-        if (storedPlayerData && storedPlayerData.accountId > 0) {
-          const placeholder = createPlaceholderPlayerFromStored(storedPlayerData);
-          players.push(placeholder);
-        }
-      }
-    }
-
-    return players;
-    // Dependencies:
-    // - selectedTeamId: selected team changes should recompute the list
-    // - teams: getTeamPlayerIds reads team metadata (manual players + matches)
-    // - playersMap: ensures re-run when hydrated player data arrives
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, selectedTeamId, teams, playersMap]);
+  const playersArray = useMemo(
+    () => appData.getTeamPlayersSortedForDisplay(selectedTeamId),
+    [appData, selectedTeamId, appData.players, appData.matches, appData.teams],
+  );
 
   const refreshPlayer = useCallback(
     async (accountId: number) => {
@@ -128,28 +94,37 @@ export function usePlayerSelection() {
 }
 
 export function useHiddenPlayers(filteredPlayers: Player[]) {
-  const [hiddenPlayers, setHiddenPlayers] = useState<Player[]>([]);
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
   const [showHiddenModal, setShowHiddenModal] = useState(false);
+
+  const hiddenPlayers = useMemo(() => {
+    if (!selectedTeamId) return [] as Player[];
+    return appData.getTeamHiddenPlayersForDisplay(selectedTeamId);
+  }, [appData, selectedTeamId, appData.players, appData.teams]);
+
+  const hiddenIds = useMemo(() => new Set(hiddenPlayers.map((player) => player.accountId)), [hiddenPlayers]);
 
   const handleHidePlayer = useCallback(
     (id: number) => {
-      setHiddenPlayers((prev) => {
-        const playerToHide = filteredPlayers.find((p: Player) => p.accountId === id);
-        if (!playerToHide) return prev;
-        return [...prev, playerToHide];
-      });
+      if (!selectedTeamId) return;
+      appData.hidePlayerOnTeam(id, selectedTeamId);
     },
-    [filteredPlayers],
+    [appData, selectedTeamId],
   );
 
-  const handleUnhidePlayer = useCallback((id: number) => {
-    setHiddenPlayers((prev) => prev.filter((p: Player) => p.accountId !== id));
-  }, []);
+  const handleUnhidePlayer = useCallback(
+    (id: number) => {
+      if (!selectedTeamId) return;
+      appData.unhidePlayerOnTeam(id, selectedTeamId);
+    },
+    [appData, selectedTeamId],
+  );
 
-  const visiblePlayers = useMemo(() => {
-    const hiddenIds = new Set(hiddenPlayers.map((p: Player) => p.accountId));
-    return filteredPlayers.filter((p: Player) => !hiddenIds.has(p.accountId));
-  }, [filteredPlayers, hiddenPlayers]);
+  const visiblePlayers = useMemo(
+    () => filteredPlayers.filter((player) => !hiddenIds.has(player.accountId)),
+    [filteredPlayers, hiddenIds],
+  );
 
   return {
     hiddenPlayers,
@@ -190,50 +165,12 @@ export function usePlayerViewModes() {
 }
 
 export function useSortedPlayers(players: Player[]) {
-  return useMemo(() => {
-    return [...players].sort((a, b) => {
-      const aName = a.profile.personaname.toLowerCase();
-      const bName = b.profile.personaname.toLowerCase();
-      return aName.localeCompare(bName);
-    });
-  }, [players]);
+  // Players returned from AppData selectors are already sorted; reuse the same
+  // array reference to avoid duplicate sorting work in the UI.
+  return useMemo(() => players, [players]);
 }
 
 // Filter helpers to scope players to the active team
-export function useTeamPlayerIds(): Set<number> {
-  const appData = useAppData();
-  const teams = appData.teams;
-  const matches = appData.matches;
-  const selectedTeamId = appData.state.selectedTeamId;
-
-  return useMemo(() => {
-    if (!selectedTeamId) return new Set<number>();
-
-    // Use AppData to get player IDs for the team
-    return appData.getTeamPlayerIds(selectedTeamId);
-    // teams and matches are required despite linter warning because getTeamPlayerIds() internally reads:
-    // - team.players Map (for manual players) and team.matches Map (for manual matches) from the teams Map
-    // - match.players data from the matches Map (for extracting player IDs from manual matches)
-    // Without these deps, the player list won't update when matches/teams change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, selectedTeamId, teams, matches]);
-}
-
-export function useFilteredTeamPlayers(
-  players: Player[],
-  teamPlayerIds: Set<number>,
-  hasActiveTeam: boolean,
-): Player[] {
-  return useMemo(() => {
-    if (!hasActiveTeam) {
-      return players;
-    }
-
-    if (teamPlayerIds.size === 0) return [] as Player[];
-    return players.filter((p) => teamPlayerIds.has(p.accountId));
-  }, [players, teamPlayerIds, hasActiveTeam]);
-}
-
 export function useWaitForPlayerReadySource(players: Player[]) {
   const playersRef = useRef<Player[]>(players);
   useEffect(() => {
@@ -410,41 +347,4 @@ export function usePlayerEditActions(deps: {
   );
 
   return { handleRemoveManualPlayer, handleEditManualPlayer, handleAddPlayer, onEditPlayer } as const;
-}
-
-/**
- * Create a placeholder player from stored player data
- * Similar to createPlaceholderPlayer in app-data-storage-ops.ts but for use in hooks
- */
-function createPlaceholderPlayerFromStored(stored: StoredPlayerData): Player {
-  const now = Date.now();
-  const wins = Math.round((stored.winRate / 100) * stored.games);
-  const losses = stored.games - wins;
-
-  return {
-    accountId: stored.accountId,
-    profile: {
-      name: stored.name,
-      personaname: stored.name,
-      avatar: stored.avatar,
-      avatarfull: stored.avatar,
-      rank_tier: stored.rank_tier,
-      leaderboard_rank: stored.leaderboard_rank,
-    },
-    heroStats: stored.topHeroes.map((hero) => ({
-      heroId: hero.id,
-      games: 0,
-      wins: 0,
-      lastPlayed: now,
-    })),
-    overallStats: {
-      wins,
-      losses,
-      totalGames: stored.games,
-      winRate: stored.winRate,
-    },
-    recentMatchIds: [],
-    createdAt: now,
-    updatedAt: now,
-  };
 }

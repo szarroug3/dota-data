@@ -22,32 +22,43 @@ export function createFirstBloodEvent(
   heroes: Record<string, Hero>,
   heroesByName: Record<string, Hero>,
 ): MatchEvent {
+  const killerSlot = objective.player_slot ?? objective.slot;
   const killerName =
-    objective.player_slot !== undefined
-      ? getHeroNameFromPlayerSlot(objective.player_slot, players, heroes)
-      : 'unknown player';
+    killerSlot !== undefined ? getHeroNameFromPlayerSlot(killerSlot, players, heroes) : 'unknown player';
+
   let victimName = 'unknown player';
   let victimHero: Hero | undefined;
   let killerHero: Hero | undefined;
-  if (objective.player_slot !== undefined) {
-    const killer = players.find((p) => p.player_slot === objective.player_slot);
+
+  if (killerSlot !== undefined) {
+    const killer = players.find((p) => p.player_slot === killerSlot);
     if (killer) {
       killerHero = heroes[killer.hero_id.toString()];
-      if (killer.kills_log && killer.kills_log.length > 0) {
-        const firstKill = killer.kills_log.find((kill) => kill.time === objective.time);
-        if (firstKill && firstKill.key) {
-          victimHero = heroesByName[firstKill.key];
-          victimName = victimHero ? victimHero.localizedName : firstKill.key.replace('npc_dota_hero_', '');
-        }
-      }
+      victimHero = resolveFirstBloodVictim(killer, objective.time, heroesByName);
+      if (victimHero) victimName = victimHero.localizedName;
     }
   }
+
   return {
     timestamp: objective.time,
     type: objective.type as EventType,
-    side: getSideFromPlayerSlot(objective.player_slot),
+    side: getSideFromPlayerSlot(killerSlot),
     details: { killer: killerName, victim: victimName, killerHero, victimHero },
   };
+}
+
+function resolveFirstBloodVictim(
+  killer: OpenDotaMatchPlayer,
+  time: number,
+  heroesByName: Record<string, Hero>,
+): Hero | undefined {
+  if (!killer.kills_log) return undefined;
+  const firstKill = killer.kills_log.find((kill) => kill.time === time);
+  if (!firstKill?.key) return undefined;
+  const normalizedKey = firstKill.key.startsWith('npc_dota_hero_')
+    ? firstKill.key
+    : `npc_dota_hero_${firstKill.key.replace('npc_dota_hero_', '')}`;
+  return heroesByName[normalizedKey];
 }
 
 export function createRoshanKillEvent(objective: { time: number; player_slot?: number; type: string }): MatchEvent {
@@ -141,7 +152,7 @@ export function createTeamFightEvent(teamfight: {
   players: TeamfightPlayerMetrics[];
 }): MatchEvent {
   const duration = teamfight.end - teamfight.start;
-  const side: 'radiant' | 'dire' | 'neutral' = 'neutral';
+  const side: 'radiant' | 'dire' = 'radiant'; // Neutral events attributed to radiant for now
   const playerDetails = teamfight.players.map((player, index) => ({
     playerIndex: index,
     deaths: player.deaths || 0,

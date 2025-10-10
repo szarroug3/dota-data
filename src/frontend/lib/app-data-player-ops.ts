@@ -14,6 +14,7 @@ import type { StoredPlayerData } from './storage-manager';
  */
 export interface AppDataPlayerOpsContext {
   _teams: Map<string, Team>;
+  _players: Map<number, Player>;
   updateTeam(teamKey: string, updates: Partial<Team>): void;
   saveToStorage(): void;
   loadPlayer(playerId: number): Promise<Player | null>;
@@ -127,4 +128,90 @@ export async function editManualPlayerToTeam(
   appData.updateTeamPlayersMetadata(teamKey);
 
   return newPlayer;
+}
+
+function getPlayerName(fullPlayer: Player | undefined, playerId: number): string {
+  return fullPlayer?.profile.personaname || `Player ${playerId}`;
+}
+
+function getPlayerRankTier(fullPlayer: Player | undefined): number {
+  return fullPlayer?.profile.rank_tier ?? 0;
+}
+
+function getPlayerGames(fullPlayer: Player | undefined): number {
+  return fullPlayer?.overallStats.totalGames ?? 0;
+}
+
+function getPlayerWinRate(fullPlayer: Player | undefined): number {
+  return fullPlayer?.overallStats.winRate ?? 0;
+}
+
+function getPlayerAvatar(fullPlayer: Player | undefined): string {
+  return fullPlayer?.profile.avatar || '';
+}
+
+function createStoredPlayerFromFullPlayer(
+  playerId: number,
+  fullPlayer: Player | undefined,
+  hidden: boolean,
+): StoredPlayerData {
+  return {
+    accountId: playerId,
+    name: getPlayerName(fullPlayer, playerId),
+    rank: 'Unknown',
+    rank_tier: getPlayerRankTier(fullPlayer),
+    leaderboard_rank: fullPlayer?.profile.leaderboard_rank,
+    games: getPlayerGames(fullPlayer),
+    winRate: getPlayerWinRate(fullPlayer),
+    topHeroes: [],
+    avatar: getPlayerAvatar(fullPlayer),
+    isManual: false,
+    isHidden: hidden,
+  };
+}
+
+function ensureStoredPlayerExists(
+  appData: AppDataPlayerOpsContext,
+  playerId: number,
+  teamKey: string,
+  hidden: boolean,
+): StoredPlayerData {
+  const team = appData._teams.get(teamKey);
+  if (!team) {
+    throw new Error(`Team ${teamKey} not found`);
+  }
+
+  let storedPlayer = team.players.get(playerId);
+  if (!storedPlayer) {
+    const fullPlayer = appData._players.get(playerId);
+    storedPlayer = createStoredPlayerFromFullPlayer(playerId, fullPlayer, hidden);
+    team.players.set(playerId, storedPlayer);
+  }
+
+  return storedPlayer;
+}
+
+function setPlayerHiddenForTeam(appData: AppDataPlayerOpsContext, playerId: number, teamKey: string, hidden: boolean) {
+  const team = appData._teams.get(teamKey);
+  if (!team) {
+    throw new Error(`Team ${teamKey} not found`);
+  }
+
+  const storedPlayer = ensureStoredPlayerExists(appData, playerId, teamKey, hidden);
+
+  if (storedPlayer.isHidden === hidden) {
+    return;
+  }
+
+  team.players.set(playerId, { ...storedPlayer, isHidden: hidden });
+  appData.updateTeam(teamKey, { players: team.players });
+  appData.updateTeamPlayersMetadata(teamKey);
+}
+
+export function hidePlayerOnTeam(appData: AppDataPlayerOpsContext, playerId: number, teamKey: string): void {
+  setPlayerHiddenForTeam(appData, playerId, teamKey, true);
+}
+
+export function unhidePlayerOnTeam(appData: AppDataPlayerOpsContext, playerId: number, teamKey: string): void {
+  setPlayerHiddenForTeam(appData, playerId, teamKey, false);
 }

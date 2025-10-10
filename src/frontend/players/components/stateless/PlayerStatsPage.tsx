@@ -1,10 +1,9 @@
 'use client';
 
-import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 
-import { useAppData } from '@/contexts/app-data-context';
-import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
+import type { TeamPlayerOverview } from '@/frontend/lib/app-data-statistics-ops';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import { AddPlayerSheet } from '@/frontend/players/components/stateless/AddPlayerSheet';
 import { EditPlayerSheet } from '@/frontend/players/components/stateless/EditPlayerSheet';
 import { ErrorContent } from '@/frontend/players/components/stateless/ErrorContent';
@@ -12,19 +11,7 @@ import {
   ResizablePlayerLayout,
   type ResizablePlayerLayoutRef,
 } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
-import {
-  useFilteredTeamPlayers,
-  useHiddenPlayers as useHiddenPlayersHook,
-  usePlayerData as usePlayerDataHook,
-  usePlayerEditActions,
-  usePlayerListActions,
-  usePlayerSelection as usePlayerSelectionHook,
-  usePlayerViewModes as usePlayerViewModesHook,
-  useSortedPlayers as useSortedPlayersHook,
-  useTeamPlayerIds,
-  useTeamPlayerOperations,
-  useWaitForPlayerReadySource,
-} from '@/frontend/players/hooks/usePlayerStatsPage';
+import { usePlayerListActions } from '@/frontend/players/hooks/usePlayerStatsPage';
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 import { LoadingSkeleton } from '@/frontend/shared/layout/LoadingSkeleton';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
@@ -33,8 +20,39 @@ import { validatePlayerId } from '@/utils/validation';
 import type { PlayerDetailsPanelMode } from './details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from './PlayerListView';
 
+export interface PlayerEditActions {
+  handleRemoveManualPlayer: (playerId: number) => void;
+  handleEditManualPlayer: (playerId: number) => void;
+  handleAddPlayer: (playerId: string) => Promise<void>;
+  onEditPlayer: (oldId: number, newPlayerId: string) => Promise<void>;
+}
+
+export interface PlayerStatsPageProps {
+  resizableLayoutRef: React.MutableRefObject<ResizablePlayerLayoutRef | null>;
+  players: Player[];
+  filteredPlayers: Player[];
+  visiblePlayers: Player[];
+  hiddenPlayers: Player[];
+  onHidePlayer: (playerId: number) => void;
+  onRefreshPlayer: (playerId: number) => Promise<void | object | null>;
+  viewMode: PlayerListViewMode;
+  setViewMode: (mode: PlayerListViewMode) => void;
+  selectedPlayerId: number | null;
+  selectPlayer: (playerId: number) => void;
+  selectedPlayer: Player | null;
+  playerDetailsViewMode: PlayerDetailsPanelMode;
+  setPlayerDetailsViewMode: (mode: PlayerDetailsPanelMode) => void;
+  setShowHiddenModal: React.Dispatch<React.SetStateAction<boolean>>;
+  manualPlayerIds: Set<number>;
+  heroes: Map<number, Hero>;
+  preferredSite: PreferredExternalSite;
+  playerTeamOverview: TeamPlayerOverview | null;
+  editActions: PlayerEditActions;
+  error: string | null;
+}
+
 function PlayerSheetsContainer({
-  teamPlayerIds,
+  existingPlayerIds,
   showAddPlayerSheet,
   setShowAddPlayerSheet,
   addPlayerId,
@@ -49,7 +67,7 @@ function PlayerSheetsContainer({
   setEditError,
   editActions,
 }: {
-  teamPlayerIds: Set<number>;
+  existingPlayerIds: Set<number>;
   showAddPlayerSheet: boolean;
   setShowAddPlayerSheet: (open: boolean) => void;
   addPlayerId: string;
@@ -62,7 +80,7 @@ function PlayerSheetsContainer({
   setIsSubmittingEdit: (b: boolean) => void;
   editError: string | undefined;
   setEditError: (s: string | undefined) => void;
-  editActions: ReturnType<typeof usePlayerEditActions>;
+  editActions: PlayerEditActions;
 }) {
   return (
     <PlayerSheets
@@ -75,7 +93,7 @@ function PlayerSheetsContainer({
         setAddPlayerId('');
         setShowAddPlayerSheet(false);
       }}
-      teamPlayerIds={teamPlayerIds}
+      existingPlayerIds={existingPlayerIds}
       showEditPlayerSheet={showEditPlayerSheet}
       setShowEditPlayerSheet={setShowEditPlayerSheet}
       editPlayerIdInput={editPlayerIdInput}
@@ -102,38 +120,30 @@ function PlayerSheetsContainer({
   );
 }
 
-function PlayerStatsPageInner(): React.ReactElement {
-  const { players, error, addPlayer, refreshPlayer } = usePlayerDataHook();
-  const appData = useAppData();
-  const selectedTeamId = appData.state.selectedTeamId;
-  if (!selectedTeamId) {
-    throw new Error('No selected team ID');
-  }
-  const getSelectedTeam = useCallback(() => {
-    const team = appData.getTeam(selectedTeamId);
-    if (!team) {
-      throw new Error('No selected team found');
-    }
-    return team;
-  }, [appData, selectedTeamId]);
-  const { selectedPlayer, selectedPlayerId, selectPlayer } = usePlayerSelectionHook();
-  const { viewMode, setViewMode, playerDetailsViewMode, setPlayerDetailsViewMode } = usePlayerViewModesHook();
-  const preferredSite: PreferredExternalSite = useConfigContext().config.preferredExternalSite;
-  const matchesArray = useMemo(() => Array.from(appData.matches.values()), [appData.matches]);
-
-  // Team-scoped player filtering
-  const teamPlayerIds = useTeamPlayerIds();
-  const hasActiveTeam = Boolean(selectedTeamId);
-  const teamPlayersOnly = useFilteredTeamPlayers(players, teamPlayerIds, hasActiveTeam);
-
-  const sortedPlayers = useSortedPlayersHook(teamPlayersOnly);
-  const { hiddenPlayers, setShowHiddenModal, visiblePlayers } = useHiddenPlayersHook(sortedPlayers);
-  const manualPlayerIds = useMemo(() => {
-    const selectedTeam = getSelectedTeam();
-    return new Set<number>(selectedTeam.manualPlayerIds);
-  }, [getSelectedTeam]);
-
-  const resizableLayoutRef = useRef<ResizablePlayerLayoutRef | null>(null);
+export function PlayerStatsPage({
+  resizableLayoutRef,
+  players,
+  filteredPlayers,
+  visiblePlayers,
+  hiddenPlayers,
+  onHidePlayer,
+  onRefreshPlayer,
+  viewMode,
+  setViewMode,
+  selectedPlayerId,
+  selectPlayer,
+  selectedPlayer,
+  playerDetailsViewMode,
+  setPlayerDetailsViewMode,
+  setShowHiddenModal,
+  manualPlayerIds,
+  heroes,
+  preferredSite,
+  playerTeamOverview,
+  editActions,
+  error,
+}: PlayerStatsPageProps): React.ReactElement {
+  const existingPlayerIds = useMemo(() => new Set(players.map((player) => player.accountId)), [players]);
   const [showAddPlayerSheet, setShowAddPlayerSheet] = useState(false);
   const [showEditPlayerSheet, setShowEditPlayerSheet] = useState<{ open: boolean; playerId: number | null }>({
     open: false,
@@ -144,26 +154,13 @@ function PlayerStatsPageInner(): React.ReactElement {
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [editError, setEditError] = useState<string | undefined>();
 
-  const waitForPlayerReady = useWaitForPlayerReadySource(players);
-  const { addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamPlayerOperations();
-
-  const editActions = usePlayerEditActions({
-    addPlayer,
-    addPlayerToTeam: selectedTeamId ? addPlayerToTeam : undefined,
-    removeManualPlayer,
-    editManualPlayer,
-    selectPlayer,
-    resizableLayoutRef,
-    waitForPlayerReady,
-  });
-
-  const listActions = usePlayerListActions({ refreshPlayer, resizableLayoutRef, setShowAddPlayerSheet });
+  const listActions = usePlayerListActions({ refreshPlayer: onRefreshPlayer, resizableLayoutRef, setShowAddPlayerSheet });
 
   const contentProps = {
     resizableLayoutRef,
-    players: teamPlayersOnly,
+    players,
     visiblePlayers,
-    filteredPlayers: sortedPlayers,
+    filteredPlayers,
     onRefreshPlayer: listActions.handleRefreshPlayer,
     viewMode,
     setViewMode,
@@ -177,12 +174,16 @@ function PlayerStatsPageInner(): React.ReactElement {
     handleScrollToPlayer: listActions.handleScrollToPlayer,
     setShowAddPlayerSheet,
     manualPlayerIds,
-    handleEditManualPlayer: (playerId: number) => setShowEditPlayerSheet({ open: true, playerId }),
+    handleEditManualPlayer: (playerId: number) => {
+      setEditPlayerIdInput(String(playerId));
+      setEditError(undefined);
+      setShowEditPlayerSheet({ open: true, playerId });
+    },
     handleRemoveManualPlayer: editActions.handleRemoveManualPlayer,
-    heroes: appData.heroes,
+    handleHidePlayer: onHidePlayer,
+    heroes,
     preferredSite,
-    matchesArray,
-    selectedTeam: getSelectedTeam(),
+    playerTeamOverview,
   } as const;
 
   const renderContent = () => {
@@ -194,7 +195,7 @@ function PlayerStatsPageInner(): React.ReactElement {
     <ErrorBoundary>
       <Suspense fallback={<LoadingSkeleton type="text" lines={6} />}>{renderContent()}</Suspense>
       <PlayerSheetsContainer
-        teamPlayerIds={teamPlayerIds}
+        existingPlayerIds={existingPlayerIds}
         showAddPlayerSheet={showAddPlayerSheet}
         setShowAddPlayerSheet={setShowAddPlayerSheet}
         addPlayerId={addPlayerId}
@@ -211,10 +212,6 @@ function PlayerStatsPageInner(): React.ReactElement {
       />
     </ErrorBoundary>
   );
-}
-
-export function PlayerStatsPage(): React.ReactElement {
-  return <PlayerStatsPageInner />;
 }
 
 function PlayerStatsContent({
@@ -237,10 +234,10 @@ function PlayerStatsContent({
   manualPlayerIds,
   handleEditManualPlayer,
   handleRemoveManualPlayer,
+  handleHidePlayer,
   heroes,
   preferredSite,
-  matchesArray,
-  selectedTeam,
+  playerTeamOverview,
 }: {
   resizableLayoutRef: React.RefObject<ResizablePlayerLayoutRef | null>;
   players: Player[];
@@ -252,19 +249,19 @@ function PlayerStatsContent({
   selectedPlayerId: number | null;
   selectPlayer: (id: number) => void;
   hiddenPlayers: Player[];
-  setShowHiddenModal: (b: boolean) => void;
+  setShowHiddenModal: React.Dispatch<React.SetStateAction<boolean>>;
   selectedPlayer: Player | null;
   playerDetailsViewMode: PlayerDetailsPanelMode;
   setPlayerDetailsViewMode: (m: PlayerDetailsPanelMode) => void;
   handleScrollToPlayer: (id: number) => void;
-  setShowAddPlayerSheet: (b: boolean) => void;
+  setShowAddPlayerSheet: React.Dispatch<React.SetStateAction<boolean>>;
   manualPlayerIds: Set<number>;
   handleEditManualPlayer: (playerId: number) => void;
   handleRemoveManualPlayer: (playerId: number) => void;
+  handleHidePlayer: (playerId: number) => void;
   heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
-  matchesArray: Match[];
-  selectedTeam: Team;
+  playerTeamOverview: TeamPlayerOverview | null;
 }) {
   return (
     <ResizablePlayerLayout
@@ -272,9 +269,7 @@ function PlayerStatsContent({
       players={players}
       visiblePlayers={visiblePlayers}
       filteredPlayers={filteredPlayers}
-      onHidePlayer={() => {
-        /* not implemented yet */
-      }}
+      onHidePlayer={handleHidePlayer}
       onRefreshPlayer={onRefreshPlayer}
       viewMode={viewMode}
       setViewMode={setViewMode}
@@ -293,8 +288,7 @@ function PlayerStatsContent({
       onRemovePlayer={handleRemoveManualPlayer}
       heroes={heroes}
       preferredSite={preferredSite}
-      matchesArray={matchesArray}
-      selectedTeam={selectedTeam}
+      playerTeamOverview={playerTeamOverview}
     />
   );
 }
@@ -304,7 +298,7 @@ function PlayerSheets({
   addPlayerId,
   setAddPlayerId,
   onSubmitAdd,
-  teamPlayerIds,
+  existingPlayerIds,
   showEditPlayerSheet,
   setShowEditPlayerSheet,
   editPlayerIdInput,
@@ -320,7 +314,7 @@ function PlayerSheets({
   addPlayerId: string;
   setAddPlayerId: (val: string) => void;
   onSubmitAdd: () => Promise<void>;
-  teamPlayerIds: Set<number>;
+  existingPlayerIds: Set<number>;
   showEditPlayerSheet: { open: boolean; playerId: number | null };
   setShowEditPlayerSheet: (s: { open: boolean; playerId: number | null }) => void;
   editPlayerIdInput: string;
@@ -352,7 +346,7 @@ function PlayerSheets({
         isDuplicate={(() => {
           const idNum = parseInt(addPlayerId, 10);
           if (!Number.isFinite(idNum)) return false;
-          return teamPlayerIds.has(idNum);
+          return existingPlayerIds.has(idNum);
         })()}
         isValid={addPlayerId.trim().length > 0 && validatePlayerId(addPlayerId).isValid}
       />
@@ -375,7 +369,7 @@ function PlayerSheets({
           const currentId = showEditPlayerSheet.playerId ?? 0;
           if (!Number.isFinite(nextId)) return false;
           if (nextId === currentId) return false;
-          return teamPlayerIds.has(nextId);
+          return existingPlayerIds.has(nextId);
         })()}
         isValid={editPlayerIdInput.trim().length > 0 && validatePlayerId(editPlayerIdInput).isValid}
       />

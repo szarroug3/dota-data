@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
 import { MatchDetailsPanelEvents } from '@/frontend/matches/components/details/MatchDetailsPanelEvents';
 import { MatchDetailsPanelHeader } from '@/frontend/matches/components/details/MatchDetailsPanelHeader';
@@ -17,8 +17,7 @@ interface MatchDetailsPanelProps {
   viewMode: MatchDetailsPanelMode;
   onViewModeChange: (mode: MatchDetailsPanelMode) => void;
   allMatches: Match[];
-  teamMatches: Map<number, TeamMatchMetadata>;
-  hiddenMatchIds: Set<number>;
+  selectedTeam: Team;
 }
 
 export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
@@ -27,8 +26,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   viewMode,
   onViewModeChange,
   allMatches,
-  teamMatches,
-  hiddenMatchIds,
+  selectedTeam,
 }) => {
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
   return (
@@ -45,8 +43,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
               filter={draftFilter}
               onFilterChange={setDraftFilter}
               allMatches={allMatches}
-              teamMatches={teamMatches}
-              hiddenMatchIds={hiddenMatchIds}
+              selectedTeam={selectedTeam}
             />
           </div>
         )}
@@ -56,8 +53,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
               match={match}
               teamMatch={teamMatch}
               allMatches={allMatches}
-              teamMatches={teamMatches}
-              hiddenMatchIds={hiddenMatchIds}
+              selectedTeam={selectedTeam}
             />
           </div>
         )}

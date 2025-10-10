@@ -1,5 +1,0 @@
----
-description: Security Best Practices
-alwaysApply: true
----
-- Never store sensitive information in plaintext.

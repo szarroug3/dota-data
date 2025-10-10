@@ -25,7 +25,8 @@
     "test:e2e:install": "playwright install",
     "test:e2e:report": "playwright show-report",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "type-check:ci": "tsc --noEmit --project . --skipLibCheck true"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

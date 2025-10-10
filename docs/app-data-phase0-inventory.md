@@ -26,14 +26,15 @@ This document captures the present-day behaviour before we begin the refactor. I
 
 ## 3. Calculations & Derived Data
 
-- **Centralised calculations:**
+- **Centralised calculations (current):**
   - `app-data-player-metadata-ops`: aggregates player stats post-fetch.
   - `app-data-match-participation-ops`: determines match sides/results, high-performing heroes.
+  - `app-data-derivations`: now owns player display lists, hidden player sets, match filters, hero summary aggregates, team player overviews, hidden match sets, and team performance summaries exposed via AppData selectors.
 - **In-component / hook calculations (targets for refactor):**
   - `usePlayerStatsPage.ts`: sorts players, filters by team, manages hidden players, builds placeholder data.
   - `players` stateless components: still apply filtering/hiding logic passed from hook.
   - `teams` components may compute view models locally (needs deeper audit in later phases).
-  - `MatchHistory` page: uses hooks to compute grouped views (to confirm in later phases).
+  - `MatchHistory` page: remaining per-view state (e.g., hidden match bookkeeping, hero summary toggles) still local.
 
 ## 4. Fetch Order (Current Behaviour)
 
@@ -63,11 +64,13 @@ Observed gaps vs desired order:
 
 - Unit tests exist for storage manager sanitisation.
 - Component tests around Match History view modes and localStorage integration.
-- Gaps:
-- No tests covering player list hydration/refresh.
-- No integration test ensuring fetch order or persistence after refresh.
-- Added baseline Jest test: `AppDataHydration.test.ts` ensures `loadFromStorage` still hydrates teams, matches, and players.
-- Added hook-level coverage: `usePlayerData.test.tsx` verifies player placeholders derived from stored metadata.
+- Gap coverage added during Phase 0:
+  - `AppDataHydration.test.ts` locks in storage hydration behaviour and catch-up flows.
+  - `usePlayerData.test.tsx` verifies placeholder reconstruction in player lists.
+  - `PlayerStatsPage.test.tsx` mocks the revised AppData shape to assert UI behaviour.
+  - `MatchHistoryPage.test.tsx` uses canonical mock team/match maps to cover view-mode persistence.
+  - Layout and utility tests refreshed (`AppLoader`, request utils) to align with new providers and env getters.
+- Result: `pnpm test` now passes, giving a clean baseline for subsequent phases.
 
 ## 7. Known Technical Debt
 
@@ -86,11 +89,14 @@ Observed gaps vs desired order:
   - Historical match processing helpers (`draft.ts`, `events.ts`, `roles.ts`) construct objects that fall outside current type definitions (e.g., missing draft `order`, `"neutral"` side strings, `"Support"`/`"Roaming"` roles).
   - Older test fixtures (e.g., dashboard stats, OpenDota match parsing) omit required fields such as `radiant_score`/`dire_score`.
   - Hidden matches modal utilities instantiate plain objects where `Map` instances are expected.
-- We fixed the missing `rank_tier` persistence for manual players and reintroduced a `sortMatchesByDateDesc` helper so player hydration continues to work; the remaining issues are earmarked for the broader refactor.
+- Upkeep performed in Phase 0: restored manual player rank persistence, reintroduced `sortMatchesByDateDesc`, and modernised failing tests; the remaining issues are earmarked for later phases.
 
 ---
 
-### Next Steps (Phase 0 continued)
-1. Stabilise automated tests around hydration and refresh flows.
-2. Tighten lint/type settings (no stray `any`, enforce strict mode).
-3. Use this inventory as the reference when validating phases 1–6.
+### Phase 0 Status
+- ✅ Inventory captured
+- ✅ Critical tests stabilised (`pnpm test` green)
+- ✅ Lint clean for touched files
+- ❗ TypeScript strict failures remain (tracked above) and will be addressed in later phases alongside the architectural changes.
+
+Phase 1 can now begin using this baseline.

@@ -3,13 +3,13 @@
  * Converts internal Team data to UI display format
  */
 
-import type { Team, TeamDisplayData } from './app-data-types';
+import type { TeamDisplayData, Team, TeamPerformanceSummary } from './app-data-types';
 
 /**
  * Format a single team for UI display
  * Returns a minimal structure - will be extended with computed data in future steps
  */
-export function formatTeamForDisplay(team: Team): TeamDisplayData {
+export function formatTeamForDisplay(team: Team, performance?: TeamPerformanceSummary): TeamDisplayData {
   // Build user-friendly error message from team-specific errors
   let errorMessage: string | undefined;
   if (team.teamError && team.leagueError) {
@@ -20,22 +20,35 @@ export function formatTeamForDisplay(team: Team): TeamDisplayData {
     errorMessage = 'Failed to fetch league';
   }
 
+  const manualPlayerIds = Array.from(team.players.entries())
+    .filter(([, playerData]) => playerData.isManual)
+    .map(([playerId]) => playerId);
+
+  const manualMatches: Record<number, { side: 'radiant' | 'dire' }> = {};
+  team.matches.forEach((match, matchId) => {
+    if (match.isManual) {
+      manualMatches[matchId] = { side: match.side };
+    }
+  });
+
   return {
     team: { id: team.teamId, name: team.name },
     league: { id: team.leagueId, name: team.leagueName },
     timeAdded: new Date(team.timeAdded).toISOString(),
     matches: {},
-    manualMatches: {},
-    manualPlayers: Array.from(team.players.entries())
-      .filter(([, playerData]) => playerData.isManual)
-      .map(([playerId]) => playerId),
+    manualMatches,
+    manualPlayers: manualPlayerIds,
     players: [],
-    performance: {
+    performance: performance ?? {
       totalMatches: 0,
       totalWins: 0,
       totalLosses: 0,
       overallWinRate: 0,
       erroredMatches: 0,
+      totalDurationSeconds: 0,
+      averageMatchDurationSeconds: 0,
+      manualMatchCount: 0,
+      manualPlayerCount: manualPlayerIds.length,
     },
     isLoading: team.isLoading,
     error: errorMessage,
@@ -46,6 +59,6 @@ export function formatTeamForDisplay(team: Team): TeamDisplayData {
 /**
  * Format multiple teams for UI display
  */
-export function formatTeamsForDisplay(teams: Team[]): TeamDisplayData[] {
-  return teams.map((team) => formatTeamForDisplay(team));
+export function formatTeamsForDisplay(teams: Team[], performances?: Map<string, TeamPerformanceSummary>): TeamDisplayData[] {
+  return teams.map((team) => formatTeamForDisplay(team, performances?.get(team.id)));
 }

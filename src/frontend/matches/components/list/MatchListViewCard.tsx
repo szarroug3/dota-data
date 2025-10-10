@@ -124,6 +124,7 @@ function useManualMatchHandlers(
       form.setShowEditSheet(false);
       form.setIsSubmitting(true);
       form.setError(undefined);
+
       try {
         // Validate that side is selected
         if (form.teamSide !== 'radiant' && form.teamSide !== 'dire') {
@@ -131,14 +132,21 @@ function useManualMatchHandlers(
           return;
         }
 
+        // Scroll immediately when the match will move in the list
+        onScrollToMatch?.(newMatchId);
+        onSelectMatch?.(newMatchId);
+
         // Atomic swap to prevent flickering
         // Pass the user-selected side from the form
         await appData.editManualMatchToTeam(match.id, newMatchId, selectedTeamId, form.teamSide);
-        onScrollToMatch?.(newMatchId);
-        onSelectMatch?.(newMatchId);
       } catch (err) {
-        form.setError(err instanceof Error ? err.message : 'Failed to edit match');
-        console.error('Failed to edit match:', err);
+        // Only handle validation errors here - match loading errors are handled by AppData
+        if (err instanceof Error && err.message.includes('team side')) {
+          form.setError(err.message);
+        } else {
+          // For other errors, just log them - the match will show the error
+          console.error('Failed to edit match:', err);
+        }
       } finally {
         form.setIsSubmitting(false);
       }
@@ -189,9 +197,7 @@ function useMatchCardData(
     const heroesMap = appData.heroes;
 
     if (side && match.players?.[side]?.length) {
-      return match.players[side]
-        .map((player) => player.hero)
-        .filter((hero): hero is Hero => Boolean(hero));
+      return match.players[side].map((player) => player.hero).filter((hero): hero is Hero => Boolean(hero));
     }
 
     return (teamMatch.heroes || []).map((storedHero) => resolveStoredHero(storedHero, heroesMap));
@@ -231,13 +237,14 @@ function useEditManualMatchForm(matchId: number, teamMatch: StoredMatchData, sel
   const [validationError, setValidationError] = useState<string | undefined>();
   const [duplicateError, setDuplicateError] = useState<string | undefined>();
 
-  // keep in sync when prop changes
+  // Initialize values when matchId changes (but don't reset user input)
   useEffect(() => {
     setMatchIdString(matchId.toString());
     const matchData = selectedTeam.matches.get(matchId);
     const side = matchData?.side || 'radiant';
     setTeamSide(side);
-  }, [matchId, selectedTeam]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId]);
 
   useEffect(() => {
     const v = validateMatchId(matchIdString);

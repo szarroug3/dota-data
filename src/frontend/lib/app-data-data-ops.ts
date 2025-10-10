@@ -5,7 +5,8 @@
  * Extracted to reduce app-data.ts file size.
  */
 
-import type { Match, Player, Team, TeamDisplayData } from './app-data-types';
+import { computeTeamPerformanceSummary } from './app-data-derivations';
+import type { Match, Player, TeamDisplayData, Team } from './app-data-types';
 import { formatTeamForDisplay, formatTeamsForDisplay } from './team-display-formatter';
 
 /**
@@ -119,14 +120,20 @@ export function getTeams(appData: AppDataDataOpsContext): Team[] {
 export function getTeamDataForDisplay(appData: AppDataDataOpsContext, teamId: string): TeamDisplayData | undefined {
   const team = appData._teams.get(teamId);
   if (!team) return undefined;
-  return formatTeamForDisplay(team);
+  const performance = computeTeamPerformanceSummary({ team, matchesMap: appData._matches });
+  return formatTeamForDisplay(team, performance);
 }
 
 /**
  * Get all teams formatted for UI display
  */
 export function getAllTeamsForDisplay(appData: AppDataDataOpsContext): TeamDisplayData[] {
-  return formatTeamsForDisplay(getTeams(appData));
+  const performances = new Map<string, ReturnType<typeof computeTeamPerformanceSummary>>();
+  appData._teams.forEach((team, teamId) => {
+    performances.set(teamId, computeTeamPerformanceSummary({ team, matchesMap: appData._matches }));
+  });
+
+  return formatTeamsForDisplay(getTeams(appData), performances);
 }
 
 // ============================================================================
@@ -197,6 +204,78 @@ export function getPlayer(appData: AppDataDataOpsContext, accountId: number): Pl
  */
 export function getPlayers(appData: AppDataDataOpsContext): Player[] {
   return Array.from(appData._players.values());
+}
+
+/**
+ * Update an existing player with partial changes
+ */
+export function updatePlayer(
+  appData: AppDataDataOpsContext,
+  accountId: number,
+  updates: Partial<Player>,
+  options: { skipSave?: boolean } = {},
+): void {
+  const existing = appData._players.get(accountId);
+  if (!existing) {
+    return;
+  }
+
+  const updated: Player = {
+    ...existing,
+    ...updates,
+    profile: { ...existing.profile, ...(updates.profile ?? {}) },
+    overallStats: { ...existing.overallStats, ...(updates.overallStats ?? {}) },
+    heroStats: updates.heroStats ?? existing.heroStats,
+    recentMatchIds: updates.recentMatchIds ?? existing.recentMatchIds,
+    updatedAt: Date.now(),
+  };
+
+  appData._players.set(accountId, updated);
+  appData.updatePlayersRef();
+  if (!options.skipSave) {
+    appData.saveToStorage();
+  }
+}
+
+export function updateMatch(
+  appData: AppDataDataOpsContext,
+  matchId: number,
+  updates: Partial<Match>,
+  options: { skipSave?: boolean } = {},
+): void {
+  const existing = appData._matches.get(matchId);
+  if (!existing) {
+    return;
+  }
+
+  // For simple updates like isLoading and error, we can use a simpler merge
+  const updated: Match = {
+    ...existing,
+    ...updates,
+  };
+
+  // Only merge nested objects if they're being updated
+  if (updates.radiant) {
+    updated.radiant = { ...existing.radiant, ...updates.radiant };
+  }
+  if (updates.dire) {
+    updated.dire = { ...existing.dire, ...updates.dire };
+  }
+  if (updates.draft) {
+    updated.draft = { ...existing.draft, ...updates.draft };
+  }
+  if (updates.players) {
+    updated.players = { ...existing.players, ...updates.players };
+  }
+  if (updates.statistics) {
+    updated.statistics = { ...existing.statistics, ...updates.statistics };
+  }
+
+  appData._matches.set(matchId, updated);
+  appData.updateMatchesRef();
+  if (!options.skipSave) {
+    appData.saveToStorage();
+  }
 }
 
 // ============================================================================

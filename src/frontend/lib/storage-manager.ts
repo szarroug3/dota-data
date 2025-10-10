@@ -331,7 +331,7 @@ function getTeamMatchesConsolidatedInfo(team: Team): Record<string, StoredMatchD
 /**
  * Get consolidated player information for storage (includes all players with isManual/isHidden flags)
  */
-function getTeamPlayersConsolidatedInfo(team: Team): Record<string, StoredPlayerData> {
+function getTeamPlayersConsolidInfo(team: Team): Record<string, StoredPlayerData> {
   const allPlayers: Record<string, StoredPlayerData> = {};
 
   team.players.forEach((playerData, playerId) => {
@@ -585,7 +585,7 @@ export function saveTeamsToStorage(teams: Map<string, Team>, selectedTeamId: str
         },
         timeAdded: new Date(team.timeAdded).toISOString(),
         matches: getTeamMatchesConsolidatedInfo(team), // Consolidated match info for display
-        players: getTeamPlayersConsolidatedInfo(team), // Consolidated player info for display
+        players: getTeamPlayersConsolidInfo(team), // Consolidated player info for display
       };
     });
 

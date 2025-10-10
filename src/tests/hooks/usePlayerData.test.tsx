@@ -75,6 +75,55 @@ describe('usePlayerData', () => {
       getPlayer: () => undefined,
       loadPlayer: jest.fn(),
       refreshPlayer: jest.fn(),
+      getTeamPlayersForDisplay: () => [
+        {
+          accountId: stored.accountId,
+          profile: {
+            name: stored.name,
+            personaname: stored.name,
+            avatar: stored.avatar,
+            avatarfull: stored.avatar,
+            rank_tier: stored.rank_tier,
+            leaderboard_rank: stored.leaderboard_rank,
+          },
+          heroStats: [],
+          overallStats: {
+            wins: 0,
+            losses: 0,
+            totalGames: 0,
+            winRate: 0,
+          },
+          recentMatchIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ],
+      getTeamPlayersSortedForDisplay: () => [
+        {
+          accountId: stored.accountId,
+          profile: {
+            name: stored.name,
+            personaname: stored.name,
+            avatar: stored.avatar,
+            avatarfull: stored.avatar,
+            rank_tier: stored.rank_tier,
+            leaderboard_rank: stored.leaderboard_rank,
+          },
+          heroStats: [],
+          overallStats: {
+            wins: 0,
+            losses: 0,
+            totalGames: 0,
+            winRate: 0,
+          },
+          recentMatchIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ],
+      getTeamHiddenPlayersForDisplay: () => [],
+      hidePlayerOnTeam: jest.fn(),
+      unhidePlayerOnTeam: jest.fn(),
     });
   });
 

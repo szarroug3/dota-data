@@ -6,7 +6,100 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { ConfigProvider } from '@/frontend/contexts/config-context';
-import { MatchHistoryPage } from '@/frontend/matches/components/containers/MatchHistoryPage';
+import { MatchHistoryPageContainer } from '@/frontend/matches/components/containers/MatchHistoryPageContainer';
+
+const mockTeam = {
+  id: 'team1',
+  teamId: 12345,
+  leagueId: 67890,
+  name: 'Test Team',
+  leagueName: 'Test League',
+  matches: new Map<number, any>(),
+  players: new Map(),
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  timeAdded: Date.now(),
+  isLoading: false,
+  isGlobal: false,
+  highPerformingHeroes: new Set<string>(),
+  manualPlayerIds: [] as number[],
+  performance: {
+    totalMatches: 0,
+    totalWins: 0,
+    totalLosses: 0,
+    overallWinRate: 0,
+    erroredMatches: 0,
+    totalDurationSeconds: 0,
+    averageMatchDurationSeconds: 0,
+    manualMatchCount: 0,
+    manualPlayerCount: 0,
+  },
+};
+
+const mockAppData = {
+  state: {
+    selectedTeamId: mockTeam.id,
+    selectedTeamIdParsed: { teamId: mockTeam.teamId, leagueId: mockTeam.leagueId },
+    selectedMatchId: null as number | null,
+    selectedPlayerId: null as number | null,
+    isLoading: false,
+    error: null,
+  },
+  teams: new Map([[mockTeam.id, mockTeam]]),
+  matches: new Map<number, any>(),
+  players: new Map(),
+  heroes: new Map(),
+  items: new Map(),
+  leagues: new Map(),
+  leagueMatchesCache: new Map([
+    [
+      mockTeam.leagueId,
+      {
+        matches: new Map(),
+        matchIdsByTeam: new Map([[mockTeam.teamId, [] as number[]]]),
+        fetchedAt: Date.now(),
+      },
+    ],
+  ]),
+  getTeam: jest.fn(() => mockTeam),
+  getTeams: jest.fn(() => [mockTeam]),
+  getMatch: jest.fn(() => null),
+  getTeamMatchesMetadata: jest.fn(() => new Map()),
+  teamHasMatch: jest.fn(() => false),
+  getTeamHiddenPlayersForDisplay: jest.fn(() => []),
+  hidePlayerOnTeam: jest.fn(),
+  unhidePlayerOnTeam: jest.fn(),
+  getTeamMatchesForDisplay: jest.fn(() => []),
+  getTeamHiddenMatchesForDisplay: jest.fn(() => []),
+  getTeamMatchFilters: jest.fn(() => ({
+    filteredMatches: [],
+    filterStats: {
+      totalMatches: 0,
+      filteredMatches: 0,
+      filterBreakdown: {
+        dateRange: 0,
+        result: 0,
+        teamSide: 0,
+        pickOrder: 0,
+        heroesPlayed: 0,
+        opponent: 0,
+        highPerformersOnly: 0,
+      },
+    },
+  })),
+  getTeamHeroSummaryForMatches: jest.fn(() => ({
+    matchesCount: 0,
+    activeTeamPicks: [],
+    opponentTeamPicks: [],
+    activeTeamBans: [],
+    opponentTeamBans: [],
+  })),
+  hideMatchOnTeam: jest.fn(),
+  unhideMatchOnTeam: jest.fn(),
+  refreshMatch: jest.fn(async () => undefined),
+  addManualMatchToTeam: jest.fn(async () => undefined),
+  removeManualMatchFromTeam: jest.fn(async () => undefined),
+};
 
 // Remove data coordinator dependency (no longer used)
 const DataCoordinatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
@@ -62,7 +155,7 @@ jest.mock('@/frontend/matches/components/stateless/HiddenMatchesModal', () => ({
 }));
 
 // Mock the ResizableMatchLayout component to avoid the react-resizable-panels issue
-jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () => ({
+jest.mock('@/frontend/matches/components/stateless/ResizableMatchLayout', () => ({
   ResizableMatchLayout: ({ viewMode, setViewMode }: { viewMode: string; setViewMode: (mode: string) => void }) => (
     <div data-testid="resizable-match-layout">
       <div data-testid="current-view-mode">{viewMode}</div>
@@ -81,82 +174,7 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
 
 // Mock AppData context instead of old contexts
 jest.mock('@/contexts/app-data-context', () => ({
-  useAppData: () => ({
-    teams: new Map([
-      [
-        'team1',
-        {
-          teamId: 'team1',
-          leagueId: 'league1',
-          name: 'Test Team',
-          leagueName: 'Test League',
-          isLoading: false,
-          performance: {
-            totalMatches: 0,
-            totalWins: 0,
-            totalLosses: 0,
-            overallWinRate: 0,
-            currentWinStreak: 0,
-            currentLoseStreak: 0,
-            averageMatchDuration: 0,
-            averageKills: 0,
-            averageDeaths: 0,
-            averageGold: 0,
-            averageExperience: 0,
-          },
-        },
-      ],
-    ]),
-    matches: new Map(),
-    players: new Map(),
-    heroes: new Map([
-      [
-        1,
-        {
-          id: 1,
-          name: 'Hero',
-          localizedName: 'Hero',
-          primaryAttribute: 'strength',
-          attackType: 'melee',
-          roles: [],
-          imageUrl: '',
-        },
-      ],
-    ]),
-    items: new Map([
-      [
-        1,
-        {
-          id: 1,
-          name: 'Item',
-          localizedName: 'Item',
-          cost: 0,
-          secretShop: false,
-          sideShop: false,
-          recipe: false,
-          imageUrl: '',
-        },
-      ],
-    ]),
-    leagues: new Map(),
-    selectedTeamId: null,
-    setSelectedTeamId: jest.fn(),
-    addTeam: jest.fn(),
-    updateTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    addMatch: jest.fn(),
-    updateMatch: jest.fn(),
-    removeMatch: jest.fn(),
-    addPlayer: jest.fn(),
-    updatePlayer: jest.fn(),
-    removePlayer: jest.fn(),
-    loadTeamData: jest.fn(),
-    loadMatchData: jest.fn(),
-    loadPlayerData: jest.fn(),
-    loadHeroesData: jest.fn(),
-    loadItemsData: jest.fn(),
-    loadLeaguesData: jest.fn(),
-  }),
+  useAppData: () => mockAppData,
 }));
 
 // Mock useViewMode to simulate localStorage preference and allow state updates
@@ -197,8 +215,28 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('MatchHistoryPage', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
     localStorage.clear();
+    jest.clearAllMocks();
+    mockTeam.matches.clear();
+    mockAppData.matches.clear();
+    mockAppData.players.clear();
+    mockAppData.heroes.clear();
+    mockAppData.items.clear();
+    mockAppData.leagues.clear();
+    mockAppData.teams.clear();
+    mockAppData.teams.set(mockTeam.id, mockTeam);
+    mockAppData.leagueMatchesCache.clear();
+    mockAppData.leagueMatchesCache.set(mockTeam.leagueId, {
+      matches: new Map(),
+      matchIdsByTeam: new Map([[mockTeam.teamId, [] as number[]]]),
+      fetchedAt: Date.now(),
+    });
+    mockAppData.state.selectedTeamId = mockTeam.id;
+    mockAppData.getTeam.mockReturnValue(mockTeam);
+    mockAppData.getTeams.mockReturnValue([mockTeam]);
+    mockAppData.getMatch.mockReturnValue(null);
+    mockAppData.getTeamMatchesMetadata.mockReturnValue(new Map());
+    mockAppData.teamHasMatch.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -207,14 +245,14 @@ describe('MatchHistoryPage', () => {
   });
 
   it('should initialize with default view mode from config', () => {
-    renderWithProviders(<MatchHistoryPage />);
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Should show the default view mode (list)
     expect(screen.getByTestId('current-view-mode')).toHaveTextContent('list');
   });
 
   it('should persist view mode changes to localStorage', async () => {
-    renderWithProviders(<MatchHistoryPage />);
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Change to card view
     fireEvent.click(screen.getByTestId('set-card-view'));
@@ -245,14 +283,14 @@ describe('MatchHistoryPage', () => {
     };
     localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(savedPreferences));
 
-    renderWithProviders(<MatchHistoryPage />);
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Should load the saved view mode
     expect(screen.getByTestId('current-view-mode')).toHaveTextContent('grid');
   });
 
   it('should handle all view mode changes', async () => {
-    renderWithProviders(<MatchHistoryPage />);
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Test list view
     fireEvent.click(screen.getByTestId('set-list-view'));

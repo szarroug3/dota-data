@@ -23,30 +23,10 @@ const mockTeamData: TeamDisplayData = {
     totalLosses: 2,
     overallWinRate: 60,
     erroredMatches: 0,
-    heroUsage: {
-      picks: [],
-      bans: [],
-      picksAgainst: [],
-      bansAgainst: [],
-      picksByPlayer: {},
-    },
-    draftStats: {
-      firstPickCount: 0,
-      secondPickCount: 0,
-      firstPickWinRate: 0,
-      secondPickWinRate: 0,
-      uniqueHeroesPicked: 0,
-      uniqueHeroesBanned: 0,
-      mostPickedHero: '',
-      mostBannedHero: '',
-    },
-    currentWinStreak: 0,
-    currentLoseStreak: 0,
-    averageMatchDuration: 1800,
-    averageKills: 0,
-    averageDeaths: 0,
-    averageGold: 0,
-    averageExperience: 0,
+    totalDurationSeconds: 9000,
+    averageMatchDurationSeconds: 1800,
+    manualMatchCount: 1,
+    manualPlayerCount: 0,
   },
 };
 
@@ -337,7 +317,7 @@ describe('TeamCard', () => {
       />,
     );
 
-    expect(screen.getByText('Loading 12345...')).toBeInTheDocument();
+    expect(screen.getByText('Team 12345')).toBeInTheDocument();
   });
 
   it('should handle team with missing league name', () => {
@@ -360,7 +340,7 @@ describe('TeamCard', () => {
       />,
     );
 
-    expect(screen.getByText('Loading 67890...')).toBeInTheDocument();
+    expect(screen.getByText('League 67890')).toBeInTheDocument();
   });
 
   it('should have proper accessibility attributes', () => {

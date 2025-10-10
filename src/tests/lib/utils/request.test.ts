@@ -9,6 +9,9 @@ jest.mock('@/lib/config/environment', () => ({
     USE_MOCK_STEAM: jest.fn(() => false),
     USE_MOCK_OPENDOTA: jest.fn(() => false),
     WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false),
+    MOCK_API_DELAY_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_OPENDOTA_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_STEAM_MS: jest.fn(() => 0),
   },
 }));
 

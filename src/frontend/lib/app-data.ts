@@ -7,41 +7,40 @@
 
 import type React from 'react';
 
-
+import * as ComputedOps from './app-data-computed-ops';
+import type { AppDataComputedOpsContext } from './app-data-computed-ops';
+import * as CrudOps from './app-data-crud-ops';
 import * as DataOps from './app-data-data-ops';
+import * as HeroPerformanceOps from './app-data-hero-performance-ops';
 import * as InitializationOps from './app-data-initialization-ops';
+import * as LoadingOps from './app-data-loading-ops';
 import * as MatchOps from './app-data-match-ops';
 import { updateTeamMatchParticipation as updateTeamMatchParticipationOp } from './app-data-match-participation-ops';
 import { updateTeamPlayersMetadata as updateTeamPlayersMetadataOp } from './app-data-player-metadata-ops';
 import * as PlayerOps from './app-data-player-ops';
 import * as StatisticsOps from './app-data-statistics-ops';
+import type { TeamPlayerOverview } from './app-data-statistics-ops';
 import * as StorageOps from './app-data-storage-ops';
 import type { LoadedStorageResult } from './app-data-storage-ops';
 import {
   GLOBAL_TEAM_KEY,
   type AppDataState,
   type Hero,
-  type Item,
-  type League,
-  type LeagueMatchesCache,
-  type Match,
-  type Player,
-  type Team,
-  type TeamDisplayData,
+  Item,
+  Match,
+  MatchFilters,
+  MatchFiltersResult,
+  League,
+  LeagueMatchesCache,
+  Player,
+  Team,
+  TeamDisplayData,
+  TeamHeroSummary,
+  TeamMatchParticipation,
 } from './app-data-types';
 import * as UIOps from './app-data-ui-ops';
-import { getOrFetchLeagueMatches } from './league-matches-loader';
 import type { PlayerStats, HeroStats, TeamPlayerStats, DateRangeSelection } from './player-statistics-calculator';
 import type { StoredMatchData } from './storage-manager';
-import { fetchTeamData } from './team-loader';
-
-function sortMatchesByDateDesc(matches: Match[]): Match[] {
-  return matches.slice().sort((a, b) => {
-    const aTime = Number.isFinite(Date.parse(a.date)) ? Date.parse(a.date) : 0;
-    const bTime = Number.isFinite(Date.parse(b.date)) ? Date.parse(b.date) : 0;
-    return bTime - aTime;
-  });
-}
 
 // ============================================================================
 // APP DATA CLASS
@@ -56,7 +55,7 @@ function sortMatchesByDateDesc(matches: Match[]): Match[] {
  * - UI state (selectedTeamId, selectedLeagueId, isLoading, error)
  * - Constructor and initialization
  */
-export class AppData {
+export class AppData implements AppDataComputedOpsContext {
   // ============================================================================
   // CORE DATA MAPS
   // ============================================================================
@@ -248,35 +247,129 @@ export class AppData {
    * Add a new team
    */
   addTeam(team: Omit<Team, 'createdAt' | 'updatedAt' | 'matches' | 'players' | 'highPerformingHeroes'>): void {
-    DataOps.addTeam(this, team);
+    CrudOps.addTeam(this, team);
   }
 
   /**
    * Remove a team
    */
   removeTeam(teamId: string): void {
-    DataOps.removeTeam(this, teamId);
+    CrudOps.removeTeam(this, teamId);
   }
 
   /**
    * Update an existing team
    */
   updateTeam(teamId: string, updates: Partial<Omit<Team, 'id' | 'createdAt' | 'updatedAt'>>): void {
-    DataOps.updateTeam(this, teamId, updates);
+    CrudOps.updateTeam(this, teamId, updates);
   }
 
   /**
    * Get a team by ID
    */
   getTeam(teamId: string): Team | undefined {
-    return DataOps.getTeam(this, teamId);
+    return CrudOps.getTeam(this, teamId);
   }
 
   /**
    * Get all teams as an array
    */
   getTeams(): Team[] {
-    return DataOps.getTeams(this);
+    return CrudOps.getTeams(this);
+  }
+
+  getTeamPlayersForDisplay(teamKey: string): Player[] {
+    return CrudOps.getTeamPlayersForDisplay(this, teamKey);
+  }
+
+  getTeamPlayersSortedForDisplay(teamKey: string): Player[] {
+    return CrudOps.getTeamPlayersSortedForDisplay(this, teamKey);
+  }
+
+  getTeamHiddenPlayersForDisplay(teamKey: string): Player[] {
+    return CrudOps.getTeamHiddenPlayersForDisplay(this, teamKey);
+  }
+
+  getTeamHiddenMatchesForDisplay(teamKey: string): Match[] {
+    return CrudOps.getTeamHiddenMatchesForDisplay(this, teamKey);
+  }
+
+  getTeamMatchesForDisplay(teamKey: string): Match[] {
+    return CrudOps.getTeamMatchesForDisplay(this, teamKey);
+  }
+
+  getTeamMatchFilters(teamKey: string, filters: MatchFilters, hiddenMatchIds: Set<number>): MatchFiltersResult {
+    return CrudOps.getTeamMatchFilters(this, teamKey, filters, hiddenMatchIds);
+  }
+
+  getTeamHeroSummaryForMatches(teamKey: string, matches: Match[]): TeamHeroSummary {
+    return CrudOps.getTeamHeroSummaryForMatches(this, teamKey, matches);
+  }
+
+  /**
+   * Compute hero performance statistics for a specific hero
+   *
+   * @param hero - The hero to analyze
+   * @param allMatches - All matches to analyze
+   * @param teamMatches - Team match participation data
+   * @param hiddenMatchIds - Set of hidden match IDs to exclude
+   * @returns Hero performance statistics
+   */
+  computeHeroPerformanceStats(
+    hero: Hero,
+    allMatches: Match[],
+    teamMatches: Map<number, TeamMatchParticipation>,
+    hiddenMatchIds: Set<number>,
+  ): {
+    gamesPlayed: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    isHighPerforming: boolean;
+  } {
+    return HeroPerformanceOps.computeHeroPerformanceStats(hero, allMatches, teamMatches, hiddenMatchIds);
+  }
+
+  /**
+   * Compute hero performance for all heroes in a team's matches
+   *
+   * @param allMatches - All matches to analyze
+   * @param teamMatches - Team match participation data
+   * @param hiddenMatchIds - Set of hidden match IDs to exclude
+   * @returns Map of hero ID to performance stats
+   */
+  computeAllHeroPerformanceStats(
+    allMatches: Match[],
+    teamMatches: Map<number, TeamMatchParticipation>,
+    hiddenMatchIds: Set<number>,
+  ): Map<
+    number,
+    {
+      gamesPlayed: number;
+      wins: number;
+      losses: number;
+      winRate: number;
+      isHighPerforming: boolean;
+    }
+  > {
+    return HeroPerformanceOps.computeAllHeroPerformanceStats(allMatches, teamMatches, hiddenMatchIds);
+  }
+
+  /**
+   * Compute and store hero performance for all matches in a team
+   *
+   * @param teamKey - Team key to compute hero performance for
+   * @param allMatches - All matches for the team
+   * @param teamMatches - Team match participation data
+   * @param hiddenMatchIds - Set of hidden match IDs to exclude
+   */
+  computeAndStoreHeroPerformanceForTeam(
+    teamKey: string,
+    allMatches: Match[],
+    teamMatches: Map<number, TeamMatchParticipation>,
+    hiddenMatchIds: Set<number>,
+  ): void {
+    HeroPerformanceOps.computeAndStoreHeroPerformanceForTeam(this, teamKey, allMatches, teamMatches, hiddenMatchIds);
   }
 
   /**
@@ -284,14 +377,14 @@ export class AppData {
    * Returns a minimal structure - will be extended with computed data in future steps
    */
   getTeamDataForDisplay(teamId: string): TeamDisplayData | undefined {
-    return DataOps.getTeamDataForDisplay(this, teamId);
+    return CrudOps.getTeamDataForDisplay(this, teamId);
   }
 
   /**
    * Get all teams formatted for UI display
    */
   getAllTeamsForDisplay(): TeamDisplayData[] {
-    return DataOps.getAllTeamsForDisplay(this);
+    return CrudOps.getAllTeamsForDisplay(this);
   }
 
   // ============================================================================
@@ -302,28 +395,35 @@ export class AppData {
    * Add a new match
    */
   addMatch(match: Match): void {
-    DataOps.addMatch(this, match);
+    CrudOps.addMatch(this, match);
   }
 
   /**
    * Remove a match
    */
   removeMatch(matchId: number): void {
-    DataOps.removeMatch(this, matchId);
+    CrudOps.removeMatch(this, matchId);
+  }
+
+  /**
+   * Update a match
+   */
+  updateMatch(matchId: number, updates: Partial<Match>, options?: { skipSave?: boolean }): void {
+    CrudOps.updateMatch(this, matchId, updates, options);
   }
 
   /**
    * Get a match by ID
    */
   getMatch(matchId: number): Match | undefined {
-    return DataOps.getMatch(this, matchId);
+    return CrudOps.getMatch(this, matchId);
   }
 
   /**
    * Get all matches as an array
    */
   getMatches(): Match[] {
-    return DataOps.getMatches(this);
+    return CrudOps.getMatches(this);
   }
 
   // ============================================================================
@@ -334,28 +434,35 @@ export class AppData {
    * Add a new player
    */
   addPlayer(player: Player): void {
-    DataOps.addPlayer(this, player);
+    CrudOps.addPlayer(this, player);
   }
 
   /**
    * Remove a player
    */
   removePlayer(accountId: number): void {
-    DataOps.removePlayer(this, accountId);
+    CrudOps.removePlayer(this, accountId);
   }
 
   /**
    * Get a player by account ID
    */
   getPlayer(accountId: number): Player | undefined {
-    return DataOps.getPlayer(this, accountId);
+    return CrudOps.getPlayer(this, accountId);
+  }
+
+  /**
+   * Partially update a player by account ID
+   */
+  updatePlayer(accountId: number, updates: Partial<Player>, options?: { skipSave?: boolean }): void {
+    CrudOps.updatePlayer(this, accountId, updates, options);
   }
 
   /**
    * Get all players as an array
    */
   getPlayers(): Player[] {
-    return DataOps.getPlayers(this);
+    return CrudOps.getPlayers(this);
   }
 
   // ============================================================================
@@ -381,6 +488,25 @@ export class AppData {
    */
   getHiddenMatches(teamId: string): Match[] {
     return DataOps.getHiddenMatches(this, teamId);
+  }
+
+  /**
+   * Get hidden match IDs for a specific team
+   */
+  getTeamHiddenMatchIds(teamKey: string): Set<number> {
+    const team = this.getTeam(teamKey);
+    if (!team) {
+      return new Set();
+    }
+
+    const hiddenMatchIds = new Set<number>();
+    team.matches.forEach((metadata, matchId) => {
+      if (metadata.isHidden) {
+        hiddenMatchIds.add(matchId);
+      }
+    });
+
+    return hiddenMatchIds;
   }
 
   // ============================================================================
@@ -495,21 +621,7 @@ export class AppData {
    * @returns Array of Match objects for the team
    */
   getTeamMatches(teamKey: string): Match[] {
-    const team = this._teams.get(teamKey);
-    if (!team) return [];
-
-    // Combine match IDs from cache and stored metadata
-    const leagueCache = this.leagueMatchesCache.get(team.leagueId);
-    const leagueMatchIds = leagueCache?.matchIdsByTeam.get(team.teamId) || [];
-    const storedMatchIds = Array.from(team.matches.keys());
-    const allMatchIds = new Set([...leagueMatchIds, ...storedMatchIds]);
-
-    // Return matches that exist in our matches Map
-    return sortMatchesByDateDesc(
-      Array.from(allMatchIds)
-        .map((matchId) => this._matches.get(matchId))
-        .filter((match): match is Match => match !== undefined),
-    );
+    return ComputedOps.getTeamMatches(this, teamKey);
   }
 
   /**
@@ -520,9 +632,7 @@ export class AppData {
    * @returns Array of Match objects (filters out undefined)
    */
   getMatchesByIds(matchIds: number[]): Match[] {
-    return sortMatchesByDateDesc(
-      matchIds.map((id) => this._matches.get(id)).filter((match): match is Match => match !== undefined),
-    );
+    return ComputedOps.getMatchesByIds(this, matchIds);
   }
 
   /**
@@ -533,54 +643,7 @@ export class AppData {
    * @returns Set of player IDs for the team
    */
   getTeamPlayerIds(teamKey: string): Set<number> {
-    const team = this._teams.get(teamKey);
-    if (!team) return new Set();
-
-    // Start with ALL stored player IDs (both manual and non-manual)
-    const storedPlayerIds = Array.from(team.players.entries())
-      .filter(([, playerData]) => playerData.accountId > 0)
-      .map(([playerId]) => playerId);
-    const playerIds = new Set<number>(storedPlayerIds);
-
-    // Add player IDs from league matches
-    const leagueCache = this.leagueMatchesCache.get(team.leagueId);
-    const matchIds = leagueCache?.matchIdsByTeam.get(team.teamId) || [];
-
-    matchIds.forEach((matchId) => {
-      const matchInfo = leagueCache?.matches.get(matchId);
-      if (!matchInfo) return;
-
-      // Add players based on which side the team played
-      if (matchInfo.radiantTeamId === team.teamId) {
-        matchInfo.radiantPlayerIds.forEach((id) => playerIds.add(id));
-      }
-      if (matchInfo.direTeamId === team.teamId) {
-        matchInfo.direPlayerIds.forEach((id) => playerIds.add(id));
-      }
-    });
-
-    // Add players from manual matches
-    const manualMatchIds = Array.from(team.matches.entries())
-      .filter(([, matchData]) => matchData.isManual)
-      .map(([matchId]) => matchId);
-
-    manualMatchIds.forEach((matchId) => {
-      const match = this._matches.get(matchId);
-      if (!match) return;
-
-      const matchData = team.matches.get(matchId);
-      if (!matchData?.side) return;
-
-      // Add players from the team's side
-      const teamPlayers = match.players[matchData.side];
-      teamPlayers.forEach((player) => {
-        if (player.accountId) {
-          playerIds.add(player.accountId);
-        }
-      });
-    });
-
-    return playerIds;
+    return ComputedOps.getTeamPlayerIds(this, teamKey);
   }
 
   // ============================================================================
@@ -633,12 +696,26 @@ export class AppData {
 
     if (matchIdsToLoad.length === 0) {
       this.updateTeamMatchParticipation(teamKey, allMatchIds);
+
+      // Compute and store hero performance for all matches
+      const teamMatches = this.getTeamMatchesMetadata(teamKey);
+      const matches = this.getMatchesByIds(allMatchIds);
+      const hiddenMatchIds = this.getTeamHiddenMatchIds(teamKey);
+      this.computeAndStoreHeroPerformanceForTeam(teamKey, matches, teamMatches, hiddenMatchIds);
+
       await this.maybeLoadPlayersForMatches(teamKey, allMatchIds, force);
       return;
     }
 
     await Promise.allSettled(matchIdsToLoad.map((matchId) => this.loadMatch(matchId)));
     this.updateTeamMatchParticipation(teamKey, allMatchIds);
+
+    // Compute and store hero performance for all matches
+    const teamMatches = this.getTeamMatchesMetadata(teamKey);
+    const matches = this.getMatchesByIds(allMatchIds);
+    const hiddenMatchIds = this.getTeamHiddenMatchIds(teamKey);
+    this.computeAndStoreHeroPerformanceForTeam(teamKey, matches, teamMatches, hiddenMatchIds);
+
     await this.maybeLoadPlayersForMatches(teamKey, force ? allMatchIds : matchIdsToLoad, force);
   }
 
@@ -662,12 +739,26 @@ export class AppData {
 
     if (matchIdsToLoad.length === 0) {
       this.updateTeamMatchParticipation(teamKey, allMatchIds);
+
+      // Compute and store hero performance for all matches
+      const teamMatches = this.getTeamMatchesMetadata(teamKey);
+      const matches = this.getMatchesByIds(allMatchIds);
+      const hiddenMatchIds = this.getTeamHiddenMatchIds(teamKey);
+      this.computeAndStoreHeroPerformanceForTeam(teamKey, matches, teamMatches, hiddenMatchIds);
+
       await this.maybeLoadPlayersForMatches(teamKey, allMatchIds, force);
       return;
     }
 
     await Promise.allSettled(matchIdsToLoad.map((matchId) => this.loadMatch(matchId)));
     this.updateTeamMatchParticipation(teamKey, allMatchIds);
+
+    // Compute and store hero performance for all matches
+    const teamMatches = this.getTeamMatchesMetadata(teamKey);
+    const matches = this.getMatchesByIds(allMatchIds);
+    const hiddenMatchIds = this.getTeamHiddenMatchIds(teamKey);
+    this.computeAndStoreHeroPerformanceForTeam(teamKey, matches, teamMatches, hiddenMatchIds);
+
     await this.maybeLoadPlayersForMatches(teamKey, force ? allMatchIds : matchIdsToLoad, force);
   }
 
@@ -753,6 +844,14 @@ export class AppData {
     return MatchOps.editManualMatchToTeam(this, oldMatchId, newMatchId, teamKey, userSelectedSide);
   }
 
+  hideMatchOnTeam(matchId: number, teamKey: string): void {
+    MatchOps.hideMatchOnTeam(this, matchId, teamKey);
+  }
+
+  unhideMatchOnTeam(matchId: number, teamKey: string): void {
+    MatchOps.unhideMatchOnTeam(this, matchId, teamKey);
+  }
+
   /**
    * Check if a match exists for a team
    * Checks both league matches and manual matches
@@ -813,6 +912,14 @@ export class AppData {
    */
   async editManualPlayerToTeam(oldPlayerId: number, newPlayerId: number, teamKey: string): Promise<Player | null> {
     return PlayerOps.editManualPlayerToTeam(this, oldPlayerId, newPlayerId, teamKey);
+  }
+
+  hidePlayerOnTeam(playerId: number, teamKey: string): void {
+    PlayerOps.hidePlayerOnTeam(this, playerId, teamKey);
+  }
+
+  unhidePlayerOnTeam(playerId: number, teamKey: string): void {
+    PlayerOps.unhidePlayerOnTeam(this, playerId, teamKey);
   }
 
   /**
@@ -943,34 +1050,7 @@ export class AppData {
     fetchTeam = false,
     forceLeague = false,
   ): Promise<{ teamData: { name?: string }; teamError?: string; leagueError?: string }> {
-    const promises: Promise<unknown>[] = [getOrFetchLeagueMatches(leagueId, this.leagueMatchesCache, forceLeague)];
-    if (fetchTeam) promises.push(fetchTeamData(teamId));
-
-    const results = await Promise.allSettled(promises);
-
-    // Handle league matches fetch result
-    let leagueError: string | undefined;
-    const leagueResult = results[0];
-    if (leagueResult.status === 'rejected') {
-      leagueError =
-        leagueResult.reason instanceof Error ? leagueResult.reason.message : 'Failed to fetch league matches';
-      console.error(`Failed to fetch league matches for league ${leagueId}:`, leagueResult.reason);
-    }
-
-    // Handle team fetch result (at index 1 if fetched)
-    let teamData: { name?: string } = {};
-    let teamError: string | undefined;
-    if (fetchTeam) {
-      const teamResult = results[1];
-      if (teamResult.status === 'fulfilled') {
-        teamData = teamResult.value as { name?: string };
-      } else {
-        teamError = teamResult.reason instanceof Error ? teamResult.reason.message : 'Failed to fetch team data';
-        console.error(`Failed to fetch team ${teamId}:`, teamResult.reason);
-      }
-    }
-
-    return { teamData, teamError, leagueError };
+    return LoadingOps.fetchTeamAndLeagueData(this, teamId, leagueId, fetchTeam, forceLeague);
   }
 
   /** Save teams data to localStorage (includes global team) */
@@ -1030,5 +1110,9 @@ export class AppData {
    */
   filterPlayerMatchesByDateRange(playerId: number, dateRange: DateRangeSelection): Match[] {
     return StatisticsOps.filterPlayerMatchesByDateRange(this, playerId, dateRange);
+  }
+
+  getTeamPlayerOverview(playerId: number, teamKey: string): TeamPlayerOverview {
+    return StatisticsOps.getTeamPlayerOverview(this, playerId, teamKey);
   }
 }

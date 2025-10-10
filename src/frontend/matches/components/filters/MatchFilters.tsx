@@ -6,18 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
-
-export interface MatchFilters {
-  dateRange: 'all' | '7days' | '30days' | 'custom';
-  customDateRange: { start: string | null; end: string | null };
-  result: 'all' | 'wins' | 'losses';
-  opponent: string[];
-  teamSide: 'all' | 'radiant' | 'dire';
-  pickOrder: 'all' | 'first' | 'second';
-  heroesPlayed: string[];
-  highPerformersOnly: boolean;
-}
+import type { Hero, Match, MatchFilters, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 
 interface MatchFiltersProps {
   filters: MatchFilters;

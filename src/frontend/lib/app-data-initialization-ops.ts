@@ -27,7 +27,9 @@ export interface AppDataInitializationOpsContext {
   getMatch(matchId: number): Match | undefined;
   getPlayer(accountId: number): Player | undefined;
   addMatch(match: Match): void;
+  updateMatch(matchId: number, updates: Partial<Match>, options?: { skipSave?: boolean }): void;
   addPlayer(player: Player): void;
+  updatePlayer(accountId: number, updates: Partial<Player>, options?: { skipSave?: boolean }): void;
   addTeam(team: Omit<Team, 'createdAt' | 'updatedAt' | 'matches' | 'players' | 'highPerformingHeroes'>): void;
   updateTeam(teamId: string, updates: Partial<Omit<Team, 'id' | 'createdAt' | 'updatedAt'>>): void;
   setSelectedTeam(teamId: string): void;
@@ -127,6 +129,46 @@ export async function refreshAllTeams(appData: AppDataInitializationOpsContext):
 // ============================================================================
 
 /**
+ * Check if a match has meaningful player data (not just empty arrays)
+ */
+function hasPlayerData(match: Match): boolean {
+  return Boolean(match.players && (match.players.radiant.length > 0 || match.players.dire.length > 0));
+}
+
+/**
+ * Handle match loading success
+ */
+function handleMatchLoadSuccess(appData: AppDataInitializationOpsContext, match: Match): Match {
+  const hydratedMatch: Match = {
+    ...match,
+    isLoading: false,
+  };
+
+  appData.addMatch(hydratedMatch);
+  return appData.getMatch(match.id) ?? hydratedMatch;
+}
+
+/**
+ * Handle match loading failure
+ */
+function handleMatchLoadFailure(
+  appData: AppDataInitializationOpsContext,
+  matchId: number,
+  hadExistingMatch: boolean,
+  error: unknown,
+): null {
+  if (hadExistingMatch) {
+    appData.updateMatch(
+      matchId,
+      { error: error instanceof Error ? error.message : 'Failed to load match data' },
+      { skipSave: true },
+    );
+  }
+  console.error(`Failed to load match ${matchId}:`, error);
+  return null;
+}
+
+/**
  * Load full match data from API
  * Fetches and processes match data, then stores it in AppData
  * @param matchId - The match ID to load
@@ -135,22 +177,87 @@ export async function refreshAllTeams(appData: AppDataInitializationOpsContext):
 export async function loadMatch(appData: AppDataInitializationOpsContext, matchId: number): Promise<Match | null> {
   // Check if already loaded with full data
   const existing = appData._matches.get(matchId);
-  if (existing && existing.players) {
+  if (existing && hasPlayerData(existing)) {
     return existing;
   }
 
-  // Fetch and process match data
-  const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items);
+  const hadExistingMatch = Boolean(existing);
 
-  if (!match) {
-    console.error(`Failed to load match ${matchId}`);
-    return null;
+  if (hadExistingMatch) {
+    appData.updateMatch(matchId, { isLoading: true, error: undefined }, { skipSave: true });
   }
 
-  // Store in AppData
-  appData.addMatch(match);
+  try {
+    const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items);
+    return match
+      ? handleMatchLoadSuccess(appData, match)
+      : handleMatchLoadFailure(appData, matchId, hadExistingMatch, 'No match data');
+  } catch (error) {
+    return handleMatchLoadFailure(appData, matchId, hadExistingMatch, error);
+  } finally {
+    if (hadExistingMatch) {
+      appData.updateMatch(matchId, { isLoading: false }, { skipSave: true });
+    }
+  }
+}
 
-  return match;
+/**
+ * Update team match metadata while preserving manual side selection
+ */
+function updateTeamMatchMetadata(
+  appData: AppDataInitializationOpsContext,
+  teamKey: string,
+  team: Team,
+  matchId: number,
+  refreshedMatch: Match,
+): void {
+  const existingMatchData = team.matches.get(matchId);
+  if (existingMatchData?.isManual) {
+    // Update the match data with fresh information while preserving the side
+    const updatedMatchData = {
+      ...existingMatchData,
+      duration: refreshedMatch.duration,
+      date: refreshedMatch.date,
+      // Keep the existing side - don't overwrite it
+      side: existingMatchData.side,
+    };
+    team.matches.set(matchId, updatedMatchData);
+    appData.updateTeam(teamKey, { matches: team.matches });
+  }
+}
+
+/**
+ * Update team participation and load players for teams that have this match
+ */
+function updateTeamParticipationForMatch(
+  appData: AppDataInitializationOpsContext,
+  matchId: number,
+  refreshedMatch: Match,
+): void {
+  for (const [teamKey, team] of appData._teams.entries()) {
+    const manualMatchIds = Array.from(team.matches.entries())
+      .filter(([, matchData]) => matchData.isManual)
+      .map(([matchId]) => matchId);
+    const allMatchIds = [...manualMatchIds, ...Array.from(team.matches.keys())];
+
+    if (allMatchIds.includes(matchId)) {
+      // Preserve the team's manual match metadata (especially the side)
+      updateTeamMatchMetadata(appData, teamKey, team, matchId, refreshedMatch);
+
+      appData.updateTeamMatchParticipation(teamKey, allMatchIds);
+
+      // Load players for this team's side of the match
+      const matchData = team.matches.get(matchId);
+      if (matchData?.side) {
+        appData.loadPlayersFromMatchForTeam(refreshedMatch, matchData.side).catch((err) => {
+          console.error(`Failed to load players for team ${teamKey} match ${matchId}:`, err);
+        });
+      }
+
+      // Update team player metadata to reflect any changes from the refreshed match
+      appData.updateTeamPlayersMetadata(teamKey);
+    }
+  }
 }
 
 /**
@@ -160,40 +267,52 @@ export async function loadMatch(appData: AppDataInitializationOpsContext, matchI
  * @returns The refreshed match or null on error
  */
 export async function refreshMatch(appData: AppDataInitializationOpsContext, matchId: number): Promise<Match | null> {
-  // Fetch fresh data from API with force=true to bypass cache
-  const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items, true);
+  // Check if match exists and set loading state
+  const existing = appData._matches.get(matchId);
+  const hadExistingMatch = Boolean(existing);
 
-  if (!match) {
-    console.error(`Failed to refresh match ${matchId}`);
-    return null;
+  if (hadExistingMatch) {
+    appData.updateMatch(matchId, { isLoading: true, error: undefined }, { skipSave: true });
   }
 
-  // Update in place (no remove/re-add to avoid UI flicker)
-  appData.addMatch(match);
+  try {
+    // Fetch fresh data from API with force=true to bypass cache
+    const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items, true);
 
-  // Update team participation and load players for teams that have this match
-  for (const [teamKey, team] of appData._teams.entries()) {
-    const manualMatchIds = Array.from(team.matches.entries())
-      .filter(([, matchData]) => matchData.isManual)
-      .map(([matchId]) => matchId);
-    const allMatchIds = [...manualMatchIds, ...Array.from(team.matches.keys())];
-    if (allMatchIds.includes(matchId)) {
-      appData.updateTeamMatchParticipation(teamKey, allMatchIds);
-
-      // Load players for this team's side of the match
-      const matchData = team.matches.get(matchId);
-      if (matchData?.side) {
-        appData.loadPlayersFromMatchForTeam(match, matchData.side).catch((err) => {
-          console.error(`Failed to load players for team ${teamKey} match ${matchId}:`, err);
-        });
+    if (!match) {
+      if (hadExistingMatch) {
+        appData.updateMatch(matchId, { error: 'Failed to refresh match data' }, { skipSave: true });
       }
+      console.error(`Failed to refresh match ${matchId}`);
+      return null;
+    }
 
-      // Update team player metadata to reflect any changes from the refreshed match
-      appData.updateTeamPlayersMetadata(teamKey);
+    // Update in place (no remove/re-add to avoid UI flicker)
+    const refreshedMatch: Match = {
+      ...match,
+      isLoading: false,
+    };
+    appData.addMatch(refreshedMatch);
+
+    // Update team participation and load players for teams that have this match
+    updateTeamParticipationForMatch(appData, matchId, refreshedMatch);
+
+    return refreshedMatch;
+  } catch (error) {
+    if (hadExistingMatch) {
+      appData.updateMatch(
+        matchId,
+        { error: error instanceof Error ? error.message : 'Failed to refresh match data' },
+        { skipSave: true },
+      );
+    }
+    console.error(`Failed to refresh match ${matchId}:`, error);
+    return null;
+  } finally {
+    if (hadExistingMatch) {
+      appData.updateMatch(matchId, { isLoading: false }, { skipSave: true });
     }
   }
-
-  return match;
 }
 
 /**
@@ -227,23 +346,56 @@ export async function loadAllManualMatches(appData: AppDataInitializationOpsCont
  * @returns The loaded player or null on error
  */
 export async function loadPlayer(appData: AppDataInitializationOpsContext, accountId: number): Promise<Player | null> {
-  // Check if already loaded
   const existing = appData._players.get(accountId);
-  if (existing && existing.profile) {
-    return existing;
+  const hadExistingPlayer = Boolean(existing);
+
+  if (hadExistingPlayer) {
+    appData.updatePlayer(accountId, { isLoading: true, error: undefined }, { skipSave: true });
   }
 
-  // Fetch and process player data
-  const player = await fetchAndProcessPlayer(accountId);
+  try {
+    const player = await fetchAndProcessPlayer(accountId);
 
-  if (!player) {
+    if (!player) {
+      if (hadExistingPlayer) {
+        appData.updatePlayer(accountId, { error: 'Failed to load player data' }, { skipSave: true });
+      }
+      return null;
+    }
+
+    const hydratedPlayer: Player = {
+      ...player,
+      isLoading: false,
+    };
+
+    appData.addPlayer(hydratedPlayer);
+    return appData.getPlayer(accountId) ?? null;
+  } catch (error) {
+    if (hadExistingPlayer) {
+      appData.updatePlayer(
+        accountId,
+        { error: error instanceof Error ? error.message : 'Failed to load player data' },
+        { skipSave: true },
+      );
+    }
     return null;
+  } finally {
+    if (hadExistingPlayer) {
+      appData.updatePlayer(accountId, { isLoading: false }, { skipSave: true });
+    }
   }
+}
 
-  // Store in AppData
-  appData.addPlayer(player);
-
-  return player;
+/**
+ * Update team player metadata for all teams that have this player
+ */
+function updateTeamPlayerMetadataForPlayer(appData: AppDataInitializationOpsContext, accountId: number): void {
+  for (const [teamKey, _team] of appData._teams.entries()) {
+    const playerIds = appData.getTeamPlayerIds(teamKey);
+    if (playerIds.has(accountId)) {
+      appData.updateTeamPlayersMetadata(teamKey);
+    }
+  }
 }
 
 /**
@@ -256,25 +408,48 @@ export async function refreshPlayer(
   appData: AppDataInitializationOpsContext,
   accountId: number,
 ): Promise<Player | null> {
-  // Fetch fresh data from API
-  const player = await fetchAndProcessPlayer(accountId);
+  const existing = appData._players.get(accountId);
+  const hadExistingPlayer = Boolean(existing);
 
-  if (!player) {
-    return null;
+  if (hadExistingPlayer) {
+    appData.updatePlayer(accountId, { isLoading: true, error: undefined }, { skipSave: true });
   }
 
-  // Update in place (no remove/re-add to avoid UI flicker)
-  appData.addPlayer(player);
+  try {
+    const player = await fetchAndProcessPlayer(accountId);
 
-  // Update team player metadata for all teams that have this player
-  for (const [teamKey, team] of appData._teams.entries()) {
-    const playerIds = appData.getTeamPlayerIds(teamKey);
-    if (playerIds.has(accountId)) {
-      appData.updateTeamPlayersMetadata(teamKey);
+    if (!player) {
+      if (hadExistingPlayer) {
+        appData.updatePlayer(accountId, { error: 'Failed to refresh player data' }, { skipSave: true });
+      }
+      return null;
+    }
+
+    const refreshedPlayer: Player = {
+      ...player,
+      isLoading: false,
+    };
+
+    appData.addPlayer(refreshedPlayer);
+
+    // Update team player metadata for all teams that have this player
+    updateTeamPlayerMetadataForPlayer(appData, accountId);
+
+    return appData.getPlayer(accountId) ?? null;
+  } catch (error) {
+    if (hadExistingPlayer) {
+      appData.updatePlayer(
+        accountId,
+        { error: error instanceof Error ? error.message : 'Failed to refresh player data' },
+        { skipSave: true },
+      );
+    }
+    return null;
+  } finally {
+    if (hadExistingPlayer) {
+      appData.updatePlayer(accountId, { isLoading: false }, { skipSave: true });
     }
   }
-
-  return player;
 }
 
 /**

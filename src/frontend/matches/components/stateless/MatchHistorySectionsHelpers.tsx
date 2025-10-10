@@ -1,21 +1,27 @@
 'use client';
 
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation, TeamHeroSummary } from '@/frontend/lib/app-data-types';
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
 import { validateMatchId } from '@/utils/validation';
 
 export function HeroSummarySection({
-  visibleMatches,
-  teamMatches,
-  allMatches,
+  summary,
+  highPerformingHeroes,
+  showHighPerformersOnly,
 }: {
-  visibleMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  allMatches: Match[];
+  summary: TeamHeroSummary;
+  highPerformingHeroes?: Set<string>;
+  showHighPerformersOnly?: boolean;
 }) {
-  return <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} allMatches={allMatches} />;
+  return (
+    <HeroSummaryTable
+      summary={summary}
+      highPerformingHeroes={highPerformingHeroes}
+      showHighPerformersOnly={showHighPerformersOnly}
+    />
+  );
 }
 
 export function HiddenMatchesModalSection({

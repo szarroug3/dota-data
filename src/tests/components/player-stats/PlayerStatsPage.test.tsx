@@ -1,49 +1,151 @@
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-import { PlayerStatsPage } from '@/frontend/players/components/stateless/PlayerStatsPage';
-import { renderWithProviders, screen } from '@/tests/utils/test-utils';
+import { PlayerStatsPageContainer } from '@/frontend/players/components/containers/PlayerStatsPageContainer';
 
-// We don’t want a global loading skeleton to show on add/refresh
-// This test ensures the page renders list content even when the player context is in a loading state,
-// leaving per-player loading to individual cards.
 
-// Mock AppData context instead of constants context
+const storedPlayer = {
+  accountId: 123456789,
+  name: 'Invoker Main',
+  rank: 'Divine 2',
+  rank_tier: 72,
+  leaderboard_rank: 1500,
+  games: 120,
+  winRate: 55,
+  topHeroes: [],
+  avatar: 'invoker.png',
+  isManual: false,
+  isHidden: false,
+};
+
+const mockTeam = {
+  id: '123-456',
+  teamId: 123,
+  leagueId: 456,
+  name: 'Radiant Reborn',
+  leagueName: 'Ancient League',
+  timeAdded: Date.now(),
+  matches: new Map(),
+  players: new Map([[storedPlayer.accountId, storedPlayer]]),
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  isLoading: false,
+  highPerformingHeroes: new Set(),
+  manualPlayerIds: [storedPlayer.accountId],
+};
+
+const mockAppData = {
+  state: {
+    selectedTeamId: mockTeam.id,
+    selectedTeamIdParsed: { teamId: mockTeam.teamId, leagueId: mockTeam.leagueId },
+    selectedMatchId: null,
+    selectedPlayerId: null,
+    isLoading: false,
+    error: null,
+  },
+  teams: new Map([[mockTeam.id, mockTeam]]),
+  matches: new Map(),
+  players: new Map(),
+  heroes: new Map(),
+  items: new Map(),
+  leagues: new Map(),
+  getTeam: jest.fn(() => mockTeam),
+  getTeams: jest.fn(() => [mockTeam]),
+  getTeamPlayerIds: jest.fn(() => new Set([storedPlayer.accountId])),
+  getPlayer: jest.fn(() => undefined),
+  loadPlayer: jest.fn(async () => null),
+  refreshPlayer: jest.fn(async () => null),
+  getTeamPlayersForDisplay: jest.fn(() => [
+    {
+      accountId: storedPlayer.accountId,
+      profile: {
+        name: storedPlayer.name,
+        personaname: storedPlayer.name,
+        avatar: storedPlayer.avatar,
+        avatarfull: storedPlayer.avatar,
+        rank_tier: storedPlayer.rank_tier,
+        leaderboard_rank: storedPlayer.leaderboard_rank,
+      },
+      heroStats: [],
+      overallStats: {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        winRate: 0,
+      },
+      recentMatchIds: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+  ]),
+  getTeamPlayersSortedForDisplay: jest.fn(() => [
+    {
+      accountId: storedPlayer.accountId,
+      profile: {
+        name: storedPlayer.name,
+        personaname: storedPlayer.name,
+        avatar: storedPlayer.avatar,
+        avatarfull: storedPlayer.avatar,
+        rank_tier: storedPlayer.rank_tier,
+        leaderboard_rank: storedPlayer.leaderboard_rank,
+      },
+      heroStats: [],
+      overallStats: {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        winRate: 0,
+      },
+      recentMatchIds: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+  ]),
+  getTeamHiddenPlayersForDisplay: jest.fn(() => []),
+  hidePlayerOnTeam: jest.fn(),
+  unhidePlayerOnTeam: jest.fn(),
+  addManualPlayerToTeam: jest.fn(async () => undefined),
+  removeManualPlayerFromTeam: jest.fn(),
+  editManualPlayerToTeam: jest.fn(async () => undefined),
+  getTeamPlayerOverview: jest.fn(() => ({ teamStats: null, detailedStats: null })),
+};
+
 jest.mock('@/contexts/app-data-context', () => ({
-  useAppData: () => ({
-    teams: new Map(),
-    matches: new Map(),
-    players: new Map(),
-    heroes: new Map(),
-    items: new Map(),
-    leagues: new Map(),
-    selectedTeamId: null,
-    setSelectedTeamId: jest.fn(),
-    addTeam: jest.fn(),
-    updateTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    addMatch: jest.fn(),
-    updateMatch: jest.fn(),
-    removeMatch: jest.fn(),
-    addPlayer: jest.fn(),
-    updatePlayer: jest.fn(),
-    removePlayer: jest.fn(),
-    loadTeamData: jest.fn(),
-    loadMatchData: jest.fn(),
-    loadPlayerData: jest.fn(),
-    loadHeroesData: jest.fn(),
-    loadItemsData: jest.fn(),
-    loadLeaguesData: jest.fn(),
+  useAppData: () => mockAppData,
+}));
+
+jest.mock('@/frontend/contexts/config-context', () => ({
+  useConfigContext: () => ({
+    config: {
+      preferredPlayerlistView: 'list',
+      preferredMatchlistView: 'list',
+      preferredExternalSite: 'dotabuff',
+      theme: 'system',
+    },
+    updateConfig: jest.fn(),
+    resetConfig: jest.fn(),
+    clearErrors: jest.fn(),
+    getTeams: jest.fn(() => new Map()),
+    setTeams: jest.fn(),
+    activeTeam: null,
+    setActiveTeam: jest.fn(),
+    getGlobalManualMatches: jest.fn(() => []),
+    setGlobalManualMatches: jest.fn(),
+    getGlobalManualPlayers: jest.fn(() => []),
+    setGlobalManualPlayers: jest.fn(),
+    isLoading: false,
+    isSaving: false,
+    error: null,
   }),
 }));
 
-// Mock ResizablePlayerLayout to render a deterministic marker
 jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () => ({
   ResizablePlayerLayout: (props: any) => (
     <div
       data-testid="player-layout"
       data-view-mode={props.viewMode}
       data-player-count={props.players?.length ?? 0}
-      data-player-ids={(props.players || []).map((p: any) => p.profile.profile.account_id).join(',')}
+      data-player-ids={(props.players || []).map((p: any) => p.accountId ?? '').join(',')}
     >
       layout
     </div>
@@ -51,23 +153,37 @@ jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () =>
 }));
 
 describe('PlayerStatsPage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAppData.players.clear();
+    mockAppData.matches.clear();
+    mockAppData.heroes.clear();
+    mockAppData.items.clear();
+    mockAppData.leagues.clear();
+    mockAppData.teams.clear();
+    mockAppData.teams.set(mockTeam.id, mockTeam);
+    mockAppData.getTeam.mockReturnValue(mockTeam);
+    mockAppData.getTeams.mockReturnValue([mockTeam]);
+    mockAppData.getTeamPlayerIds.mockReturnValue(new Set([storedPlayer.accountId]));
+    mockAppData.state.selectedTeamId = mockTeam.id;
+  });
+
   it('does not render a global loading skeleton when context is loading', () => {
-    renderWithProviders(<PlayerStatsPage />);
-    // Should render the layout instead of a page-level loading skeleton
+    render(<PlayerStatsPageContainer />);
     expect(screen.getByTestId('player-layout')).toBeInTheDocument();
     expect(screen.queryByText(/Loading/i)).not.toBeInTheDocument();
   });
 
   it('initializes player list view mode from in-memory config defaults', () => {
-    renderWithProviders(<PlayerStatsPage />);
+    render(<PlayerStatsPageContainer />);
     const layout = screen.getByTestId('player-layout');
     expect(layout).toHaveAttribute('data-view-mode', 'list');
   });
 
   it('filters players to only those on the active team (manual or auto)', () => {
-    renderWithProviders(<PlayerStatsPage />);
+    render(<PlayerStatsPageContainer />);
     const layout = screen.getByTestId('player-layout');
     expect(layout).toHaveAttribute('data-player-count', '1');
-    expect(layout).toHaveAttribute('data-player-ids', '123456789');
+    expect(layout).toHaveAttribute('data-player-ids', `${storedPlayer.accountId}`);
   });
 });

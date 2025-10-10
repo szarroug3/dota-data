@@ -5,6 +5,9 @@
  * Extracted to reduce app-data.ts file size.
  */
 
+import { processPlayerDetailedStats } from '@/utils/player-statistics';
+import type { PlayerDetailedStats } from '@/utils/player-statistics';
+
 import type { Hero, Match, Player, Team } from './app-data-types';
 import {
   calculatePlayerStats,
@@ -26,6 +29,11 @@ export interface AppDataStatisticsOpsContext {
   getMatch(matchId: number): Match | undefined;
   heroes: Map<number, Hero>;
   getTeam(teamKey: string): Team | undefined;
+}
+
+export interface TeamPlayerOverview {
+  teamStats: TeamPlayerStats | null;
+  detailedStats: PlayerDetailedStats | null;
 }
 
 /**
@@ -153,4 +161,34 @@ export function filterPlayerMatchesByDateRange(
     .filter((match): match is Match => match != null);
 
   return filterPlayerMatches(matches, dateRange);
+}
+
+export function getTeamPlayerOverview(
+  appData: AppDataStatisticsOpsContext,
+  playerId: number,
+  teamKey: string,
+): TeamPlayerOverview {
+  const teamStatsRaw = getTeamPlayerStats(appData, playerId, teamKey);
+  const matches = getPlayerParticipatedMatches(appData, playerId, teamKey);
+  const player = appData.getPlayer(playerId);
+
+  const teamStats = teamStatsRaw.totalGames > 0 ? teamStatsRaw : null;
+
+  if (!player || matches.length === 0) {
+    return {
+      teamStats,
+      detailedStats: null,
+    };
+  }
+
+  const heroesRecord = Object.fromEntries(
+    Array.from(appData.heroes.entries()).map(([id, hero]) => [id.toString(), hero]),
+  );
+
+  const detailedStats = processPlayerDetailedStats(player, matches, heroesRecord);
+
+  return {
+    teamStats,
+    detailedStats,
+  };
 }

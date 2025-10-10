@@ -3,8 +3,7 @@ import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAppData } from '@/contexts/app-data-context';
-import type { DraftPhase, Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { DraftPhase, Hero, Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { getTeamDisplayNames } from '@/frontend/matches/utils/match-name-helpers';
 
@@ -15,8 +14,7 @@ interface MatchDetailsPanelDraftProps {
   onFilterChange?: (filter: DraftFilter) => void;
   className?: string;
   allMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
+  selectedTeam: Team;
 }
 
 type DraftFilter = 'picks' | 'bans' | 'both';
@@ -58,32 +56,6 @@ const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFi
   </div>
 );
 
-const isHighPerformingHero = (
-  hero: Hero,
-  allMatches: Match[],
-  teamMatches: Map<number, TeamMatchParticipation>,
-  hiddenMatchIds: Set<number>,
-): boolean => {
-  const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
-  allMatches.forEach((matchData) => {
-    if (hiddenMatchIds.has(matchData.id)) return;
-    const matchTeamData = teamMatches.get(matchData.id);
-    if (!matchTeamData?.side) return;
-    const teamPlayers = matchData.players[matchTeamData.side] || [];
-    const isWin = matchTeamData.result === 'won';
-    teamPlayers.forEach((player) => {
-      if (player.hero?.id === hero.id) {
-        heroStats.count++;
-        heroStats.totalGames++;
-        if (isWin) {
-          heroStats.wins++;
-        }
-      }
-    });
-  });
-  return heroStats.count >= 5 && heroStats.wins / heroStats.count >= 0.6;
-};
-
 const DraftEntryRow: React.FC<{
   hero: Hero;
   heroName: string;
@@ -110,22 +82,34 @@ const DraftEntryRow: React.FC<{
   </div>
 );
 
+const isHeroHighPerforming = (
+  hero: Hero,
+  isOnActiveTeamSide: boolean,
+  isPick: boolean,
+  allMatches: Match[],
+): boolean => {
+  return (
+    isOnActiveTeamSide && isPick && (allMatches[0]?.computed?.heroPerformance?.get(hero.id)?.isHighPerforming || false)
+  );
+};
+
 const DraftEntry: React.FC<{
   phase: DraftPhase;
   team: 'radiant' | 'dire';
   teamMatch?: TeamMatchParticipation;
   allMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
-}> = ({ phase, team, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
+}> = ({ phase, team, teamMatch, allMatches }) => {
   const hero = phase.hero;
   const heroName = hero.localizedName || `Hero ${hero.id}`;
   const isTeamPhase = phase.team === team;
+
+  if (!isTeamPhase) return <div className="h-6"></div>;
+
   const isOnActiveTeamSide = team === teamMatch?.side;
   const isPick = phase.phase === 'pick';
-  const isHigh = isOnActiveTeamSide && isPick && isHighPerformingHero(hero, allMatches, teamMatches, hiddenMatchIds);
-  if (!isTeamPhase) return <div className="h-6"></div>;
-  return <DraftEntryRow hero={hero} heroName={heroName} phase={phase} isHighPerforming={isHigh} />;
+  const isHighPerforming = isHeroHighPerforming(hero, isOnActiveTeamSide, isPick, allMatches);
+
+  return <DraftEntryRow hero={hero} heroName={heroName} phase={phase} isHighPerforming={isHighPerforming} />;
 };
 
 const DraftTimeline: React.FC<{
@@ -135,18 +119,7 @@ const DraftTimeline: React.FC<{
   isRadiantWin: boolean;
   teamMatch?: TeamMatchParticipation;
   allMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
-}> = ({
-  filteredDraft,
-  leftDisplayName,
-  rightDisplayName,
-  isRadiantWin,
-  teamMatch,
-  allMatches = [],
-  teamMatches,
-  hiddenMatchIds = new Set(),
-}) => (
+}> = ({ filteredDraft, leftDisplayName, rightDisplayName, isRadiantWin, teamMatch, allMatches = [] }) => (
   <div>
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div className="hidden @[210px]:flex items-center gap-2 h-6">
@@ -173,8 +146,6 @@ const DraftTimeline: React.FC<{
             team="radiant"
             teamMatch={teamMatch}
             allMatches={allMatches}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
           />
         ))}
       </div>
@@ -186,8 +157,6 @@ const DraftTimeline: React.FC<{
             team="dire"
             teamMatch={teamMatch}
             allMatches={allMatches}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
           />
         ))}
       </div>
@@ -208,17 +177,8 @@ const DraftSummary: React.FC<{
   filter: DraftFilter;
   onFilterChange: (filter: DraftFilter) => void;
   allMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
-}> = ({ match, teamMatch, filter, onFilterChange, allMatches, teamMatches, hiddenMatchIds }) => {
-  const appData = useAppData();
-  const selectedTeamId = appData.state.selectedTeamId;
-
-  const selectedTeam = appData.getTeam(selectedTeamId);
-  if (!selectedTeam) {
-    throw new Error(`Selected team ${selectedTeamId} not found`);
-  }
-
+  selectedTeam: Team;
+}> = ({ match, teamMatch, filter, onFilterChange, allMatches, selectedTeam }) => {
   if (!match?.processedDraft)
     return <div className="text-center text-muted-foreground py-8">No draft data available</div>;
 
@@ -242,8 +202,6 @@ const DraftSummary: React.FC<{
           isRadiantWin={isRadiantWin}
           teamMatch={teamMatch}
           allMatches={allMatches}
-          teamMatches={teamMatches}
-          hiddenMatchIds={hiddenMatchIds}
         />
       </div>
     </div>
@@ -257,8 +215,7 @@ export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
   onFilterChange = () => {},
   className,
   allMatches = [],
-  teamMatches,
-  hiddenMatchIds = new Set(),
+  selectedTeam,
 }) => {
   if (!match) return <div className="text-center text-muted-foreground py-8">No match data available</div>;
   return (
@@ -269,8 +226,7 @@ export const MatchDetailsPanelDraft: React.FC<MatchDetailsPanelDraftProps> = ({
         filter={filter}
         onFilterChange={onFilterChange}
         allMatches={allMatches}
-        teamMatches={teamMatches}
-        hiddenMatchIds={hiddenMatchIds}
+        selectedTeam={selectedTeam}
       />
     </div>
   );

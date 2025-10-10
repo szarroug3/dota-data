@@ -52,7 +52,6 @@ interface MatchesListProps {
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
   teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
@@ -95,7 +94,6 @@ interface MatchesListContentProps {
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
   teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
@@ -113,7 +111,6 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
   onRefreshMatch,
   viewMode,
   teamMatches,
-  hiddenMatchIds,
   allMatches,
   onScrollToMatch,
   onAddMatch,
@@ -150,7 +147,7 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
               onClick={onAddMatch}
               variant="outline"
               size="sm"
-              className="flex items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex hidden"
+              className="hidden items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex"
             >
               <Plus className="h-3 w-3" />
               <span className="@[420px]:block hidden">Add Match</span>
@@ -171,7 +168,6 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
             onRefreshMatch={onRefreshMatch}
             viewMode={viewMode}
             teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
             allMatches={allMatches}
             onScrollToMatch={onScrollToMatch}
           />
@@ -194,7 +190,6 @@ const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
       hiddenMatchesCount = 0,
       onShowHiddenMatches,
       teamMatches,
-      hiddenMatchIds = new Set(),
       allMatches = [],
       onScrollToMatch,
       onAddMatch,
@@ -215,7 +210,6 @@ const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
         onRefreshMatch={onRefreshMatch}
         viewMode={viewMode}
         teamMatches={teamMatches}
-        hiddenMatchIds={hiddenMatchIds}
         allMatches={allMatches}
         onScrollToMatch={onScrollToMatch}
         onAddMatch={onAddMatch}

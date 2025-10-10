@@ -86,6 +86,21 @@ export interface Match {
   // State
   error?: string;
   isLoading?: boolean;
+
+  // Computed fields (calculated when match is loaded)
+  computed?: {
+    // Hero performance data for this match
+    heroPerformance: Map<
+      number,
+      {
+        gamesPlayed: number;
+        wins: number;
+        losses: number;
+        winRate: number;
+        isHighPerforming: boolean;
+      }
+    >;
+  };
 }
 
 export interface HeroPick {
@@ -214,6 +229,18 @@ export interface DraftPhase {
  * Team data structure for UI display
  * Minimal structure for now - will be extended with computed data in future steps
  */
+export interface TeamPerformanceSummary {
+  totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  overallWinRate: number;
+  erroredMatches: number;
+  totalDurationSeconds: number;
+  averageMatchDurationSeconds: number;
+  manualMatchCount: number;
+  manualPlayerCount: number;
+}
+
 export interface TeamDisplayData {
   team: { id: number; name: string };
   league: { id: number; name: string };
@@ -222,13 +249,7 @@ export interface TeamDisplayData {
   manualMatches: Record<number, { side: 'radiant' | 'dire' }>;
   manualPlayers: number[];
   players: unknown[];
-  performance: {
-    totalMatches: number;
-    totalWins: number;
-    totalLosses: number;
-    overallWinRate: number;
-    erroredMatches: number;
-  };
+  performance: TeamPerformanceSummary;
   isLoading: boolean;
   error?: string;
   isGlobal?: boolean;
@@ -380,6 +401,62 @@ export interface TeamPlayerMetadata {
 }
 
 export type TeamMatchParticipation = TeamMatchMetadata;
+
+// ============================================================================
+// MATCH FILTERS & DERIVED DATA
+// ============================================================================
+
+export interface MatchFilters {
+  dateRange: 'all' | '7days' | '30days' | 'custom';
+  customDateRange: {
+    start: string | null;
+    end: string | null;
+  };
+  result: 'all' | 'wins' | 'losses';
+  opponent: string[];
+  teamSide: 'all' | 'radiant' | 'dire';
+  pickOrder: 'all' | 'first' | 'second';
+  heroesPlayed: string[];
+  highPerformersOnly: boolean;
+}
+
+export interface MatchFilterStats {
+  totalMatches: number;
+  filteredMatches: number;
+  filterBreakdown: {
+    dateRange: number;
+    result: number;
+    teamSide: number;
+    pickOrder: number;
+    heroesPlayed: number;
+    opponent: number;
+    highPerformersOnly: number;
+  };
+}
+
+export interface MatchFiltersResult {
+  filteredMatches: Match[];
+  filterStats: MatchFilterStats;
+}
+
+export interface HeroSummaryEntry {
+  heroId: string;
+  heroName: string;
+  heroImage?: string;
+  count: number;
+  winRate?: number;
+  totalGames: number;
+  primaryAttribute?: string;
+  playedRoles?: { role: string; count: number }[];
+}
+
+export interface TeamHeroSummary {
+  matchesCount: number;
+  activeTeamPicks: HeroSummaryEntry[];
+  opponentTeamPicks: HeroSummaryEntry[];
+  activeTeamBans: HeroSummaryEntry[];
+  opponentTeamBans: HeroSummaryEntry[];
+}
 
 /**
  * UI state interface

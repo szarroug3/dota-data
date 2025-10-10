@@ -26,7 +26,32 @@ describe('HiddenMatchesModal', () => {
   it('renders list of hidden matches and calls unhide', () => {
     const onUnhide = jest.fn();
     const onClose = jest.fn();
-    render(<HiddenMatchesModal hiddenMatches={[mockMatch]} onUnhide={onUnhide} onClose={onClose} teamMatches={{}} />);
+    const teamMatches = new Map<number, any>([
+      [
+        mockMatch.id,
+        {
+          matchId: mockMatch.id,
+          side: 'radiant',
+          result: 'won',
+          opponentName: 'Dire Dynasty',
+          isManual: false,
+          isHidden: true,
+          pickOrder: 'first',
+          heroes: [],
+          duration: mockMatch.duration,
+          date: mockMatch.date,
+        },
+      ],
+    ]);
+
+    render(
+      <HiddenMatchesModal
+        hiddenMatches={[mockMatch]}
+        onUnhide={onUnhide}
+        onClose={onClose}
+        teamMatches={teamMatches}
+      />,
+    );
 
     expect(screen.getByText('Hidden Matches')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Unhide'));
@@ -35,7 +60,14 @@ describe('HiddenMatchesModal', () => {
 
   it('closes when there are no hidden matches', () => {
     const onClose = jest.fn();
-    render(<HiddenMatchesModal hiddenMatches={[]} onUnhide={() => {}} onClose={onClose} teamMatches={{}} />);
+    render(
+      <HiddenMatchesModal
+        hiddenMatches={[]}
+        onUnhide={() => {}}
+        onClose={onClose}
+        teamMatches={new Map()}
+      />,
+    );
     expect(onClose).toHaveBeenCalled();
   });
 });

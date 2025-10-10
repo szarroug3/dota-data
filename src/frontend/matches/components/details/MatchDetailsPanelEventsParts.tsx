@@ -72,28 +72,33 @@ export function AdvantagesList({ payload }: { payload: TooltipEntry[] }) {
   );
 }
 
+function resolveDisplayName(primary?: string, heroName?: string): string {
+  return primary?.trim() || heroName || 'Unknown Player';
+}
+
 export function FirstBloodDescription({ details }: { details?: EventDetails }) {
-  const killerName = details?.killer ?? 'unknown player';
-  const victimName = details?.victim ?? 'unknown player';
-  const killerImageUrl = details?.killerHero?.imageUrl;
-  const victimImageUrl = details?.victimHero?.imageUrl;
+  const info = {
+    killerName: resolveDisplayName(details?.killer, details?.killerHero?.localizedName),
+    victimName: resolveDisplayName(details?.victim, details?.victimHero?.localizedName),
+    killerImage: details?.killerHero?.imageUrl,
+    victimImage: details?.victimHero?.imageUrl,
+  };
   return (
     <span className="flex items-center gap-2">
       <span>First Blood:</span>
-      <NameWithInlineHeroImage imageUrl={killerImageUrl} name={killerName} />
+      <NameWithInlineHeroImage imageUrl={info.killerImage} name={info.killerName} />
       <span>killed</span>
-      <NameWithInlineHeroImage imageUrl={victimImageUrl} name={victimName} />
+      <NameWithInlineHeroImage imageUrl={info.victimImage} name={info.victimName} />
     </span>
   );
 }
 
 export function AegisDescription({ details }: { details?: EventDetails }) {
-  const aegisHolderName = details?.aegisHolder ?? 'unknown player';
-  const aegisHolderImageUrl = details?.aegisHolderHero?.imageUrl;
+  const aegisHolderName = resolveDisplayName(details?.aegisHolder, details?.aegisHolderHero?.localizedName);
   return (
     <span className="flex items-center gap-2">
       <span>Aegis picked up by</span>
-      <InlineHeroImage imageUrl={aegisHolderImageUrl} altText={aegisHolderName} />
+      <InlineHeroImage imageUrl={details?.aegisHolderHero?.imageUrl} altText={aegisHolderName} />
       <span>{aegisHolderName}</span>
     </span>
   );

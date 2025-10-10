@@ -31,6 +31,36 @@ jest.mock('@/contexts/app-data-context', () => ({
     loadHeroesData: jest.fn(),
     loadItemsData: jest.fn(),
     loadLeaguesData: jest.fn(),
+    getTeamMatchesForDisplay: jest.fn(() => []),
+    getTeamPlayersForDisplay: jest.fn(() => []),
+    getTeamPlayersSortedForDisplay: jest.fn(() => []),
+    getTeamHiddenPlayersForDisplay: jest.fn(() => []),
+    hidePlayerOnTeam: jest.fn(),
+    unhidePlayerOnTeam: jest.fn(),
+    getTeamPlayersSortedForDisplay: jest.fn(() => []),
+    getTeamMatchFilters: jest.fn(() => ({
+      filteredMatches: [],
+      filterStats: {
+        totalMatches: 0,
+        filteredMatches: 0,
+        filterBreakdown: {
+          dateRange: 0,
+          result: 0,
+          teamSide: 0,
+          pickOrder: 0,
+          heroesPlayed: 0,
+          opponent: 0,
+          highPerformersOnly: 0,
+        },
+      },
+    })),
+    getTeamHeroSummaryForMatches: jest.fn(() => ({
+      matchesCount: 0,
+      activeTeamPicks: [],
+      opponentTeamPicks: [],
+      activeTeamBans: [],
+      opponentTeamBans: [],
+    })),
   }),
 }));
 
@@ -82,13 +112,8 @@ describe('AppLoader', () => {
     );
 
     // Should render app content after loading
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('app-content')).toBeInTheDocument();
-      },
-      { timeout: 2000 },
-    );
-
-    expect(screen.getByText('App Content')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('App Content')).toBeInTheDocument();
+    });
   });
 });

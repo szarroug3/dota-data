@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Hero, Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
+import type { Hero, Match, TeamMatchMetadata, Team } from '@/frontend/lib/app-data-types';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';
 import { ExternalSiteButton } from '@/frontend/matches/components/stateless/common/ExternalSiteButton';
 import { HideButton } from '@/frontend/matches/components/stateless/common/HideButton';
@@ -11,6 +11,7 @@ import { RefreshButton } from '@/frontend/matches/components/stateless/common/Re
 import { RemoveManualMatchButton } from '@/frontend/matches/components/stateless/common/RemoveManualMatchButton';
 import { EditManualMatchSheet } from '@/frontend/matches/components/stateless/EditManualMatchSheet';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
+import { validateMatchId } from '@/utils/validation';
 
 import { ErrorBadge, HeroAvatars, PickOrderBadge, ResultBadge, TeamSideBadge } from './MatchListViewList.parts';
 
@@ -33,7 +34,6 @@ interface MatchListViewProps {
   onRefreshMatch: (matchId: number) => void;
   className?: string;
   teamMatches: Map<number, TeamMatchMetadata>;
-  hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   highPerformingHeroes?: Set<string>;
@@ -94,6 +94,64 @@ const getPickOrder = (match: Match, teamMatch: TeamMatchMetadata | undefined): s
   const pickOrder = match.pickOrder[teamMatch.side];
   return pickOrder === 'first' ? 'First Pick' : pickOrder === 'second' ? 'Second Pick' : null;
 };
+
+function computeDuplicateError(
+  newMatchId: number,
+  currentMatchId: number,
+  teamMatch: TeamMatchMetadata,
+  selectedTeam: Team,
+): string | undefined {
+  if (!Number.isFinite(newMatchId) || newMatchId === currentMatchId) return undefined;
+  const duplicate = selectedTeam.matches.has(newMatchId);
+  return duplicate ? `Match ${newMatchId} is already present for the selected team` : undefined;
+}
+
+function useEditManualMatchForm(matchId: number, teamMatch: TeamMatchMetadata, selectedTeam: Team) {
+  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [matchIdString, setMatchIdString] = useState(matchId.toString());
+  const [teamSide, setTeamSide] = useState<'radiant' | 'dire' | ''>('');
+  const [validationError, setValidationError] = useState<string | undefined>();
+  const [duplicateError, setDuplicateError] = useState<string | undefined>();
+
+  // Initialize values when matchId changes (but don't reset user input)
+  useEffect(() => {
+    setMatchIdString(matchId.toString());
+    const matchData = selectedTeam.matches.get(matchId);
+    const side = matchData?.side || 'radiant';
+    setTeamSide(side);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchId]); // Only depend on matchId to prevent infinite loops
+
+  useEffect(() => {
+    const v = validateMatchId(matchIdString);
+    setValidationError(v.error);
+  }, [matchIdString]);
+
+  useEffect(() => {
+    const newMatchId = parseInt(matchIdString, 10);
+    setDuplicateError(computeDuplicateError(newMatchId, matchId, teamMatch, selectedTeam));
+  }, [matchIdString, matchId, teamMatch, selectedTeam]);
+
+  const isFormValid = !validationError && teamSide !== '' && !duplicateError;
+
+  return {
+    showEditSheet,
+    setShowEditSheet,
+    isSubmitting,
+    setIsSubmitting,
+    error,
+    setError,
+    matchIdString,
+    setMatchIdString,
+    teamSide,
+    setTeamSide,
+    validationError,
+    duplicateError,
+    isFormValid,
+  } as const;
+}
 
 const MatchBadgesContent: React.FC<{
   hasError: boolean;
@@ -269,7 +327,6 @@ function useMatchCardHandlers(
   match: Match,
   deps: ReturnType<typeof useMatchCardState>,
   onSelectMatch: (matchId: number) => void,
-  onScrollToMatch?: (matchId: number) => void,
 ) {
   const handleClick = () => {
     if (!deps.hasError) {
@@ -282,23 +339,56 @@ function useMatchCardHandlers(
       onSelectMatch(match.id);
     }
   };
-  const handleEditManualMatch = async (newMatchId: number) => {
-    deps.setShowEditSheet(false);
-    deps.setIsSubmitting(true);
-    deps.setError(undefined);
+  return { handleClick, handleKeyDown };
+}
+
+function useMatchCardFormHandlers(
+  match: Match,
+  form: ReturnType<typeof useEditManualMatchForm>,
+  appData: ReturnType<typeof useAppData>,
+  selectedTeamId: string,
+  onScrollToMatch?: (matchId: number) => void,
+  onSelectMatch?: (matchId: number) => void,
+) {
+  const handleEditManualMatchWithForm = async (newMatchId: number) => {
+    form.setShowEditSheet(false);
+    form.setIsSubmitting(true);
+    form.setError(undefined);
+
     try {
-      // Pass the current team side (user's selected side for this match)
-      await deps.appData.editManualMatchToTeam(match.id, newMatchId, deps.selectedTeamId, deps.currentTeamSide);
+      // Validate that side is selected
+      if (form.teamSide !== 'radiant' && form.teamSide !== 'dire') {
+        form.setError('Please select a team side (Radiant or Dire)');
+        return;
+      }
+
+      // Scroll immediately when the match will move in the list
       onScrollToMatch?.(newMatchId);
-      onSelectMatch(newMatchId);
+      onSelectMatch?.(newMatchId);
+
+      // Atomic swap to prevent flickering
+      // Pass the user-selected side from the form
+      await appData.editManualMatchToTeam(match.id, newMatchId, selectedTeamId, form.teamSide);
     } catch (err) {
-      deps.setError(err instanceof Error ? err.message : 'Failed to edit match');
-      console.error('Failed to edit match:', err);
+      // Only handle validation errors here - match loading errors are handled by AppData
+      if (err instanceof Error && err.message.includes('team side')) {
+        form.setError(err.message);
+      } else {
+        // For other errors, just log them - the match will show the error
+        console.error('Failed to edit match:', err);
+      }
     } finally {
-      deps.setIsSubmitting(false);
+      form.setIsSubmitting(false);
     }
   };
-  return { handleClick, handleKeyDown, handleEditManualMatch };
+
+  const submitEdit = async () => {
+    if (!form.isFormValid) return;
+    const newId = parseInt(form.matchIdString, 10);
+    await handleEditManualMatchWithForm(newId);
+  };
+
+  return { handleEditManualMatchWithForm, submitEdit };
 }
 
 export const MatchCard: React.FC<MatchCardProps> = ({
@@ -312,12 +402,25 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   highPerformingHeroes,
 }) => {
   const state = useMatchCardState(match, teamMatches);
-  const { handleClick, handleKeyDown, handleEditManualMatch } = useMatchCardHandlers(
-    match,
-    state,
-    onSelectMatch,
-    onScrollToMatch,
-  );
+  const { handleClick, handleKeyDown } = useMatchCardHandlers(match, state, onSelectMatch);
+
+  // Add the form state management
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+  const selectedTeam = appData.getTeam(selectedTeamId);
+
+  if (!selectedTeam) {
+    throw new Error(`Selected team ${selectedTeamId} not found`);
+  }
+
+  const teamMatch = teamMatches.get(match.id);
+  if (!teamMatch) {
+    throw new Error(`Match ${match.id} has no team participation metadata`);
+  }
+
+  const form = useEditManualMatchForm(match.id, teamMatch, selectedTeam);
+  const { submitEdit } = useMatchCardFormHandlers(match, form, appData, selectedTeamId, onScrollToMatch, onSelectMatch);
+
   return (
     <Card
       className={`transition-all duration-200 ${selectedMatchId === match.id ? 'ring-2 ring-primary bg-primary/5' : state.hasError ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'hover:bg-accent/50 cursor-pointer hover:shadow-md'}`}
@@ -343,27 +446,27 @@ export const MatchCard: React.FC<MatchCardProps> = ({
             preferredSite={state.config.preferredExternalSite}
             isManualMatch={state.isManualMatch}
             onRefreshMatch={onRefreshMatch}
-            onOpenEdit={() => state.setShowEditSheet(true)}
+            onOpenEdit={() => form.setShowEditSheet(true)}
             onRemoveManual={() => {
-              state.appData.removeManualMatchFromTeam(match.id, state.selectedTeamId);
+              appData.removeManualMatchFromTeam(match.id, selectedTeamId);
             }}
             onHideMatch={onHideMatch}
           />
         </div>
       </CardContent>
       <EditManualMatchSheet
-        isOpen={state.showEditSheet}
-        onClose={() => state.setShowEditSheet(false)}
-        matchIdString={match.id.toString()}
-        teamSide={state.currentTeamSide}
-        onChangeMatchId={() => {}}
-        onChangeTeamSide={() => {}}
-        onSubmit={() => handleEditManualMatch(match.id)}
-        isSubmitting={state.isSubmitting}
-        error={state.error}
-        validationError={undefined}
-        duplicateError={undefined}
-        isFormValid={false}
+        isOpen={form.showEditSheet}
+        onClose={() => form.setShowEditSheet(false)}
+        matchIdString={form.matchIdString}
+        teamSide={form.teamSide}
+        onChangeMatchId={form.setMatchIdString}
+        onChangeTeamSide={form.setTeamSide}
+        onSubmit={submitEdit}
+        isSubmitting={form.isSubmitting}
+        error={form.error}
+        validationError={form.validationError}
+        duplicateError={form.duplicateError}
+        isFormValid={form.isFormValid}
       />
     </Card>
   );

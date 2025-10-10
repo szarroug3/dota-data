@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/ui/form';
+import { Form, FormField } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -110,6 +110,64 @@ function getButtonText(
   return 'Update Match';
 }
 
+function getMatchIdHelpText(): React.ReactNode {
+  return (
+    <>
+      Find this in{' '}
+      <a
+        href="https://dotabuff.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:text-primary/80 underline"
+      >
+        Dotabuff
+      </a>{' '}
+      or{' '}
+      <a
+        href="https://opendota.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:text-primary/80 underline"
+      >
+        OpenDota
+      </a>{' '}
+      match URLs
+    </>
+  );
+}
+
+function TeamSideSelect({
+  teamSide,
+  setTeamSide,
+  isSubmitting,
+}: {
+  teamSide: '' | 'radiant' | 'dire';
+  setTeamSide: (v: '' | 'radiant' | 'dire') => void;
+  isSubmitting: boolean;
+}) {
+  return (
+    <FormField>
+      <Label htmlFor="team-side" className="text-sm font-medium">
+        Team Side *
+      </Label>
+      <Select
+        value={teamSide}
+        onValueChange={(value: 'radiant' | 'dire' | '') => setTeamSide(value)}
+        disabled={isSubmitting}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select team side" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="radiant">Radiant</SelectItem>
+          <SelectItem value="dire">Dire</SelectItem>
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground mt-1">Which side was the team on?</p>
+    </FormField>
+  );
+}
+
 function EditManualMatchForm({
   matchIdString,
   setMatchIdString,
@@ -120,6 +178,7 @@ function EditManualMatchForm({
   handleSubmit,
   validationError,
   duplicateError,
+  isFormValid,
 }: {
   matchIdString: string;
   setMatchIdString: (v: string) => void;
@@ -130,6 +189,7 @@ function EditManualMatchForm({
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   validationError?: string;
   duplicateError?: string;
+  isFormValid: boolean;
 }) {
   const shouldShowMatchError = matchIdString.trim().length > 0 ? validationError : undefined;
   const combinedError = duplicateError || shouldShowMatchError;
@@ -151,52 +211,12 @@ function EditManualMatchForm({
         value={matchIdString}
         onChange={setMatchIdString}
         disabled={isSubmitting}
-        helpText={
-          <>
-            Find this in{' '}
-            <a
-              href="https://dotabuff.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline"
-            >
-              Dotabuff
-            </a>{' '}
-            or{' '}
-            <a
-              href="https://opendota.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline"
-            >
-              OpenDota
-            </a>{' '}
-            match URLs
-          </>
-        }
+        helpText={getMatchIdHelpText()}
         error={combinedError}
-        isValid={!validationError && !duplicateError}
+        isValid={matchIdString.trim().length === 0 || isFormValid}
       />
 
-      <FormField>
-        <Label htmlFor="team-side" className="text-sm font-medium">
-          Team Side *
-        </Label>
-        <Select
-          value={teamSide}
-          onValueChange={(value: 'radiant' | 'dire' | '') => setTeamSide(value)}
-          disabled={isSubmitting}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select team side" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="radiant">Radiant</SelectItem>
-            <SelectItem value="dire">Dire</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground mt-1">Which side was the team on?</p>
-      </FormField>
+      <TeamSideSelect teamSide={teamSide} setTeamSide={setTeamSide} isSubmitting={isSubmitting} />
     </div>
   );
 }
@@ -215,7 +235,9 @@ export function EditManualMatchSheet({
   duplicateError,
   isFormValid,
 }: EditManualMatchSheetProps): React.ReactElement {
-  const isDisabled = isSubmitting || !isFormValid || teamSide === '';
+  // Use our own calculation since parent's isFormValid is incorrect
+  const manualIsFormValid = !validationError && teamSide !== '' && !duplicateError;
+  const isDisabled = isSubmitting || !manualIsFormValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,21 +256,30 @@ export function EditManualMatchSheet({
         </SheetHeader>
 
         <div className="grid flex-1 auto-rows-min gap-6 px-4">
-          <EditManualMatchForm
-            matchIdString={matchIdString}
-            setMatchIdString={onChangeMatchId}
-            teamSide={teamSide}
-            setTeamSide={onChangeTeamSide}
-            isSubmitting={isSubmitting}
-            isDisabled={isDisabled}
-            handleSubmit={handleSubmit}
-            validationError={validationError}
-            duplicateError={duplicateError}
-          />
+          <Form onSubmit={handleSubmit}>
+            <EditManualMatchForm
+              matchIdString={matchIdString}
+              setMatchIdString={onChangeMatchId}
+              teamSide={teamSide}
+              setTeamSide={onChangeTeamSide}
+              isSubmitting={isSubmitting}
+              isDisabled={isDisabled}
+              handleSubmit={handleSubmit}
+              validationError={validationError}
+              duplicateError={duplicateError}
+              isFormValid={isFormValid}
+            />
+            {_error && (
+              <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{_error}</span>
+              </div>
+            )}
+          </Form>
         </div>
 
         <SheetFooter className="flex flex-col gap-2 w-full">
-          <Button type="button" onClick={handleSubmit} disabled={isDisabled} className="w-full">
+          <Button type="submit" disabled={isDisabled} className="w-full" onClick={handleSubmit}>
             {getButtonText(!validationError, teamSide, isSubmitting, duplicateError)}
           </Button>
           <SheetClose asChild>

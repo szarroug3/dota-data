@@ -3,21 +3,15 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
-import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
-import { MatchFilters } from '@/frontend/matches/components/filters/MatchFilters';
 import MatchesList, { type MatchesListRef } from '@/frontend/matches/components/list/MatchesList';
 import type { MatchListViewMode } from '@/frontend/matches/components/list/MatchListView';
 
 interface ResizableMatchLayoutProps {
-  filters: MatchFiltersType;
-  onFiltersChange: (filters: MatchFiltersType) => void;
-  activeTeamMatches: Match[];
   teamMatches: Map<number, TeamMatchParticipation>;
   visibleMatches: Match[];
-  filteredMatches: Match[];
   unhiddenMatches: Match[];
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
@@ -27,39 +21,16 @@ interface ResizableMatchLayoutProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
-  hiddenMatchIds: Set<number>;
   selectedMatch: Match | null;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
+  selectedTeam: Team;
 }
 
 export interface ResizableMatchLayoutRef {
   scrollToMatch: (matchId: number) => void;
-}
-
-function FiltersSection({
-  filters,
-  onFiltersChange,
-  activeTeamMatches,
-  teamMatches,
-}: {
-  filters: MatchFiltersType;
-  onFiltersChange: (filters: MatchFiltersType) => void;
-  activeTeamMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-}) {
-  return (
-    <div className="flex-shrink-0 pb-2">
-      <MatchFilters
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        matches={activeTeamMatches}
-        teamMatches={teamMatches}
-      />
-    </div>
-  );
 }
 
 function MatchListPane({
@@ -74,7 +45,6 @@ function MatchListPane({
   hiddenMatchesCount,
   onShowHiddenMatches,
   teamMatches,
-  hiddenMatchIds,
   unhiddenMatches,
   onScrollToMatch,
   onAddMatch,
@@ -90,7 +60,6 @@ function MatchListPane({
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
   teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
   unhiddenMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
@@ -110,7 +79,6 @@ function MatchListPane({
           hiddenMatchesCount={hiddenMatchesCount}
           onShowHiddenMatches={onShowHiddenMatches}
           teamMatches={teamMatches}
-          hiddenMatchIds={hiddenMatchIds}
           allMatches={unhiddenMatches}
           onScrollToMatch={onScrollToMatch}
           onAddMatch={onAddMatch}
@@ -126,14 +94,14 @@ function MatchDetailsPane({
   matchDetailsViewMode,
   setMatchDetailsViewMode,
   unhiddenMatches,
-  hiddenMatchIds,
+  selectedTeam,
 }: {
   selectedMatch: Match | null;
   teamMatches: Map<number, TeamMatchParticipation>;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   unhiddenMatches: Match[];
-  hiddenMatchIds: Set<number>;
+  selectedTeam: Team;
 }) {
   return (
     <ResizablePanel id="match-details" defaultSize={50} minSize={0} maxSize={100} className="overflow-hidden">
@@ -148,8 +116,7 @@ function MatchDetailsPane({
                 viewMode={matchDetailsViewMode}
                 onViewModeChange={setMatchDetailsViewMode}
                 allMatches={unhiddenMatches}
-                teamMatches={teamMatches}
-                hiddenMatchIds={hiddenMatchIds}
+                selectedTeam={selectedTeam}
               />
             );
           })()
@@ -169,9 +136,6 @@ function MatchDetailsPane({
 export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, ResizableMatchLayoutProps>(
   (
     {
-      filters,
-      onFiltersChange,
-      activeTeamMatches,
       teamMatches,
       visibleMatches,
       unhiddenMatches,
@@ -183,12 +147,12 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
       onSelectMatch,
       hiddenMatchesCount = 0,
       onShowHiddenMatches,
-      hiddenMatchIds = new Set(),
       selectedMatch,
       matchDetailsViewMode,
       setMatchDetailsViewMode,
       onScrollToMatch,
       onAddMatch,
+      selectedTeam,
     },
     ref,
   ) => {
@@ -201,44 +165,33 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
     }));
 
     return (
-      <div className="h-fit flex flex-col">
-        <FiltersSection
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          activeTeamMatches={activeTeamMatches}
+      <ResizablePanelGroup direction="horizontal">
+        <MatchListPane
+          matchesListRef={matchesListRef}
+          visibleMatches={visibleMatches}
+          onHideMatch={onHideMatch}
+          onRefreshMatch={onRefreshMatch}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          selectedMatchId={selectedMatchId}
+          onSelectMatch={onSelectMatch}
+          hiddenMatchesCount={hiddenMatchesCount}
+          onShowHiddenMatches={onShowHiddenMatches}
           teamMatches={teamMatches}
+          unhiddenMatches={unhiddenMatches}
+          onScrollToMatch={onScrollToMatch}
+          onAddMatch={onAddMatch}
         />
-        <div className="h-fit">
-          <ResizablePanelGroup direction="horizontal">
-            <MatchListPane
-              matchesListRef={matchesListRef}
-              visibleMatches={visibleMatches}
-              onHideMatch={onHideMatch}
-              onRefreshMatch={onRefreshMatch}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              selectedMatchId={selectedMatchId}
-              onSelectMatch={onSelectMatch}
-              hiddenMatchesCount={hiddenMatchesCount}
-              onShowHiddenMatches={onShowHiddenMatches}
-              teamMatches={teamMatches}
-              hiddenMatchIds={hiddenMatchIds}
-              unhiddenMatches={unhiddenMatches}
-              onScrollToMatch={onScrollToMatch}
-              onAddMatch={onAddMatch}
-            />
-            <ResizableHandle withHandle className="after:w-4" />
-            <MatchDetailsPane
-              selectedMatch={selectedMatch}
-              teamMatches={teamMatches}
-              matchDetailsViewMode={matchDetailsViewMode}
-              setMatchDetailsViewMode={setMatchDetailsViewMode}
-              unhiddenMatches={unhiddenMatches}
-              hiddenMatchIds={hiddenMatchIds}
-            />
-          </ResizablePanelGroup>
-        </div>
-      </div>
+        <ResizableHandle withHandle />
+        <MatchDetailsPane
+          selectedMatch={selectedMatch}
+          teamMatches={teamMatches}
+          matchDetailsViewMode={matchDetailsViewMode}
+          setMatchDetailsViewMode={setMatchDetailsViewMode}
+          unhiddenMatches={unhiddenMatches}
+          selectedTeam={selectedTeam}
+        />
+      </ResizablePanelGroup>
     );
   },
 );

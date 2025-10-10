@@ -3,7 +3,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
+import type { TeamPlayerOverview } from '@/frontend/lib/app-data-statistics-ops';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
@@ -33,8 +34,7 @@ interface ResizablePlayerLayoutProps {
   onAddPlayer?: () => void;
   heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
-  matchesArray: Match[];
-  selectedTeam: Team;
+  playerTeamOverview: TeamPlayerOverview | null;
 }
 
 export interface ResizablePlayerLayoutRef {
@@ -116,8 +116,7 @@ function PlayerDetailsSection(props: {
   players: Player[];
   hiddenPlayerIds?: Set<number>;
   heroes: Map<number, Hero>;
-  matchesArray: Match[];
-  selectedTeam: Team;
+  playerTeamOverview: TeamPlayerOverview | null;
 }) {
   const {
     selectedPlayer,
@@ -126,8 +125,7 @@ function PlayerDetailsSection(props: {
     players,
     hiddenPlayerIds = new Set(),
     heroes,
-    matchesArray,
-    selectedTeam,
+    playerTeamOverview,
   } = props;
   return (
     <div className="h-fit pt-2 pl-3">
@@ -139,8 +137,7 @@ function PlayerDetailsSection(props: {
           allPlayers={players}
           hiddenPlayerIds={hiddenPlayerIds}
           heroes={heroes}
-          matchesArray={matchesArray}
-          selectedTeam={selectedTeam}
+          playerTeamOverview={playerTeamOverview}
         />
       ) : (
         <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)]">
@@ -179,8 +176,7 @@ export const ResizablePlayerLayout = React.memo(
         onRemovePlayer,
         heroes,
         preferredSite,
-        matchesArray,
-        selectedTeam,
+        playerTeamOverview,
       },
       ref,
     ) => {
@@ -231,14 +227,13 @@ export const ResizablePlayerLayout = React.memo(
               >
                 <PlayerDetailsSection
                   selectedPlayer={selectedPlayer}
-                  playerDetailsViewMode={playerDetailsViewMode}
-                  setPlayerDetailsViewMode={setPlayerDetailsViewMode}
-                  players={players}
-                  hiddenPlayerIds={hiddenPlayerIds}
-                  heroes={heroes}
-                  matchesArray={matchesArray}
-                  selectedTeam={selectedTeam}
-                />
+          playerDetailsViewMode={playerDetailsViewMode}
+          setPlayerDetailsViewMode={setPlayerDetailsViewMode}
+          players={players}
+          hiddenPlayerIds={hiddenPlayerIds}
+          heroes={heroes}
+          playerTeamOverview={playerTeamOverview}
+        />
               </ResizablePanel>
             </ResizablePanelGroup>
           </div>

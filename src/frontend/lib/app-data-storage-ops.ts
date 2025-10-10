@@ -212,7 +212,7 @@ function removeInvalidStoredPlayers(team: Team): void {
   });
 }
 
-function createPlaceholderPlayer(stored: StoredPlayerData): Player {
+export function createPlaceholderPlayer(stored: StoredPlayerData): Player {
   const now = Date.now();
   const wins = Math.round((stored.winRate / 100) * stored.games);
   const losses = stored.games - wins;

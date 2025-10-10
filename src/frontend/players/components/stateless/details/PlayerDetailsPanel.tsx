@@ -1,7 +1,8 @@
 import React from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
+import type { TeamPlayerOverview } from '@/frontend/lib/app-data-statistics-ops';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 
 import { PlayerDetailsPanelDetails } from './PlayerDetailsPanelDetails';
 import { PlayerDetailsPanelHeader } from './PlayerDetailsPanelHeader';
@@ -17,8 +18,7 @@ interface PlayerDetailsPanelProps {
   allPlayers?: Player[];
   hiddenPlayerIds?: Set<number>;
   heroes: Map<number, Hero>;
-  matchesArray: Match[];
-  selectedTeam: Team;
+  playerTeamOverview: TeamPlayerOverview | null;
 }
 
 export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(
@@ -29,8 +29,7 @@ export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(
     allPlayers = [],
     hiddenPlayerIds = new Set<number>(),
     heroes,
-    matchesArray,
-    selectedTeam,
+    playerTeamOverview,
   }) => {
     return (
       <Card className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)] @container">
@@ -55,12 +54,7 @@ export const PlayerDetailsPanel: React.FC<PlayerDetailsPanelProps> = React.memo(
           )}
           {viewMode === 'team' && (
             <div className="space-y-4">
-              <PlayerDetailsPanelTeam
-                player={player}
-                heroes={heroes}
-                matchesArray={matchesArray}
-                selectedTeam={selectedTeam}
-              />
+              <PlayerDetailsPanelTeam playerTeamOverview={playerTeamOverview} />
             </div>
           )}
         </CardContent>

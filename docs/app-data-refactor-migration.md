@@ -22,7 +22,9 @@ Goal: freeze the current behaviour, establish safety nets, and understand the ex
    - Enforce `noImplicitAny`, `strictNullChecks`, and ESLint warnings on `any`/`unknown`.
    - Fix existing lint/type issues so later steps fail fast.
 
-Deliverables: updated documentation (this inventory), passing test suite, lint/type clean base.
+Deliverables: updated documentation (this inventory), passing test suite (✅ achieved), lint clean base (✅ on touched files), TypeScript strict issues documented for later phases (⏳ remaining).
+
+**Phase 0 status:** ✅ complete; proceed to Phase 1.
 
 ---
 
@@ -30,15 +32,17 @@ Deliverables: updated documentation (this inventory), passing test suite, lint/t
 
 Goal: ensure every entity has **one canonical in-memory format** and **one persisted format**.
 
+_Status_: ✅ Canonical entity interfaces (`TeamEntity`, `MatchEntity`, `PlayerEntity`, etc.) are now the primary definitions in `app-data-types`. Legacy names temporarily alias back for compatibility and should be removed once dependent code finishes migrating. Storage manager now reads/writes these canonical shapes directly when hydrating and persisting teams.
+
 1. **Define canonical types**
    - Create a `types` module exporting `TeamEntity`, `MatchEntity`, `PlayerEntity`, etc.
    - Update in-memory Maps to use these types.
 2. **Align persistence layer**
-   - Update `storage-manager` to serialise/deserialise using the canonical types (possibly with DTOs for persistence).
-   - Add migration logic if the storage shape changes (version key in localStorage).
+   - ✅ `storage-manager` serialises/deserialises `TeamEntity`-shaped objects (maps/sets rebuilt from stored DTOs).
+   - ⏳ Add migration/versioning if storage format changes beyond current schema.
 3. **Refactor all loaders**
-   - Ensure `fetchAndProcessMatch`, `fetchAndProcessPlayer`, and league loaders return canonical entities.
-   - Remove duplicate placeholder builders; keep a single `createPlaceholder<Entity>` per type.
+   - ✅ `fetchAndProcessMatch`/`fetchAndProcessPlayer` and reference-data loaders now emit canonical entities.
+   - ✅ Storage + metadata helpers consume canonical maps; placeholder builders remain centralized.
 
 Tests: reload app to ensure localStorage migration is lossless; run automated suite.
 
@@ -47,6 +51,16 @@ Tests: reload app to ensure localStorage migration is lossless; run automated su
 ## Phase 2 · Context-Owned Derived Data
 
 Goal: all calculations (sorting, filtering, stats, aggregates) live in context, not components.
+
+_Status_: ✅ Complete. Player and match data now flow from context-owned selectors:
+- ✅ `computeTeamPlayersForDisplay` → `AppData.getTeamPlayersForDisplay` removes hook-level placeholder logic.
+- ✅ `sortPlayersByName` + `AppData.getTeamPlayersSortedForDisplay` feed the player stats page with pre-sorted rosters.
+- ✅ `computeTeamHiddenPlayersForDisplay` + `AppData.hidePlayerOnTeam/unhidePlayerOnTeam` centralise hidden-player state and persistence.
+- ✅ `computeTeamHiddenMatchesForDisplay` + `AppData.hideMatchOnTeam/unhideMatchOnTeam` move match-level hiding into the context layer.
+- ✅ `computeTeamMatchFilters` powers `useMatchFilters` so filtering happens once inside AppData.
+- ✅ `computeTeamHeroSummaryForMatches` feeds Match History hero summaries, letting the UI render cached aggregates only.
+- ✅ `AppData.getTeamPlayerOverview` serves the player details panel with precomputed team stats and hero usage.
+- ✅ `computeTeamPerformanceSummary` now populates team cards/lists with aggregated win rates and manual counts from context data.
 
 1. **Identify derived data**
    - List calculations currently done in hooks/components (player sorting, hidden-state counts, match formatting, statistics).
@@ -70,6 +84,8 @@ Manual QA: verify CPU profiles stay reasonable (no runaway recomputation). Compo
 
 Goal: enforce the “container + stateless component” structure across all routes.
 
+_Status_: 🚧 In progress. Player Stats now routes through `PlayerStatsPageContainer`, with the stateless view taking only props and handling manual-player interactions via callbacks. Dashboard and Match History still need the same treatment.
+
 1. **Define container responsibilities**
    - Each container should:
      - Subscribe to `AppData` selectors.
@@ -86,6 +102,8 @@ Goal: enforce the “container + stateless component” structure across all rou
    - Ensure there are no lingering `any`s introduced during refactor.
 
 Tests: snapshot & behaviour tests for each page verifying props passed to stateless components.
+
+_Next steps_: Extract Dashboard and Match History containers, then remove any residual hook logic that mutates state inside stateless components.
 
 ---
 
@@ -170,4 +188,3 @@ Deliverable: clean, well-structured repository with updated docs and tooling.
 - **Design collaboration:** Sync with design/UX to confirm UI expectations when data phases complete (loading indicators, stale data states).
 
 Following this plan should incrementally transform the data layer into a coherent, maintainable, and testable system while keeping the UI stable at each step.
-

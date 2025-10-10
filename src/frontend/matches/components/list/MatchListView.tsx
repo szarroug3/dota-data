@@ -15,7 +15,6 @@ interface MatchListViewProps {
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
   teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
 }
@@ -28,7 +27,6 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
   onRefreshMatch,
   viewMode,
   teamMatches,
-  hiddenMatchIds = new Set(),
   allMatches = [],
   onScrollToMatch,
 }) => {
@@ -41,7 +39,6 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
         teamMatches={teamMatches}
-        hiddenMatchIds={hiddenMatchIds}
         allMatches={allMatches}
         onScrollToMatch={onScrollToMatch}
       />

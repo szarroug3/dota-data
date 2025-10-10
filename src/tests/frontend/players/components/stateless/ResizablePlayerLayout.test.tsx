@@ -131,8 +131,7 @@ const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
 const mockPlayer = createMockPlayer();
 
 const heroes: Record<string, any> = {};
-const matchesArray: any[] = [];
-const selectedTeam: any = null;
+const playerTeamOverview = { teamStats: null, detailedStats: null };
 
 const defaultProps = {
   players: [mockPlayer],
@@ -154,8 +153,7 @@ const defaultProps = {
   onAddPlayer: jest.fn(),
   heroes,
   preferredSite: 'dotabuff' as any,
-  matchesArray,
-  selectedTeam,
+  playerTeamOverview,
 };
 
 describe('ResizablePlayerLayout', () => {
