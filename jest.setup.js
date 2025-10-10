@@ -1,20 +1,32 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
 require('@testing-library/jest-dom');
 
-// Mock window.matchMedia for next-themes compatibility
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof globalThis.File === 'undefined') {
+  globalThis.File = class {};
+}
+// Ensure global.File is also set for modules referencing the global directly
+if (typeof global.File === 'undefined') {
+  global.File = globalThis.File;
+}
+
+// Mock window.matchMedia for next-themes compatibility (only if window exists)
+if (typeof globalThis.window !== 'undefined') {
+  if (!window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: jest.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(), // deprecated
+        removeListener: jest.fn(), // deprecated
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+      })),
+    });
+  }
+}
 
 // Mock Upstash Redis modules globally to prevent any real connections or warnings
 const mockRedisInstance = {
@@ -34,7 +46,9 @@ const mockRedisInstance = {
   flushall: jest.fn(),
 };
 
-const MockRedis = function() { return mockRedisInstance; };
+const MockRedis = function () {
+  return mockRedisInstance;
+};
 MockRedis.fromEnv = () => mockRedisInstance;
 
 jest.mock('@upstash/redis', () => ({
@@ -49,7 +63,9 @@ jest.mock('next/server', () => {
       this.status = init?.status;
       this.headers = new Map();
     }
-    json() { return Promise.resolve(this.body); }
+    json() {
+      return Promise.resolve(this.body);
+    }
     static json(data, init) {
       return new NextResponse(data, init);
     }
@@ -58,14 +74,12 @@ jest.mock('next/server', () => {
 });
 
 // Set global environment variables to prevent Redis warnings and enable mock mode
-global.process.env.UPSTASH_REDIS_REST_URL = 'http://localhost:6379';
-global.process.env.UPSTASH_REDIS_REST_TOKEN = 'dummy-token';
+// Use Dota Assistant env names now
+global.process.env.DOTA_ASSISTANT_KV_REST_API_URL = 'http://localhost:6379';
+global.process.env.DOTA_ASSISTANT_KV_REST_API_TOKEN = 'dummy-token';
 global.process.env.MOCK_DATA = 'true';
 global.process.env.USE_MOCK_OPENDOTA = 'true';
-global.process.env.USE_MOCK_DOTABUFF = 'true';
+global.process.env.USE_MOCK_STEAM = 'true';
 
-// Mock all Redis/cache/queue/rate-limit backend modules globally
-// These are only needed for backend tests, not frontend tests
-// jest.mock('@/lib/api/cache-backends/redis');
-// jest.mock('@/lib/api/queue-backends/redis');
-// jest.mock('@/lib/api/rate-limit-backends/redis'); 
+// Mock next/image to behave like a plain img for Jest environment
+jest.mock('next/image', () => ({ __esModule: true, default: 'img' }));

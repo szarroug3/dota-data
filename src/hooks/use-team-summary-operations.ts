@@ -19,34 +19,27 @@ import { createInitialTeamData, updateTeamError } from '@/utils/team-helpers';
 // UTILITY FUNCTIONS
 // ============================================================================
 
-function updateTeamInState(
+function updateTeamInStateAndPersist(
   teamKey: string,
   updatedTeamData: TeamData,
   state: {
     setTeams: React.Dispatch<React.SetStateAction<Map<string, TeamData>>>;
-  }
+  },
+  configContext: ConfigContextValue
 ) {
   state.setTeams(prev => {
     const newTeams = new Map(prev);
     newTeams.set(teamKey, updatedTeamData);
+    try {
+      configContext.setTeams(newTeams);
+    } catch (error) {
+      console.warn('Failed to persist updated team summary:', error);
+    }
     return newTeams;
   });
 }
 
-function persistTeamData(
-  teamKey: string, 
-  teamData: TeamData, 
-  state: Map<string, TeamData>, 
-  configContext: ConfigContextValue
-): void {
-  try {
-    const updatedTeams = new Map(state);
-    updatedTeams.set(teamKey, teamData);
-    configContext.setTeams(updatedTeams);
-  } catch (error) {
-    console.warn('Failed to persist team data:', error);
-  }
-}
+// Removed separate persist function to avoid persisting stale state
 
 function handleSummaryOperationError(
   error: Error | string | object,
@@ -120,15 +113,12 @@ export function useRefreshTeamSummary(
         isLoading: false
       };
       
-      // Update team in state
-      updateTeamInState(teamKey, updatedTeamData, state);
-      
-      // Persist updated data
-      persistTeamData(teamKey, updatedTeamData, state.teams, configContext);
+      // Update team in state and persist in one step to avoid stale state
+      updateTeamInStateAndPersist(teamKey, updatedTeamData, state, configContext);
       
     } catch (error) {
       const fallbackData = handleSummaryOperationError(error as Error | string | object, controller, teamId, leagueId, state, configContext);
-      updateTeamInState(teamKey, fallbackData, state);
+      updateTeamInStateAndPersist(teamKey, fallbackData, state, configContext);
     } finally {
       // Clear loading state using Map utility
       clearMapItemLoading(state.setTeams, teamKey);

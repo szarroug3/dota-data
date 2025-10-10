@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaMatch } from '@/lib/api/opendota/matches';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle match API errors
  */
 function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
+  if (error.message.includes('429')) {
+    return {
+      error: 'Rate limited by OpenDota API',
+      status: 429,
+      details: 'Too many requests to OpenDota API. Please try again later.',
+    };
+  }
   if (error.message.includes('Rate limited')) {
     return {
       error: 'Rate limited by OpenDota API',
       status: 429,
-      details: 'Too many requests to OpenDota API. Please try again later.'
+      details: 'Too many requests to OpenDota API. Please try again later.',
     };
   }
 
@@ -19,7 +28,7 @@ function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
     return {
       error: 'Match not found',
       status: 404,
-      details: `Match with ID ${matchId} could not be found.`
+      details: `Match with ID ${matchId} could not be found.`,
     };
   }
 
@@ -27,14 +36,14 @@ function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
     return {
       error: 'Invalid match data',
       status: 422,
-      details: 'Match data is invalid or corrupted.'
+      details: 'Match data is invalid or corrupted.',
     };
   }
 
   return {
     error: 'Failed to fetch match',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -138,7 +147,7 @@ function handleMatchError(error: Error, matchId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   try {
     const { id: matchId } = await params;
@@ -150,11 +159,20 @@ export async function GET(
     // Fetch raw match data (handles caching, rate limiting, mock mode)
     const match = await fetchOpenDotaMatch(matchId, force);
 
-    // Return successful response
-    return NextResponse.json(match);
+    // Validate response shape (permissive schema)
+    try {
+      const validated = schemas.getApiMatches.parse(match);
+      return NextResponse.json(validated);
+    } catch {
+      throw new Error('Failed to parse match');
+    }
   } catch (error) {
-    console.error('Matches API Error:', error);
-    
+    const { id } = await params;
+    apiLogger.error(
+      'Matches API Error',
+      `Failed to fetch match data for ID: ${id} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+
     if (error instanceof Error) {
       const { id } = await params;
       const errorResponse = handleMatchError(error, id);
@@ -164,8 +182,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to fetch match',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

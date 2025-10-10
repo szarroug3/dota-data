@@ -1,0 +1,171 @@
+/**
+ * Player Statistics Processing
+ */
+
+import type { Hero } from '@/frontend/types/contexts/constants-context-value';
+import type { Match } from '@/frontend/types/contexts/match-context-value';
+import type { Player } from '@/frontend/types/contexts/player-context-value';
+import type { TeamData } from '@/frontend/types/contexts/team-context-value';
+import type { OpenDotaPlayerHero } from '@/shared/types/external-apis';
+
+export interface PlayerRank { medal: string; stars: number; isImmortal: boolean; immortalRank?: number; displayText: string }
+
+export function processPlayerRank(rankTier: number, leaderboardRank?: number): PlayerRank | null {
+  if (rankTier === 0) return null;
+  if (rankTier >= 80) {
+    const immortalRank = rankTier - 80;
+    if (leaderboardRank && leaderboardRank > 0) {
+      return { medal: 'Immortal', stars: 0, isImmortal: true, immortalRank: leaderboardRank, displayText: `Immortal #${leaderboardRank}` };
+    }
+    return { medal: 'Immortal', stars: 0, isImmortal: true, immortalRank, displayText: immortalRank > 0 ? `Immortal ${immortalRank}` : 'Immortal' };
+  }
+  const medalTiers = ['Herald', 'Guardian', 'Crusader', 'Archon', 'Legend', 'Ancient', 'Divine'];
+  const tier = Math.floor((rankTier - 1) / 10);
+  const stars = rankTier % 10;
+  if (tier >= 0 && tier < medalTiers.length) return { medal: medalTiers[tier], stars, isImmortal: false, displayText: medalTiers[tier] };
+  return null;
+}
+
+export interface HeroUsage { hero: Hero; games: number; wins: number; winRate: number; averageKDA?: number; roles?: string[] }
+
+export function getTopHeroesByGames(heroes: OpenDotaPlayerHero[], heroesData: Record<string, Hero>, limit: number = 5): HeroUsage[] {
+  return heroes
+    .sort((a, b) => b.games - a.games)
+    .slice(0, limit)
+    .map(hero => {
+      const heroData = heroesData[hero.hero_id.toString()];
+      return {
+        hero: heroData || { id: hero.hero_id.toString(), name: `npc_dota_hero_${hero.hero_id}`, localizedName: `Hero ${hero.hero_id}`, primaryAttribute: 'strength', attackType: 'melee', roles: [], imageUrl: '' },
+        games: hero.games,
+        wins: hero.win,
+        winRate: hero.games > 0 ? (hero.win / hero.games) * 100 : 0
+      };
+    });
+}
+
+export function getTopHeroesByWinRate(heroes: OpenDotaPlayerHero[], heroesData: Record<string, Hero>, minGames: number = 5, limit: number = 5): HeroUsage[] {
+  return heroes
+    .filter(hero => hero.games >= minGames)
+    .sort((a, b) => {
+      const aWinRate = a.games > 0 ? a.win / a.games : 0;
+      const bWinRate = b.games > 0 ? b.win / b.games : 0;
+      return bWinRate - aWinRate;
+    })
+    .slice(0, limit)
+    .map(hero => {
+      const heroData = heroesData[hero.hero_id.toString()];
+      return {
+        hero: heroData || { id: hero.hero_id.toString(), name: `npc_dota_hero_${hero.hero_id}`, localizedName: `Hero ${hero.hero_id}`, primaryAttribute: 'strength', attackType: 'melee', roles: [], imageUrl: '' },
+        games: hero.games,
+        wins: hero.win,
+        winRate: hero.games > 0 ? (hero.win / hero.games) * 100 : 0
+      };
+    });
+}
+
+export interface TeamRoleStats { role: string; games: number; wins: number; winRate: number }
+export interface TeamHeroStats { hero: Hero; games: number; wins: number; winRate: number; roles: string[] }
+
+export function processTeamRoleStats(player: Player, teamData: TeamData, matches: Match[]): TeamRoleStats[] {
+  const roleStats: Record<string, { games: number; wins: number }> = {};
+  matches.forEach(match => {
+    const radiantPlayer = match.players.radiant.find(p => p.accountId === player.profile.profile.account_id);
+    const direPlayer = match.players.dire.find(p => p.accountId === player.profile.profile.account_id);
+    const matchPlayer = radiantPlayer || direPlayer;
+    if (matchPlayer && matchPlayer.role) {
+      const role = matchPlayer.role;
+      const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : (direPlayer ? true : false);
+      if (!roleStats[role]) roleStats[role] = { games: 0, wins: 0 };
+      roleStats[role].games++;
+      if (isWin) roleStats[role].wins++;
+    }
+  });
+  return Object.entries(roleStats).map(([role, stats]) => ({ role, games: stats.games, wins: stats.wins, winRate: stats.games > 0 ? (stats.wins / stats.games) * 100 : 0 }));
+}
+
+export function processTeamHeroStats(
+  player: Player,
+  teamData: TeamData,
+  matches: Match[],
+  heroesData: Record<string, Hero>
+): TeamHeroStats[] {
+  const heroStats: Record<string, { games: number; wins: number; roles: Set<string> }> = {};
+  matches.forEach(match => {
+    const radiantPlayer = match.players.radiant.find(p => p.accountId === player.profile.profile.account_id);
+    const direPlayer = match.players.dire.find(p => p.accountId === player.profile.profile.account_id);
+    const matchPlayer = radiantPlayer || direPlayer;
+    if (matchPlayer) {
+      const heroId = matchPlayer.hero.id.toString();
+      const role = matchPlayer.role || 'Unknown';
+      const isWin = match.result === 'radiant' ? (radiantPlayer ? true : false) : (direPlayer ? true : false);
+      if (!heroStats[heroId]) heroStats[heroId] = { games: 0, wins: 0, roles: new Set() };
+      heroStats[heroId].games++;
+      heroStats[heroId].roles.add(role);
+      if (isWin) heroStats[heroId].wins++;
+    }
+  });
+  return Object.entries(heroStats).map(([heroId, stats]) => {
+    const heroData = heroesData[heroId];
+    return {
+      hero: heroData || { id: heroId, name: `npc_dota_hero_${heroId}`, localizedName: `Hero ${heroId}`, primaryAttribute: 'strength', attackType: 'melee', roles: [], imageUrl: '' },
+      games: stats.games,
+      wins: stats.wins,
+      winRate: stats.games > 0 ? (stats.wins / stats.games) * 100 : 0,
+      roles: Array.from(stats.roles)
+    };
+  });
+}
+
+export interface PlayerDetailedStats {
+  playerId: number;
+  playerName: string;
+  rank: PlayerRank | null;
+  topHeroesAllTime: HeroUsage[];
+  topHeroesRecent: HeroUsage[];
+  teamRoles: TeamRoleStats[];
+  teamHeroes: TeamHeroStats[];
+  totalGames: number;
+  totalWins: number;
+  winRate: number;
+  averageKDA: number;
+}
+
+export function processPlayerDetailedStats(
+  player: Player,
+  teamData?: TeamData,
+  matches: Match[] = [],
+  heroesData: Record<string, Hero> = {}
+): PlayerDetailedStats {
+  const rank = processPlayerRank(player.profile.rank_tier);
+  const topHeroesAllTime = getTopHeroesByGames(player.heroes, heroesData, 5);
+  const topHeroesRecent = getTopHeroesByGames(player.heroes, heroesData, 5);
+  const teamRoles = teamData ? processTeamRoleStats(player, teamData, matches) : [];
+  const teamHeroes = teamData ? processTeamHeroStats(player, teamData, matches, heroesData) : [];
+  const totalGames = player.wl.win + player.wl.lose;
+  const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
+  let totalKDA = 0;
+  let matchCount = 0;
+  player.recentMatches.forEach(match => {
+    if (match.kills !== undefined && match.deaths !== undefined && match.assists !== undefined) {
+      const kda = match.deaths > 0 ? (match.kills + match.assists) / match.deaths : match.kills + match.assists;
+      totalKDA += kda;
+      matchCount++;
+    }
+  });
+  const averageKDA = matchCount > 0 ? totalKDA / matchCount : 0;
+  return {
+    playerId: player.profile.profile.account_id,
+    playerName: player.profile.profile.personaname,
+    rank,
+    topHeroesAllTime,
+    topHeroesRecent,
+    teamRoles,
+    teamHeroes,
+    totalGames,
+    totalWins: player.wl.win,
+    winRate,
+    averageKDA
+  };
+}
+
+

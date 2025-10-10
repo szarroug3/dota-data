@@ -1,38 +1,27 @@
-"use client"
+'use client';
 
-import { CheckIcon, ChevronsUpDownIcon, XIcon } from "lucide-react"
-import * as React from "react"
+import { CheckIcon, ChevronsUpDownIcon, XIcon } from 'lucide-react';
+import * as React from 'react';
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface ComboboxOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface MultiSelectComboboxProps {
-  options: ComboboxOption[]
-  value: string[]
-  onValueChange: (value: string[]) => void
-  placeholder?: string
-  searchPlaceholder?: string
-  emptyMessage?: string
-  className?: string
+  options: ComboboxOption[];
+  value: string[];
+  onValueChange: (value: string[]) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  className?: string;
 }
 
 function ClearButton({ onClick }: { onClick: () => void }) {
@@ -42,100 +31,84 @@ function ClearButton({ onClick }: { onClick: () => void }) {
       tabIndex={0}
       className="ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex-shrink-0 cursor-pointer"
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          onClick()
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
         }
       }}
       onMouseDown={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
+        e.preventDefault();
+        e.stopPropagation();
       }}
       onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        onClick()
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
       }}
     >
       <XIcon className="h-3 w-3 text-muted-foreground hover:text-foreground" />
     </div>
-  )
+  );
 }
 
 function SingleSelectionBadge({ option, onRemove }: { option: ComboboxOption; onRemove: () => void }) {
   return (
-    <Badge
-      variant="secondary"
-      className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]"
-    >
+    <Badge variant="secondary" className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]">
       <span className="truncate flex-1 min-w-0">{option.label}</span>
       <ClearButton onClick={onRemove} />
     </Badge>
-  )
+  );
 }
 
 function MultipleSelectionDisplay({ count, onClear }: { count: number; onClear: () => void }) {
   return (
-    <Badge
-      variant="secondary"
-      className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]"
-    >
+    <Badge variant="secondary" className="text-xs flex items-center overflow-hidden max-w-[calc(100%-0.01rem)]">
       <span className="truncate flex-1 min-w-0">{count} selected</span>
       <ClearButton onClick={onClear} />
     </Badge>
-  )
+  );
 }
 
 function renderTriggerContent(
   selectedOptions: ComboboxOption[],
   placeholder: string,
   onValueChange: (value: string[]) => void,
-  handleRemove: (valueToRemove: string) => void
+  handleRemove: (valueToRemove: string) => void,
 ) {
   if (selectedOptions.length === 0) {
-    return <span className="text-muted-foreground">{placeholder}</span>
+    return <span className="text-muted-foreground">{placeholder}</span>;
   }
-  
+
   if (selectedOptions.length === 1) {
-    return (
-      <SingleSelectionBadge
-        option={selectedOptions[0]}
-        onRemove={() => handleRemove(selectedOptions[0].value)}
-      />
-    )
+    return <SingleSelectionBadge option={selectedOptions[0]} onRemove={() => handleRemove(selectedOptions[0].value)} />;
   }
-  
-  return (
-    <MultipleSelectionDisplay
-      count={selectedOptions.length}
-      onClear={() => onValueChange([])}
-    />
-  )
+
+  return <MultipleSelectionDisplay count={selectedOptions.length} onClear={() => onValueChange([])} />;
 }
 
 export function MultiSelectCombobox({
   options,
   value,
   onValueChange,
-  placeholder = "Select options...",
-  searchPlaceholder = "Search options...",
-  emptyMessage = "No options found.",
+  placeholder = 'Select options...',
+  searchPlaceholder = 'Search options...',
+  emptyMessage = 'No options found.',
   className,
 }: MultiSelectComboboxProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   const handleSelect = (selectedValue: string) => {
     const newValue = value.includes(selectedValue)
-      ? value.filter(v => v !== selectedValue)
-      : [...value, selectedValue]
-    onValueChange(newValue)
-  }
+      ? value.filter((v) => v !== selectedValue)
+      : [...value, selectedValue];
+    onValueChange(newValue);
+  };
 
   const handleRemove = (valueToRemove: string) => {
-    onValueChange(value.filter(v => v !== valueToRemove))
-  }
+    onValueChange(value.filter((v) => v !== valueToRemove));
+  };
 
-  const selectedOptions = options.filter(option => value.includes(option.value))
+  const selectedOptions = options.filter((option) => value.includes(option.value));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -144,7 +117,7 @@ export function MultiSelectCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn('w-full justify-between', className)}
         >
           <div className="flex flex-wrap gap-1 flex-1 min-w-0">
             {renderTriggerContent(selectedOptions, placeholder, onValueChange, handleRemove)}
@@ -159,16 +132,9 @@ export function MultiSelectCombobox({
             <CommandEmpty>{emptyMessage}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.label}
-                  onSelect={() => handleSelect(option.value)}
-                >
+                <CommandItem key={option.value} value={option.label} onSelect={() => handleSelect(option.value)}>
                   <CheckIcon
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value.includes(option.value) ? "opacity-100" : "opacity-0"
-                    )}
+                    className={cn('mr-2 h-4 w-4', value.includes(option.value) ? 'opacity-100' : 'opacity-0')}
                   />
                   {option.label}
                 </CommandItem>
@@ -178,5 +144,5 @@ export function MultiSelectCombobox({
         </Command>
       </PopoverContent>
     </Popover>
-  )
-} 
+  );
+}

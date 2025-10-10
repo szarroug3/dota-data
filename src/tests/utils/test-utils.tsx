@@ -2,18 +2,17 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
-import { ConfigProvider } from '@/contexts/config-context';
-import { MatchProvider } from '@/contexts/match-context';
-import { PlayerProvider } from '@/contexts/player-context';
-import { TeamProvider } from '@/contexts/team-context';
-import { ThemeContextProvider } from '@/contexts/theme-context';
+import { AppDataProvider } from '@/contexts/app-data-context';
+import { ConfigProvider } from '@/frontend/contexts/config-context';
+import { ThemeContextProvider } from '@/frontend/contexts/theme-context';
 
-import { HeroProvider } from '@/contexts/hero-context';
+// In tests we don't need hero context wiring here; keep wrapper lean
+const HeroProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
 
 // Mock window.matchMedia for next-themes
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -50,33 +49,21 @@ Object.defineProperty(window, 'localStorage', {
 // Test wrapper component with all necessary providers
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-    >
-      <ThemeContextProvider>
-        <ConfigProvider>
-          <TeamProvider>
-            <MatchProvider>
-              <PlayerProvider>
-                <HeroProvider>
-                  {children}
-                </HeroProvider>
-              </PlayerProvider>
-            </MatchProvider>
-          </TeamProvider>
-        </ConfigProvider>
-      </ThemeContextProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ConfigProvider>
+        <ThemeContextProvider>
+          <AppDataProvider>
+            <HeroProvider>{children}</HeroProvider>
+          </AppDataProvider>
+        </ThemeContextProvider>
+      </ConfigProvider>
     </ThemeProvider>
   );
 };
 
 // Custom render function that includes the test wrapper
-const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: TestWrapper, ...options });
+const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: TestWrapper, ...options });
 
 // Export the custom render function as renderWithProviders for better naming
 export const renderWithProviders = customRender;

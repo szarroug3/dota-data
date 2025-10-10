@@ -14,6 +14,7 @@ interface AddPlayerSheetProps {
   onClose: () => void;
   onAddPlayer: (playerId: string) => Promise<void>;
   existingPlayers: Player[];
+  initialPlayerId?: string;
 }
 
 interface FormFieldInputProps {
@@ -81,7 +82,8 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
   isOpen,
   onClose,
   onAddPlayer,
-  existingPlayers
+  existingPlayers,
+  initialPlayerId
 }) => {
   const [playerId, setPlayerId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,17 +103,21 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
     }
   }, [playerId]);
 
+  // Prefill when editing
+  useEffect(() => {
+    if (isOpen && initialPlayerId) {
+      setPlayerId(initialPlayerId);
+    }
+  }, [isOpen, initialPlayerId]);
+
   const handleAddPlayer = useCallback(async (newPlayerId: string) => {
     try {
-      setIsSubmitting(true);
-      setError(undefined);
-      await onAddPlayer(newPlayerId);
+      // Optimistic: close immediately; background add handled by parent
       onClose();
+      await onAddPlayer(newPlayerId);
     } catch (error) {
       console.error('Failed to add player:', error);
-      setError(error instanceof Error ? error.message : 'Failed to add player');
-    } finally {
-      setIsSubmitting(false);
+      // No-op: sheet is closed; log only
     }
   }, [onAddPlayer, onClose]);
 
@@ -142,7 +148,7 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
       const currentPlayerId = playerId;
       // Clear fields immediately
       setPlayerId('');
-      await handleAddPlayer(currentPlayerId);
+      void handleAddPlayer(currentPlayerId);
     }
   };
 
@@ -204,7 +210,7 @@ export const AddPlayerSheet: React.FC<AddPlayerSheetProps> = ({
             className="w-full"
             onClick={handleSubmit}
           >
-            {isSubmitting ? 'Adding Player...' : getButtonText()}
+            {getButtonText()}
           </Button>
           <SheetClose asChild>
             <Button variant="outline" className="w-full">

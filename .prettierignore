@@ -1,0 +1,9 @@
+real-data/**/*.html
+mock-data/**/*.html
+.next/
+dist/
+build/
+out/
+coverage/
+node_modules/
+pnpm-lock.yaml

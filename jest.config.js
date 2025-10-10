@@ -1,60 +1,43 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  setupFiles: [
-    '<rootDir>/jest.upstash-mock.js',
-    '<rootDir>/jest.setup.js'
-  ],
-  testMatch: [
-    '**/tests/**/*.test.ts',
-    '**/tests/**/*.test.tsx'
-  ],
+  testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.test.tsx'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
     '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tsconfig.jest.json'
-      }
-    ]
+        tsconfig: '<rootDir>/tsconfig.jest.json',
+      },
+    ],
   },
-  transformIgnorePatterns: [
-    'node_modules/(?!(@upstash/redis|uncrypto)/)'
-  ],
-  setupFilesAfterEnv: [
-    '<rootDir>/jest.setup.js'
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(@upstash/redis|uncrypto)/)'],
   verbose: false,
   silent: true,
   projects: [
     {
       displayName: 'backend',
-      testMatch: [
-        '<rootDir>/src/tests/lib/**/*.test.ts',
-        '<rootDir>/src/tests/app/api/**/*.test.ts'
-      ],
+      testMatch: ['<rootDir>/src/tests/lib/**/*.test.ts', '<rootDir>/src/tests/app/api/**/*.test.ts'],
       testEnvironment: 'node',
+      setupFilesAfterEnv: ['<rootDir>/jest.backend.setup.js'],
       moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1'
+        '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
+        '^@/(.*)$': '<rootDir>/src/$1',
       },
       transform: {
         '^.+\\.(ts|tsx)$': [
           'ts-jest',
           {
             useESM: true,
-            tsconfig: '<rootDir>/tsconfig.jest.json'
-          }
-        ]
+            tsconfig: '<rootDir>/tsconfig.jest.json',
+          },
+        ],
       },
-      transformIgnorePatterns: [
-        'node_modules/(?!(@upstash/redis|uncrypto)/)'
-      ],
-      extensionsToTreatAsEsm: [
-        '.ts',
-        '.tsx'
-      ]
+      transformIgnorePatterns: ['node_modules/(?!(@upstash/redis|uncrypto)/)'],
+      extensionsToTreatAsEsm: ['.ts', '.tsx'],
     },
     {
       displayName: 'frontend',
@@ -68,29 +51,26 @@ module.exports = {
         '<rootDir>/src/tests/utils/**/*.test.ts',
         '<rootDir>/src/tests/utils/**/*.test.tsx',
         '<rootDir>/src/tests/app/**/*.test.ts',
-        '<rootDir>/src/tests/app/**/*.test.tsx'
+        '<rootDir>/src/tests/app/**/*.test.tsx',
       ],
-      testPathIgnorePatterns: [
-        '.*/api/.*'
-      ],
+      testPathIgnorePatterns: ['.*/api/.*'],
       testEnvironment: 'jsdom',
       moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1'
+        '^@/types/api-zod$': '<rootDir>/src/types/api-zod/index.ts',
+        '^@/(.*)$': '<rootDir>/src/$1',
       },
       transform: {
         '^.+\\.(ts|tsx)$': [
           'ts-jest',
           {
-            tsconfig: '<rootDir>/tsconfig.jest.json'
-          }
-        ]
+            tsconfig: '<rootDir>/tsconfig.jest.json',
+          },
+        ],
       },
       transformIgnorePatterns: [
-        'node_modules/(?!(@upstash/redis|uncrypto|cheerio|domhandler|react-resizable-panels)/)'
+        'node_modules/(?!(@upstash/redis|uncrypto|cheerio|domhandler|react-resizable-panels)/)',
       ],
-      setupFilesAfterEnv: [
-        '<rootDir>/jest.setup.js'
-      ]
-    }
-  ]
-}; 
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    },
+  ],
+};

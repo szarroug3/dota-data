@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { fetchDotabuffTeam } from '@/lib/api/dotabuff/teams';
+export const runtime = 'nodejs';
+
+import { fetchSteamTeam } from '@/lib/api/steam/teams';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle team API errors
@@ -9,9 +12,9 @@ import { ApiErrorResponse } from '@/types/api';
 function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
   if (error.message.includes('Rate limited')) {
     return {
-      error: 'Rate limited by Dotabuff API',
+      error: 'Rate limited by Steam API',
       status: 429,
-      details: 'Too many requests to Dotabuff API. Please try again later.'
+      details: 'Too many requests to Steam API. Please try again later.',
     };
   }
 
@@ -19,7 +22,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
     return {
       error: 'Data Not Found',
       status: 404,
-      details: `Team with ID ${teamId} could not be found.`
+      details: `Team with ID ${teamId} could not be found.`,
     };
   }
 
@@ -27,14 +30,14 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
     return {
       error: 'Invalid team data',
       status: 422,
-      details: 'Team data is invalid or corrupted.'
+      details: 'Team data is invalid or corrupted.',
     };
   }
 
   return {
     error: 'Failed to process team',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -42,8 +45,8 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  * @swagger
  * /api/teams/{id}:
  *   get:
- *     summary: Fetch and process Dota 2 team data for Dota Scout Assistant
- *     description: Retrieves comprehensive team data including statistics, performance metrics, and roster information from Dotabuff. Supports different view modes for optimized data delivery.
+ *     summary: Fetch basic Steam team info
+ *     description: Retrieves raw team info from Steam Web API (GetTeamInfoByTeamID) and returns id and name.
  *     tags:
  *       - Teams
  *     parameters:
@@ -86,50 +89,10 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  *             schema:
  *               type: object
  *               properties:
- *                 data:
- *                   type: object
- *                   properties:
- *                     teamId:
- *                       type: string
- *                     name:
- *                       type: string
- *                     tag:
- *                       type: string
- *                     performance:
- *                       type: object
- *                       properties:
- *                         recentForm:
- *                           type: string
- *                         strength:
- *                           type: string
- *                         consistency:
- *                           type: string
- *                     statistics:
- *                       type: object
- *                       properties:
- *                         totalMatches:
- *                           type: integer
- *                         wins:
- *                           type: integer
- *                         losses:
- *                           type: integer
- *                         winRate:
- *                           type: number
- *                         rating:
- *                           type: number
- *                         lastMatchTime:
- *                           type: string
- *                         averageMatchDuration:
- *                           type: number
- *                     processed:
- *                       type: object
- *                       properties:
- *                         timestamp:
- *                           type: string
- *                         dataQuality:
- *                           type: string
- *                         completeness:
- *                           type: number
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
  *                 timestamp:
  *                   type: string
  *                   format: date-time
@@ -143,26 +106,8 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  *                     includeRoster:
  *                       type: boolean
  *             example:
- *               data:
- *                 teamId: "9517508"
- *                 name: "Team Spirit"
- *                 tag: "TS"
- *                 performance:
- *                   recentForm: "strong"
- *                   strength: "high"
- *                   consistency: "stable"
- *                 statistics:
- *                   totalMatches: 150
- *                   wins: 95
- *                   losses: 55
- *                   winRate: 0.633
- *                   rating: 1850
- *                   lastMatchTime: "2024-01-01T00:00:00.000Z"
- *                   averageMatchDuration: 2400
- *                 processed:
- *                   timestamp: "2024-01-01T00:00:00.000Z"
- *                   dataQuality: "high"
- *                   completeness: 0.9
+ *               id: "8654939"
+ *               name: "LE Bron"
  *               timestamp: "2024-01-01T00:00:00.000Z"
  *               view: "full"
  *               options:
@@ -220,7 +165,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  *               status: 422
  *               details: "Team data is invalid or corrupted."
  *       429:
- *         description: Rate limited by Dotabuff API
+ *         description: Rate limited by Steam API
  *         content:
  *           application/json:
  *             schema:
@@ -233,9 +178,9 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  *                 details:
  *                   type: string
  *             example:
- *               error: "Rate limited by Dotabuff API"
+ *               error: "Rate limited by Steam API"
  *               status: 429
- *               details: "Too many requests to Dotabuff API. Please try again later."
+ *               details: "Too many requests to Steam API. Please try again later."
  *       500:
  *         description: Internal server error
  *         content:
@@ -256,7 +201,7 @@ function handleTeamError(error: Error, teamId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   try {
     const { id: teamId } = await params;
@@ -265,14 +210,18 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
 
-    // Fetch raw team data (handles caching, rate limiting, mock mode)
-    const team = await fetchDotabuffTeam(teamId, force);
+    // Fetch team basic info from Steam (name, id)
+    const team = await fetchSteamTeam(teamId, force);
 
-    // Return successful response
-    return NextResponse.json(team);
+    // Normalize and validate using shared schema
+    const valid = schemas.getApiTeams.parse({
+      ...team,
+      id: String((team as { id: string | number }).id),
+    });
+    return NextResponse.json(valid);
   } catch (error) {
     console.error('Teams API Error:', error);
-    
+
     if (error instanceof Error) {
       const { id } = await params;
       const errorResponse = handleTeamError(error, id);
@@ -282,8 +231,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to process team',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

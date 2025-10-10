@@ -147,6 +147,12 @@ export function updateTeamError(
     state.setTeams(prev => {
       const newTeams = new Map(prev);
       newTeams.set(teamKey, updatedTeam);
+      // Persist updated teams
+      try {
+        configContext.setTeams(newTeams);
+      } catch (error) {
+        console.warn('Failed to persist updated team error state:', error);
+      }
       return newTeams;
     });
   } else {
@@ -160,12 +166,15 @@ export function updateTeamError(
     state.setTeams(prev => {
       const newTeams = new Map(prev);
       newTeams.set(teamKey, errorTeam);
+      // Persist updated teams
+      try {
+        configContext.setTeams(newTeams);
+      } catch (error) {
+        console.warn('Failed to persist new error team state:', error);
+      }
       return newTeams;
     });
   }
-  
-  // Persist teams to config context
-  configContext.setTeams(state.teams);
 }
 
 /**

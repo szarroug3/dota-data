@@ -5,13 +5,6 @@ interface PageContentProps {
   className?: string;
 }
 
-export const PageContent: React.FC<PageContentProps> = ({ 
-  children, 
-  className = "" 
-}) => {
-  return (
-    <div className={`flex flex-col gap-8 ${className}`}>
-      {children}
-    </div>
-  );
-}; 
+export const PageContent: React.FC<PageContentProps> = ({ children, className = '' }) => {
+  return <div className={`flex flex-col gap-8 ${className}`}>{children}</div>;
+};

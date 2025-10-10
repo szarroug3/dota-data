@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { CacheService } from '@/lib/cache-service';
+import { cacheLogger } from '@/lib/logger';
 import { ApiErrorResponse, CacheInvalidateRequest, CacheInvalidateResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Validate cache invalidation request body
@@ -11,7 +13,7 @@ function validateInvalidationRequest(body: CacheInvalidateRequest): ApiErrorResp
     return {
       error: 'Missing invalidation criteria',
       status: 400,
-      details: 'Either pattern or key must be provided'
+      details: 'Either pattern or key must be provided',
     };
   }
 
@@ -19,7 +21,7 @@ function validateInvalidationRequest(body: CacheInvalidateRequest): ApiErrorResp
     return {
       error: 'Invalid invalidation criteria',
       status: 400,
-      details: 'Cannot specify both pattern and key, choose one'
+      details: 'Cannot specify both pattern and key, choose one',
     };
   }
 
@@ -30,26 +32,19 @@ function validateInvalidationRequest(body: CacheInvalidateRequest): ApiErrorResp
  * Create cache service instance
  */
 function createCacheService(): CacheService {
-  return new CacheService({
-    useRedis: process.env.USE_REDIS === 'true',
-    redisUrl: process.env.REDIS_URL,
-    fallbackToMemory: true,
-  });
+  return new CacheService();
 }
 
 /**
  * Handle pattern-based cache invalidation
  */
-async function handlePatternInvalidation(
-  cache: CacheService,
-  pattern: string
-): Promise<NextResponse> {
+async function handlePatternInvalidation(cache: CacheService, pattern: string): Promise<NextResponse> {
   try {
     const invalidatedCount = await cache.invalidatePattern(pattern);
-    
+
     const response: CacheInvalidateResponse = {
       invalidated: invalidatedCount,
-      pattern: pattern
+      pattern: pattern,
     };
 
     return NextResponse.json({
@@ -59,15 +54,18 @@ async function handlePatternInvalidation(
       details: {
         pattern,
         invalidatedCount,
-        operation: 'pattern-invalidation'
-      }
+        operation: 'pattern-invalidation',
+      },
     });
   } catch (error) {
-    console.error('Pattern invalidation error:', error);
+    cacheLogger.error(
+      'Pattern invalidation error',
+      `Failed to invalidate cache by pattern: ${pattern} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
     const errorResponse: ApiErrorResponse = {
       error: 'Pattern invalidation failed',
       status: 500,
-      details: error instanceof Error ? error.message : 'Unknown error occurred'
+      details: error instanceof Error ? error.message : 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
@@ -76,21 +74,18 @@ async function handlePatternInvalidation(
 /**
  * Handle key-based cache invalidation
  */
-async function handleKeyInvalidation(
-  cache: CacheService,
-  key: string
-): Promise<NextResponse> {
+async function handleKeyInvalidation(cache: CacheService, key: string): Promise<NextResponse> {
   try {
     const keyExists = await cache.exists(key);
     let invalidatedCount = 0;
-    
+
     if (keyExists) {
       const deleted = await cache.delete(key);
       invalidatedCount = deleted ? 1 : 0;
     }
 
     const response: CacheInvalidateResponse = {
-      invalidated: invalidatedCount
+      invalidated: invalidatedCount,
     };
 
     return NextResponse.json({
@@ -101,15 +96,18 @@ async function handleKeyInvalidation(
         key,
         existed: keyExists,
         invalidated: invalidatedCount > 0,
-        operation: 'key-invalidation'
-      }
+        operation: 'key-invalidation',
+      },
     });
   } catch (error) {
-    console.error('Key invalidation error:', error);
+    cacheLogger.error(
+      'Key invalidation error',
+      `Failed to invalidate cache by key: ${key} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
     const errorResponse: ApiErrorResponse = {
       error: 'Key invalidation failed',
       status: 500,
-      details: error instanceof Error ? error.message : 'Unknown error occurred'
+      details: error instanceof Error ? error.message : 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
@@ -123,7 +121,7 @@ function handleCacheServiceError(error: Error): ApiErrorResponse {
     return {
       error: 'Cache backend unavailable',
       status: 503,
-      details: 'Cache service is temporarily unavailable'
+      details: 'Cache service is temporarily unavailable',
     };
   }
 
@@ -131,7 +129,7 @@ function handleCacheServiceError(error: Error): ApiErrorResponse {
     return {
       error: 'Invalid cache pattern',
       status: 400,
-      details: 'Cache pattern is invalid or malformed'
+      details: 'Cache pattern is invalid or malformed',
     };
   }
 
@@ -139,14 +137,14 @@ function handleCacheServiceError(error: Error): ApiErrorResponse {
     return {
       error: 'Permission denied',
       status: 403,
-      details: 'Insufficient permissions to invalidate cache'
+      details: 'Insufficient permissions to invalidate cache',
     };
   }
 
   return {
     error: 'Failed to invalidate cache',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -321,48 +319,92 @@ function handleCacheServiceError(error: Error): ApiErrorResponse {
  *               status: 503
  *               details: "Cache service is temporarily unavailable"
  */
+// Helper function to parse and validate request body
+async function parseRequestBody(request: NextRequest): Promise<CacheInvalidateRequest | NextResponse> {
+  try {
+    // Use unknown intermediate step for safer type narrowing
+    const requestData: unknown = await request.json();
+    const body = requestData as unknown as CacheInvalidateRequest;
+
+    // Basic validation - ensure it's an object (allow empty objects to proceed to business logic validation)
+    if (!body || typeof body !== 'object') {
+      throw new Error('Invalid request structure');
+    }
+
+    return body;
+  } catch {
+    const errorResponse: ApiErrorResponse = {
+      error: 'Invalid request body',
+      status: 400,
+      details: 'Request body must be valid JSON',
+    };
+    return NextResponse.json(errorResponse, { status: 400 });
+  }
+}
+
+// Helper function to validate request body with Zod
+function validateRequestBody(body: CacheInvalidateRequest): NextResponse | null {
+  const parsed = schemas.postApiCacheInvalidateBody.safeParse(body);
+  if (!parsed.success) {
+    const errorResponse: ApiErrorResponse = {
+      error: 'Invalid request body',
+      status: 400,
+      details: 'Body does not match expected shape',
+    };
+    return NextResponse.json(errorResponse, { status: 400 });
+  }
+  return null;
+}
+
+// Helper function to handle the main invalidation logic
+async function performInvalidation(body: CacheInvalidateRequest): Promise<NextResponse> {
+  // Validate request parameters
+  const validationError = validateInvalidationRequest(body);
+  if (validationError) {
+    return NextResponse.json(validationError, { status: validationError.status });
+  }
+
+  // Initialize cache service
+  const cache = createCacheService();
+
+  // Perform invalidation based on request type
+  if (body.pattern) {
+    return await handlePatternInvalidation(cache, body.pattern);
+  } else if (body.key) {
+    return await handleKeyInvalidation(cache, body.key);
+  }
+
+  // This should not be reached due to validation above
+  const errorResponse: ApiErrorResponse = {
+    error: 'Invalid invalidation request',
+    status: 400,
+    details: 'Unable to process invalidation request',
+  };
+  return NextResponse.json(errorResponse, { status: 400 });
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Parse and validate request body
-    let body: CacheInvalidateRequest;
-    try {
-      body = await request.json() as CacheInvalidateRequest;
-    } catch {
-      const errorResponse: ApiErrorResponse = {
-        error: 'Invalid request body',
-        status: 400,
-        details: 'Request body must be valid JSON'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) {
+      return bodyOrError;
     }
 
-    // Validate request parameters
-    const validationError = validateInvalidationRequest(body);
+    // Validate request body with Zod
+    const validationError = validateRequestBody(bodyOrError);
     if (validationError) {
-      return NextResponse.json(validationError, { status: validationError.status });
+      return validationError;
     }
 
-    // Initialize cache service
-    const cache = createCacheService();
-
-    // Perform invalidation based on request type
-    if (body.pattern) {
-      return await handlePatternInvalidation(cache, body.pattern);
-    } else if (body.key) {
-      return await handleKeyInvalidation(cache, body.key);
-    }
-
-    // This should not be reached due to validation above
-    const errorResponse: ApiErrorResponse = {
-      error: 'Invalid invalidation request',
-      status: 400,
-      details: 'Unable to process invalidation request'
-    };
-    return NextResponse.json(errorResponse, { status: 400 });
-
+    // Perform the actual invalidation
+    return await performInvalidation(bodyOrError);
   } catch (error) {
-    console.error('Cache Invalidate API Error:', error);
-    
+    cacheLogger.error(
+      'Cache Invalidate API Error',
+      `Failed to process cache invalidation request - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+
     if (error instanceof Error) {
       const errorResponse = handleCacheServiceError(error);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
@@ -371,7 +413,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to invalidate cache',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
@@ -503,29 +545,31 @@ export async function GET(): Promise<NextResponse> {
             method: 'POST',
             description: 'Invalidate cache entries by pattern',
             example: {
-              pattern: 'opendota:*'
-            }
+              pattern: 'opendota:*',
+            },
           },
           invalidateKey: {
             method: 'POST',
             description: 'Invalidate single cache entry by key',
             example: {
-              key: 'opendota:heroes'
-            }
-          }
-        }
+              key: 'opendota:heroes',
+            },
+          },
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('Cache Status API Error:', error);
-    
+    cacheLogger.error(
+      'Cache Status API Error',
+      `Failed to retrieve cache status - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to get cache status',
       status: 500,
-      details: error instanceof Error ? error.message : 'Unknown error occurred'
+      details: error instanceof Error ? error.message : 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

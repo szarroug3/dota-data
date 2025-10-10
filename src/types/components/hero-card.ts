@@ -1,6 +1,6 @@
 /**
  * Hero Card Component Types
- * 
+ *
  * Type definitions for the hero card component and its variants
  */
 
@@ -101,4 +101,4 @@ export interface HeroCardListProps {
   showMeta?: boolean;
   showRole?: boolean;
   className?: string;
-} 
+}

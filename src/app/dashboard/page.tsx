@@ -1,5 +1,5 @@
-import { DashboardPage } from '@/components/dashboard/DashboardPage';
 import { PageHeader } from '@/components/ui/page-header';
+import { DashboardPageContainer } from '@/frontend/teams/components/containers/DashboardPageContainer';
 
 export default function DashboardPageRoute() {
   return (
@@ -8,7 +8,7 @@ export default function DashboardPageRoute() {
         title="Dashboard"
         description="Monitor your tracked teams, view performance statistics, and manage your Dota 2 data analysis."
       />
-      <DashboardPage />
+      <DashboardPageContainer />
     </>
   );
-} 
+}

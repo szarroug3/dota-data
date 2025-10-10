@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaItem } from '@/types/external-apis';
 
@@ -12,17 +13,17 @@ import { OpenDotaItem } from '@/types/external-apis';
  */
 export async function fetchOpenDotaItems(force = false): Promise<Record<string, OpenDotaItem>> {
   const cacheKey = 'opendota:items';
-  const cacheTTL = 60 * 60 * 24 * 30; // 30 days
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'items.json');
+  const cacheTTL = CacheTtlSeconds.items;
+  const externalDataFilename = path.join(process.cwd(), 'mock-data', 'external-data', 'items.json');
 
   const result = await request<Record<string, OpenDotaItem>>(
     'opendota',
     () => fetchItemsFromOpenDota(),
     (data: string) => parseOpenDotaItems(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -37,14 +38,14 @@ export async function fetchOpenDotaItems(force = false): Promise<Record<string, 
  */
 async function fetchItemsFromOpenDota(): Promise<string> {
   const url = `https://api.opendota.com/api/constants/items`;
-  
+
   try {
     const response = await requestWithRetry('GET', url);
-    
+
     if (!response.ok) {
       throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
     }
-    
+
     return await response.text();
   } catch (err) {
     throw new Error(`Failed to fetch items from OpenDota: ${err}`);
@@ -56,9 +57,8 @@ async function fetchItemsFromOpenDota(): Promise<string> {
  */
 function parseOpenDotaItems(data: string): Record<string, OpenDotaItem> {
   try {
-    const items = JSON.parse(data) as Record<string, OpenDotaItem>;
-    return items;
+    return JSON.parse(data) as Record<string, OpenDotaItem>;
   } catch (err) {
     throw new Error(`Failed to parse OpenDota items data: ${err}`);
   }
-} 
+}

@@ -111,6 +111,7 @@ function saveTeamsToStorage(teams: Map<string, TeamData>): void {
 const getDefaultConfig = (): AppConfig => ({
   preferredExternalSite: 'dotabuff',
   preferredMatchlistView: 'list',
+  preferredPlayerlistView: 'list',
   theme: 'system',
 });
 
@@ -123,9 +124,9 @@ function useLoadConfig(setConfig: (c: AppConfig) => void, setIsLoading: (b: bool
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedConfig = loadFromStorage(STORAGE_KEYS.CONFIG, getDefaultConfig());
-      if (JSON.stringify(storedConfig) !== JSON.stringify(getDefaultConfig())) {
-        setConfig(storedConfig);
-      }
+      // Merge with defaults to handle newly added fields gracefully
+      const mergedConfig: AppConfig = { ...getDefaultConfig(), ...storedConfig };
+      setConfig(mergedConfig);
       setIsLoading(false);
     }
   }, [setConfig, setIsLoading]);

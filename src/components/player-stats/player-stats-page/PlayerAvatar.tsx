@@ -22,6 +22,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   const { width, height } = avatarSize;
   
   const getFallbackText = () => {
+    if (player.error) return '?';
     const name = player.profile.profile.personaname || '';
     if (!name) return '?';
     const words = name.split(/\s+/);
@@ -45,6 +46,8 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   
   const fallbackText = getFallbackText();
   const playerUrl = getPlayerUrl();
+  const imageSrc = player.profile.profile.avatarfull || player.profile.profile.avatarmedium || player.profile.profile.avatar || '';
+  const hasValidImage = typeof imageSrc === 'string' && imageSrc.trim().length > 0;
   
   const handleClick = (e: React.MouseEvent) => {
     if (showLink) {
@@ -55,11 +58,13 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   
   const avatarContent = (
     <Avatar className={`${width} ${height} border border-background cursor-pointer hover:border-primary transition-colors ${className}`}>
-      <AvatarImage 
-        src={player.profile.profile.avatarfull} 
-        alt={player.profile.profile.personaname || 'Player'}
-        className="object-cover object-center"
-      />
+      {hasValidImage ? (
+        <AvatarImage
+          src={imageSrc}
+          alt={player.profile.profile.personaname || 'Player'}
+          className="object-cover object-center"
+        />
+      ) : null}
       <AvatarFallback className="text-xs">
         {fallbackText}
       </AvatarFallback>

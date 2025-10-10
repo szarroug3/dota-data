@@ -1,9 +1,9 @@
 /**
  * Reusable abort controller hook
- * 
+ *
  * Provides centralized abort controller management for async operations.
  * Eliminates code duplication across different contexts and operations.
- * 
+ *
  * Uses prefixed operation keys to avoid conflicts between different types.
  */
 
@@ -71,7 +71,7 @@ export function createPlayerOperationKey(playerId: number): string {
 export function abortTeamLeagueOperations(
   abortController: AbortControllerManager,
   teamId: number,
-  leagueId: number
+  leagueId: number,
 ): void {
   const teamLeaguePrefix = createTeamLeagueOperationKey(teamId, leagueId);
   abortController.abortOperationsByPrefix(teamLeaguePrefix);
@@ -84,7 +84,7 @@ export function abortTeamMatchOperations(
   abortController: AbortControllerManager,
   teamId: number,
   leagueId: number,
-  matchId: number
+  matchId: number,
 ): void {
   const matchPrefix = createTeamMatchOperationKey(teamId, leagueId, matchId);
   abortController.abortOperationsByPrefix(matchPrefix);
@@ -97,7 +97,7 @@ export function abortTeamPlayerOperations(
   abortController: AbortControllerManager,
   teamId: number,
   leagueId: number,
-  playerId: number
+  playerId: number,
 ): void {
   const playerPrefix = createTeamPlayerOperationKey(teamId, leagueId, playerId);
   abortController.abortOperationsByPrefix(playerPrefix);
@@ -106,10 +106,7 @@ export function abortTeamPlayerOperations(
 /**
  * Abort all operations for a specific match (independent of team/league)
  */
-export function abortMatchOperations(
-  abortController: AbortControllerManager,
-  matchId: number
-): void {
+export function abortMatchOperations(abortController: AbortControllerManager, matchId: number): void {
   const matchPrefix = createMatchOperationKey(matchId);
   abortController.abortOperationsByPrefix(matchPrefix);
 }
@@ -117,10 +114,7 @@ export function abortMatchOperations(
 /**
  * Abort all operations for a specific player (independent of team/league)
  */
-export function abortPlayerOperations(
-  abortController: AbortControllerManager,
-  playerId: number
-): void {
+export function abortPlayerOperations(abortController: AbortControllerManager, playerId: number): void {
   const playerPrefix = createPlayerOperationKey(playerId);
   abortController.abortOperationsByPrefix(playerPrefix);
 }
@@ -131,7 +125,7 @@ export function abortPlayerOperations(
 export function getTeamLeagueOperations(
   abortController: AbortControllerManager,
   teamId: number,
-  leagueId: number
+  leagueId: number,
 ): string[] {
   const teamLeaguePrefix = createTeamLeagueOperationKey(teamId, leagueId);
   return abortController.getOngoingOperationsByPrefix(teamLeaguePrefix);
@@ -144,7 +138,7 @@ export function getTeamMatchOperations(
   abortController: AbortControllerManager,
   teamId: number,
   leagueId: number,
-  matchId: number
+  matchId: number,
 ): string[] {
   const matchPrefix = createTeamMatchOperationKey(teamId, leagueId, matchId);
   return abortController.getOngoingOperationsByPrefix(matchPrefix);
@@ -157,7 +151,7 @@ export function getTeamPlayerOperations(
   abortController: AbortControllerManager,
   teamId: number,
   leagueId: number,
-  playerId: number
+  playerId: number,
 ): string[] {
   const playerPrefix = createTeamPlayerOperationKey(teamId, leagueId, playerId);
   return abortController.getOngoingOperationsByPrefix(playerPrefix);
@@ -166,10 +160,7 @@ export function getTeamPlayerOperations(
 /**
  * Get all ongoing operations for a specific match (independent of team/league)
  */
-export function getMatchOperations(
-  abortController: AbortControllerManager,
-  matchId: number
-): string[] {
+export function getMatchOperations(abortController: AbortControllerManager, matchId: number): string[] {
   const matchPrefix = createMatchOperationKey(matchId);
   return abortController.getOngoingOperationsByPrefix(matchPrefix);
 }
@@ -177,10 +168,7 @@ export function getMatchOperations(
 /**
  * Get all ongoing operations for a specific player (independent of team/league)
  */
-export function getPlayerOperations(
-  abortController: AbortControllerManager,
-  playerId: number
-): string[] {
+export function getPlayerOperations(abortController: AbortControllerManager, playerId: number): string[] {
   const playerPrefix = createPlayerOperationKey(playerId);
   return abortController.getOngoingOperationsByPrefix(playerPrefix);
 }
@@ -204,7 +192,7 @@ export function useAbortController(): AbortControllerManager {
     if (existingController) {
       existingController.abort();
     }
-    
+
     // Create new abort controller
     const controller = new AbortController();
     ongoingOperations.current.set(operationKey, controller);
@@ -234,16 +222,16 @@ export function useAbortController(): AbortControllerManager {
    */
   const abortOperationsByPrefix = useCallback((prefix: string): void => {
     const operationsToAbort: string[] = [];
-    
+
     ongoingOperations.current.forEach((controller, key) => {
       if (key.startsWith(prefix)) {
         controller.abort();
         operationsToAbort.push(key);
       }
     });
-    
+
     // Remove aborted operations from the map
-    operationsToAbort.forEach(key => {
+    operationsToAbort.forEach((key) => {
       ongoingOperations.current.delete(key);
     });
   }, []);
@@ -259,9 +247,7 @@ export function useAbortController(): AbortControllerManager {
    * Get list of ongoing operation keys by prefix
    */
   const getOngoingOperationsByPrefix = useCallback((prefix: string): string[] => {
-    return Array.from(ongoingOperations.current.keys()).filter(key => 
-      key.startsWith(prefix)
-    );
+    return Array.from(ongoingOperations.current.keys()).filter((key) => key.startsWith(prefix));
   }, []);
 
   return {
@@ -270,7 +256,7 @@ export function useAbortController(): AbortControllerManager {
     hasOngoingOperation,
     abortOperationsByPrefix,
     getOngoingOperations,
-    getOngoingOperationsByPrefix
+    getOngoingOperationsByPrefix,
   };
 }
 
@@ -281,10 +267,7 @@ export function useAbortController(): AbortControllerManager {
 /**
  * Check if operation was aborted and handle silently
  */
-export function handleAbortCheck<T>(
-  abortController: AbortController,
-  fallbackValue: T
-): T | null {
+export function handleAbortCheck<T>(abortController: AbortController, fallbackValue: T): T | null {
   if (abortController.signal.aborted) {
     // Silently handle abort - this is expected when operations are replaced
     return fallbackValue;
@@ -299,7 +282,7 @@ export function handleOperationErrorWithAbort<T>(
   error: Error | string | object,
   abortController: AbortController,
   fallbackValue: T,
-  errorHandler?: (error: Error | string | object) => void
+  errorHandler?: (error: Error | string | object) => void,
 ): T | null {
   // Only handle actual errors, not aborts
   if (!abortController.signal.aborted) {
@@ -318,19 +301,19 @@ export function handleOperationErrorWithAbort<T>(
 export function createSafeAsyncOperation<T>(
   operation: (abortController: AbortController) => Promise<T>,
   abortController: AbortController,
-  fallbackValue: T
+  fallbackValue: T,
 ): Promise<T | null> {
   return operation(abortController)
-    .then(result => {
+    .then((result) => {
       if (abortController.signal.aborted) {
         return fallbackValue;
       }
       return result;
     })
-    .catch(error => {
+    .catch((error) => {
       if (abortController.signal.aborted) {
         return fallbackValue;
       }
       throw error;
     });
-} 
+}

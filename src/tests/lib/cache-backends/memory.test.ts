@@ -18,7 +18,7 @@ function testGet(getCache: () => MemoryCacheBackend) {
     });
     it('should return null for expired entry', async () => {
       await getCache().set('expired-key', 'value', 1);
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
       const result = await getCache().get('expired-key');
       expect(result).toBeNull();
     });
@@ -90,7 +90,7 @@ function testExists(getCache: () => MemoryCacheBackend) {
     });
     it('should return false for expired key', async () => {
       await getCache().set('test-key', 'test value', 1);
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
       const result = await getCache().exists('test-key');
       expect(result).toBe(false);
     });
@@ -119,7 +119,7 @@ function testMset(getCache: () => MemoryCacheBackend) {
       const entries = [
         { key: 'key1', value: 'value1', ttl: 10 },
         { key: 'key2', value: 'value2', ttl: 20 },
-        { key: 'key3', value: 'value3' }
+        { key: 'key3', value: 'value3' },
       ];
       await getCache().mset(entries);
       expect(await getCache().get('key1')).toBe('value1');
@@ -206,7 +206,7 @@ function testTTLBehavior(getCache: () => MemoryCacheBackend) {
     it('should respect TTL values', async () => {
       await getCache().set('short', 'value', 1);
       await getCache().set('long', 'value', 10);
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
       expect(await getCache().get('short')).toBeNull();
       expect(await getCache().get('long')).toBe('value');
     });
@@ -268,4 +268,4 @@ describe('MemoryCacheBackend', () => {
       limitedCache.destroy();
     });
   });
-}); 
+});

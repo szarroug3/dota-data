@@ -10,7 +10,7 @@
 
 /**
  * Valid cache value types
- * 
+ *
  * Cache can store any JSON-serializable value including:
  * - Primitive types (string, number, boolean, null)
  * - Arrays of primitive types
@@ -25,7 +25,7 @@ export type CacheValue = string | number | boolean | null | CacheValue[] | { [ke
 /**
  * Cache backend type enumeration
  */
-export type CacheBackendType = 'redis' | 'memory';
+export type CacheBackendType = 'redis' | 'memory' | 'file';
 
 /**
  * Cache backend interface that all cache implementations must implement
@@ -186,16 +186,7 @@ export interface CacheService {
 /**
  * Cache key namespace enumeration
  */
-export type CacheNamespace = 
-  | 'api'
-  | 'hero'
-  | 'player'
-  | 'team'
-  | 'match'
-  | 'league'
-  | 'rate-limit'
-  | 'job'
-  | 'config';
+export type CacheNamespace = 'api' | 'hero' | 'player' | 'team' | 'match' | 'league' | 'rate-limit' | 'job' | 'config';
 
 /**
  * Cache key builder interface
@@ -237,7 +228,7 @@ export interface CacheKeyConfig {
 /**
  * Cache error types
  */
-export type CacheErrorType = 
+export type CacheErrorType =
   | 'connection_failed'
   | 'timeout'
   | 'serialization_error'
@@ -294,4 +285,4 @@ export interface CacheWarmingResult {
     error: string;
   }>;
   duration: number;
-} 
+}

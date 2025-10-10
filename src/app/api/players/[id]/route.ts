@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaPlayer } from '@/lib/api/opendota/players';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle player API errors
  */
 function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
+  if (error.message.includes('429')) {
+    return {
+      error: 'Rate limited by OpenDota API',
+      status: 429,
+      details: 'Too many requests to OpenDota API. Please try again later.',
+    };
+  }
   if (error.message.includes('Rate limited')) {
     return {
       error: 'Rate limited by OpenDota API',
       status: 429,
-      details: 'Too many requests to OpenDota API. Please try again later.'
+      details: 'Too many requests to OpenDota API. Please try again later.',
     };
   }
 
@@ -19,7 +28,7 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
     return {
       error: 'Data Not Found',
       status: 404,
-      details: `Player with ID ${playerId} could not be found.`
+      details: `Player with ID ${playerId} could not be found.`,
     };
   }
 
@@ -27,7 +36,7 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
     return {
       error: 'Invalid player data',
       status: 422,
-      details: 'Player data is invalid or corrupted.'
+      details: 'Player data is invalid or corrupted.',
     };
   }
 
@@ -35,15 +44,23 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
     return {
       error: 'Private profile',
       status: 403,
-      details: 'Player profile is private and cannot be accessed.'
+      details: 'Player profile is private and cannot be accessed.',
     };
   }
 
   return {
     error: 'Failed to fetch player',
     status: 500,
-    details: error.message
+    details: error.message,
   };
+}
+
+/**
+ * Extract force flag from request URL
+ */
+function getForceFlagFromUrl(url: string): boolean {
+  const { searchParams } = new URL(url);
+  return searchParams.get('force') === 'true';
 }
 
 /**
@@ -129,23 +146,26 @@ function handlePlayerError(error: Error, playerId: string): ApiErrorResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   try {
     const { id: playerId } = await params;
+    const force = getForceFlagFromUrl(request.url);
 
-    // Extract query parameters
-    const { searchParams } = new URL(request.url);
-    const force = searchParams.get('force') === 'true';
-
-    // Fetch comprehensive player data (handles caching, rate limiting, mock mode)
     const player = await fetchOpenDotaPlayer(playerId, force);
-
-    // Return successful response
-    return NextResponse.json(player);
+    try {
+      const validated = schemas.getApiPlayers.parse(player);
+      return NextResponse.json(validated);
+    } catch {
+      throw new Error('Invalid player data');
+    }
   } catch (error) {
-    console.error('Players API Error:', error);
-    
+    const { id } = await params;
+    apiLogger.error(
+      'Players API Error',
+      `Failed to fetch player data for ID: ${id} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+
     if (error instanceof Error) {
       const { id } = await params;
       const errorResponse = handlePlayerError(error, id);
@@ -155,8 +175,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to fetch player',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Component } from 'react';
 
-import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
+import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 
 // Helpers
 class ThrowError extends Component<{ shouldThrow?: boolean }> {
@@ -11,9 +11,15 @@ class ThrowError extends Component<{ shouldThrow?: boolean }> {
       throw new Error('Test error');
     }
   }
-  render() { return <div>Normal content</div>; }
+  render() {
+    return <div>Normal content</div>;
+  }
 }
-class NormalComponent extends Component { render() { return <div>Normal content</div>; } }
+class NormalComponent extends Component {
+  render() {
+    return <div>Normal content</div>;
+  }
+}
 const suppressConsoleError = () => jest.spyOn(console, 'error').mockImplementation(() => {});
 
 // Normal operation
@@ -22,7 +28,7 @@ describe('ErrorBoundary - Normal operation', () => {
     render(
       <ErrorBoundary>
         <NormalComponent />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Normal content')).toBeInTheDocument();
   });
@@ -30,7 +36,7 @@ describe('ErrorBoundary - Normal operation', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={false} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Normal content')).toBeInTheDocument();
   });
@@ -43,10 +49,12 @@ describe('ErrorBoundary - Error handling', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('Uhhhh complain to @FatSloth on Discord. Tell him to buy me chocolate and I\'ll fix it.')).toBeInTheDocument();
+    expect(
+      screen.getByText("Uhhhh complain to @FatSloth on Discord. Tell him to buy me chocolate and I'll fix it."),
+    ).toBeInTheDocument();
     consoleSpy.mockRestore();
   });
   it('should render custom fallback when provided', () => {
@@ -55,7 +63,7 @@ describe('ErrorBoundary - Error handling', () => {
     render(
       <ErrorBoundary fallback={customFallback}>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Custom error message')).toBeInTheDocument();
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
@@ -67,11 +75,11 @@ describe('ErrorBoundary - Error handling', () => {
     render(
       <ErrorBoundary onError={onErrorMock}>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(onErrorMock).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ componentStack: expect.any(String) })
+      expect.objectContaining({ componentStack: expect.any(String) }),
     );
     consoleSpy.mockRestore();
   });
@@ -85,7 +93,7 @@ describe('ErrorBoundary - Error recovery', () => {
     const { rerender } = render(
       <ErrorBoundary key={key}>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     const retryButton = screen.getByText('Try Again');
@@ -94,7 +102,7 @@ describe('ErrorBoundary - Error recovery', () => {
     rerender(
       <ErrorBoundary key={key}>
         <NormalComponent />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     expect(screen.getByText('Normal content')).toBeInTheDocument();
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
@@ -111,7 +119,7 @@ describe('ErrorBoundary - Development mode', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const detailsElement = screen.getByText('Error Details (Development)');
     expect(detailsElement).toBeInTheDocument();
@@ -127,7 +135,7 @@ describe('ErrorBoundary - Development mode', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const detailsElement = screen.queryByText('Error Details (Development)');
     expect(detailsElement).not.toBeInTheDocument();
@@ -143,7 +151,7 @@ describe('ErrorBoundary - Accessibility', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const retryButton = screen.getByRole('button', { name: 'Try Again' });
     expect(retryButton).toBeInTheDocument();
@@ -154,7 +162,7 @@ describe('ErrorBoundary - Accessibility', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const heading = screen.getByText('Something went wrong');
     expect(heading).toHaveClass('text-lg', 'font-medium');
@@ -169,7 +177,7 @@ describe('ErrorBoundary - Styling and layout', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const container = document.querySelector('.min-h-screen');
     expect(container).toBeInTheDocument();
@@ -182,7 +190,7 @@ describe('ErrorBoundary - Styling and layout', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const retryButton = screen.getByText('Try Again');
     expect(retryButton).toHaveClass('bg-blue-600', 'hover:bg-blue-700', 'text-white');
@@ -197,7 +205,7 @@ describe('ErrorBoundary - Dark mode support', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const container = document.querySelector('.bg-muted');
     expect(container).toBeInTheDocument();
@@ -210,12 +218,12 @@ describe('ErrorBoundary - Dark mode support', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     );
     const heading = screen.getByText('Something went wrong');
-    const description = screen.getByText(/We encountered an unexpected error/);
+    const description = screen.getByText(/Uhhhh complain to @FatSloth/);
     expect(heading).toHaveClass('text-foreground');
     expect(description).toHaveClass('text-muted-foreground');
     consoleSpy.mockRestore();
   });
-}); 
+});

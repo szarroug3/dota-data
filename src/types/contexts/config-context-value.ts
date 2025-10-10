@@ -1,11 +1,11 @@
 /**
  * Config context value types
- * 
+ *
  * Defines the structure for application configuration and user preferences
  * in the frontend application.
  */
 
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Team } from '@/frontend/lib/app-data-types';
 
 // ============================================================================
 // CONFIG DATA TYPES
@@ -22,6 +22,11 @@ export type PreferredExternalSite = 'opendota' | 'dotabuff';
 export type PreferredMatchlistView = 'list' | 'card' | 'grid';
 
 /**
+ * Preferred player list view mode
+ */
+export type PreferredPlayerlistView = 'list' | 'card';
+
+/**
  * Theme type
  */
 export type Theme = 'light' | 'dark' | 'system';
@@ -32,6 +37,7 @@ export type Theme = 'light' | 'dark' | 'system';
 export interface AppConfig {
   preferredExternalSite: PreferredExternalSite;
   preferredMatchlistView: PreferredMatchlistView;
+  preferredPlayerlistView: PreferredPlayerlistView;
   theme: Theme;
 }
 
@@ -47,10 +53,16 @@ export interface ConfigContextValue {
   config: AppConfig;
 
   // Team data (persistent) - now stored as Map for consistency
-  getTeams: () => Map<string, TeamData>;
-  setTeams: (teams: Map<string, TeamData>) => void;
+  getTeams: () => Map<string, Team>;
+  setTeams: (teams: Map<string, Team>) => void;
   activeTeam: { teamId: number; leagueId: number } | null;
   setActiveTeam: (activeTeam: { teamId: number; leagueId: number } | null) => void;
+
+  getGlobalManualMatches: () => number[];
+  setGlobalManualMatches: (ids: number[]) => void;
+
+  getGlobalManualPlayers: () => number[];
+  setGlobalManualPlayers: (ids: number[]) => void;
 
   // Loading states
   isLoading: boolean;
@@ -84,4 +96,4 @@ export interface ConfigChange {
   oldValue: string | number | boolean | null;
   newValue: string | number | boolean | null;
   type: 'added' | 'removed' | 'modified';
-} 
+}

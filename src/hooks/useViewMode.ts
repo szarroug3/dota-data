@@ -1,25 +1,15 @@
-import { useCallback, useState } from 'react';
+import { useConfigContext } from '@/frontend/contexts/config-context';
 
-import { MatchListViewMode } from '@/components/match-history/list/MatchListView';
-import { useConfigContext } from '@/contexts/config-context';
+export type MatchListViewMode = 'list' | 'card';
+export type PreferredMatchlistView = 'list' | 'card';
 
-const useViewMode = () => {
+export default function useViewMode(defaultMode: MatchListViewMode = 'list') {
   const { config, updateConfig } = useConfigContext();
-  const [viewMode, setViewMode] = useState<MatchListViewMode>(config.preferredMatchlistView);
+  const viewMode: MatchListViewMode = (config.preferredMatchlistView as MatchListViewMode) || defaultMode;
 
-  const handleViewModeChange = useCallback((mode: MatchListViewMode) => {
-    setViewMode(mode);
-    updateConfig({
-      preferredMatchlistView: mode
-    }).catch(error => {
-      console.error('Failed to save view mode preference:', error);
-    });
-  }, [updateConfig]);
+  function setViewMode(newMode: MatchListViewMode) {
+    updateConfig({ preferredMatchlistView: newMode });
+  }
 
-  return {
-    viewMode,
-    setViewMode: handleViewModeChange
-  };
-};
-
-export default useViewMode; 
+  return { viewMode, setViewMode };
+}

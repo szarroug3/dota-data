@@ -1,49 +1,49 @@
 import path from 'path';
 
+import { CacheTtlSeconds } from '@/lib/cache-ttls';
+import { rateLimiter } from '@/lib/rate-limiter';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import {
-    OpenDotaPlayer,
-    OpenDotaPlayerComprehensive,
-    OpenDotaPlayerCounts,
-    OpenDotaPlayerHero,
-    OpenDotaPlayerRanking,
-    OpenDotaPlayerRating,
-    OpenDotaPlayerRecentMatches,
-    OpenDotaPlayerTotals,
-    OpenDotaPlayerWardMap,
-    OpenDotaPlayerWL
+  OpenDotaPlayer,
+  OpenDotaPlayerComprehensive,
+  OpenDotaPlayerHero,
+  OpenDotaPlayerMatches,
+  OpenDotaPlayerWL,
 } from '@/types/external-apis';
 
 /**
- * Fetches comprehensive Dota 2 player data from OpenDota using the generic request function.
- * OpenDota endpoints: 
- * - https://api.opendota.com/api/players/{playerId}
- * - https://api.opendota.com/api/players/{playerId}/counts
- * - https://api.opendota.com/api/players/{playerId}/heroes
- * - https://api.opendota.com/api/players/{playerId}/rankings
- * - https://api.opendota.com/api/players/{playerId}/ratings
- * - https://api.opendota.com/api/players/{playerId}/recentMatches
- * - https://api.opendota.com/api/players/{playerId}/totals
- * - https://api.opendota.com/api/players/{playerId}/wl
- * - https://api.opendota.com/api/players/{playerId}/wardMap
+ * Fetch comprehensive Dota 2 player data from OpenDota using the generic request function.
  *
- * @param playerId The player ID to fetch
- * @param force If true, bypasses cache and fetches fresh data
- * @returns Comprehensive player data object
+ * Calls only the endpoints used by the frontend:
+ * - players/{playerId} (profile)
+ * - players/{playerId}/heroes
+ * - players/{playerId}/matches
+ * - players/{playerId}/wl
+ *
+ * Unused fields are omitted from the response shape. Data is cached for 24h to minimize
+ * repeated traffic. A small inter-call delay is included
+ * to respect OpenDota's 1 req/sec guidance. Retries/backoff for 429/5xx are handled
+ * by the shared requestWithRetry helper.
  */
 export async function fetchOpenDotaPlayer(playerId: string, force = false): Promise<OpenDotaPlayerComprehensive> {
   const cacheKey = `opendota:player-comprehensive:${playerId}`;
-  const cacheTTL = 60 * 60 * 24; // 24 hours
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'players', `player-${playerId}-comprehensive.json`);
+  const cacheTTL = CacheTtlSeconds.playerComprehensive;
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'players',
+    `player-${playerId}-comprehensive.json`,
+  );
 
   const result = await request<OpenDotaPlayerComprehensive>(
     'opendota',
     () => fetchAllPlayerDataFromOpenDota(playerId),
     (data: string) => parseOpenDotaPlayerComprehensive(data),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
-    cacheKey
+    cacheKey,
   );
 
   if (!result) {
@@ -58,10 +58,12 @@ export async function fetchOpenDotaPlayer(playerId: string, force = false): Prom
  */
 async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string> {
   const baseUrl = process.env.OPENDOTA_API_BASE_URL || 'https://api.opendota.com/api';
-  const delayMs = 1000;
 
-  // Helper to fetch and parse JSON
+  // Helper to fetch and parse JSON with rate limiting
   async function fetchJson(url: string) {
+    // Wait for rate limit clearance before making request
+    await rateLimiter.waitForClearance('opendota');
+
     const response = await requestWithRetry('GET', url);
     if (!response.ok) {
       throw new Error(`OpenDota API error: ${response.status} ${response.statusText}`);
@@ -69,72 +71,24 @@ async function fetchAllPlayerDataFromOpenDota(playerId: string): Promise<string>
     return await response.json();
   }
 
-  // Helper to add delay
-  function delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   // 1. Profile
   const profile: OpenDotaPlayer = await fetchJson(`${baseUrl}/players/${playerId}`);
-  await delay(delayMs);
 
-  // 2. Counts
-  const counts: OpenDotaPlayerCounts = await fetchJson(`${baseUrl}/players/${playerId}/counts`);
-  await delay(delayMs);
-
-  // 3. Heroes
+  // 2. Heroes (used by frontend)
   const heroes: OpenDotaPlayerHero[] = await fetchJson(`${baseUrl}/players/${playerId}/heroes`);
-  await delay(delayMs);
 
-  // 4. Rankings
-  let rankings: OpenDotaPlayerRanking[] = [];
-  try {
-    rankings = await fetchJson(`${baseUrl}/players/${playerId}/rankings`);
-  } catch {
-    rankings = [];
-  }
-  await delay(delayMs);
+  // 3. Matches (recentMatches used by frontend)
+  const recentMatches: OpenDotaPlayerMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/matches`);
 
-  // 5. Ratings
-  let ratings: OpenDotaPlayerRating[] = [];
-  try {
-    ratings = await fetchJson(`${baseUrl}/players/${playerId}/ratings`);
-  } catch {
-    ratings = [];
-  }
-  await delay(delayMs);
-
-  // 6. Recent Matches
-  const recentMatches: OpenDotaPlayerRecentMatches[] = await fetchJson(`${baseUrl}/players/${playerId}/recentMatches`);
-  await delay(delayMs);
-
-  // 7. Totals
-  const totals: OpenDotaPlayerTotals = await fetchJson(`${baseUrl}/players/${playerId}/totals`);
-  await delay(delayMs);
-
-  // 8. Win/Loss
+  // 4. Win/Loss (used by frontend)
   const wl: OpenDotaPlayerWL = await fetchJson(`${baseUrl}/players/${playerId}/wl`);
-  await delay(delayMs);
 
-  // 9. Ward Map
-  let wardMap: OpenDotaPlayerWardMap = { obs: {}, sen: {} };
-  try {
-    wardMap = await fetchJson(`${baseUrl}/players/${playerId}/wardMap`);
-  } catch {
-    wardMap = { obs: {}, sen: {} };
-  }
-
-  const comprehensiveData: OpenDotaPlayerComprehensive = {
+  const comprehensiveData = {
     profile,
-    counts,
     heroes,
-    rankings,
-    ratings,
     recentMatches,
-    totals,
     wl,
-    wardMap
-  };
+  } as OpenDotaPlayerComprehensive;
 
   return JSON.stringify(comprehensiveData);
 }
@@ -148,4 +102,4 @@ function parseOpenDotaPlayerComprehensive(data: string): OpenDotaPlayerComprehen
   } catch (err) {
     throw new Error(`Failed to parse OpenDota player comprehensive data: ${err}`);
   }
-} 
+}

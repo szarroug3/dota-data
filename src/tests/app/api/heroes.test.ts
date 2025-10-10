@@ -18,7 +18,7 @@ const mockHeroesData: OpenDotaHero[] = [
     primary_attr: 'agi',
     attack_type: 'Melee',
     roles: ['Carry', 'Escape', 'Nuker'],
-    legs: 2
+    legs: 2,
   },
   {
     id: 2,
@@ -27,8 +27,8 @@ const mockHeroesData: OpenDotaHero[] = [
     primary_attr: 'str',
     attack_type: 'Melee',
     roles: ['Initiator', 'Durable', 'Disabler', 'Carry'],
-    legs: 2
-  }
+    legs: 2,
+  },
 ];
 
 describe('Heroes API Route', () => {
@@ -45,8 +45,27 @@ describe('Heroes API Route', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      
-      expect(data).toEqual(mockHeroesData);
+
+      expect(data).toEqual([
+        {
+          id: 1,
+          name: 'npc_dota_hero_antimage',
+          localized_name: 'Anti-Mage',
+          primary_attr: 'agi',
+          attack_type: 'Melee',
+          roles: ['Carry', 'Escape', 'Nuker'],
+          legs: 2,
+        },
+        {
+          id: 2,
+          name: 'npc_dota_hero_axe',
+          localized_name: 'Axe',
+          primary_attr: 'str',
+          attack_type: 'Melee',
+          roles: ['Initiator', 'Durable', 'Disabler', 'Carry'],
+          legs: 2,
+        },
+      ]);
       expect(mockFetchOpenDotaHeroes).toHaveBeenCalledWith(false);
     });
 
@@ -84,6 +103,27 @@ describe('Heroes API Route', () => {
       expect(data.error).toBe('Invalid heroes data');
       expect(data.status).toBe(422);
       expect(data.details).toBe('Heroes data is invalid or corrupted.');
+    });
+
+    it('should return 422 when schema validation fails on shape mismatch', async () => {
+      // Provide malformed payload that will fail Zod validation in route.ts
+      const badData: any = [
+        {
+          id: '1', // wrong type
+          name: 'npc_dota_hero_antimage',
+          localized_name: 'Anti-Mage',
+          primary_attr: 'agi',
+          attack_type: 'Melee',
+          roles: 'Carry', // wrong type
+        },
+      ];
+      mockFetchOpenDotaHeroes.mockResolvedValue(badData as any as OpenDotaHero[]);
+
+      const request = new NextRequest('http://localhost:3000/api/heroes');
+      const response = await GET(request);
+      expect(response.status).toBe(422);
+      const json = await response.json();
+      expect(json.error).toBe('Invalid heroes data');
     });
 
     it('should handle generic API errors', async () => {
@@ -138,4 +178,4 @@ describe('Heroes API Route', () => {
       expect(mockFetchOpenDotaHeroes).toHaveBeenCalledWith(false);
     });
   });
-}); 
+});

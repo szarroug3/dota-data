@@ -1,4 +1,10 @@
 // Dedicated Jest setup file to mock @upstash/redis before any app code is loaded
+
+// Ensure global File exists for libraries that expect it in Node
+if (typeof globalThis.File === 'undefined') {
+  globalThis.File = class {};
+}
+
 const mockRedisInstance = {
   get: jest.fn(),
   set: jest.fn(),
@@ -16,9 +22,11 @@ const mockRedisInstance = {
   flushall: jest.fn(),
 };
 
-const MockRedis = function() { return mockRedisInstance; };
+const MockRedis = function () {
+  return mockRedisInstance;
+};
 MockRedis.fromEnv = () => mockRedisInstance;
 
 jest.mock('@upstash/redis', () => ({
   Redis: MockRedis,
-})); 
+}));

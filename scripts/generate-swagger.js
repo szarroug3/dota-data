@@ -31,4 +31,4 @@ try {
 } catch (error) {
   console.error('Error generating swagger documentation:', error);
   process.exit(1);
-} 
+}

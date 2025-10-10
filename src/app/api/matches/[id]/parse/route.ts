@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { parseOpenDotaMatchWithJobPolling } from '@/lib/api/opendota/matches';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle match parsing errors
@@ -11,7 +12,7 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
     return {
       error: 'Rate limited by OpenDota API',
       status: 429,
-      details: 'Too many requests to OpenDota API. Please try again later.'
+      details: 'Too many requests to OpenDota API. Please try again later.',
     };
   }
 
@@ -19,7 +20,7 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
     return {
       error: 'Match not found',
       status: 404,
-      details: `Match with ID ${matchId} could not be found for parsing.`
+      details: `Match with ID ${matchId} could not be found for parsing.`,
     };
   }
 
@@ -27,7 +28,7 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
     return {
       error: 'Match parsing timed out',
       status: 408,
-      details: 'Match parsing took too long to complete. Please try again later.'
+      details: 'Match parsing took too long to complete. Please try again later.',
     };
   }
 
@@ -35,14 +36,14 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
     return {
       error: 'Invalid match data',
       status: 422,
-      details: 'Match data is invalid and cannot be parsed.'
+      details: 'Match data is invalid and cannot be parsed.',
     };
   }
 
   return {
     error: 'Failed to parse match',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -61,12 +62,7 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
  *         schema:
  *           type: string
  *         description: Match ID (numeric string)
- *       - in: query
- *         name: timeout
- *         schema:
- *           type: integer
- *           default: 60000
- *         description: Maximum time to wait for parsing completion (in milliseconds)
+ *
  *     responses:
  *       200:
  *         description: Match parsing completed successfully
@@ -189,36 +185,35 @@ function handleMatchParsingError(error: Error, matchId: string): ApiErrorRespons
  *               status: 500
  *               details: "Unknown error occurred"
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<NextResponse> {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
   try {
-    const matchId = params.id;
-
-    // Extract query parameters
-    const { searchParams } = new URL(request.url);
-    const timeout = Number(searchParams.get('timeout')) || 60000; // 1 minute default
+    const { id } = params;
+    const matchId = id;
 
     // Parse match using the library function
-    const parsedMatch = await parseOpenDotaMatchWithJobPolling(matchId, timeout);
+    const parsedMatch = await parseOpenDotaMatchWithJobPolling(matchId);
 
-    // Return successful response with parsed match data
-    return NextResponse.json(parsedMatch);
-
+    // Validate response
+    try {
+      const validated = schemas.getApiMatches.parse(parsedMatch);
+      return NextResponse.json(validated);
+    } catch {
+      throw new Error('Invalid match data');
+    }
   } catch (error) {
     console.error('Match Parse API Error:', error);
-    
+
     if (error instanceof Error) {
-      const errorResponse = handleMatchParsingError(error, params.id);
+      const { id } = params;
+      const errorResponse = handleMatchParsingError(error, id);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
     }
 
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to parse match',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

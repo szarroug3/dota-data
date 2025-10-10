@@ -1,0 +1,81 @@
+name: Verify (Lint & Type Check)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: ESLint & TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Lint should not block the type-check; we save outputs to files
+      - name: Lint (ESLint)
+        id: lint
+        continue-on-error: true
+        run: |
+          # human-readable
+          pnpm run lint:ci | tee eslint-report.txt
+          # structured JSON (optional)
+          npx eslint -f json . > eslint-report.json || true
+
+      # Always run type-check, even if lint failed
+      - name: Type Check (tsc)
+        id: typecheck
+        if: always()
+        continue-on-error: true
+        run: |
+          pnpm run type-check:ci | tee tsc-report.txt
+
+      # Combine summaries into a single markdown for quick reading
+      - name: Create combined report
+        if: always()
+        run: |
+          echo "# Verify Report" > verify-report.md
+          echo "## Lint (ESLint)" >> verify-report.md
+          if [ -s eslint-report.txt ]; then
+            echo '\n```\n' >> verify-report.md
+            sed -n '1,400p' eslint-report.txt >> verify-report.md
+            echo '\n```\n' >> verify-report.md
+          else
+            echo "_No ESLint output_" >> verify-report.md
+          fi
+          echo "## Type Check (tsc)" >> verify-report.md
+          if [ -s tsc-report.txt ]; then
+            echo '\n```\n' >> verify-report.md
+            sed -n '1,400p' tsc-report.txt >> verify-report.md
+            echo '\n```\n' >> verify-report.md
+          else
+            echo "_No tsc output_" >> verify-report.md
+
+      # Upload artifacts so you can download the results
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-artifacts-${{ github.run_number }}
+          path: |
+            eslint-report.txt
+            eslint-report.json
+            tsc-report.txt
+            verify-report.md

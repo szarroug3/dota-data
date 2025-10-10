@@ -2,7 +2,7 @@ import { chromium, FullConfig } from '@playwright/test';
 
 async function globalTeardown(config: FullConfig) {
   const { baseURL } = config.projects[0].use;
-  
+
   // Start the browser and create a new context
   const browser = await chromium.launch();
   const context = await browser.newContext();
@@ -11,15 +11,15 @@ async function globalTeardown(config: FullConfig) {
   try {
     // Navigate to the application
     await page.goto(baseURL!);
-    
+
     // Wait for the application to load
     await page.waitForLoadState('networkidle');
-    
+
     // Clean up test data from localStorage
     await page.evaluate(() => {
       // Clear all test data
       localStorage.clear();
-      
+
       // Reset to default preferences
       localStorage.setItem('theme', 'light');
       localStorage.setItem('sidebarCollapsed', 'false');
@@ -33,4 +33,4 @@ async function globalTeardown(config: FullConfig) {
   }
 }
 
-export default globalTeardown; 
+export default globalTeardown;

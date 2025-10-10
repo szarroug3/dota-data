@@ -6,11 +6,13 @@ jest.mock('@/lib/cache-service');
 jest.mock('@/lib/config/environment', () => ({
   getEnv: {
     USE_MOCK_API: jest.fn(() => false),
-    USE_MOCK_DOTABUFF: jest.fn(() => false),
+    USE_MOCK_STEAM: jest.fn(() => false),
     USE_MOCK_OPENDOTA: jest.fn(() => false),
-    USE_MOCK_D2PT: jest.fn(() => false),
-    WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false)
-  }
+    WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false),
+    MOCK_API_DELAY_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_OPENDOTA_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_STEAM_MS: jest.fn(() => 0),
+  },
 }));
 
 const mockCacheService = CacheService as jest.MockedClass<typeof CacheService>;
@@ -29,15 +31,7 @@ describe('request utility', () => {
 
       const requestFn = jest.fn();
       const processingFn = jest.fn();
-      const result = await request(
-        'dotabuff',
-        requestFn,
-        processingFn,
-        '/mock/file.html',
-        false,
-        3600,
-        'test-key'
-      );
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key');
 
       expect(result).toEqual(cachedData);
       expect(requestFn).not.toHaveBeenCalled();
@@ -45,20 +39,12 @@ describe('request utility', () => {
     });
 
     it('should fetch from API when cache is empty and force is false', async () => {
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const processedData = { id: '123', name: 'Test' };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
-      const result = await request(
-        'dotabuff',
-        requestFn,
-        processingFn,
-        '/mock/file.html',
-        false,
-        3600,
-        'test-key'
-      );
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
@@ -70,20 +56,12 @@ describe('request utility', () => {
       const cachedData = { id: '123', name: 'Test' };
       mockCacheService.prototype.get.mockResolvedValue(cachedData);
 
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const processedData = { id: '456', name: 'New Test' };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
-      const result = await request(
-        'dotabuff',
-        requestFn,
-        processingFn,
-        '/mock/file.html',
-        true,
-        3600,
-        'test-key'
-      );
+      const result = await request('steam', requestFn, processingFn, '/mock/file.json', true, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
@@ -94,33 +72,21 @@ describe('request utility', () => {
       const requestFn = jest.fn().mockRejectedValue(new Error('API Error'));
       const processingFn = jest.fn();
 
-      await expect(request(
-        'dotabuff',
-        requestFn,
-        processingFn,
-        '/mock/file.html',
-        false,
-        3600,
-        'test-key'
-      )).rejects.toThrow('API Error');
+      await expect(
+        request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key'),
+      ).rejects.toThrow('API Error');
     });
 
     it('should handle errors from processing function', async () => {
-      const apiData = '<html>test</html>';
+      const apiData = { ok: true };
       const requestFn = jest.fn().mockResolvedValue(apiData);
       const processingFn = jest.fn().mockImplementation(() => {
         throw new Error('Processing Error');
       });
 
-      await expect(request(
-        'dotabuff',
-        requestFn,
-        processingFn,
-        '/mock/file.html',
-        false,
-        3600,
-        'test-key'
-      )).rejects.toThrow('Processing Error');
+      await expect(
+        request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key'),
+      ).rejects.toThrow('Processing Error');
     });
   });
 
@@ -135,8 +101,8 @@ describe('request utility', () => {
         status: 200,
         statusText: 'OK',
         headers: {
-          get: jest.fn().mockReturnValue(null)
-        }
+          get: jest.fn().mockReturnValue(null),
+        },
       };
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
@@ -146,7 +112,7 @@ describe('request utility', () => {
       expect(global.fetch).toHaveBeenCalledWith('https://api.example.com/data', {
         method: 'GET',
         body: undefined,
-        headers: undefined
+        headers: undefined,
       });
     });
 
@@ -156,21 +122,19 @@ describe('request utility', () => {
         status: 500,
         statusText: 'Internal Server Error',
         headers: {
-          get: jest.fn().mockReturnValue('1')
-        }
+          get: jest.fn().mockReturnValue('1'),
+        },
       };
       const successResponse = {
         ok: true,
         status: 200,
         statusText: 'OK',
         headers: {
-          get: jest.fn().mockReturnValue(null)
-        }
+          get: jest.fn().mockReturnValue(null),
+        },
       };
 
-      (global.fetch as jest.Mock)
-        .mockResolvedValueOnce(failedResponse)
-        .mockResolvedValueOnce(successResponse);
+      (global.fetch as jest.Mock).mockResolvedValueOnce(failedResponse).mockResolvedValueOnce(successResponse);
 
       const result = await requestWithRetry('GET', 'https://api.example.com/data');
 
@@ -184,14 +148,15 @@ describe('request utility', () => {
         status: 500,
         statusText: 'Internal Server Error',
         headers: {
-          get: jest.fn().mockReturnValue(null)
-        }
+          get: jest.fn().mockReturnValue(null),
+        },
       };
 
       (global.fetch as jest.Mock).mockResolvedValue(failedResponse);
 
-      await expect(requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 2))
-        .rejects.toThrow('Request failed: 500 Internal Server Error');
+      await expect(requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 2)).rejects.toThrow(
+        'Request failed: 500 Internal Server Error',
+      );
     });
 
     it('should handle POST requests with body', async () => {
@@ -200,8 +165,8 @@ describe('request utility', () => {
         status: 200,
         statusText: 'OK',
         headers: {
-          get: jest.fn().mockReturnValue(null)
-        }
+          get: jest.fn().mockReturnValue(null),
+        },
       };
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
@@ -213,8 +178,8 @@ describe('request utility', () => {
       expect(global.fetch).toHaveBeenCalledWith('https://api.example.com/data', {
         method: 'POST',
         body: JSON.stringify(body),
-        headers
+        headers,
       });
     });
   });
-}); 
+});

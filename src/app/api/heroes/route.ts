@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaHeroes } from '@/lib/api/opendota/heroes';
+import { apiLogger } from '@/lib/logger';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle heroes API errors
  */
 function handleHeroesError(error: Error): ApiErrorResponse {
+  if (error.message.includes('429')) {
+    return {
+      error: 'Rate limited by OpenDota API',
+      status: 429,
+      details: 'Too many requests to OpenDota API. Please try again later.',
+    };
+  }
   if (error.message.includes('Rate limited')) {
     return {
       error: 'Rate limited by OpenDota API',
       status: 429,
-      details: 'Too many requests to OpenDota API. Please try again later.'
+      details: 'Too many requests to OpenDota API. Please try again later.',
     };
   }
 
@@ -19,14 +28,14 @@ function handleHeroesError(error: Error): ApiErrorResponse {
     return {
       error: 'Invalid heroes data',
       status: 422,
-      details: 'Heroes data is invalid or corrupted.'
+      details: 'Heroes data is invalid or corrupted.',
     };
   }
 
   return {
     error: 'Failed to fetch heroes',
     status: 500,
-    details: error.message
+    details: error.message,
   };
 }
 
@@ -197,9 +206,7 @@ function handleHeroesError(error: Error): ApiErrorResponse {
  *               status: 500
  *               details: "Unknown error occurred"
  */
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Extract query parameters
     const { searchParams } = new URL(request.url);
@@ -207,12 +214,19 @@ export async function GET(
 
     // Fetch raw heroes data (handles caching, rate limiting, mock mode)
     const heroes = await fetchOpenDotaHeroes(force);
-
-    // Return successful response
-    return NextResponse.json(heroes);
+    try {
+      const validated = schemas.getApiHeroes.parse(heroes);
+      return NextResponse.json(validated);
+    } catch {
+      // Normalize validation errors to our 422 handler branch
+      throw new Error('Failed to parse heroes data');
+    }
   } catch (error) {
-    console.error('Heroes API Error:', error);
-    
+    apiLogger.error(
+      'Heroes API Error',
+      `Failed to fetch heroes data - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+
     if (error instanceof Error) {
       const errorResponse = handleHeroesError(error);
       return NextResponse.json(errorResponse, { status: errorResponse.status });
@@ -221,8 +235,8 @@ export async function GET(
     const errorResponse: ApiErrorResponse = {
       error: 'Failed to fetch heroes',
       status: 500,
-      details: 'Unknown error occurred'
+      details: 'Unknown error occurred',
     };
     return NextResponse.json(errorResponse, { status: 500 });
   }
-} 
+}

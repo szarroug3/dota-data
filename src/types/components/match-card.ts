@@ -321,4 +321,4 @@ export interface MatchCardSort {
   direction: 'asc' | 'desc';
   /** Custom sort function */
   customSort?: (a: MatchCardData, b: MatchCardData) => number;
-} 
+}

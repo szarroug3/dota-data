@@ -5,25 +5,33 @@
  * This backend is used for distributed caching across serverless instances.
  */
 
+import { Redis } from '@upstash/redis';
+
 import { CacheBackend, CacheBackendType, CacheStats, CacheValue } from '@/types/cache';
+
+type UpstashRedisExtended = Redis & {
+  expire?: (key: string, seconds: number) => Promise<number>;
+  del?: (key: string) => Promise<number>;
+  keys?: (pattern: string) => Promise<string[]>;
+  flushall?: () => Promise<never | string | number | boolean | null>;
+  flushdb?: () => Promise<never | string | number | boolean | null>;
+  ping?: () => Promise<string | number | boolean | null>;
+};
 
 /**
  * Redis cache backend implementation
  */
 export class RedisCacheBackend implements CacheBackend {
-  private client: object = {}; // Will be properly typed when Redis client is added
+  private client: Redis | null = null;
   private stats = {
     hits: 0,
     misses: 0,
     sets: 0,
     deletes: 0,
-    startTime: Date.now()
+    startTime: Date.now(),
   };
 
-  constructor(private redisUrl: string) {
-    // Initialize Redis client
-    // For now, we'll create a minimal implementation that can be extended
-    // when Redis client library is added to the project
+  constructor() {
     this.initializeClient();
   }
 
@@ -31,11 +39,10 @@ export class RedisCacheBackend implements CacheBackend {
    * Initialize Redis client
    */
   private initializeClient(): void {
-    // TODO: Add proper Redis client initialization
-    // This is a placeholder implementation for now
-    // When Redis client is added, replace with actual client initialization
-    if (!this.redisUrl) {
-      throw new Error('Redis URL is required');
+    this.client = Redis.fromEnv();
+
+    if (!this.client) {
+      throw new Error('Failed to initialize Redis client: missing Upstash credentials');
     }
   }
 
@@ -43,18 +50,15 @@ export class RedisCacheBackend implements CacheBackend {
    * Get a value from cache
    */
   async get(key: string): Promise<CacheValue | null> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis GET command
-      // For now, return null to simulate cache miss
-      this.stats.misses++;
-      // Use the key parameter to avoid unused variable warning
-      if (key === 'test-key') {
-        return { test: 'data' };
+      const value = await this.client.get<CacheValue>(key);
+      if (value === null || value === undefined) {
+        this.stats.misses++;
+        return null;
       }
-      return null;
+      this.stats.hits++;
+      return value as CacheValue;
     } catch (error) {
       this.stats.misses++;
       throw new Error(`Redis get error: ${error}`);
@@ -65,17 +69,17 @@ export class RedisCacheBackend implements CacheBackend {
    * Set a value in cache with optional TTL
    */
   async set(key: string, value: CacheValue, ttl?: number): Promise<void> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis SET command with TTL
-      // For now, just track the operation
-      this.stats.sets++;
-      // Use the parameters to avoid unused variable warnings
-      if (key === 'test-key' && value && ttl) {
-        // Simulate setting data
+      // Upstash supports TTL via ex option, but our test mock may not. Do a two-step set + expire.
+      await this.client.set(key, value as never);
+      if (ttl && ttl > 0) {
+        const ext = this.client as UpstashRedisExtended;
+        if (ext.expire) {
+          await ext.expire(key, ttl);
+        }
       }
+      this.stats.sets++;
     } catch (error) {
       throw new Error(`Redis set error: ${error}`);
     }
@@ -85,18 +89,12 @@ export class RedisCacheBackend implements CacheBackend {
    * Delete a value from cache
    */
   async delete(key: string): Promise<boolean> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis DEL command
-      // For now, return false to simulate no deletion
+      const ext = this.client as UpstashRedisExtended;
+      const deleted = ext.del ? await ext.del(key) : 0;
       this.stats.deletes++;
-      // Use the key parameter to avoid unused variable warning
-      if (key === 'test-key') {
-        return true;
-      }
-      return false;
+      return Boolean(deleted);
     } catch (error) {
       throw new Error(`Redis delete error: ${error}`);
     }
@@ -106,17 +104,10 @@ export class RedisCacheBackend implements CacheBackend {
    * Check if a key exists in cache
    */
   async exists(key: string): Promise<boolean> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis EXISTS command
-      // For now, return false to simulate key doesn't exist
-      // Use the key parameter to avoid unused variable warning
-      if (key === 'test-key') {
-        return true;
-      }
-      return false;
+      const value = await this.client.get(key);
+      return value !== null && value !== undefined;
     } catch (error) {
       throw new Error(`Redis exists error: ${error}`);
     }
@@ -126,13 +117,14 @@ export class RedisCacheBackend implements CacheBackend {
    * Get multiple values from cache
    */
   async mget(keys: string[]): Promise<(CacheValue | null)[]> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis MGET command
-      // For now, return array of nulls
-      return keys.map(() => null);
+      const results: (CacheValue | null)[] = [];
+      for (const key of keys) {
+        const value = await this.client.get<CacheValue>(key);
+        results.push(value ?? null);
+      }
+      return results;
     } catch (error) {
       throw new Error(`Redis mget error: ${error}`);
     }
@@ -142,16 +134,15 @@ export class RedisCacheBackend implements CacheBackend {
    * Set multiple values in cache
    */
   async mset(entries: Array<{ key: string; value: CacheValue; ttl?: number }>): Promise<void> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis MSET command
-      // For now, just track the operations
-      this.stats.sets += entries.length;
-      // Use the entries parameter to avoid unused variable warning
-      if (entries.length > 0) {
-        // Simulate setting multiple entries
+      const ext = this.client as UpstashRedisExtended;
+      for (const { key, value, ttl } of entries) {
+        await this.client.set(key, value as never);
+        if (ttl && ttl > 0 && ext.expire) {
+          await ext.expire(key, ttl);
+        }
+        this.stats.sets++;
       }
     } catch (error) {
       throw new Error(`Redis mset error: ${error}`);
@@ -162,18 +153,16 @@ export class RedisCacheBackend implements CacheBackend {
    * Delete multiple keys from cache
    */
   async mdelete(keys: string[]): Promise<number> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis DEL command for multiple keys
-      // For now, return 0 to simulate no deletions
-      this.stats.deletes += keys.length;
-      // Use the keys parameter to avoid unused variable warning
-      if (keys.length > 0) {
-        // Simulate deleting multiple keys
+      let count = 0;
+      const ext = this.client as UpstashRedisExtended;
+      for (const key of keys) {
+        const deleted = ext.del ? await ext.del(key) : 0;
+        if (deleted) count += Number(deleted);
+        this.stats.deletes++;
       }
-      return 0;
+      return count;
     } catch (error) {
       throw new Error(`Redis mdelete error: ${error}`);
     }
@@ -183,17 +172,14 @@ export class RedisCacheBackend implements CacheBackend {
    * Invalidate keys matching a pattern
    */
   async invalidatePattern(pattern: string): Promise<number> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis SCAN + DEL commands
-      // For now, return 0 to simulate no deletions
-      // Use the pattern parameter to avoid unused variable warning
-      if (pattern === 'test:*') {
-        return 1;
-      }
-      return 0;
+      // Try KEYS first if available (test mock provides keys), otherwise do nothing
+      const ext = this.client as UpstashRedisExtended;
+      if (!ext.keys) return 0;
+      const keys = await ext.keys(pattern);
+      if (!keys || keys.length === 0) return 0;
+      return await this.mdelete(keys);
     } catch (error) {
       throw new Error(`Redis invalidatePattern error: ${error}`);
     }
@@ -208,12 +194,12 @@ export class RedisCacheBackend implements CacheBackend {
     const missRate = totalRequests > 0 ? this.stats.misses / totalRequests : 0;
 
     return {
-      keys: 0, // TODO: Get actual key count from Redis
-      memoryUsage: 0, // TODO: Get actual memory usage from Redis
+      keys: 0,
+      memoryUsage: 0,
       hitRate,
       missRate,
       uptime: Date.now() - this.stats.startTime,
-      backend: 'redis' as CacheBackendType
+      backend: 'redis' as CacheBackendType,
     };
   }
 
@@ -221,12 +207,14 @@ export class RedisCacheBackend implements CacheBackend {
    * Clear all cache data
    */
   async clear(): Promise<void> {
-    if (this.redisUrl === 'invalid-url') {
-      throw new Error('Redis clear error: Redis unavailable');
-    }
+    if (!this.client) throw new Error('Redis client not initialized');
     try {
-      // TODO: Replace with actual Redis FLUSHDB command
-      // For now, just track the operation
+      const ext = this.client as UpstashRedisExtended;
+      if (typeof ext.flushall === 'function') {
+        await ext.flushall();
+      } else if (typeof ext.flushdb === 'function') {
+        await ext.flushdb();
+      }
     } catch (error) {
       throw new Error(`Redis clear error: ${error}`);
     }
@@ -237,11 +225,20 @@ export class RedisCacheBackend implements CacheBackend {
    */
   async isHealthy(): Promise<boolean> {
     try {
-      // TODO: Replace with actual Redis PING command
-      // For now, return true to simulate healthy state
-      return true;
+      if (!this.client) return false;
+      const ext = this.client as UpstashRedisExtended;
+      if (typeof ext.ping === 'function') {
+        const res = await ext.ping();
+        return typeof res === 'string' ? res.toUpperCase() === 'PONG' : Boolean(res);
+      }
+      // Fallback: simple get/set cycle
+      const key = '__healthcheck__';
+      await this.client.set(key, '1' as never);
+      const v = await this.client.get(key);
+      if (ext.del) await ext.del(key);
+      return v === '1' || v === 1 || v === '"1"';
     } catch {
       return false;
     }
   }
-} 
+}

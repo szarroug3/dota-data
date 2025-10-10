@@ -63,7 +63,7 @@ export function safeClear(): boolean {
  */
 export function safeParseJSON<T>(data: string | null): T | null {
   if (!data) return null;
-  
+
   try {
     const parsed = JSON.parse(data);
     return parsed as T;
@@ -92,7 +92,7 @@ export function safeStringify(data: object | string | number | boolean | null): 
 export function getParsedData<T>(key: string): T | null {
   const rawData = safeGetItem(key);
   if (rawData === null) return null;
-  
+
   const parsedData = safeParseJSON<T>(rawData);
   if (parsedData === null) {
     // Clear corrupted data automatically
@@ -100,7 +100,7 @@ export function getParsedData<T>(key: string): T | null {
     safeRemoveItem(key);
     return null;
   }
-  
+
   return parsedData;
 }
 
@@ -110,7 +110,7 @@ export function getParsedData<T>(key: string): T | null {
 export function setData<T>(key: string, data: T): boolean {
   const stringified = safeStringify(data as object | string | number | boolean | null);
   if (stringified === null) return false;
-  
+
   return safeSetItem(key, stringified);
 }
 
@@ -141,11 +141,11 @@ export function isLocalStorageAvailable(): boolean {
  */
 export function getStorageInfo(): { available: boolean; used: number; quota?: number } {
   const available = isLocalStorageAvailable();
-  
+
   if (!available) {
     return { available: false, used: 0 };
   }
-  
+
   try {
     let used = 0;
     for (let i = 0; i < localStorage.length; i++) {
@@ -155,10 +155,10 @@ export function getStorageInfo(): { available: boolean; used: number; quota?: nu
         used += (key.length + (value?.length || 0)) * 2; // UTF-16 characters
       }
     }
-    
+
     return { available: true, used };
   } catch (error) {
     console.error('Failed to get storage info:', error);
     return { available: true, used: 0 };
   }
-} 
+}

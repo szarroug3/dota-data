@@ -1,0 +1,11 @@
+*** Begin Patch
+*** Update File: src/tests/utils/app-data-derivations.test.ts
+@@
+ import {
+   computeTeamHeroSummaryForMatches,
+   computeTeamHiddenMatchesForDisplay,
+   computeTeamHiddenPlayersForDisplay,
+   computeTeamMatchFilters,
+   computeTeamPerformanceSummary,
+ } from '@/frontend/lib/app-data-derivations';
+*** End Patch

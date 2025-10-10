@@ -41,14 +41,17 @@ export function useTeamStateOperations(
   const persistTeams = useCallback((
     teams: Map<string, TeamData> | ((prev: Map<string, TeamData>) => Map<string, TeamData>)
   ) => {
-    // Calculate the updated teams first
-    const updatedTeams = typeof teams === 'function' ? teams(state.teams) : teams;
-    
-    // Update local state
-    state.setTeams(teams);
-    
-    // Persist to localStorage with the calculated updated teams
-    configContext.setTeams(updatedTeams);
+    // Use functional update to ensure we calculate and persist from the latest state
+    state.setTeams(prev => {
+      const updatedTeams = typeof teams === 'function' ? teams(prev) : teams;
+      // Persist to localStorage with the calculated updated teams
+      try {
+        configContext.setTeams(updatedTeams);
+      } catch (error) {
+        console.warn('Failed to persist team data:', error);
+      }
+      return updatedTeams;
+    });
   }, [state, configContext]);
 
   // Remove team
