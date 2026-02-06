@@ -25,26 +25,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { dev }) => {
-    config.resolve = config.resolve || {};
-    config.resolve.alias = {
-      ...(config.resolve.alias || {}),
+  // Turbopack configuration (Next.js 16+ uses Turbopack by default)
+  turbopack: {
+    resolveAlias: {
+      // Path alias for @ imports (also configured in tsconfig.json)
       '@': path.resolve(__dirname, 'src'),
-    };
-    if (dev) {
-      config.watchOptions = {
-        ...(config.watchOptions || {}),
-        ignored: [
-          ...(Array.isArray(config.watchOptions?.ignored)
-            ? config.watchOptions.ignored
-            : typeof config.watchOptions?.ignored === 'string'
-              ? [config.watchOptions.ignored]
-              : []),
-          'mock-data/**',
-        ].filter((v) => typeof v === 'string' && v.length > 0),
-      };
-    }
-    return config;
+    },
+    // Turbopack automatically ignores common patterns
+    // For custom ignore patterns, we can configure them here if needed
   },
 };
 
