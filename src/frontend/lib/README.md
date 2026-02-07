@@ -53,11 +53,6 @@ This directory contains the core data management logic for the Dota Scout Assist
   - Functions: `formatTeamForDisplay()`, `formatTeamsForDisplay()`
   - Handles error message formatting
 
-### Legacy Files
-
-- **`fetch-cache.ts`** (1.5KB) - Legacy caching utilities
-- **`optimistic-operations.ts`** (6.8KB) - Legacy optimistic update logic
-
 ## Architecture
 
 ```
