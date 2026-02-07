@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 interface EditManualMatchSheetProps {
   isOpen: boolean;

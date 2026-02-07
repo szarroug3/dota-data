@@ -14,7 +14,7 @@ import { RemoveManualMatchButton } from '@/frontend/matches/components/stateless
 import { EditManualMatchSheet } from '@/frontend/matches/components/stateless/EditManualMatchSheet';
 import { getOpponentName } from '@/frontend/matches/utils/match-name-helpers';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import { validateMatchId } from '@/utils/validation';
+import { validateMatchId } from '@/utils/validation/validation';
 
 const useResponsiveGrid = () => {
   const containerRef = useRef<HTMLDivElement>(null);

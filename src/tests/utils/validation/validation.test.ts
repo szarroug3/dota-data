@@ -1,4 +1,4 @@
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 describe('getValidationAriaAttributes', () => {
   it('returns no error attributes when valid', () => {

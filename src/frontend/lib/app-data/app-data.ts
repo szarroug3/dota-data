@@ -78,7 +78,7 @@ import type {
 } from '@/frontend/lib/player/player-statistics-calculator';
 import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 import { parseMatch as apiParseMatch } from '@/frontend/matches/api/matches';
-import { validateTeamForm } from '@/utils/validation';
+import { validateTeamForm } from '@/utils/validation/validation';
 
 export class AppData {
   _teams: Map<string, Team> = new Map();

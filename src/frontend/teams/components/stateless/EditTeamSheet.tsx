@@ -14,7 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 type TeamFormValidation = { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
 

@@ -1,6 +1,6 @@
 import type { Hero, Match, Player, PlayerMatchData, Team } from '@/frontend/lib/app-data/app-data-types';
 import type { StoredHero, StoredPlayerData } from '@/frontend/lib/storage/storage-manager';
-import { processPlayerRank } from '@/utils/player-statistics';
+import { processPlayerRank } from '@/utils/player/player-statistics';
 
 /**
  * Parse rank string to extract rank_tier and leaderboard_rank

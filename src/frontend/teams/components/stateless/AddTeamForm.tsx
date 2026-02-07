@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormField, FormRow } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 interface AddTeamFormProps {
   teamId: string;

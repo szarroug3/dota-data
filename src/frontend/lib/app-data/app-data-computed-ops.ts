@@ -14,8 +14,8 @@ import type {
   LeagueMatchesCache,
 } from '@/frontend/lib/app-data/app-data-types';
 import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage/storage-manager';
-import { processPlayerRank, type PlayerRank } from '@/utils/player-statistics';
-import { validatePlayerId } from '@/utils/validation';
+import { processPlayerRank, type PlayerRank } from '@/utils/player/player-statistics';
+import { validatePlayerId } from '@/utils/validation/validation';
 
 export interface AppDataComputedOpsContext {
   _teams: Map<string, Team>;

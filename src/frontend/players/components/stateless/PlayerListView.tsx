@@ -9,7 +9,7 @@ import { RefreshButton } from '@/frontend/matches/components/stateless/common/Re
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import { PlayerExternalSiteButton } from '@/frontend/players/components/stateless/PlayerExternalSiteButton';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { PlayerRank } from '@/utils/player-statistics';
+import type { PlayerRank } from '@/utils/player/player-statistics';
 
 export type PlayerListViewMode = 'list' | 'card';
 

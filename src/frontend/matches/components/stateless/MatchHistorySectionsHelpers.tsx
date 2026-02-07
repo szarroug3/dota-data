@@ -4,7 +4,7 @@ import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
-import { validateMatchId } from '@/utils/validation';
+import { validateMatchId } from '@/utils/validation/validation';
 
 export function HeroSummarySection({
   visibleMatches,
