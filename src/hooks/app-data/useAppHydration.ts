@@ -21,6 +21,9 @@ export function useAppHydration() {
 
   const contextsRef = useRef({ configContext, appData });
   contextsRef.current = { configContext, appData };
+  const activeTeamKey = configContext.activeTeam
+    ? `${configContext.activeTeam.teamId}-${configContext.activeTeam.leagueId}`
+    : null;
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
@@ -63,7 +66,7 @@ export function useAppHydration() {
           setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
         });
     }
-  }, [contextsRef.current.configContext.activeTeam]);
+  }, [activeTeamKey]);
 
   return {
     hydrationError,
