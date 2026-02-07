@@ -35,9 +35,18 @@ export function useAppHydration() {
   }, []);
 
   useEffect(() => {
+    if (!hasHydratedRef.current) return;
     const active = contextsRef.current.configContext.activeTeam;
-    const key = active ? `${active.teamId}-${active.leagueId}` : null;
-    if (active && ensuredActiveTeamKeyRef.current !== key) {
+    if (!active) return;
+    const key = `${active.teamId}-${active.leagueId}`;
+    if (ensuredActiveTeamKeyRef.current !== key) {
+      const existingTeam = contextsRef.current.appData.getTeam(key);
+      if (existingTeam) {
+        contextsRef.current.appData.setSelectedTeam(key);
+        ensuredActiveTeamKeyRef.current = key;
+        return;
+      }
+
       contextsRef.current.appData
         .loadTeam(active.teamId, active.leagueId)
         .then(() => {
@@ -93,13 +102,15 @@ async function hydrateAppData({
     await fetchConstantsIfNeeded(appData);
     refreshTeamsCachedMetadata(appData);
 
-    const ensuredKey = await ensureActiveTeam(configContext, appData);
-    if (ensuredKey) {
-      ensuredActiveTeamKeyRef.current = ensuredKey;
+    const ensuredActiveTeam = await ensureActiveTeam(configContext, appData);
+    if (ensuredActiveTeam.key) {
+      ensuredActiveTeamKeyRef.current = ensuredActiveTeam.key;
     }
 
     const { activeTeam, otherTeams } = getRefreshTargets(appData);
-    await refreshActiveTeam(appData, activeTeam);
+    if (!ensuredActiveTeam.didLoad) {
+      await refreshActiveTeam(appData, activeTeam);
+    }
     refreshOtherTeams(appData, otherTeams);
 
     await appData.loadAllManualMatches();
@@ -139,14 +150,24 @@ function refreshOtherTeams(
 async function ensureActiveTeam(
   configContext: ReturnType<typeof useConfigContext>,
   appData: ReturnType<typeof useAppData>,
-): Promise<string | null> {
+): Promise<{ key: string | null; didLoad: boolean }> {
   const active = configContext.activeTeam;
   if (active) {
+    const key = `${active.teamId}-${active.leagueId}`;
+    const existingTeam = appData.getTeam(key);
+
+    if (existingTeam) {
+      if (appData.state.selectedTeamId !== key) {
+        appData.setSelectedTeam(key);
+      }
+      return { key, didLoad: false };
+    }
+
     await appData.loadTeam(active.teamId, active.leagueId);
-    return `${active.teamId}-${active.leagueId}`;
+    return { key, didLoad: true };
   }
 
-  return null;
+  return { key: null, didLoad: false };
 }
 
 function getRefreshTargets(appData: ReturnType<typeof useAppData>): {

@@ -49,8 +49,10 @@ const mockAppData = {
   loadAllManualMatches: jest.fn(),
   loadAllManualPlayers: jest.fn(),
   loadTeam: jest.fn(),
+  getTeam: jest.fn(),
   refreshTeam: jest.fn(),
   getTeams: jest.fn(),
+  setSelectedTeam: jest.fn(),
   updateTeamMatchParticipation: jest.fn(),
   updateTeamPlayersMetadata: jest.fn(),
   state: {
@@ -105,6 +107,7 @@ describe('useAppHydration', () => {
     mockAppData.loadAllManualMatches.mockResolvedValue(undefined);
     mockAppData.loadAllManualPlayers.mockResolvedValue(undefined);
     mockAppData.loadTeam.mockResolvedValue(undefined);
+    mockAppData.getTeam.mockReturnValue(undefined);
     mockAppData.refreshTeam.mockResolvedValue(undefined);
     mockAppData.getTeams.mockReturnValue([]);
     mockAppData.state.selectedTeamId = '0-0';
@@ -156,6 +159,24 @@ describe('useAppHydration', () => {
       expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
     });
     expect(mockAppData.loadTeam).toHaveBeenCalledWith(1, 2);
+  });
+
+  it('should avoid reloading the active team when it is already stored', async () => {
+    const team = createTeam();
+    mockConfigContext.activeTeam = { teamId: team.teamId, leagueId: team.leagueId };
+    mockAppData.getTeams.mockReturnValue([team]);
+    mockAppData.getTeam.mockReturnValue(team);
+    mockAppData.state.selectedTeamId = '0-0';
+
+    render(<TestComponent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
+    });
+
+    expect(mockAppData.loadTeam).not.toHaveBeenCalled();
+    expect(mockAppData.setSelectedTeam).toHaveBeenCalledWith(team.id);
+    expect(mockAppData.refreshTeam).toHaveBeenCalledWith(team.teamId, team.leagueId);
   });
 
   it('should handle errors during constants fetching', async () => {
