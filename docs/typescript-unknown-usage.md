@@ -150,7 +150,7 @@ When you encounter `unknown` in the codebase:
 ### Logger (Appropriate Usage)
 
 ```typescript
-// src/lib/logger.ts
+// src/lib/config/logger.ts
 interface LogEntry {
   data?: unknown; // ✅ Appropriate - logging data is truly dynamic
 }

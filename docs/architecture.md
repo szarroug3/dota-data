@@ -180,8 +180,8 @@ function MyComponent() {
 
 - Single entry point for all external API calls
 - Validate inputs only (Zod schemas in `src/types/api-zod/`)
-- Apply rate limiting per `src/types/rate-limit.ts`
-- Coordinate caching via `src/lib/cache-service.ts` and `src/lib/cache-backends/*`
+- Apply rate limiting per `src/lib/rate-limit/rate-limiter.ts` and `src/types/rate-limit.ts`
+- Coordinate caching via `src/lib/cache/cache-service.ts` and `src/lib/cache-backends/*`
 - Return pass-through data from external APIs; avoid business calculations
 
 ### Conventions
@@ -278,14 +278,14 @@ function MyComponent() {
 
 ## Caching
 
-- Centralized in `src/lib/cache-service.ts`
+- Centralized in `src/lib/cache/cache-service.ts`
 - Backends: `src/lib/cache-backends/` (Redis, Memory, File)
 - Family TTLs: players 24h, teams 24h, matches indefinite
 - Cache keys: `family:resource:params:v{CACHE_VERSION}`
 
 ## Error Handling & Logging
 
-- Use helpers in `src/utils/error-handling.ts`
+- Use helpers in `src/utils/error/error-handling.ts`
 - Provide meaningful error messages
 - No silent failures
 - Surface errors via context error fields
