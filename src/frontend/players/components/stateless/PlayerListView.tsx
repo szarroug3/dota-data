@@ -474,16 +474,17 @@ const PlayerCardsGrid: React.FC<{
   return (
     <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
       {processed.map(({ player, topHeroes, rank }) => (
-        <PlayerCard
-          key={player.accountId}
-          player={player}
-          topHeroes={topHeroes}
-          rank={rank}
-          isSelected={selectedPlayerId === player.accountId}
-          onSelectPlayer={onSelectPlayer}
-          onRefreshPlayer={onRefreshPlayer}
-          preferredSite={preferredSite}
-        />
+        <div key={player.accountId} data-player-id={player.accountId}>
+          <PlayerCard
+            player={player}
+            topHeroes={topHeroes}
+            rank={rank}
+            isSelected={selectedPlayerId === player.accountId}
+            onSelectPlayer={onSelectPlayer}
+            onRefreshPlayer={onRefreshPlayer}
+            preferredSite={preferredSite}
+          />
+        </div>
       ))}
     </div>
   );

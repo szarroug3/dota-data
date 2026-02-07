@@ -25,9 +25,10 @@ const inFlightPlayerRequests = new Map<number, Promise<Player | null>>();
  * @param playerId - Player account ID to fetch
  * @returns Player data or null on error
  */
-async function fetchPlayerData(playerId: number): Promise<OpenDotaPlayerComprehensive | null> {
+async function fetchPlayerData(playerId: number, force = false): Promise<OpenDotaPlayerComprehensive | null> {
   try {
-    const response = await fetch(`/api/players/${playerId}`);
+    const url = force ? `/api/players/${playerId}?force=true` : `/api/players/${playerId}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       console.error(`Failed to fetch player ${playerId}: ${response.status}`);
@@ -120,7 +121,10 @@ export function processPlayerData(playerData: OpenDotaPlayerComprehensive): Play
  * @param playerId - Player account ID to fetch
  * @returns Processed Player object or null on error
  */
-export async function fetchAndProcessPlayer(playerId: number): Promise<Player | null> {
+export async function fetchAndProcessPlayer(
+  playerId: number,
+  options: { force?: boolean } = {},
+): Promise<Player | null> {
   // Check if request is already in flight
   const existingRequest = inFlightPlayerRequests.get(playerId);
   if (existingRequest) {
@@ -130,7 +134,7 @@ export async function fetchAndProcessPlayer(playerId: number): Promise<Player | 
   // Create new request
   const request = (async () => {
     try {
-      const playerData = await fetchPlayerData(playerId);
+      const playerData = await fetchPlayerData(playerId, options.force);
 
       if (!playerData) {
         const now = Date.now();

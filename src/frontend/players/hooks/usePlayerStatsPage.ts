@@ -265,6 +265,20 @@ export function useWaitForPlayerReadySource(players: Player[]) {
   return waitForPlayerReady;
 }
 
+export function usePlayerScroll(resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>) {
+  const scheduledScrollRef = useRef<NodeJS.Timeout | null>(null);
+  return useCallback(
+    (playerId: number) => {
+      if (scheduledScrollRef.current) clearTimeout(scheduledScrollRef.current);
+      scheduledScrollRef.current = setTimeout(() => {
+        resizableLayoutRef.current?.scrollToPlayer(playerId);
+        scheduledScrollRef.current = null;
+      }, 100);
+    },
+    [resizableLayoutRef],
+  );
+}
+
 export function usePlayerListActions(deps: {
   refreshPlayer: (id: number) => Promise<void | object | null>;
   resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;
@@ -341,8 +355,8 @@ export function usePlayerEditActions(deps: {
   removeManualPlayer?: (id: number) => void;
   editManualPlayer?: (oldId: number, newId: number) => Promise<void>;
   selectPlayer: (id: number) => void;
-  resizableLayoutRef: MutableRefObject<ResizablePlayerLayoutRef | null>;
   waitForPlayerReady: (playerId: number, timeoutMs?: number) => Promise<boolean>;
+  scrollToPlayer: (playerId: number) => void;
 }) {
   const appData = useAppData();
   const {
@@ -351,8 +365,8 @@ export function usePlayerEditActions(deps: {
     removeManualPlayer,
     editManualPlayer,
     selectPlayer,
-    resizableLayoutRef,
     waitForPlayerReady,
+    scrollToPlayer,
   } = deps;
 
   const handleRemoveManualPlayer = useCallback(
@@ -396,12 +410,14 @@ export function usePlayerEditActions(deps: {
         console.warn('addPlayerToTeam failed, player added to context only:', e);
       }
 
-      // Select and scroll right away so the optimistic card is visible
+      // Select now, then wait for data before scrolling to the loaded entry
       selectPlayer(playerIdNum);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      resizableLayoutRef.current?.scrollToPlayer(playerIdNum);
+      const ready = await waitForPlayerReady(playerIdNum);
+      if (ready) {
+        scrollToPlayer(playerIdNum);
+      }
     },
-    [addPlayer, addPlayerToTeam, selectPlayer, resizableLayoutRef, appData],
+    [addPlayer, addPlayerToTeam, selectPlayer, scrollToPlayer, appData, waitForPlayerReady],
   );
 
   const onEditPlayer = useCallback(
@@ -410,13 +426,13 @@ export function usePlayerEditActions(deps: {
       const newIdNum = Number(newPlayerId);
       await editManualPlayer?.(oldId, newIdNum);
       await new Promise((resolve) => setTimeout(resolve, 10));
-      resizableLayoutRef.current?.scrollToPlayer(newIdNum);
+      scrollToPlayer(newIdNum);
       const ready = await waitForPlayerReady(newIdNum);
       if (ready) {
         selectPlayer(newIdNum);
       }
     },
-    [editManualPlayer, resizableLayoutRef, waitForPlayerReady, selectPlayer],
+    [editManualPlayer, scrollToPlayer, waitForPlayerReady, selectPlayer],
   );
 
   return { handleRemoveManualPlayer, handleEditManualPlayer, handleAddPlayer, onEditPlayer } as const;

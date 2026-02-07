@@ -14,9 +14,11 @@ import type { StoredPlayerData } from './storage-manager';
  */
 export interface AppDataPlayerOpsContext {
   _teams: Map<string, Team>;
+  _players: Map<number, Player>;
   updateTeam(teamKey: string, updates: Partial<Team>): void;
   saveToStorage(): void;
   loadPlayer(playerId: number): Promise<Player | null>;
+  addPlayer(player: Player): void;
   updateTeamPlayersMetadata(teamKey: string, options?: { skipSave?: boolean }): void;
 }
 
@@ -53,6 +55,10 @@ export async function addManualPlayerToTeam(
 
     team.players.set(playerId, newPlayerData);
     appData.updateTeam(teamKey, { players: team.players });
+  }
+
+  if (!appData._players.has(playerId)) {
+    appData.addPlayer(createPlaceholderPlayerFromStored(playerId, team.players.get(playerId)));
   }
 
   // Load the player data
@@ -127,4 +133,60 @@ export async function editManualPlayerToTeam(
   appData.updateTeamPlayersMetadata(teamKey);
 
   return newPlayer;
+}
+
+function createPlaceholderPlayerFromStored(playerId: number, stored: StoredPlayerData | undefined): Player {
+  const now = Date.now();
+  if (!stored) {
+    return {
+      accountId: playerId,
+      profile: {
+        name: `Player ${playerId}`,
+        personaname: `Player ${playerId}`,
+        rank_tier: 0,
+      },
+      heroStats: [],
+      overallStats: {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        winRate: 0,
+      },
+      recentMatchIds: [],
+      isLoading: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  const wins = Math.round((stored.winRate / 100) * stored.games);
+  const losses = stored.games - wins;
+
+  return {
+    accountId: stored.accountId,
+    profile: {
+      name: stored.name,
+      personaname: stored.name,
+      avatar: stored.avatar,
+      avatarfull: stored.avatar,
+      rank_tier: stored.rank_tier,
+      leaderboard_rank: stored.leaderboard_rank,
+    },
+    heroStats: stored.topHeroes.map((hero) => ({
+      heroId: hero.id,
+      games: 0,
+      wins: 0,
+      lastPlayed: now,
+    })),
+    overallStats: {
+      wins,
+      losses,
+      totalGames: stored.games,
+      winRate: stored.winRate,
+    },
+    recentMatchIds: [],
+    isLoading: true,
+    createdAt: now,
+    updatedAt: now,
+  };
 }

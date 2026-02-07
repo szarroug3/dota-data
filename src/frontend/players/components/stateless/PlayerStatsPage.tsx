@@ -18,6 +18,7 @@ import {
   usePlayerEditActions,
   usePlayerListActions,
   usePlayerSelection as usePlayerSelectionHook,
+  usePlayerScroll,
   usePlayerViewModes as usePlayerViewModesHook,
   useTeamPlayerOperations,
   useWaitForPlayerReadySource,
@@ -193,6 +194,7 @@ function PlayerStatsPageInner(): React.ReactElement {
   const { showEditPlayerSheet, addPlayerId, editPlayerIdInput } = sheetState;
 
   const waitForPlayerReady = useWaitForPlayerReadySource(teamPlayers);
+  const scrollToPlayer = usePlayerScroll(resizableLayoutRef);
   const { addPlayerToTeam, removeManualPlayer, editManualPlayer } = useTeamPlayerOperations();
   const addPlayer = useCallback(async (accountId: number) => appData.loadPlayer(accountId), [appData]);
   const refreshPlayer = useCallback(async (accountId: number) => appData.refreshPlayer(accountId), [appData]);
@@ -203,8 +205,8 @@ function PlayerStatsPageInner(): React.ReactElement {
     removeManualPlayer,
     editManualPlayer,
     selectPlayer,
-    resizableLayoutRef,
     waitForPlayerReady,
+    scrollToPlayer,
   });
 
   const listActions = usePlayerListActions({
@@ -237,7 +239,10 @@ function PlayerStatsPageInner(): React.ReactElement {
     handleScrollToPlayer: listActions.handleScrollToPlayer,
     setShowAddPlayerSheet: sheetState.setShowAddPlayerSheet,
     manualPlayerIds,
-    handleEditManualPlayer: (playerId: number) => sheetState.setShowEditPlayerSheet({ open: true, playerId }),
+    handleEditManualPlayer: (playerId: number) => {
+      sheetState.setEditPlayerIdInput(String(playerId));
+      sheetState.setShowEditPlayerSheet({ open: true, playerId });
+    },
     handleRemoveManualPlayer: editActions.handleRemoveManualPlayer,
     playerListViewEntries,
     preferredSite,

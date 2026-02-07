@@ -168,6 +168,11 @@ describe('PlayerListView', () => {
       ).toBeGreaterThan(0);
     });
 
+    it('renders data-player-id wrapper for scrolling', () => {
+      const { container } = render(<PlayerListView {...cardViewProps} />);
+      expect(container.querySelector('[data-player-id="123456789"]')).toBeInTheDocument();
+    });
+
     it('shows error state correctly in card view', () => {
       const errorPlayer = createMockPlayerWithError('Failed to fetch player data');
       render(<PlayerListView {...cardViewProps} playerEntries={[createMockEntry({ player: errorPlayer })]} />);

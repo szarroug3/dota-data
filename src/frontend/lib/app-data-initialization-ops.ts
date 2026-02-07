@@ -75,6 +75,19 @@ export async function loadLeaguesData(appData: AppDataInitializationOpsContext):
   appData.leagues = await loadLeagues();
 }
 
+async function ensureMatchReferenceData(appData: AppDataInitializationOpsContext): Promise<void> {
+  const tasks: Array<Promise<void>> = [];
+  if (appData.heroes.size === 0) {
+    tasks.push(loadHeroesData(appData));
+  }
+  if (appData.items.size === 0) {
+    tasks.push(loadItemsData(appData));
+  }
+  if (tasks.length > 0) {
+    await Promise.all(tasks);
+  }
+}
+
 // ============================================================================
 // TEAM LOADING
 // ============================================================================
@@ -139,10 +152,19 @@ export async function loadMatch(appData: AppDataInitializationOpsContext, matchI
     return existing;
   }
 
+  if (existing) {
+    appData.addMatch({ ...existing, isLoading: true, error: undefined });
+  }
+
+  await ensureMatchReferenceData(appData);
+
   // Fetch and process match data
   const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items);
 
   if (!match) {
+    if (existing) {
+      appData.addMatch({ ...existing, isLoading: false, error: `Failed to load match ${matchId}` });
+    }
     console.error(`Failed to load match ${matchId}`);
     return null;
   }
@@ -160,6 +182,8 @@ export async function loadMatch(appData: AppDataInitializationOpsContext, matchI
  * @returns The refreshed match or null on error
  */
 export async function refreshMatch(appData: AppDataInitializationOpsContext, matchId: number): Promise<Match | null> {
+  await ensureMatchReferenceData(appData);
+
   // Fetch fresh data from API with force=true to bypass cache
   const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items, true);
 
@@ -233,6 +257,8 @@ export async function loadPlayer(appData: AppDataInitializationOpsContext, accou
     return existing;
   }
 
+  ensurePlayerLoadingState(appData, accountId);
+
   // Fetch and process player data
   const player = await fetchAndProcessPlayer(accountId);
 
@@ -256,8 +282,10 @@ export async function refreshPlayer(
   appData: AppDataInitializationOpsContext,
   accountId: number,
 ): Promise<Player | null> {
+  ensurePlayerLoadingState(appData, accountId);
+
   // Fetch fresh data from API
-  const player = await fetchAndProcessPlayer(accountId);
+  const player = await fetchAndProcessPlayer(accountId, { force: true });
 
   if (!player) {
     return null;
@@ -275,6 +303,37 @@ export async function refreshPlayer(
   }
 
   return player;
+}
+
+function ensurePlayerLoadingState(appData: AppDataInitializationOpsContext, accountId: number): void {
+  const existing = appData._players.get(accountId);
+  if (existing) {
+    if (!existing.isLoading) {
+      appData.addPlayer({ ...existing, isLoading: true, updatedAt: Date.now() });
+    }
+    return;
+  }
+
+  const now = Date.now();
+  appData.addPlayer({
+    accountId,
+    profile: {
+      name: `Player ${accountId}`,
+      personaname: `Player ${accountId}`,
+      rank_tier: 0,
+    },
+    heroStats: [],
+    overallStats: {
+      wins: 0,
+      losses: 0,
+      totalGames: 0,
+      winRate: 0,
+    },
+    recentMatchIds: [],
+    isLoading: true,
+    createdAt: now,
+    updatedAt: now,
+  });
 }
 
 /**
