@@ -129,4 +129,118 @@ describe('AppData.loadFromStorage', () => {
     const globalTeam = appData.getTeam(GLOBAL_TEAM_KEY);
     expect(globalTeam).toBeDefined();
   });
+
+  it('clears matches and players before hydrating again', async () => {
+    const firstTeamKey = '111-222';
+    const secondTeamKey = '333-444';
+
+    window.localStorage.setItem(
+      TEAMS_STORAGE_KEY,
+      JSON.stringify({
+        [firstTeamKey]: {
+          team: { id: 111, name: 'First Team' },
+          league: { id: 222, name: 'First League' },
+          timeAdded: new Date('2024-01-01T00:00:00.000Z').toISOString(),
+          matches: {
+            1111: {
+              matchId: 1111,
+              result: 'won',
+              opponentName: 'Old Opponent',
+              side: 'radiant',
+              duration: 1800,
+              date: '2024-01-02T00:00:00.000Z',
+              pickOrder: 'first',
+              heroes: [],
+              isManual: false,
+              isHidden: false,
+            },
+          },
+          players: {
+            42: {
+              accountId: 42,
+              name: 'Old Player',
+              rank: 'Legend 1',
+              rank_tier: 41,
+              leaderboard_rank: 0,
+              games: 10,
+              winRate: 60,
+              topHeroes: [],
+              avatar: 'old.png',
+              isManual: false,
+              isHidden: false,
+            },
+          },
+        },
+      }),
+    );
+
+    window.localStorage.setItem(
+      ACTIVE_TEAM_STORAGE_KEY,
+      JSON.stringify({
+        teamId: 111,
+        leagueId: 222,
+      }),
+    );
+
+    const appData = new AppData();
+    await appData.loadFromStorage();
+
+    expect(appData.matches.has(1111)).toBe(true);
+    expect(appData.players.has(42)).toBe(true);
+
+    window.localStorage.setItem(
+      TEAMS_STORAGE_KEY,
+      JSON.stringify({
+        [secondTeamKey]: {
+          team: { id: 333, name: 'Second Team' },
+          league: { id: 444, name: 'Second League' },
+          timeAdded: new Date('2024-02-01T00:00:00.000Z').toISOString(),
+          matches: {
+            2222: {
+              matchId: 2222,
+              result: 'lost',
+              opponentName: 'New Opponent',
+              side: 'dire',
+              duration: 2000,
+              date: '2024-02-02T00:00:00.000Z',
+              pickOrder: 'second',
+              heroes: [],
+              isManual: false,
+              isHidden: false,
+            },
+          },
+          players: {
+            99: {
+              accountId: 99,
+              name: 'New Player',
+              rank: 'Ancient 3',
+              rank_tier: 63,
+              leaderboard_rank: 0,
+              games: 20,
+              winRate: 45,
+              topHeroes: [],
+              avatar: 'new.png',
+              isManual: false,
+              isHidden: false,
+            },
+          },
+        },
+      }),
+    );
+
+    window.localStorage.setItem(
+      ACTIVE_TEAM_STORAGE_KEY,
+      JSON.stringify({
+        teamId: 333,
+        leagueId: 444,
+      }),
+    );
+
+    await appData.loadFromStorage();
+
+    expect(appData.matches.has(1111)).toBe(false);
+    expect(appData.players.has(42)).toBe(false);
+    expect(appData.matches.has(2222)).toBe(true);
+    expect(appData.players.has(99)).toBe(true);
+  });
 });

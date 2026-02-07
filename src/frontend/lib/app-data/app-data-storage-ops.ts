@@ -90,6 +90,10 @@ export interface LoadedStorageResult {
 export async function loadFromStorage(appData: AppDataStorageOpsContext): Promise<LoadedStorageResult> {
   // Clear existing teams before hydrating from storage
   appData._teams.clear();
+  appData._matches.clear();
+  appData._players.clear();
+  appData.updateMatchesRef();
+  appData.updatePlayersRef();
 
   // Always ensure we have the global team available
   ensureGlobalTeam(appData);
