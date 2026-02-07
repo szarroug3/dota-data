@@ -47,6 +47,7 @@ export type MatchHistoryContentProps = {
   resizableLayoutRef?: React.RefObject<ResizableMatchLayoutRef | null>;
   scrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
+  isMatchListLoading?: boolean;
 };
 
 export function MatchListSection({
@@ -70,6 +71,7 @@ export function MatchListSection({
   onAddMatch,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
+  isMatchListLoading,
 }: Pick<
   MatchHistoryContentProps,
   | 'filters'
@@ -90,6 +92,7 @@ export function MatchListSection({
   | 'onAddMatch'
   | 'matchDetailsViewMode'
   | 'setMatchDetailsViewMode'
+  | 'isMatchListLoading'
 > & { hiddenMatches: Match[]; setShowHiddenModal: (show: boolean) => void }) {
   return (
     <ResizableMatchLayout
@@ -115,6 +118,7 @@ export function MatchListSection({
       setMatchDetailsViewMode={setMatchDetailsViewMode}
       onScrollToMatch={scrollToMatch || (() => {})}
       onAddMatch={onAddMatch || (() => {})}
+      isMatchListLoading={isMatchListLoading}
     />
   );
 }
@@ -188,6 +192,7 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
     resizableLayoutRef,
     scrollToMatch,
     onAddMatch,
+    isMatchListLoading,
   } = props;
 
   return (
@@ -226,6 +231,7 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
         onAddMatch={onAddMatch}
         matchDetailsViewMode={matchDetailsViewMode}
         setMatchDetailsViewMode={setMatchDetailsViewMode}
+        isMatchListLoading={isMatchListLoading}
       />
 
       <SummaryAndHiddenSection

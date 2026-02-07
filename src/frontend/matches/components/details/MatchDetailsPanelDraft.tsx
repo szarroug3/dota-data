@@ -21,6 +21,86 @@ interface MatchDetailsPanelDraftProps {
 
 type DraftFilter = 'picks' | 'bans' | 'both';
 
+function buildDraftPhasesFromPicks(match: Match): DraftPhase[] {
+  const radiantPicks = match.draft?.radiantPicks ?? [];
+  const direPicks = match.draft?.direPicks ?? [];
+  const phases: DraftPhase[] = [];
+
+  radiantPicks.forEach((pick, index) => {
+    phases.push({
+      phase: 'pick',
+      team: 'radiant',
+      hero: pick.hero,
+      time: pick.order ?? index + 1,
+    });
+  });
+
+  direPicks.forEach((pick, index) => {
+    phases.push({
+      phase: 'pick',
+      team: 'dire',
+      hero: pick.hero,
+      time: pick.order ?? index + 1,
+    });
+  });
+
+  return phases;
+}
+
+function buildDraftPhasesFromPlayers(match: Match): DraftPhase[] {
+  const radiantPlayers = match.players?.radiant ?? [];
+  const direPlayers = match.players?.dire ?? [];
+  const phases: DraftPhase[] = [];
+
+  radiantPlayers.forEach((player, index) => {
+    phases.push({
+      phase: 'pick',
+      team: 'radiant',
+      hero: player.hero,
+      time: index + 1,
+    });
+  });
+
+  direPlayers.forEach((player, index) => {
+    phases.push({
+      phase: 'pick',
+      team: 'dire',
+      hero: player.hero,
+      time: index + 1,
+    });
+  });
+
+  return phases;
+}
+
+function buildFallbackDraftPhases(match: Match): DraftPhase[] {
+  const picksDraft = buildDraftPhasesFromPicks(match);
+  if (picksDraft.length > 0) {
+    return picksDraft;
+  }
+  return buildDraftPhasesFromPlayers(match);
+}
+
+function getDraftViewState(
+  appData: ReturnType<typeof useAppData>,
+  match: Match,
+  filter: DraftFilter,
+): { status: 'loading' | 'empty' | 'ready'; filteredDraft: DraftPhase[]; showPickOrder: boolean } {
+  if (match.isLoading) {
+    return { status: 'loading', filteredDraft: [], showPickOrder: false };
+  }
+
+  const hasProcessedDraft = Boolean(match.processedDraft?.length);
+  const fallbackDraft = hasProcessedDraft ? [] : buildFallbackDraftPhases(match);
+
+  if (!hasProcessedDraft && fallbackDraft.length === 0) {
+    return { status: 'empty', filteredDraft: [], showPickOrder: false };
+  }
+
+  const filteredDraft = hasProcessedDraft ? appData.getDraftPhases(match.id, filter) : fallbackDraft;
+  return { status: 'ready', filteredDraft, showPickOrder: hasProcessedDraft };
+}
+
 const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFilter) => void }> = ({
   filter,
   setFilter,
@@ -63,7 +143,8 @@ const DraftEntryRow: React.FC<{
   heroName: string;
   phase: DraftPhase;
   isHighPerforming: boolean;
-}> = ({ hero, heroName, phase, isHighPerforming }) => (
+  showPickOrder: boolean;
+}> = ({ hero, heroName, phase, isHighPerforming, showPickOrder }) => (
   <div className="flex items-center justify-between h-6">
     <div className="flex items-center gap-2 min-w-0 flex-1">
       <div className="hidden @[160px]:block">
@@ -71,13 +152,15 @@ const DraftEntryRow: React.FC<{
       </div>
       <div className="@[125px]:hidden block w-6 h-6"></div>
       <span className="text-sm font-medium truncate @[300px]:block hidden">{heroName}</span>
-      <Badge variant="outline" className="text-xs flex-shrink-0 @[530px]:block hidden">
-        #{phase.time}
-      </Badge>
+      {showPickOrder && (
+        <Badge variant="outline" className="text-xs shrink-0 @[530px]:block hidden">
+          #{phase.time}
+        </Badge>
+      )}
     </div>
     <Badge
       variant={phase.phase === 'pick' ? 'default' : 'secondary'}
-      className="text-xs flex-shrink-0 ml-2 @[270px]:block hidden"
+      className="text-xs shrink-0 ml-2 @[270px]:block hidden"
     >
       {phase.phase.toUpperCase()}
     </Badge>
@@ -90,7 +173,8 @@ const DraftEntry: React.FC<{
   teamMatch?: TeamMatchParticipation;
   selectedTeamId: string;
   hiddenMatchIds: Set<number>;
-}> = ({ phase, team, teamMatch, selectedTeamId, hiddenMatchIds }) => {
+  showPickOrder: boolean;
+}> = ({ phase, team, teamMatch, selectedTeamId, hiddenMatchIds, showPickOrder }) => {
   const appData = useAppData();
   const hero = phase.hero;
   const heroName = hero.localizedName || `Hero ${hero.id}`;
@@ -99,38 +183,44 @@ const DraftEntry: React.FC<{
   const isPick = phase.phase === 'pick';
   const isHigh = isOnActiveTeamSide && isPick && appData.isHighPerformingHero(hero.id, selectedTeamId, hiddenMatchIds);
   if (!isTeamPhase) return <div className="h-6"></div>;
-  return <DraftEntryRow hero={hero} heroName={heroName} phase={phase} isHighPerforming={isHigh} />;
+  return (
+    <DraftEntryRow hero={hero} heroName={heroName} phase={phase} isHighPerforming={isHigh} showPickOrder={showPickOrder} />
+  );
 };
 
 const DraftTimeline: React.FC<{
-  filteredDraft: DraftPhase[];
+  radiantDraft: DraftPhase[];
+  direDraft: DraftPhase[];
   leftDisplayName: string;
   rightDisplayName: string;
   isRadiantWin: boolean;
   teamMatch?: TeamMatchParticipation;
   selectedTeamId: string;
   hiddenMatchIds: Set<number>;
+  showPickOrder: boolean;
 }> = ({
-  filteredDraft,
+  radiantDraft,
+  direDraft,
   leftDisplayName,
   rightDisplayName,
   isRadiantWin,
   teamMatch,
   selectedTeamId,
   hiddenMatchIds = new Set(),
+  showPickOrder,
 }) => (
   <div>
     <div className="grid grid-cols-2 gap-4 mb-4">
       <div className="hidden @[210px]:flex items-center gap-2 h-6">
         <div className="font-semibold truncate flex-1 flex items-center gap-2">
           <span className="truncate">{leftDisplayName}</span>
-          {isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
+          {isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 shrink-0" />}
         </div>
       </div>
       <div className="hidden @[210px]:flex items-center gap-2 h-6">
         <div className="font-semibold truncate flex-1 flex items-center gap-2">
           <span className="truncate">{rightDisplayName}</span>
-          {!isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
+          {!isRadiantWin && <Crown className="h-4 w-4 text-yellow-500 shrink-0" />}
         </div>
       </div>
     </div>
@@ -138,7 +228,7 @@ const DraftTimeline: React.FC<{
     <div className="w-full h-px bg-border mb-4"></div>
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2 pr-4">
-        {filteredDraft.map((phase, index) => (
+        {radiantDraft.map((phase, index) => (
           <DraftEntry
             key={`radiant-${phase.time ?? index}`}
             phase={phase}
@@ -146,11 +236,12 @@ const DraftTimeline: React.FC<{
             teamMatch={teamMatch}
             selectedTeamId={selectedTeamId}
             hiddenMatchIds={hiddenMatchIds}
+            showPickOrder={showPickOrder}
           />
         ))}
       </div>
       <div className="space-y-2 pl-4">
-        {filteredDraft.map((phase, index) => (
+        {direDraft.map((phase, index) => (
           <DraftEntry
             key={`dire-${phase.time ?? index}`}
             phase={phase}
@@ -158,6 +249,7 @@ const DraftTimeline: React.FC<{
             teamMatch={teamMatch}
             selectedTeamId={selectedTeamId}
             hiddenMatchIds={hiddenMatchIds}
+            showPickOrder={showPickOrder}
           />
         ))}
       </div>
@@ -166,7 +258,7 @@ const DraftTimeline: React.FC<{
 );
 
 const DraftSummary: React.FC<{
-  match?: Match;
+  match: Match;
   teamMatch?: TeamMatchParticipation;
   filter: DraftFilter;
   onFilterChange: (filter: DraftFilter) => void;
@@ -180,15 +272,22 @@ const DraftSummary: React.FC<{
     throw new Error(`Selected team ${selectedTeamId} not found`);
   }
 
-  if (!match?.processedDraft)
-    return <div className="text-center text-muted-foreground py-8">No draft data available</div>;
+  const draftView = getDraftViewState(appData, match, filter);
 
+  if (draftView.status === 'loading') {
+    return <div className="text-center text-muted-foreground py-8">Loading draft data...</div>;
+  }
+  if (draftView.status === 'empty') {
+    return <div className="text-center text-muted-foreground py-8">No draft data available</div>;
+  }
   if (!teamMatch)
     return <div className="text-center text-muted-foreground py-8">No team participation data available</div>;
 
   const isRadiantWin = match.result === 'radiant';
   const { leftDisplayName, rightDisplayName } = getTeamDisplayNames(teamMatch, selectedTeam, match);
-  const filteredDraft = appData.getDraftPhases(match.id, filter);
+  const { filteredDraft, showPickOrder } = draftView;
+  const radiantDraft = filteredDraft.filter((phase) => phase.team === 'radiant');
+  const direDraft = filteredDraft.filter((phase) => phase.team === 'dire');
 
   return (
     <div className="space-y-4">
@@ -196,13 +295,15 @@ const DraftSummary: React.FC<{
       <div className="border rounded-lg p-4 relative">
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border transform -translate-x-1/2"></div>
         <DraftTimeline
-          filteredDraft={filteredDraft}
+          radiantDraft={radiantDraft}
+          direDraft={direDraft}
           leftDisplayName={leftDisplayName}
           rightDisplayName={rightDisplayName}
           isRadiantWin={isRadiantWin}
           teamMatch={teamMatch}
           selectedTeamId={selectedTeamId}
           hiddenMatchIds={hiddenMatchIds}
+          showPickOrder={showPickOrder}
         />
       </div>
     </div>

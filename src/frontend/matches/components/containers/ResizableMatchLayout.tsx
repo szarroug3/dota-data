@@ -33,6 +33,7 @@ interface ResizableMatchLayoutProps {
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
+  isMatchListLoading?: boolean;
 }
 
 export interface ResizableMatchLayoutRef {
@@ -71,6 +72,7 @@ function MatchListPane({
   unhiddenMatches,
   onScrollToMatch,
   onAddMatch,
+  isMatchListLoading,
 }: {
   matchesListRef: React.RefObject<MatchesListRef | null>;
   visibleMatches: Match[];
@@ -87,6 +89,7 @@ function MatchListPane({
   unhiddenMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
+  isMatchListLoading?: boolean;
 }) {
   return (
     <ResizablePanel id="match-list" defaultSize="50%" minSize="0%" maxSize="100%" className="overflow-visible">
@@ -107,6 +110,7 @@ function MatchListPane({
           allMatches={unhiddenMatches}
           onScrollToMatch={onScrollToMatch}
           onAddMatch={onAddMatch}
+          isLoading={Boolean(isMatchListLoading)}
         />
       </div>
     </ResizablePanel>
@@ -185,6 +189,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
       setMatchDetailsViewMode,
       onScrollToMatch,
       onAddMatch,
+      isMatchListLoading,
     },
     ref,
   ) => {
@@ -217,6 +222,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
               unhiddenMatches={unhiddenMatches}
               onScrollToMatch={onScrollToMatch}
               onAddMatch={onAddMatch}
+              isMatchListLoading={isMatchListLoading}
             />
             <ResizableHandle withHandle className="after:w-4" />
             <MatchDetailsPane
