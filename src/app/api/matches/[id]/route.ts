@@ -151,6 +151,10 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id: matchId } = await params;
+    const idResult = schemas.pathParamId.safeParse(matchId);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid id', status: 400, details: idResult.error.message }, { status: 400 });
+    }
 
     // Extract query parameters
     const { searchParams } = new URL(request.url);

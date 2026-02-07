@@ -1,7 +1,33 @@
 import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
 import { z } from 'zod';
 
+import type { CacheValue } from '@/types/cache/cache';
+
 const postApiCacheInvalidateBody = z.object({ pattern: z.string(), key: z.string() }).partial().passthrough();
+const cacheValueSchema: z.ZodType<CacheValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(cacheValueSchema),
+    z.record(z.string(), cacheValueSchema),
+  ]),
+);
+const pathParamId = z.string().refine((value) => /^[1-9]\d*$/.test(value), { message: 'Expected a positive integer' });
+const postApiShareBody = z
+  .object({
+    key: z.string().trim().min(1).optional(),
+    data: z
+      .object({
+        teams: z.record(z.string(), cacheValueSchema),
+        activeTeam: z.object({ teamId: z.number().int(), leagueId: z.number().int() }).nullable(),
+        globalManualMatches: z.array(z.number().int()),
+        globalManualPlayers: z.array(z.number().int()),
+      })
+      .strict(),
+  })
+  .strict();
 
 const endpoints = makeApi([
   {
@@ -552,6 +578,8 @@ const getApiTeams = findResponseSchemaByAlias('getApiTeamsId');
 
 export const schemas = {
   postApiCacheInvalidateBody,
+  postApiShareBody,
+  pathParamId,
   getApiHeroes,
   getApiItems,
   getApiLeaguesId,

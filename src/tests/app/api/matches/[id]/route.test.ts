@@ -72,6 +72,17 @@ describe('Matches API', () => {
     });
 
     describe('Error Cases', () => {
+      it('should return 400 for invalid match id', async () => {
+        const request = new NextRequest('http://localhost:3000/api/matches/invalid');
+        const response = await GET(request, { params: Promise.resolve({ id: 'invalid' }) });
+        const data = (await response.json()) as ApiErrorResponse;
+
+        expect(response.status).toBe(400);
+        expect(data.error).toBe('Invalid id');
+        expect(data.status).toBe(400);
+        expect(mockFetchOpenDotaMatch).not.toHaveBeenCalled();
+      });
+
       it('should handle rate limiting errors', async () => {
         mockFetchOpenDotaMatch.mockRejectedValueOnce(new Error('Rate limited by OpenDota API'));
 

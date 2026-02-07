@@ -150,6 +150,10 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id: playerId } = await params;
+    const idResult = schemas.pathParamId.safeParse(playerId);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid id', status: 400, details: idResult.error.message }, { status: 400 });
+    }
     const force = getForceFlagFromUrl(request.url);
 
     const player = await fetchOpenDotaPlayer(playerId, force);

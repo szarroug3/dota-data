@@ -175,17 +175,16 @@ describe('Players API Route', () => {
     });
 
     it('should handle invalid player ID', async () => {
-      // Mock the API to fail for invalid player IDs
-      mockFetchOpenDotaPlayer.mockRejectedValue(new Error('Player not found'));
-
       const request = new NextRequest('http://localhost:3000/api/players/invalid');
       const params = Promise.resolve({ id: 'invalid' });
 
       const response = await GET(request, { params });
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(400);
       const data = await response.json();
-      expect(data.error).toBe('Data Not Found');
+      expect(data.error).toBe('Invalid id');
+      expect(data.status).toBe(400);
+      expect(mockFetchOpenDotaPlayer).not.toHaveBeenCalled();
     });
 
     it('should handle network errors', async () => {

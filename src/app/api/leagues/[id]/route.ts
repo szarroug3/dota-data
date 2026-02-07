@@ -197,6 +197,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse> {
   const { id: leagueId } = await params;
+  const idResult = schemas.pathParamId.safeParse(leagueId);
+  if (!idResult.success) {
+    return NextResponse.json({ error: 'Invalid id', status: 400, details: idResult.error.message }, { status: 400 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);

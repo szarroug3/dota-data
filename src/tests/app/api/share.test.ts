@@ -64,16 +64,16 @@ describe('Share API', () => {
     const first = await postShare(makeJsonRequest({ key, data: initial }));
     expect(first.status).toBe(200);
 
-    // Second write with same key should be rejected with 409
+    // Second write with same key should upsert
     const second = await postShare(makeJsonRequest({ key, data: updated }));
-    expect(second.status).toBe(409);
+    expect(second.status).toBe(200);
 
-    // Ensure stored value remains the initial payload
+    // Ensure stored value is updated
     const getRes = await getShare(new NextRequest(`http://localhost/api/share/${key}`), {
       params: { key },
     });
-    const getJson = (await getRes.json()) as typeof initial;
-    expect(getJson).toEqual(initial);
+    const getJson = (await getRes.json()) as typeof updated;
+    expect(getJson).toEqual(updated);
   });
 
   it('generates a unique key on create and retries on collision (simulated)', async () => {
@@ -93,5 +93,13 @@ describe('Share API', () => {
     expect(secondRes.status).toBe(200);
     // Keys should be different due to uniqueness generation
     expect(secondJson.key).not.toBe(firstJson.key);
+  });
+
+  it('returns 400 for invalid request bodies', async () => {
+    const response = await postShare(makeJsonRequest({ data: {} }));
+    expect(response.status).toBe(400);
+    const data = (await response.json()) as { error: string; status: number };
+    expect(data.error).toBe('Invalid request body');
+    expect(data.status).toBe(400);
   });
 });
