@@ -35,8 +35,16 @@ function AppContent({ children }: ClientRootProps) {
 
   if (!hasHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6" role="status">
-        <span className="text-sm text-muted-foreground">Loading app data...</span>
+      <div
+        className="flex min-h-screen w-full items-center justify-center gap-3 p-6 text-sm text-muted-foreground"
+        role="status"
+        aria-live="polite"
+      >
+        <span
+          className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"
+          aria-label="Loading"
+        />
+        <span>Loading app data...</span>
       </div>
     );
   }

@@ -166,19 +166,16 @@ describe('useAppHydration', () => {
     render(<TestComponent />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
+      expect(mockAppData.refreshTeam).toHaveBeenCalledWith(team.teamId, team.leagueId);
     });
-
-    expect(mockAppData.refreshTeam).toHaveBeenCalledWith(team.teamId, team.leagueId);
   });
 
   it('should be resilient when active team exists (no crash)', async () => {
     mockConfigContext.activeTeam = { teamId: 1, leagueId: 2 };
     render(<TestComponent />);
     await waitFor(() => {
-      expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
+      expect(mockAppData.loadTeam).toHaveBeenCalledWith(1, 2);
     });
-    expect(mockAppData.loadTeam).toHaveBeenCalledWith(1, 2);
   });
 
   it('should avoid reloading the active team when it is already stored', async () => {
@@ -190,13 +187,13 @@ describe('useAppHydration', () => {
 
     render(<TestComponent />);
 
-    await waitFor(() => {
-      expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
-    });
-
     expect(mockAppData.loadTeam).not.toHaveBeenCalled();
-    expect(mockAppData.setSelectedTeam).toHaveBeenCalledWith(team.id);
-    expect(mockAppData.refreshTeam).toHaveBeenCalledWith(team.teamId, team.leagueId);
+    await waitFor(() => {
+      expect(mockAppData.setSelectedTeam).toHaveBeenCalledWith(team.id);
+    });
+    await waitFor(() => {
+      expect(mockAppData.refreshTeam).toHaveBeenCalledWith(team.teamId, team.leagueId);
+    });
   });
 
   it('should handle errors during constants fetching', async () => {

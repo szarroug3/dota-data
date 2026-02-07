@@ -121,6 +121,11 @@ async function hydrateAppData({
     }
 
     await fetchConstantsIfNeeded(appData);
+    if (!hasHydratedRef.current) {
+      hasHydratedRef.current = true;
+      setHasHydrated(true);
+    }
+
     refreshTeamsCachedMetadata(appData);
 
     const ensuredActiveTeam = await ensureActiveTeam(configContext, appData);
@@ -136,9 +141,6 @@ async function hydrateAppData({
 
     await appData.loadAllManualMatches();
     await appData.loadAllManualPlayers();
-
-    hasHydratedRef.current = true;
-    setHasHydrated(true);
   } catch (error) {
     console.error('Hydration: failed:', error);
     setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
