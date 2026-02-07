@@ -29,7 +29,7 @@ interface ShareContextValue {
   isShareMode: boolean;
   shareKey: string | null;
   payload: SharePayload | null;
-  setPayload: (payload: SharePayload) => void;
+  setPayload: (payload: SharePayload | null) => void;
   createShare: (partial: Partial<SharePayload>) => Promise<string | null>;
 }
 
@@ -111,8 +111,9 @@ const ShareProviderContent: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     let cancelled = false;
     if (urlKey) {
+      setPayload(null);
       fetchSharePayload(urlKey).then((data) => {
-        if (!cancelled) setPayload((prev) => (prev ? prev : data));
+        if (!cancelled) setPayload(data ?? null);
       });
     } else {
       setPayload(null);
