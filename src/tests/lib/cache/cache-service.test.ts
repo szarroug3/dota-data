@@ -6,10 +6,19 @@ import { CacheService } from '@/lib/cache/cache-service';
 import { FileCacheBackend } from '@/lib/cache-backends/file';
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
+import { cacheLogger } from '@/lib/config/logger';
 // Mock the cache backends
 jest.mock('@/lib/cache-backends/file');
 jest.mock('@/lib/cache-backends/memory');
 jest.mock('@/lib/cache-backends/redis');
+jest.mock('@/lib/config/logger', () => ({
+  cacheLogger: {
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+  },
+}));
 
 // Mock the environment configuration
 jest.mock('@/lib/config/environment', () => ({
@@ -93,20 +102,28 @@ describe('CacheService', () => {
       });
     });
 
-    it('should default to memory backend when no Redis URL is provided', () => {
-      const originalEnv = process.env.REDIS_URL;
-      delete process.env.REDIS_URL;
+    it('should use file backend and warn in development when Redis envs are missing', () => {
+      const originalUrl = process.env.UPSTASH_REDIS_REST_URL;
+      const originalToken = process.env.UPSTASH_REDIS_REST_TOKEN;
       Object.assign(process.env, {
+        NODE_ENV: 'development',
         USE_MOCK_API: 'false',
         USE_MOCK_DB: 'false',
       });
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
       cacheService = new CacheService();
 
-      // Should not throw, should default to memory
-      expect(cacheService).toBeInstanceOf(CacheService);
+      expect(MockFileCacheBackend).toHaveBeenCalled();
+      expect(cacheLogger.warn).toHaveBeenCalledWith(
+        'Upstash Redis credentials missing in development; falling back to file cache backend.',
+      );
 
-      Object.assign(process.env, { REDIS_URL: originalEnv });
+      Object.assign(process.env, {
+        UPSTASH_REDIS_REST_URL: originalUrl,
+        UPSTASH_REDIS_REST_TOKEN: originalToken,
+      });
     });
   });
 

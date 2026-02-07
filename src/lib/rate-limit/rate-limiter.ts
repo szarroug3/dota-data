@@ -34,7 +34,8 @@ class RedisRateLimiter implements RateLimitBackend {
   constructor(redisUrl: string) {
     // Parse Redis URL to extract token
     const url = new URL(redisUrl);
-    const token = url.password;
+    // Prefer env token if provided; fall back to URL password.
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? url.password;
 
     this.redis = new Redis({
       url: redisUrl,

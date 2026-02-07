@@ -2,14 +2,15 @@ import { FileCacheBackend } from '@/lib/cache-backends/file';
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
 import { getEnv } from '@/lib/config/environment';
+import { cacheLogger } from '@/lib/config/logger';
 import { CacheBackend, CacheStats, CacheValue } from '@/types/cache/cache';
-
-// One-time log guard to avoid noisy logs from multiple instantiations
 
 /**
  * Main cache service with automatic backend selection and fallback
  */
 export class CacheService implements CacheBackend {
+  // One-time log guard to avoid noisy logs from multiple instantiations
+  private static hasLoggedMissingRedisInDev = false;
   private backend: CacheBackend;
   private fallbackBackend: MemoryCacheBackend;
 
@@ -39,6 +40,13 @@ export class CacheService implements CacheBackend {
     const hasUpstash = Boolean(process.env.UPSTASH_REDIS_REST_URL) && Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
     if (!hasUpstash) {
       if (process.env.NODE_ENV === 'test') return 'file'; // Use file backend for tests
+      if (process.env.NODE_ENV === 'development') {
+        if (!CacheService.hasLoggedMissingRedisInDev) {
+          cacheLogger.warn('Upstash Redis credentials missing in development; falling back to file cache backend.');
+          CacheService.hasLoggedMissingRedisInDev = true;
+        }
+        return 'file';
+      }
       throw new Error('Upstash Redis credentials missing: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
     }
 

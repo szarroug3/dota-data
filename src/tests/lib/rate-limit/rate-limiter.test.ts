@@ -2,9 +2,29 @@
  * Tests for Redis-based rate limiter
  */
 
+import { Redis } from '@upstash/redis';
+
 import { createRateLimiter } from '@/lib/rate-limit/rate-limiter';
 
+jest.mock('@upstash/redis', () => ({
+  Redis: jest.fn().mockImplementation(() => ({
+    pipeline: jest.fn(() => ({
+      zremrangebyscore: jest.fn().mockReturnThis(),
+      zcard: jest.fn().mockReturnThis(),
+      zadd: jest.fn().mockReturnThis(),
+      expire: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue([0, 0]),
+    })),
+    zrange: jest.fn().mockResolvedValue([]),
+    ping: jest.fn().mockResolvedValue('PONG'),
+  })),
+}));
+
 describe('Rate Limiter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('Memory Fallback', () => {
     let rateLimiter: ReturnType<typeof createRateLimiter>;
 
@@ -57,6 +77,24 @@ describe('Rate Limiter', () => {
 
       // Should not throw an error and fallback to memory
       expect(limiter).toBeDefined();
+    });
+
+    it('should prefer env token over URL password', () => {
+      const originalToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'env-token';
+
+      const redisUrl = 'redis://:url-token@localhost:6379';
+      createRateLimiter(redisUrl);
+
+      type RedisConstructor = typeof Redis;
+      type RedisConstructorArgs = ConstructorParameters<RedisConstructor>;
+
+      const redisMock = Redis as jest.MockedClass<RedisConstructor>;
+      expect(redisMock).toHaveBeenCalled();
+      const [options] = redisMock.mock.calls[0] as RedisConstructorArgs;
+      expect(options).toEqual(expect.objectContaining({ token: 'env-token' }));
+
+      process.env.UPSTASH_REDIS_REST_TOKEN = originalToken;
     });
   });
 
