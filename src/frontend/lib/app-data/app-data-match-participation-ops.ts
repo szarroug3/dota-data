@@ -175,7 +175,15 @@ function buildStoredMatchData(
   };
 }
 
-// eslint-disable-next-line complexity
+function resolveHeroValue<T>(fallback: T, ...candidates: Array<T | undefined>): T {
+  for (const candidate of candidates) {
+    if (candidate !== undefined) {
+      return candidate;
+    }
+  }
+  return fallback;
+}
+
 function createHeroSummary(hero: Hero | undefined, heroesMap: Map<number, Hero>): StoredHero | null {
   const id = hero?.id;
   if (typeof id !== 'number') {
@@ -183,17 +191,9 @@ function createHeroSummary(hero: Hero | undefined, heroesMap: Map<number, Hero>)
   }
 
   const reference = heroesMap.get(id);
-  let name = `npc_dota_hero_${id}`;
-  let localizedName = `Hero ${id}`;
-  let imageUrl = '';
-
-  if (reference?.name) name = reference.name;
-  if (reference?.localizedName) localizedName = reference.localizedName;
-  if (reference?.imageUrl) imageUrl = reference.imageUrl;
-
-  if (hero?.name) name = hero.name;
-  if (hero?.localizedName) localizedName = hero.localizedName;
-  if (hero?.imageUrl) imageUrl = hero.imageUrl;
+  const name = resolveHeroValue(`npc_dota_hero_${id}`, hero?.name, reference?.name);
+  const localizedName = resolveHeroValue(`Hero ${id}`, hero?.localizedName, reference?.localizedName);
+  const imageUrl = resolveHeroValue('', hero?.imageUrl, reference?.imageUrl);
 
   return {
     id,
