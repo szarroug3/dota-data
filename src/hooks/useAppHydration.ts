@@ -20,60 +20,33 @@ export function useAppHydration() {
   contextsRef.current = { configContext, appData };
 
   useEffect(() => {
-    const hydrate = async () => {
-      if (hasHydratedRef.current) return;
+    if (hasHydratedRef.current) return;
 
-      try {
-        setHydrationError(null);
+    const { configContext: currentConfig, appData: currentAppData } = contextsRef.current;
 
-        if (contextsRef.current.appData.getTeams().length === 0) {
-          await contextsRef.current.appData.loadFromStorage();
-        }
-
-        await fetchConstantsIfNeeded(contextsRef.current.appData);
-        refreshTeamsCachedMetadata(contextsRef.current.appData);
-        const ensuredKey = await ensureActiveTeam(contextsRef.current.configContext, contextsRef.current.appData);
-        if (ensuredKey) {
-          ensuredActiveTeamKeyRef.current = ensuredKey;
-        }
-
-        const { activeTeam, otherTeams } = getRefreshTargets(contextsRef.current.appData);
-
-        if (activeTeam) {
-          try {
-            await contextsRef.current.appData.refreshTeam(activeTeam.teamId, activeTeam.leagueId);
-          } catch (error) {
-            console.error(`Hydration: failed to refresh active team ${activeTeam.teamKey}`, error);
-          }
-        }
-
-        otherTeams.forEach(({ teamKey, teamId, leagueId }) => {
-          contextsRef.current.appData
-            .refreshTeam(teamId, leagueId)
-            .catch((error) => console.error(`Hydration: failed to refresh team ${teamKey}`, error));
-        });
-
-        await contextsRef.current.appData.loadAllManualMatches();
-        await contextsRef.current.appData.loadAllManualPlayers();
-
-        hasHydratedRef.current = true;
-        setHasHydrated(true);
-      } catch (error) {
-        console.error('Hydration: failed:', error);
-        setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
-      }
-    };
-
-    hydrate();
+    hydrateAppData({
+      configContext: currentConfig,
+      appData: currentAppData,
+      ensuredActiveTeamKeyRef,
+      hasHydratedRef,
+      setHasHydrated,
+      setHydrationError,
+    });
   }, []);
 
   useEffect(() => {
     const active = contextsRef.current.configContext.activeTeam;
     const key = active ? `${active.teamId}-${active.leagueId}` : null;
     if (active && ensuredActiveTeamKeyRef.current !== key) {
-      contextsRef.current.appData.loadTeam(active.teamId, active.leagueId).then(() => {
-        ensuredActiveTeamKeyRef.current = key;
-      });
+      contextsRef.current.appData
+        .loadTeam(active.teamId, active.leagueId)
+        .then(() => {
+          ensuredActiveTeamKeyRef.current = key;
+        })
+        .catch((error) => {
+          console.error(`Hydration: failed to load active team ${key}`, error);
+          setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
+        });
     }
   }, [contextsRef.current.configContext.activeTeam]);
 
@@ -93,6 +66,74 @@ async function fetchConstantsIfNeeded(appData: ReturnType<typeof useAppData>): P
   if (tasks.length > 0) {
     await Promise.all(tasks);
   }
+}
+
+async function hydrateAppData({
+  configContext,
+  appData,
+  ensuredActiveTeamKeyRef,
+  hasHydratedRef,
+  setHasHydrated,
+  setHydrationError,
+}: {
+  configContext: ReturnType<typeof useConfigContext>;
+  appData: ReturnType<typeof useAppData>;
+  ensuredActiveTeamKeyRef: React.MutableRefObject<string | null>;
+  hasHydratedRef: React.MutableRefObject<boolean>;
+  setHasHydrated: (value: boolean) => void;
+  setHydrationError: (value: string | null) => void;
+}): Promise<void> {
+  try {
+    setHydrationError(null);
+
+    if (appData.getTeams().length === 0) {
+      await appData.loadFromStorage();
+    }
+
+    await fetchConstantsIfNeeded(appData);
+    refreshTeamsCachedMetadata(appData);
+
+    const ensuredKey = await ensureActiveTeam(configContext, appData);
+    if (ensuredKey) {
+      ensuredActiveTeamKeyRef.current = ensuredKey;
+    }
+
+    const { activeTeam, otherTeams } = getRefreshTargets(appData);
+    await refreshActiveTeam(appData, activeTeam);
+    refreshOtherTeams(appData, otherTeams);
+
+    await appData.loadAllManualMatches();
+    await appData.loadAllManualPlayers();
+
+    hasHydratedRef.current = true;
+    setHasHydrated(true);
+  } catch (error) {
+    console.error('Hydration: failed:', error);
+    setHydrationError(error instanceof Error ? error.message : 'Hydration failed');
+  }
+}
+
+async function refreshActiveTeam(
+  appData: ReturnType<typeof useAppData>,
+  activeTeam: { teamKey: string; teamId: number; leagueId: number } | null,
+): Promise<void> {
+  if (!activeTeam) return;
+  try {
+    await appData.refreshTeam(activeTeam.teamId, activeTeam.leagueId);
+  } catch (error) {
+    console.error(`Hydration: failed to refresh active team ${activeTeam.teamKey}`, error);
+  }
+}
+
+function refreshOtherTeams(
+  appData: ReturnType<typeof useAppData>,
+  otherTeams: Array<{ teamKey: string; teamId: number; leagueId: number }>,
+): void {
+  otherTeams.forEach(({ teamKey, teamId, leagueId }) => {
+    appData.refreshTeam(teamId, leagueId).catch((error) => {
+      console.error(`Hydration: failed to refresh team ${teamKey}`, error);
+    });
+  });
 }
 
 async function ensureActiveTeam(

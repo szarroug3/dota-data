@@ -71,6 +71,10 @@ function findPlayerForHero(
   });
 }
 
+function shouldWarnMissingHero(heroId: number): boolean {
+  return heroId > 0;
+}
+
 /**
  * Creates role object for a pick if role data is available
  */
@@ -102,7 +106,9 @@ function processPicks(
       const hero = heroes.get(pb.hero_id);
 
       if (!hero) {
-        console.warn(`Hero ${pb.hero_id} not found in heroes map`);
+        if (shouldWarnMissingHero(pb.hero_id)) {
+          console.warn(`Hero ${pb.hero_id} not found in heroes map`);
+        }
         return null;
       }
 
@@ -125,7 +131,9 @@ function processBans(picksBans: OpenDotaMatch['picks_bans'], team: 0 | 1, heroes
     .map((pb) => {
       const hero = heroes.get(pb.hero_id);
       if (!hero) {
-        console.warn(`Hero ${pb.hero_id} not found in heroes map`);
+        if (shouldWarnMissingHero(pb.hero_id)) {
+          console.warn(`Hero ${pb.hero_id} not found in heroes map`);
+        }
         return null;
       }
       return hero;
@@ -209,7 +217,9 @@ function convertPlayer(
   // Look up full Hero object
   const hero = heroes.get(player.hero_id);
   if (!hero) {
-    console.warn(`Hero ${player.hero_id} not found for player ${player.account_id}`);
+    if (shouldWarnMissingHero(player.hero_id)) {
+      console.warn(`Hero ${player.hero_id} not found for player ${player.account_id}`);
+    }
     return null;
   }
 
@@ -265,7 +275,9 @@ function processDraftTimeline(picksBans: OpenDotaMatch['picks_bans'], heroes: Ma
     .map((pb) => {
       const hero = heroes.get(pb.hero_id);
       if (!hero) {
-        console.warn(`Hero not found for ID: ${pb.hero_id}`);
+        if (shouldWarnMissingHero(pb.hero_id)) {
+          console.warn(`Hero not found for ID: ${pb.hero_id}`);
+        }
         return null;
       }
 
