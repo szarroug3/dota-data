@@ -179,7 +179,8 @@ export function getPlayerStats(appData: AppDataStatisticsOpsContext, playerId: n
     };
   }
 
-  // Get all matches for this player
+  // Matches are computed from loaded match payloads only; missing matches
+  // in recentMatchIds will undercount stats until they load.
   const matches = player.recentMatchIds
     .map((matchId) => appData.getMatch(matchId))
     .filter((match): match is Match => match != null);
@@ -197,7 +198,8 @@ export function getPlayerHeroStats(appData: AppDataStatisticsOpsContext, playerI
     return new Map();
   }
 
-  // Get all matches for this player
+  // Matches are computed from loaded match payloads only; missing matches
+  // in recentMatchIds will undercount stats until they load.
   const matches = player.recentMatchIds
     .map((matchId) => appData.getMatch(matchId))
     .filter((match): match is Match => match != null);
