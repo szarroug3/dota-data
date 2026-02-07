@@ -2,14 +2,12 @@ import React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAppData } from '@/contexts/app-data-context';
 import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 interface PlayerDetailsPanelSummaryProps {
   player: Player;
-  allPlayers?: Player[];
-  hiddenPlayerIds?: Set<number>;
-  heroes: Map<number, Hero>;
 }
 
 const renderHeroWithAvatar = (hero: Hero) => (
@@ -21,26 +19,9 @@ const renderHeroWithAvatar = (hero: Hero) => (
   </div>
 );
 
-export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = React.memo(({ player, heroes }) => {
-  const topHeroes = player.heroStats
-    .sort((a, b) => b.games - a.games)
-    .slice(0, 5)
-    .map((hero) => {
-      const heroData = heroes.get(hero.heroId);
-      return {
-        hero: heroData || {
-          id: hero.heroId,
-          name: `npc_dota_hero_${hero.heroId}`,
-          localizedName: `Hero ${hero.heroId}`,
-          primaryAttribute: 'strength',
-          roles: [],
-          imageUrl: '',
-        },
-        games: hero.games,
-        wins: hero.wins,
-        winRate: hero.games > 0 ? (hero.wins / hero.games) * 100 : 0,
-      };
-    });
+export const PlayerDetailsPanelSummary: React.FC<PlayerDetailsPanelSummaryProps> = React.memo(({ player }) => {
+  const appData = useAppData();
+  const topHeroes = appData.getPlayerTopHeroesSummary(player.accountId);
 
   const totalGames = player.overallStats.totalGames;
   const winRate = player.overallStats.winRate;

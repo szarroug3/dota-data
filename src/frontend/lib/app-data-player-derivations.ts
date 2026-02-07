@@ -1,28 +1,4 @@
-import type { Player, Team } from './app-data-types';
-import type { StoredPlayerData } from './storage-manager';
-
-interface ComputeTeamPlayersOptions {
-  team: Team;
-  playersMap: Map<number, Player>;
-}
-
-interface ComputeTeamHiddenPlayersOptions {
-  team: Team;
-  playersMap: Map<number, Player>;
-}
-
-export function computeTeamPlayersForDisplay({ team, playersMap }: ComputeTeamPlayersOptions): Player[] {
-  const players: Player[] = [];
-  for (const [, storedPlayer] of team.players) {
-    if (!storedPlayer.isHidden) {
-      const fullPlayer = playersMap.get(storedPlayer.accountId);
-      if (fullPlayer) {
-        players.push(fullPlayer);
-      }
-    }
-  }
-  return players;
-}
+import type { Player } from './app-data-types';
 
 export function sortPlayersByName(players: Player[]): Player[] {
   return [...players].sort((a, b) => {
@@ -32,16 +8,24 @@ export function sortPlayersByName(players: Player[]): Player[] {
   });
 }
 
-export function computeTeamHiddenPlayersForDisplay({ team, playersMap }: ComputeTeamHiddenPlayersOptions): Player[] {
-  const hiddenPlayers: Player[] = [];
-  for (const [, storedPlayer] of team.players) {
-    if (storedPlayer.isHidden) {
-      const fullPlayer = playersMap.get(storedPlayer.accountId);
-      if (fullPlayer) {
-        hiddenPlayers.push(fullPlayer);
-      }
-    }
+/**
+ * Filter players by team player IDs
+ * Returns only players whose accountId is in the teamPlayerIds set
+ * If hasActiveTeam is false, returns all players
+ *
+ * @param players - Array of players to filter
+ * @param teamPlayerIds - Set of player account IDs for the team
+ * @param hasActiveTeam - Whether there is an active team selected
+ * @returns Filtered array of players
+ */
+export function filterPlayersByTeam(players: Player[], teamPlayerIds: Set<number>, hasActiveTeam: boolean): Player[] {
+  if (!hasActiveTeam) {
+    return players;
   }
-  return hiddenPlayers;
-}
 
+  if (teamPlayerIds.size === 0) {
+    return [];
+  }
+
+  return players.filter((player) => teamPlayerIds.has(player.accountId));
+}

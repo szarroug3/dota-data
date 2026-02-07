@@ -19,6 +19,7 @@ interface MatchDetailsPanelProps {
   allMatches: Match[];
   teamMatches: Map<number, TeamMatchMetadata>;
   hiddenMatchIds: Set<number>;
+  selectedTeamId: string;
 }
 
 export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
@@ -29,11 +30,12 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   allMatches,
   teamMatches,
   hiddenMatchIds,
+  selectedTeamId,
 }) => {
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)] @container">
-      <CardHeader className="flex-shrink-0">
+      <CardHeader className="shrink-0">
         <MatchDetailsPanelHeader match={match} viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto min-h-0 @[90px]:block hidden">
@@ -55,9 +57,8 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
             <MatchDetailsPanelPlayers
               match={match}
               teamMatch={teamMatch}
-              allMatches={allMatches}
-              teamMatches={teamMatches}
               hiddenMatchIds={hiddenMatchIds}
+              selectedTeamId={selectedTeamId}
             />
           </div>
         )}

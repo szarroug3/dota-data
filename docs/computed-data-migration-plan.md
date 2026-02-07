@@ -106,9 +106,8 @@ export function filterPlayerMatches(
 **Implementation:**
 
 1. Move `computeAverages()`, `computePlayerTeamStats()`, `calculateKda()` from UI
-2. Move `buildHeroRows()` logic
-3. Move `filterMatchesByDateRange()` logic
-4. Add comprehensive type definitions
+2. Move `buildHeroRows()` and date range filtering into `app-data-statistics-ops` (see `getPlayerRecentHeroRows()`)
+3. Add comprehensive type definitions
 
 **⏸ PAUSE FOR USER TESTING:**
 

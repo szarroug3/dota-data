@@ -98,11 +98,7 @@ function determineMatchResult(
   return 'lost';
 }
 
-function determinePickOrder(
-  match: Match,
-  side: 'radiant' | 'dire',
-  existingPickOrder: string | undefined,
-): string {
+function determinePickOrder(match: Match, side: 'radiant' | 'dire', existingPickOrder: string | undefined): string {
   const pickOrder = match.pickOrder?.[side];
   if (pickOrder === 'first' || pickOrder === 'second') {
     return pickOrder;
@@ -113,22 +109,14 @@ function determinePickOrder(
   return 'unknown';
 }
 
-function getHeroesFromPlayers(
-  match: Match,
-  side: 'radiant' | 'dire',
-  heroesMap: Map<number, Hero>,
-): StoredHero[] {
+function getHeroesFromPlayers(match: Match, side: 'radiant' | 'dire', heroesMap: Map<number, Hero>): StoredHero[] {
   const players = match.players?.[side] || [];
   return players
     .map((player) => createHeroSummary(player.hero, heroesMap))
     .filter((hero): hero is StoredHero => hero !== null);
 }
 
-function getHeroesFromDraft(
-  match: Match,
-  side: 'radiant' | 'dire',
-  heroesMap: Map<number, Hero>,
-): StoredHero[] {
+function getHeroesFromDraft(match: Match, side: 'radiant' | 'dire', heroesMap: Map<number, Hero>): StoredHero[] {
   const picks = side === 'radiant' ? match.draft?.radiantPicks : match.draft?.direPicks;
   if (!picks) {
     return [];

@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/sheet';
 import { getValidationAriaAttributes } from '@/utils/validation';
 
+type TeamFormValidation = { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
+
 interface EditTeamSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,13 +27,14 @@ interface EditTeamSheetProps {
   newLeagueId: string;
   onChangeTeamId: (value: string) => void;
   onChangeLeagueId: (value: string) => void;
-  onSubmit: () => Promise<void> | void;
+  onSubmit: (payload: {
+    current: { teamId: string; leagueId: string };
+    next: { teamId: string; leagueId: string };
+  }) => Promise<void> | void;
+  teamExists: (teamId: string, leagueId: string) => boolean;
+  validation: TeamFormValidation;
   isSubmitting?: boolean;
   error?: string;
-  teamIdError?: string;
-  leagueIdError?: string;
-  buttonText: string;
-  buttonDisabled: boolean;
 }
 
 // Removed unused getButtonState and ButtonState as button state is provided via props
@@ -109,6 +112,44 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder,
   );
 };
 
+const getEditTeamButtonText = (isDuplicate: boolean, isSubmitting: boolean) => {
+  if (isDuplicate) return 'Team already imported';
+  if (isSubmitting) return 'Saving...';
+  return 'Save Changes';
+};
+
+const getEditTeamSheetState = ({
+  currentTeamId,
+  currentLeagueId,
+  newTeamId,
+  newLeagueId,
+  validation,
+  teamExists,
+  isSubmitting,
+}: {
+  currentTeamId: string;
+  currentLeagueId: string;
+  newTeamId: string;
+  newLeagueId: string;
+  validation: TeamFormValidation;
+  teamExists: (teamId: string, leagueId: string) => boolean;
+  isSubmitting: boolean;
+}) => {
+  const trimmedTeamId = newTeamId.trim();
+  const trimmedLeagueId = newLeagueId.trim();
+  const trimmedCurrentTeamId = currentTeamId.trim();
+  const trimmedCurrentLeagueId = currentLeagueId.trim();
+  const teamIdError = trimmedTeamId.length > 0 ? validation.errors.teamId : undefined;
+  const leagueIdError = trimmedLeagueId.length > 0 ? validation.errors.leagueId : undefined;
+  const isUnchanged = trimmedTeamId === trimmedCurrentTeamId && trimmedLeagueId === trimmedCurrentLeagueId;
+  const isDuplicate = !isUnchanged && teamExists(trimmedTeamId, trimmedLeagueId);
+  const hasRequiredInputs = trimmedTeamId.length > 0 && trimmedLeagueId.length > 0;
+  const buttonDisabled = isSubmitting || !hasRequiredInputs || !validation.isValid || isDuplicate;
+  const buttonText = getEditTeamButtonText(isDuplicate, isSubmitting);
+
+  return { trimmedTeamId, trimmedLeagueId, teamIdError, leagueIdError, buttonDisabled, buttonText };
+};
+
 export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
   isOpen,
   onClose,
@@ -119,13 +160,30 @@ export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
   onChangeTeamId,
   onChangeLeagueId,
   onSubmit,
+  teamExists,
+  validation,
   isSubmitting = false,
   error,
-  teamIdError,
-  leagueIdError,
-  buttonText,
-  buttonDisabled,
 }) => {
+  const { trimmedTeamId, trimmedLeagueId, teamIdError, leagueIdError, buttonDisabled, buttonText } =
+    getEditTeamSheetState({
+      currentTeamId,
+      currentLeagueId,
+      newTeamId,
+      newLeagueId,
+      validation,
+      teamExists,
+      isSubmitting,
+    });
+
+  const handleSubmit = async () => {
+    if (buttonDisabled) return;
+    await onSubmit({
+      current: { teamId: currentTeamId.trim(), leagueId: currentLeagueId.trim() },
+      next: { teamId: trimmedTeamId, leagueId: trimmedLeagueId },
+    });
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent className="p-6">
@@ -140,17 +198,17 @@ export const EditTeamSheet: React.FC<EditTeamSheetProps> = ({
           setNewTeamId={onChangeTeamId}
           newLeagueId={newLeagueId}
           setNewLeagueId={onChangeLeagueId}
-          shouldShowTeamError={teamIdError}
-          shouldShowLeagueError={leagueIdError}
-          onSubmit={onSubmit}
+          teamIdError={teamIdError}
+          leagueIdError={leagueIdError}
+          onSubmit={handleSubmit}
           buttonDisabled={buttonDisabled}
         />
 
         <SheetFooter className="flex flex-col gap-2 w-full">
           <Button
             type="button"
-            onClick={onSubmit}
-            disabled={buttonDisabled || isSubmitting}
+            onClick={handleSubmit}
+            disabled={buttonDisabled}
             aria-busy={isSubmitting}
             aria-label={`Save changes for team ${currentTeamId} in league ${currentLeagueId}`}
             className="w-full"
@@ -174,8 +232,8 @@ interface EditTeamSheetContentProps {
   setNewTeamId: (value: string) => void;
   newLeagueId: string;
   setNewLeagueId: (value: string) => void;
-  shouldShowTeamError?: string;
-  shouldShowLeagueError?: string;
+  teamIdError?: string;
+  leagueIdError?: string;
   onSubmit?: () => Promise<void> | void;
   buttonDisabled?: boolean;
 }
@@ -186,8 +244,8 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
   setNewTeamId,
   newLeagueId,
   setNewLeagueId,
-  shouldShowTeamError,
-  shouldShowLeagueError,
+  teamIdError,
+  leagueIdError,
   onSubmit,
   buttonDisabled,
 }) => {
@@ -216,8 +274,8 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
             placeholder="e.g., 9517508"
             value={newTeamId}
             onChange={setNewTeamId}
-            error={shouldShowTeamError}
-            isValid={!shouldShowTeamError}
+            error={teamIdError}
+            isValid={!teamIdError}
           />
           <FormFieldInput
             id="leagueId"
@@ -225,8 +283,8 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
             placeholder="e.g., 16435"
             value={newLeagueId}
             onChange={setNewLeagueId}
-            error={shouldShowLeagueError}
-            isValid={!shouldShowLeagueError}
+            error={leagueIdError}
+            isValid={!leagueIdError}
           />
         </div>
       </div>

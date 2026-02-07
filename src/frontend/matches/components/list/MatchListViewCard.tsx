@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Hero, Match, Team } from '@/frontend/lib/app-data-types';
-import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage-manager';
+import type { StoredMatchData } from '@/frontend/lib/storage-manager';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';
 import { ExternalSiteButton } from '@/frontend/matches/components/stateless/common/ExternalSiteButton';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
@@ -51,34 +51,6 @@ function onCardClick(hasError: boolean, onSelect: (id: number) => void, matchId:
   if (!hasError) {
     onSelect(matchId);
   }
-}
-
-function isDuplicateInFormTeam(teamMatch: StoredMatchData, currentMatchId: number, newMatchId: number): boolean {
-  const map = { [currentMatchId]: teamMatch } as Record<number, StoredMatchData>;
-  return newMatchId in map;
-}
-
-function isDuplicateInManual(selectedTeam: Team, newMatchId: number): boolean {
-  const matchData = selectedTeam.matches.get(newMatchId);
-  return matchData?.isManual || false;
-}
-
-function isDuplicateInMatches(selectedTeam: Team, newMatchId: number): boolean {
-  return selectedTeam.matches.has(newMatchId);
-}
-
-function computeDuplicateError(
-  newMatchId: number,
-  currentMatchId: number,
-  teamMatch: StoredMatchData,
-  selectedTeam: Team,
-): string | undefined {
-  if (!Number.isFinite(newMatchId) || newMatchId === currentMatchId) return undefined;
-  const duplicate =
-    isDuplicateInFormTeam(teamMatch, currentMatchId, newMatchId) ||
-    isDuplicateInManual(selectedTeam, newMatchId) ||
-    isDuplicateInMatches(selectedTeam, newMatchId);
-  return duplicate ? `Match ${newMatchId} is already present for the selected team` : undefined;
 }
 
 interface MatchListViewCardProps {
@@ -174,28 +146,19 @@ function useMatchCardData(
     throw new Error(`Selected team ${selectedTeamId} not found`);
   }
 
-  const form = useEditManualMatchForm(match.id, teamMatch, selectedTeam);
+  const form = useEditManualMatchForm(match.id, teamMatch, selectedTeam, appData, selectedTeamId ?? '');
   const handlers = useManualMatchHandlers(match, selectedTeamId, appData, form, onScrollToMatch, onSelectMatch);
 
   const hasError = Boolean(match.error);
   const isLoading = Boolean(match.isLoading);
-  const isManualMatch = useMemo(() => {
-    const matchData = selectedTeam.matches.get(match.id);
-    return matchData?.isManual || false;
-  }, [match.id, selectedTeam]);
+  const isManualMatch = useMemo(
+    () => appData.getMatchManualMetadata(match.id, selectedTeamId).isManual,
+    [appData, match.id, selectedTeamId],
+  );
 
   const matchHeroes = useMemo(() => {
-    const side = teamMatch.side;
-    const heroesMap = appData.heroes;
-
-    if (side && match.players?.[side]?.length) {
-      return match.players[side]
-        .map((player) => player.hero)
-        .filter((hero): hero is Hero => Boolean(hero));
-    }
-
-    return (teamMatch.heroes || []).map((storedHero) => resolveStoredHero(storedHero, heroesMap));
-  }, [appData.heroes, match, teamMatch]);
+    return appData.getMatchHeroesForTeamWithStored(match.id, selectedTeamId, teamMatch.heroes);
+  }, [appData, match.id, selectedTeamId, teamMatch.heroes]);
 
   return {
     config,
@@ -208,21 +171,13 @@ function useMatchCardData(
   };
 }
 
-function resolveStoredHero(storedHero: StoredHero, heroesMap: Map<number, Hero>): Hero {
-  const hero = heroesMap.get(storedHero.id);
-  if (hero) {
-    return hero;
-  }
-
-  return {
-    id: storedHero.id,
-    name: storedHero.name,
-    localizedName: storedHero.localizedName,
-    imageUrl: storedHero.imageUrl,
-  } as Hero;
-}
-
-function useEditManualMatchForm(matchId: number, teamMatch: StoredMatchData, selectedTeam: Team) {
+function useEditManualMatchForm(
+  matchId: number,
+  teamMatch: StoredMatchData,
+  selectedTeam: Team,
+  appData: ReturnType<typeof useAppData>,
+  teamKey: string,
+) {
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -246,8 +201,8 @@ function useEditManualMatchForm(matchId: number, teamMatch: StoredMatchData, sel
 
   useEffect(() => {
     const newMatchId = parseInt(matchIdString, 10);
-    setDuplicateError(computeDuplicateError(newMatchId, matchId, teamMatch, selectedTeam));
-  }, [matchIdString, matchId, teamMatch, selectedTeam]);
+    setDuplicateError(appData.getEditManualMatchDuplicateError(teamKey, newMatchId, matchId));
+  }, [matchIdString, matchId, teamKey, appData]);
 
   const isFormValid = !validationError && teamSide !== '' && !duplicateError;
 

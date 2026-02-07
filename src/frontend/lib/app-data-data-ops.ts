@@ -5,6 +5,10 @@
  * Extracted to reduce app-data.ts file size.
  */
 
+import {
+  filterPlayersByTeam as filterPlayersByTeamDerivation,
+  sortPlayersByName as sortPlayersByNameDerivation,
+} from './app-data-derivations';
 import type { Match, Player, Team, TeamDisplayData } from './app-data-types';
 import { formatTeamForDisplay, formatTeamsForDisplay } from './team-display-formatter';
 
@@ -23,6 +27,7 @@ export interface AppDataDataOpsContext {
   getTeam(teamId: string): Team | undefined;
   getMatch(matchId: number): Match | undefined;
   getPlayer(accountId: number): Player | undefined;
+  getTeamPlayerIds(teamKey: string): Set<number>;
   saveToStorage(): void;
 }
 
@@ -129,6 +134,22 @@ export function getAllTeamsForDisplay(appData: AppDataDataOpsContext): TeamDispl
   return formatTeamsForDisplay(getTeams(appData));
 }
 
+/**
+ * Get all teams formatted for UI display, sorted by most recently added to oldest
+ * @returns Array of TeamDisplayData sorted by timeAdded descending (newest first)
+ */
+export function getAllTeamsForDisplayOrdered(appData: AppDataDataOpsContext): TeamDisplayData[] {
+  const list = getAllTeamsForDisplay(appData);
+
+  // Sort by timeAdded descending (most recently added first)
+  // timeAdded is an ISO string, which sorts correctly chronologically
+  return [...list].sort((a, b) => {
+    if (!a || !b) return 0;
+    // Compare ISO strings - newer dates come first (descending)
+    return b.timeAdded.localeCompare(a.timeAdded);
+  });
+}
+
 // ============================================================================
 // MATCH OPERATIONS
 // ============================================================================
@@ -148,6 +169,31 @@ export function addMatch(appData: AppDataDataOpsContext, match: Match): void {
 export function removeMatch(appData: AppDataDataOpsContext, matchId: number): void {
   appData._matches.delete(matchId);
   appData.updateMatchesRef();
+}
+
+/**
+ * Update a match
+ */
+export function updateMatch(
+  appData: AppDataDataOpsContext,
+  matchId: number,
+  updates: Partial<Match>,
+  options?: { skipSave?: boolean },
+): void {
+  const match = appData.getMatch(matchId);
+  if (!match) return;
+
+  // Apply updates
+  Object.assign(match, updates);
+
+  // Update the match in the map
+  appData._matches.set(matchId, match);
+  appData.updateMatchesRef();
+
+  // Save to storage unless skipSave is true
+  if (!options?.skipSave) {
+    appData.saveToStorage();
+  }
 }
 
 /**
@@ -186,6 +232,31 @@ export function removePlayer(appData: AppDataDataOpsContext, accountId: number):
 }
 
 /**
+ * Update a player
+ */
+export function updatePlayer(
+  appData: AppDataDataOpsContext,
+  accountId: number,
+  updates: Partial<Player>,
+  options?: { skipSave?: boolean },
+): void {
+  const player = appData.getPlayer(accountId);
+  if (!player) return;
+
+  // Apply updates
+  Object.assign(player, updates);
+
+  // Update the player in the map
+  appData._players.set(accountId, player);
+  appData.updatePlayersRef();
+
+  // Save to storage unless skipSave is true
+  if (!options?.skipSave) {
+    appData.saveToStorage();
+  }
+}
+
+/**
  * Get a player by account ID
  */
 export function getPlayer(appData: AppDataDataOpsContext, accountId: number): Player | undefined {
@@ -197,6 +268,49 @@ export function getPlayer(appData: AppDataDataOpsContext, accountId: number): Pl
  */
 export function getPlayers(appData: AppDataDataOpsContext): Player[] {
   return Array.from(appData._players.values());
+}
+
+// ============================================================================
+// PLAYER SORTING & FILTERING
+// ============================================================================
+
+/**
+ * Sort players by name (alphabetically)
+ * Returns a new sorted array without modifying the original
+ *
+ * @param appData - AppData context (unused but required for consistency)
+ * @param players - Array of players to sort
+ * @returns Sorted array of players
+ */
+export function sortPlayersByName(appData: AppDataDataOpsContext, players: Player[]): Player[] {
+  return sortPlayersByNameDerivation(players);
+}
+
+/**
+ * Filter players by team
+ * Returns only players whose accountId is in the team's player IDs
+ * If no team is selected, returns all players
+ *
+ * @param appData - AppData context
+ * @param players - Array of players to filter
+ * @param teamKey - The team key (teamId-leagueId), or null/undefined for no team
+ * @returns Filtered array of players
+ */
+export function filterPlayersByTeam(
+  appData: AppDataDataOpsContext,
+  players: Player[],
+  teamKey: string | null | undefined,
+): Player[] {
+  if (!teamKey) {
+    return players;
+  }
+
+  const teamPlayerIds = appData.getTeamPlayerIds(teamKey);
+  if (teamPlayerIds.size === 0) {
+    return [];
+  }
+
+  return filterPlayersByTeamDerivation(players, teamPlayerIds, true);
 }
 
 // ============================================================================

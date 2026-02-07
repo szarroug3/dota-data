@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAppData } from '@/contexts/app-data-context';
 import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
@@ -10,6 +11,7 @@ interface HiddenMatchesModalProps {
   onUnhide: (matchId: number) => void;
   onClose: () => void;
   teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -27,61 +29,14 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-const didActiveTeamWin = (teamMatch: TeamMatchParticipation | undefined): boolean => {
-  return teamMatch?.result === 'won';
-};
-
-const getPickOrder = (match: Match, teamMatch: TeamMatchParticipation | undefined): string | null => {
-  if (!match.pickOrder || !teamMatch) return null;
-  const pickOrder = match.pickOrder[teamMatch.side];
-  return pickOrder === 'first' ? 'First Pick' : pickOrder === 'second' ? 'Second Pick' : null;
-};
-
-const getHeroesFromMatch = (match: Match, teamMatch: TeamMatchParticipation | undefined): Hero[] => {
-  if (!teamMatch) return [];
-  const teamPlayers = match.players[teamMatch.side] || [];
-  let heroes = teamPlayers
-    .map((player) => player.hero)
-    .filter((hero): hero is Hero => hero !== undefined && hero !== null);
-  if (heroes.length === 0 && match.draft) {
-    const draftPicks = teamMatch.side === 'radiant' ? match.draft.radiantPicks : match.draft.direPicks;
-    heroes = draftPicks?.map((pick) => pick.hero).slice(0, 5) || [];
-  }
-  return heroes;
-};
-
-const isHighPerformingHero = (
-  hero: Hero,
-  allMatches: Match[],
-  teamMatches: Map<number, TeamMatchParticipation>,
-  hiddenMatchIds: Set<number>,
-): boolean => {
-  const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
-  allMatches.forEach((matchData) => {
-    if (hiddenMatchIds.has(matchData.id)) return;
-    const matchTeamData = teamMatches.get(matchData.id);
-    if (!matchTeamData?.side) return;
-    const teamPlayers = matchData.players[matchTeamData.side] || [];
-    const isWin = matchTeamData.result === 'won';
-    teamPlayers.forEach((player) => {
-      if (player.hero?.id === hero.id) {
-        heroStats.count++;
-        heroStats.totalGames++;
-        if (isWin) {
-          heroStats.wins++;
-        }
-      }
-    });
-  });
-  return heroStats.count >= 5 && heroStats.wins / heroStats.count >= 0.6;
-};
-
 export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({
   hiddenMatches,
   onUnhide,
   onClose,
   teamMatches,
+  selectedTeamId,
 }) => {
+  const appData = useAppData();
   useEffect(() => {
     if (hiddenMatches.length === 0) {
       onClose();
@@ -118,8 +73,10 @@ export const HiddenMatchesModal: React.FC<HiddenMatchesModalProps> = ({
                 match={match}
                 teamMatch={teamMatches.get(match.id)}
                 onUnhide={onUnhide}
-                teamMatches={teamMatches}
-                hiddenMatches={hiddenMatches}
+                matchResultLabel={appData.getMatchResultLabel(match.id, selectedTeamId)}
+                pickOrderLabel={appData.getMatchPickOrderLabel(match.id, selectedTeamId)}
+                matchHeroes={appData.getMatchHeroesForTeam(match.id, selectedTeamId)}
+                isHighPerformingHero={(heroId) => appData.isHighPerformingHero(heroId, selectedTeamId, new Set())}
               />
             ))}
           </div>
@@ -133,20 +90,22 @@ function HiddenMatchCard({
   match,
   teamMatch,
   onUnhide,
-  teamMatches,
-  hiddenMatches,
+  matchResultLabel,
+  pickOrderLabel,
+  matchHeroes,
+  isHighPerformingHero,
 }: {
   match: Match;
   teamMatch: TeamMatchParticipation | undefined;
   onUnhide: (id: number) => void;
-  teamMatches: Map<number, TeamMatchParticipation>;
-  hiddenMatches: Match[];
+  matchResultLabel: string;
+  pickOrderLabel: string | null;
+  matchHeroes: Hero[];
+  isHighPerformingHero: (heroId: number) => boolean;
 }) {
   const opponentName = teamMatch?.opponentName || 'Unknown';
-  const teamWon = didActiveTeamWin(teamMatch);
-  const pickOrder = getPickOrder(match, teamMatch);
+  const teamWon = matchResultLabel === 'Victory';
   const teamSide = teamMatch?.side;
-  const matchHeroes = getHeroesFromMatch(match, teamMatch);
   return (
     <Card className="transition-all duration-200 hover:bg-accent/50">
       <CardContent className="p-4">
@@ -164,7 +123,7 @@ function HiddenMatchCard({
                   key={index}
                   hero={hero}
                   avatarSize={{ width: 'w-8', height: 'h-8' }}
-                  isHighPerforming={isHighPerformingHero(hero, hiddenMatches, teamMatches, new Set())}
+                  isHighPerforming={isHighPerformingHero(hero.id)}
                 />
               ))}
             </div>
@@ -172,14 +131,14 @@ function HiddenMatchCard({
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2">
               <Badge variant={teamWon ? 'success' : 'default'} className="text-xs">
-                {teamWon ? 'Victory' : 'Defeat'}
+                {matchResultLabel}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {teamSide === 'radiant' ? 'Radiant' : 'Dire'}
               </Badge>
-              {pickOrder && (
+              {pickOrderLabel && (
                 <Badge variant="secondary" className="text-xs">
-                  {pickOrder}
+                  {pickOrderLabel}
                 </Badge>
               )}
             </div>

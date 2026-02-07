@@ -1,19 +1,20 @@
 import { Pencil, Trash2 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
 import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import { PlayerExternalSiteButton } from '@/frontend/players/components/stateless/PlayerExternalSiteButton';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import { processPlayerRank } from '@/utils/player-statistics';
+import type { PlayerRank } from '@/utils/player-statistics';
 
 export type PlayerListViewMode = 'list' | 'card';
 
 interface PlayerListViewProps {
-  players: Player[];
+  playerEntries: PlayerListViewEntry[];
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
   onRefreshPlayer?: (playerId: number) => void;
@@ -21,25 +22,17 @@ interface PlayerListViewProps {
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  hiddenPlayerIds?: Set<number>;
-  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
 }
 
-function getTopHeroes(player: Player, heroes: Map<number, Hero>): Hero[] {
-  const top = [...player.heroStats].sort((a, b) => b.games - a.games).slice(0, 5);
-  return top.map((h) => heroes.get(h.heroId)).filter(Boolean) as Hero[];
-}
-
-function renderRank(rankTier?: number | null, leaderboardRank?: number | null): React.ReactNode {
-  const processed = processPlayerRank(rankTier ?? 0, leaderboardRank ?? undefined);
-  if (!processed) return null;
-  const stars = processed.isImmortal ? 0 : processed.stars;
+function renderRank(rank: PlayerRank | null): React.ReactNode {
+  if (!rank) return null;
+  const stars = rank.isImmortal ? 0 : rank.stars;
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className="text-sm font-medium truncate">{processed.displayText}</span>
+      <span className="text-sm font-medium truncate">{rank.displayText}</span>
       {stars > 0 && (
-        <div className="flex gap-0.5 flex-shrink-0">
+        <div className="flex gap-0.5 shrink-0">
           {Array.from({ length: stars }).map((_, i) => (
             <span key={i} className="text-yellow-500 text-xs">
               ★
@@ -140,7 +133,17 @@ function InfoOrPlaceholder({ show, children }: { show: boolean; children: React.
   );
 }
 
-function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; totalGames: number; winRate: number }) {
+function PlayerTextInfo({
+  player,
+  totalGames,
+  winRate,
+  rank,
+}: {
+  player: Player;
+  totalGames: number;
+  winRate: number;
+  rank: PlayerRank | null;
+}) {
   const hasError = Boolean(player.error);
   const showLoading = player.isLoading && !hasError;
   const showData = !hasError && !player.isLoading;
@@ -158,9 +161,7 @@ function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; total
         </div>
       ) : (
         <>
-          <InfoOrPlaceholder show={showData}>
-            {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}
-          </InfoOrPlaceholder>
+          <InfoOrPlaceholder show={showData}>{renderRank(rank)}</InfoOrPlaceholder>
           <InfoOrPlaceholder show={showData}>
             {totalGames} Games • {winRate.toFixed(1)}% Win Rate
           </InfoOrPlaceholder>
@@ -228,6 +229,7 @@ const ListRow: React.FC<{
   isSelected: boolean;
   onSelect?: (id: number) => void;
   topHeroes: Hero[];
+  rank: PlayerRank | null;
   onRefresh?: (id: number) => void;
   isManual?: boolean;
   onEditPlayer?: (id: number) => void;
@@ -238,6 +240,7 @@ const ListRow: React.FC<{
   isSelected,
   onSelect,
   topHeroes,
+  rank,
   onRefresh,
   isManual,
   onEditPlayer,
@@ -267,9 +270,9 @@ const ListRow: React.FC<{
               showLink={false}
               preferredSite={preferredSite}
             />
-            <PlayerTextInfo player={player} totalGames={totalGames} winRate={winRate} />
+            <PlayerTextInfo player={player} totalGames={totalGames} winRate={winRate} rank={rank} />
           </div>
-          <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-0">
+          <div className="flex flex-col items-end gap-2 shrink-0 min-w-0">
             {player.isLoading ? (
               <div className="h-8 w-28" aria-hidden="true" />
             ) : (
@@ -295,7 +298,7 @@ const ListRow: React.FC<{
 };
 
 export const PlayerListView: React.FC<PlayerListViewProps> = ({
-  players,
+  playerEntries,
   selectedPlayerId,
   onSelectPlayer,
   onRefreshPlayer,
@@ -303,25 +306,16 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
   manualPlayerIds,
   onEditPlayer,
   onRemovePlayer,
-  heroes,
   preferredSite,
 }) => {
-  const processed = useMemo(() => {
-    return players.map((p) => ({
-      player: p,
-      rank: processPlayerRank(p.profile.rank_tier, p.profile.leaderboard_rank),
-      topHeroes: getTopHeroes(p, heroes),
-    }));
-  }, [players, heroes]);
-
-  if (players.length === 0) {
+  if (playerEntries.length === 0) {
     return <PlayersEmptyState />;
   }
 
   if (viewMode === 'card') {
     return (
       <PlayerCardsGrid
-        processed={processed}
+        processed={playerEntries}
         selectedPlayerId={selectedPlayerId}
         onSelectPlayer={onSelectPlayer}
         onRefreshPlayer={onRefreshPlayer}
@@ -332,13 +326,14 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
 
   return (
     <div className="grid gap-2 w-full">
-      {processed.map(({ player, topHeroes }) => (
+      {playerEntries.map(({ player, topHeroes, rank }) => (
         <div key={player.accountId} data-player-id={player.accountId}>
           <ListRow
             player={player}
             isSelected={selectedPlayerId === player.accountId}
             onSelect={onSelectPlayer}
             topHeroes={topHeroes}
+            rank={rank}
             onRefresh={onRefreshPlayer}
             isManual={manualPlayerIds?.has(player.accountId)}
             onEditPlayer={onEditPlayer}
@@ -368,18 +363,22 @@ function PlayerCardActions({
   player,
   onRefreshPlayer,
   preferredSite,
+  showRefresh,
 }: {
   player: Player;
   onRefreshPlayer?: (playerId: number) => void;
   preferredSite: PreferredExternalSite;
+  showRefresh: boolean;
 }) {
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <PlayerExternalSiteButton playerId={player.accountId} preferredSite={preferredSite} size="sm" />
-      <RefreshButton
-        onClick={() => onRefreshPlayer?.(player.accountId)}
-        ariaLabel={`Refresh ${player.profile.personaname}`}
-      />
+      {showRefresh && (
+        <RefreshButton
+          onClick={() => onRefreshPlayer?.(player.accountId)}
+          ariaLabel={`Refresh ${player.profile.personaname}`}
+        />
+      )}
     </div>
   );
 }
@@ -387,18 +386,35 @@ function PlayerCardActions({
 const PlayerCard: React.FC<{
   player: Player;
   topHeroes: Hero[];
+  rank: PlayerRank | null;
   isSelected: boolean;
   onSelectPlayer?: (playerId: number) => void;
   onRefreshPlayer?: (playerId: number) => void;
   preferredSite: PreferredExternalSite;
-}> = ({ player, topHeroes, isSelected, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
+}> = ({ player, topHeroes, rank, isSelected, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
   const totalGames = player.overallStats.totalGames;
   const winRate = player.overallStats.winRate;
+  const hasError = Boolean(player.error);
+  const showLoading = player.isLoading && !hasError;
+  const showData = !hasError && !player.isLoading;
+  const handleSelect = () => {
+    if (!hasError) onSelectPlayer?.(player.accountId);
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleSelect();
+    }
+  };
 
   return (
     <Card
-      className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
-      onClick={() => onSelectPlayer?.(player.accountId)}
+      className={`w-full overflow-hidden ${getCardClassName(isSelected, hasError)}`}
+      onClick={handleSelect}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={hasError ? -1 : 0}
+      aria-label={getAriaLabel(player)}
     >
       <CardContent className="p-4">
         <div className="flex flex-col items-center space-y-3 mb-3">
@@ -409,20 +425,39 @@ const PlayerCard: React.FC<{
             preferredSite={preferredSite}
           />
           <div className="text-center w-full min-w-0 overflow-hidden">
-            <div className="font-medium truncate">{player.profile.personaname}</div>
-            <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
-              {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
+            <div className="font-medium truncate">
+              {showLoading ? `Loading ${player.accountId}` : player.profile.personaname}
             </div>
+            {hasError ? (
+              <div className="text-xs text-destructive truncate" role="alert">
+                {player.error}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
+                {renderRank(rank) || '\u00A0'}
+              </div>
+            )}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground mb-2 text-center truncate">
-          {totalGames} games • {winRate.toFixed(1)}%
-        </div>
+        {showData ? (
+          <div className="text-xs text-muted-foreground mb-2 text-center truncate">
+            {totalGames} games • {winRate.toFixed(1)}%
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground mb-2 text-center truncate h-4" aria-hidden="true">
+            &nbsp;
+          </div>
+        )}
         <div className="flex flex-col items-center gap-2">
           <div className="text-center overflow-hidden w-full">
-            <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
+            {showData ? <PlayerTopHeroes heroes={topHeroes} align="justify-center" /> : null}
           </div>
-          <PlayerCardActions player={player} onRefreshPlayer={onRefreshPlayer} preferredSite={preferredSite} />
+          <PlayerCardActions
+            player={player}
+            onRefreshPlayer={onRefreshPlayer}
+            preferredSite={preferredSite}
+            showRefresh={!hasError}
+          />
         </div>
       </CardContent>
     </Card>
@@ -430,7 +465,7 @@ const PlayerCard: React.FC<{
 };
 
 const PlayerCardsGrid: React.FC<{
-  processed: Array<{ player: Player; topHeroes: Hero[] }>;
+  processed: Array<{ player: Player; topHeroes: Hero[]; rank: PlayerRank | null }>;
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
   onRefreshPlayer?: (playerId: number) => void;
@@ -438,11 +473,12 @@ const PlayerCardsGrid: React.FC<{
 }> = ({ processed, selectedPlayerId, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
   return (
     <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
-      {processed.map(({ player, topHeroes }) => (
+      {processed.map(({ player, topHeroes, rank }) => (
         <PlayerCard
           key={player.accountId}
           player={player}
           topHeroes={topHeroes}
+          rank={rank}
           isSelected={selectedPlayerId === player.accountId}
           onSelectPlayer={onSelectPlayer}
           onRefreshPlayer={onRefreshPlayer}

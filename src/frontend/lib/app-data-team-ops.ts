@@ -69,10 +69,9 @@ export async function loadTeam(appData: AppDataTeamOpsContext, teamId: number, l
     if (!teamError && !leagueError) {
       appData.setSelectedTeam(teamKey);
 
-      // Load full match data for all team matches (in background)
+      // Load full match and player data so Player Stats has data without requiring a click
       // force=true on initial load to fetch all matches
-      // Don't await - let matches load asynchronously
-      appData.loadTeamMatches(teamKey, true).catch((err: unknown) => {
+      await appData.loadTeamMatches(teamKey, true).catch((err: unknown) => {
         console.error(`Failed to load matches for team ${teamKey}:`, err);
       });
     }
@@ -133,9 +132,9 @@ export async function refreshTeam(appData: AppDataTeamOpsContext, teamId: number
       leagueError,
     });
 
-    // Load/refresh matches if no errors
+    // Load/refresh matches and players so hydration completes with full player data
     if (!teamError && !leagueError) {
-      appData.loadTeamMatches(teamKey).catch((err: unknown) => {
+      await appData.loadTeamMatches(teamKey).catch((err: unknown) => {
         console.error(`Failed to load matches for team ${teamKey}:`, err);
       });
     }

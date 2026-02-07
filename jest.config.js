@@ -52,6 +52,8 @@ module.exports = {
         '<rootDir>/src/tests/utils/**/*.test.tsx',
         '<rootDir>/src/tests/app/**/*.test.ts',
         '<rootDir>/src/tests/app/**/*.test.tsx',
+        '<rootDir>/src/tests/frontend/**/*.test.ts',
+        '<rootDir>/src/tests/frontend/**/*.test.tsx',
       ],
       testPathIgnorePatterns: ['.*/api/.*'],
       testEnvironment: 'jsdom',

@@ -4,36 +4,48 @@ import {
   removeManualMatchFromTeam,
 } from '@/frontend/lib/app-data-match-ops';
 import type { Match, Team } from '@/frontend/lib/app-data-types';
+import type { StoredMatchData, StoredPlayerData } from '@/frontend/lib/storage-manager';
 
 // Mock the AppData context interface
 const createMockAppData = () => ({
   _teams: new Map<string, Team>(),
-  _matches: new Map<number, Match>(),
   updateTeam: jest.fn(),
   saveToStorage: jest.fn(),
   loadMatch: jest.fn(),
-  addMatch: jest.fn(),
-  updateMatch: jest.fn(),
-  getMatch: jest.fn(),
   updateTeamMatchParticipation: jest.fn(),
+});
+
+const createTeam = (overrides: Partial<Team> = {}): Team => ({
+  id: '123-456',
+  teamId: 123,
+  leagueId: 456,
+  name: 'Test Team',
+  leagueName: 'Test League',
+  timeAdded: Date.now(),
+  matches: new Map<number, StoredMatchData>(),
+  players: new Map<number, StoredPlayerData>(),
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  isLoading: false,
+  highPerformingHeroes: new Set<string>(),
+  ...overrides,
 });
 
 describe('app-data-match-ops', () => {
   describe('editManualMatchToTeam', () => {
-    it('should optimize side-only changes without network calls', async () => {
+    it('should replace the manual match and update participation', async () => {
       const mockAppData = createMockAppData();
-      const teamKey = 'team1';
-      const matchId = 12345;
+      const teamKey = '123-456';
+      const oldMatchId = 1001;
+      const newMatchId = 1002;
 
       // Setup existing team with a manual match
-      const existingTeam: Team = {
-        key: teamKey,
-        name: 'Test Team',
-        matches: new Map([
+      const existingTeam = createTeam({
+        matches: new Map<number, StoredMatchData>([
           [
-            matchId,
+            oldMatchId,
             {
-              matchId,
+              matchId: oldMatchId,
               result: 'won',
               opponentName: 'Enemy Team',
               side: 'radiant',
@@ -46,26 +58,14 @@ describe('app-data-match-ops', () => {
             },
           ],
         ]),
-        players: new Map(),
-        hiddenMatches: new Set(),
-        hiddenPlayers: new Set(),
-        metadata: {
-          totalMatches: 1,
-          totalWins: 1,
-          totalLosses: 0,
-          winRate: 100,
-          averageMatchDuration: 1800,
-          lastMatchDate: '2023-01-01T00:00:00Z',
-        },
-      };
+      });
 
       mockAppData._teams.set(teamKey, existingTeam);
 
-      // Mock existing match data
-      const existingMatch: Match = {
-        id: matchId,
-        date: '2023-01-01T00:00:00Z',
-        duration: 1800,
+      const mockMatch: Match = {
+        id: newMatchId,
+        date: '2023-01-02T00:00:00Z',
+        duration: 2000,
         radiant: { id: 1, name: 'Team A' },
         dire: { id: 2, name: 'Team B' },
         draft: { radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] },
@@ -82,50 +82,33 @@ describe('app-data-match-ops', () => {
         error: undefined,
       };
 
-      mockAppData._matches.set(matchId, existingMatch);
-      mockAppData.getMatch.mockReturnValue(existingMatch);
+      mockAppData.loadMatch.mockResolvedValueOnce(mockMatch);
 
-      // Call editManualMatchToTeam with same match ID but different side
-      const result = await editManualMatchToTeam(mockAppData, matchId, matchId, teamKey, 'dire');
+      const result = await editManualMatchToTeam(mockAppData, oldMatchId, newMatchId, teamKey, 'dire');
 
-      // Should return the existing match without network calls
-      expect(result).toBe(existingMatch);
+      expect(result).toBe(mockMatch);
+      expect(mockAppData.loadMatch).toHaveBeenCalledWith(newMatchId);
 
-      // Should update the team's match data with new side
-      const updatedMatchData = existingTeam.matches.get(matchId);
-      expect(updatedMatchData?.side).toBe('dire');
-
-      // Should NOT call loadMatch (no network call)
-      expect(mockAppData.loadMatch).not.toHaveBeenCalled();
-
-      // Should NOT add optimistic match
-      expect(mockAppData.addMatch).not.toHaveBeenCalled();
-
-      // Should update the team
       expect(mockAppData.updateTeam).toHaveBeenCalledWith(teamKey, {
-        matches: existingTeam.matches,
+        matches: expect.any(Map),
       });
 
-      // Should save to storage to persist the side change
-      expect(mockAppData.saveToStorage).toHaveBeenCalled();
+      const updatedMatches = mockAppData.updateTeam.mock.calls[0][1].matches;
+      expect(updatedMatches.has(oldMatchId)).toBe(false);
+      expect(updatedMatches.has(newMatchId)).toBe(true);
+
+      expect(mockAppData.updateTeamMatchParticipation).toHaveBeenCalledWith(teamKey, [newMatchId]);
     });
 
-    it('should show optimistic update immediately and then show error when match loading fails', async () => {
+    it('should throw error when match loading fails', async () => {
       const mockAppData = createMockAppData();
       const teamKey = '123-456';
       const oldMatchId = 1001;
       const newMatchId = 1002;
       const userSelectedSide = 'radiant' as const;
 
-      // Create a mock team with an existing manual match
-      const mockTeam: Team = {
-        id: teamKey,
-        teamId: 123,
-        leagueId: 456,
-        name: 'Test Team',
-        leagueName: 'Test League',
-        timeAdded: Date.now(),
-        matches: new Map([
+      const mockTeam = createTeam({
+        matches: new Map<number, StoredMatchData>([
           [
             oldMatchId,
             {
@@ -142,73 +125,27 @@ describe('app-data-match-ops', () => {
             },
           ],
         ]),
-        players: new Map(),
-        isLoading: false,
-      };
+      });
 
       mockAppData._teams.set(teamKey, mockTeam);
 
       // Mock loadMatch to fail (return null)
       mockAppData.loadMatch.mockResolvedValue(null);
 
-      // Call the function
-      const result = await editManualMatchToTeam(mockAppData, oldMatchId, newMatchId, teamKey, userSelectedSide);
-
-      // Verify that the function doesn't throw an error
-      expect(result).toBeDefined();
-      expect(result?.id).toBe(newMatchId);
-      expect(result?.error).toBeDefined();
-      expect(result?.error).toContain('Failed to load match');
-      expect(result?.isLoading).toBe(false);
-
-      // Verify that optimistic match was added immediately
-      expect(mockAppData.addMatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: newMatchId,
-          isLoading: true,
-          error: undefined,
-        }),
-      );
-
-      // Verify that the optimistic match was updated with error
-      expect(mockAppData.updateMatch).toHaveBeenCalledWith(newMatchId, {
-        isLoading: false,
-        error: expect.stringContaining('Failed to load match'),
-      });
-
-      // Verify that the team's matches were updated
-      expect(mockAppData.updateTeam).toHaveBeenCalledWith(teamKey, {
-        matches: expect.any(Map),
-      });
-
-      // Verify that the old match was removed and new match was added
-      const updatedMatches = mockAppData.updateTeam.mock.calls[0][1].matches;
-      expect(updatedMatches.has(oldMatchId)).toBe(false);
-      expect(updatedMatches.has(newMatchId)).toBe(true);
-
-      // Verify that team participation was updated
-      expect(mockAppData.updateTeamMatchParticipation).toHaveBeenCalledWith(
-        teamKey,
-        expect.arrayContaining([newMatchId]),
-      );
+      await expect(
+        editManualMatchToTeam(mockAppData, oldMatchId, newMatchId, teamKey, userSelectedSide),
+      ).rejects.toThrow(`Failed to load match ${newMatchId}`);
     });
 
-    it('should show optimistic update immediately and then show success when match loading succeeds', async () => {
+    it('should return loaded match when match loading succeeds', async () => {
       const mockAppData = createMockAppData();
       const teamKey = '123-456';
       const oldMatchId = 1001;
       const newMatchId = 1002;
       const userSelectedSide = 'dire' as const;
 
-      // Create a mock team with an existing manual match
-      const mockTeam: Team = {
-        id: teamKey,
-        teamId: 123,
-        leagueId: 456,
-        name: 'Test Team',
-        leagueName: 'Test League',
-        timeAdded: Date.now(),
-        matches: new Map([
+      const mockTeam = createTeam({
+        matches: new Map<number, StoredMatchData>([
           [
             oldMatchId,
             {
@@ -225,9 +162,7 @@ describe('app-data-match-ops', () => {
             },
           ],
         ]),
-        players: new Map(),
-        isLoading: false,
-      };
+      });
 
       mockAppData._teams.set(teamKey, mockTeam);
 
@@ -250,7 +185,7 @@ describe('app-data-match-ops', () => {
         result: 'dire',
       };
 
-      mockAppData.loadMatch.mockResolvedValue(mockMatch);
+      mockAppData.loadMatch.mockResolvedValueOnce(mockMatch);
 
       // Call the function
       const result = await editManualMatchToTeam(mockAppData, oldMatchId, newMatchId, teamKey, userSelectedSide);
@@ -258,15 +193,6 @@ describe('app-data-match-ops', () => {
       // Verify that the function returns the loaded match
       expect(result).toBe(mockMatch);
       expect(result?.error).toBeUndefined();
-
-      // Verify that optimistic match was added immediately
-      expect(mockAppData.addMatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: newMatchId,
-          isLoading: true,
-          error: undefined,
-        }),
-      );
 
       // Verify that the team's matches were updated
       expect(mockAppData.updateTeam).toHaveBeenCalledWith(teamKey, {
@@ -279,10 +205,7 @@ describe('app-data-match-ops', () => {
       expect(updatedMatches.has(newMatchId)).toBe(true);
 
       // Verify that team participation was updated
-      expect(mockAppData.updateTeamMatchParticipation).toHaveBeenCalledWith(
-        teamKey,
-        expect.arrayContaining([newMatchId]),
-      );
+      expect(mockAppData.updateTeamMatchParticipation).toHaveBeenCalledWith(teamKey, [newMatchId]);
     });
 
     it('should throw error when team is not found', async () => {
@@ -309,17 +232,7 @@ describe('app-data-match-ops', () => {
       const userSelectedSide = 'radiant' as const;
 
       // Create a mock team
-      const mockTeam: Team = {
-        id: teamKey,
-        teamId: 123,
-        leagueId: 456,
-        name: 'Test Team',
-        leagueName: 'Test League',
-        timeAdded: Date.now(),
-        matches: new Map(),
-        players: new Map(),
-        isLoading: false,
-      };
+      const mockTeam = createTeam();
 
       mockAppData._teams.set(teamKey, mockTeam);
 
@@ -344,14 +257,8 @@ describe('app-data-match-ops', () => {
       const matchId = 1001;
 
       // Create a mock team with a manual match
-      const mockTeam: Team = {
-        id: teamKey,
-        teamId: 123,
-        leagueId: 456,
-        name: 'Test Team',
-        leagueName: 'Test League',
-        timeAdded: Date.now(),
-        matches: new Map([
+      const mockTeam = createTeam({
+        matches: new Map<number, StoredMatchData>([
           [
             matchId,
             {
@@ -368,9 +275,7 @@ describe('app-data-match-ops', () => {
             },
           ],
         ]),
-        players: new Map(),
-        isLoading: false,
-      };
+      });
 
       mockAppData._teams.set(teamKey, mockTeam);
 
@@ -397,22 +302,11 @@ describe('app-data-match-ops', () => {
       const userSelectedSide = 'dire';
 
       // Setup existing team
-      const mockTeam: Team = {
-        key: teamKey,
-        name: 'Test Team',
-        matches: new Map(),
-        players: new Map(),
-        hiddenMatches: new Set(),
-        hiddenPlayers: new Set(),
-        metadata: {
-          totalMatches: 0,
-          totalWins: 0,
-          totalLosses: 0,
-          winRate: 0,
-          averageMatchDuration: 0,
-          lastMatchDate: '2023-01-01T00:00:00Z',
-        },
-      };
+      const mockTeam = createTeam({
+        id: teamKey,
+        teamId: 1,
+        leagueId: 1,
+      });
 
       mockAppData._teams.set(teamKey, mockTeam);
 

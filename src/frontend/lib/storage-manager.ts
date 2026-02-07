@@ -3,7 +3,8 @@
  * Handles localStorage persistence for teams data.
  */
 
-import type { Team } from './app-data-types';
+import type { Team } from '@/frontend/lib/app-data-types';
+import { cleanupOldTeams, optimizeStorageData } from '@/frontend/lib/storage-manager-optimization';
 
 const STORAGE_KEY = 'dota-scout-assistant-teams';
 const ACTIVE_TEAM_STORAGE_KEY = 'dota-scout-assistant-active-team';
@@ -170,12 +171,7 @@ export function loadTeamsFromStorage(): LoadedTeamsResult {
 /**
  * Process a single team's data from storage
  */
-function processTeamData(
-  teamKey: string,
-  data: unknown,
-  teams: Team[],
-  placeholders: PlaceholderTeamData[],
-): void {
+function processTeamData(teamKey: string, data: unknown, teams: Team[], placeholders: PlaceholderTeamData[]): void {
   try {
     if (isValidStoredTeamData(data)) {
       const team = convertStorageDataToTeam(teamKey, data);
@@ -198,10 +194,7 @@ function processTeamData(
 /**
  * Handle invalid team data by extracting minimal placeholder information
  */
-function handleInvalidTeamData(
-  teamKey: string,
-  data: unknown,
-): PlaceholderTeamData | null {
+function handleInvalidTeamData(teamKey: string, data: unknown): PlaceholderTeamData | null {
   console.warn(`Invalid stored team data for ${teamKey}, will try to load from API:`, data);
   const fromKey = parseTeamKey(teamKey);
   const teamId = extractTeamIdFromData(data) ?? fromKey?.teamId ?? null;
@@ -289,14 +282,14 @@ function isValidStoredTeamData(data: unknown): data is StoredTeamData {
 function hasRequiredTopLevelProps(obj: Record<string, unknown>): boolean {
   return Boolean(
     obj.team &&
-      typeof obj.team === 'object' &&
-      obj.league &&
-      typeof obj.league === 'object' &&
-      typeof obj.timeAdded === 'string' &&
-      obj.matches &&
-      typeof obj.matches === 'object' &&
-      obj.players &&
-      typeof obj.players === 'object',
+    typeof obj.team === 'object' &&
+    obj.league &&
+    typeof obj.league === 'object' &&
+    typeof obj.timeAdded === 'string' &&
+    obj.matches &&
+    typeof obj.matches === 'object' &&
+    obj.players &&
+    typeof obj.players === 'object',
   );
 }
 
@@ -494,7 +487,7 @@ function normalizePlayerData(playerId: number, data: unknown): StoredPlayerData 
   // Parse rank information if not already present
   let rankTier = value.rank_tier;
   let leaderboardRank = value.leaderboard_rank;
-  
+
   if (rankTier === undefined) {
     const parsed = parseRankFromString(rank);
     rankTier = parsed.rankTier;
@@ -556,57 +549,100 @@ function createFallbackHeroSummary(id: number): StoredHero {
   };
 }
 
-/**
- * Save matches and players data to teams storage
- * Updates the existing teams storage with full match data and player IDs
- */
+function buildStorageData(teams: Map<string, Team>): Record<string, StoredTeamData> {
+  const storageData: Record<string, StoredTeamData> = {};
+
+  teams.forEach((team) => {
+    if (typeof team.teamId !== 'number' || typeof team.leagueId !== 'number') {
+      return;
+    }
+
+    storageData[team.id] = {
+      team: {
+        id: team.teamId,
+        name: team.name,
+      },
+      league: {
+        id: team.leagueId,
+        name: team.leagueName,
+      },
+      timeAdded: new Date(team.timeAdded).toISOString(),
+      matches: getTeamMatchesConsolidatedInfo(team),
+      players: getTeamPlayersConsolidatedInfo(team),
+    };
+  });
+
+  return storageData;
+}
+
+function isStorageQuotaError(error: unknown): boolean {
+  return (
+    error instanceof DOMException && (error.code === 22 || error.code === 1014 || error.name === 'QuotaExceededError')
+  );
+}
+
+function persistActiveTeam(teams: Map<string, Team>, selectedTeamId: string): void {
+  if (!selectedTeamId) {
+    window.localStorage.removeItem(ACTIVE_TEAM_STORAGE_KEY);
+    return;
+  }
+
+  const activeTeam = teams.get(selectedTeamId);
+  if (!activeTeam) {
+    return;
+  }
+
+  window.localStorage.setItem(
+    ACTIVE_TEAM_STORAGE_KEY,
+    JSON.stringify({
+      teamId: activeTeam.teamId,
+      leagueId: activeTeam.leagueId,
+    }),
+  );
+}
+
+function saveWithQuotaFallbacks(
+  storageData: Record<string, StoredTeamData>,
+  teams: Map<string, Team>,
+  selectedTeamId: string,
+): void {
+  let dataToSave = storageData;
+  const maxAttempts = 3;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      persistActiveTeam(teams, selectedTeamId);
+      return;
+    } catch (error) {
+      if (!isStorageQuotaError(error) || attempt === maxAttempts - 1) {
+        throw error;
+      }
+
+      if (attempt === 0) {
+        console.warn('Storage quota warning: Optimizing data by limiting matches/players per team');
+        dataToSave = optimizeStorageData(dataToSave, 100, 50);
+        continue;
+      }
+
+      console.warn('Storage quota warning: Cleaning up old teams and further reducing data');
+      dataToSave = optimizeStorageData(cleanupOldTeams(dataToSave), 50, 30);
+    }
+  }
+}
+
 export function saveTeamsToStorage(teams: Map<string, Team>, selectedTeamId: string): void {
   try {
     if (typeof window === 'undefined') {
       return;
     }
 
-    const storageData: Record<string, StoredTeamData> = {};
-
-    // Convert teams Map to storage format (minimal data only per architecture)
-    teams.forEach((team) => {
-      if (typeof team.teamId !== 'number' || typeof team.leagueId !== 'number') {
-        return;
-      }
-
-      storageData[team.id] = {
-        team: {
-          id: team.teamId,
-          name: team.name,
-        },
-        league: {
-          id: team.leagueId,
-          name: team.leagueName,
-        },
-        timeAdded: new Date(team.timeAdded).toISOString(),
-        matches: getTeamMatchesConsolidatedInfo(team), // Consolidated match info for display
-        players: getTeamPlayersConsolidatedInfo(team), // Consolidated player info for display
-      };
-    });
-
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
-
-    // Save active team separately
-    if (selectedTeamId) {
-      const activeTeam = teams.get(selectedTeamId);
-      if (activeTeam) {
-        window.localStorage.setItem(
-          ACTIVE_TEAM_STORAGE_KEY,
-          JSON.stringify({
-            teamId: activeTeam.teamId,
-            leagueId: activeTeam.leagueId,
-          }),
-        );
-      }
-    } else {
-      window.localStorage.removeItem(ACTIVE_TEAM_STORAGE_KEY);
-    }
+    const storageData = buildStorageData(teams);
+    saveWithQuotaFallbacks(storageData, teams, selectedTeamId);
   } catch (error) {
-    console.error('Failed to save teams to storage:', error);
+    console.error('Failed to save teams to storage after all optimization attempts:', error);
+    if (isStorageQuotaError(error)) {
+      console.error('localStorage quota exceeded. Consider clearing old data or reducing the number of teams.');
+    }
   }
 }

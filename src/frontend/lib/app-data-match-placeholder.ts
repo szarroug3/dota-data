@@ -1,10 +1,4 @@
-import type {
-  Hero,
-  HeroPick,
-  Match,
-  PlayerMatchData,
-  Team,
-} from './app-data-types';
+import type { Hero, HeroPick, Match, PlayerMatchData, Team } from './app-data-types';
 import type { StoredHero, StoredMatchData } from './storage-manager';
 
 // eslint-disable-next-line complexity
@@ -21,14 +15,8 @@ export function createPlaceholderMatch(
   const radiantName = side === 'radiant' ? team.name : metadata.opponentName;
   const direName = side === 'dire' ? team.name : metadata.opponentName;
 
-  const radiantPicks: HeroPick[] =
-    side === 'radiant'
-      ? heroObjects.map((hero, index) => ({ hero, order: index }))
-      : [];
-  const direPicks: HeroPick[] =
-    side === 'dire'
-      ? heroObjects.map((hero, index) => ({ hero, order: index }))
-      : [];
+  const radiantPicks: HeroPick[] = side === 'radiant' ? heroObjects.map((hero, index) => ({ hero, order: index })) : [];
+  const direPicks: HeroPick[] = side === 'dire' ? heroObjects.map((hero, index) => ({ hero, order: index })) : [];
 
   const teamPlayers = heroObjects.map((hero, index) => createPlaceholderPlayer(hero, index, matchId));
 
@@ -39,10 +27,7 @@ export function createPlaceholderMatch(
 
   const winningSide = determineWinningSide(side, metadata.result);
 
-  const pickOrderValue =
-    metadata.pickOrder === 'first' || metadata.pickOrder === 'second'
-      ? metadata.pickOrder
-      : null;
+  const pickOrderValue = metadata.pickOrder === 'first' || metadata.pickOrder === 'second' ? metadata.pickOrder : null;
   const pickOrder = {
     radiant: side === 'radiant' ? pickOrderValue : invertPickOrder(pickOrderValue),
     dire: side === 'dire' ? pickOrderValue : invertPickOrder(pickOrderValue),

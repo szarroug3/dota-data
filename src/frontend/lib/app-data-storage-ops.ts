@@ -240,6 +240,7 @@ function createPlaceholderPlayer(stored: StoredPlayerData): Player {
       winRate: stored.winRate,
     },
     recentMatchIds: [],
+    recentMatches: undefined,
     createdAt: now,
     updatedAt: now,
   };

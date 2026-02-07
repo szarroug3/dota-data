@@ -4,7 +4,8 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Hero, Player } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
+import type { Player } from '@/frontend/lib/app-data-types';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 
 import { PlayerListView, type PlayerListViewMode } from './PlayerListView';
@@ -67,9 +68,8 @@ interface PlayersListProps {
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  hiddenPlayerIds?: Set<number>;
   onScrollToPlayer?: (playerId: number) => void;
-  heroes: Map<number, Hero>;
+  playerListViewEntries: PlayerListViewEntry[];
   preferredSite: PreferredExternalSite;
 }
 
@@ -84,15 +84,15 @@ interface PlayerListLayoutButtonsProps {
 
 const PlayerListLayoutButtons: React.FC<PlayerListLayoutButtonsProps> = ({ viewMode, setViewMode }) => (
   <>
-    <div className="@[120px]:flex hidden flex-shrink-0">
+    <div className="@[120px]:flex hidden shrink-0">
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as PlayerListViewMode)}>
         <TabsList className="grid w-auto grid-cols-2">
           <TabsTrigger value="list" className="flex items-center gap-2 min-w-0">
-            <List className="w-4 h-4 flex-shrink-0" />
+            <List className="w-4 h-4 shrink-0" />
             <span className="@[420px]:block hidden">List</span>
           </TabsTrigger>
           <TabsTrigger value="card" className="flex items-center gap-2 min-w-0">
-            <SquareStack className="w-4 h-4 flex-shrink-0" />
+            <SquareStack className="w-4 h-4 shrink-0" />
             <span className="@[420px]:block hidden">Card</span>
           </TabsTrigger>
         </TabsList>
@@ -116,8 +116,7 @@ interface PlayersListContentProps {
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  hiddenPlayerIds?: Set<number>;
-  heroes: Map<number, Hero>;
+  playerListViewEntries: PlayerListViewEntry[];
   preferredSite: PreferredExternalSite;
 }
 
@@ -135,8 +134,7 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
   manualPlayerIds,
   onEditPlayer,
   onRemovePlayer,
-  hiddenPlayerIds,
-  heroes,
+  playerListViewEntries,
   preferredSite,
 }) => {
   return (
@@ -144,14 +142,14 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
       className="flex flex-col min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)] @container"
       style={{ containerType: 'inline-size' }}
     >
-      <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
+      <CardHeader className="flex items-center justify-between shrink-0 min-w-0">
         <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
           <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Player Statistics</h3>
           <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
             {players.length} players found
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {hiddenPlayersCount > 0 && onShowHiddenPlayers && (
             <div className="@[260px]:flex hidden">
               <Button variant="outline" size="sm" onClick={onShowHiddenPlayers} className="flex items-center gap-2">
@@ -181,7 +179,7 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
       <CardContent ref={cardContentRef} className="flex-1 min-h-0 px-0 py-0 overflow-y-auto @[135px]:block hidden">
         <div className="px-4 py-2">
           <PlayerListView
-            players={players}
+            playerEntries={playerListViewEntries}
             selectedPlayerId={selectedPlayerId}
             onSelectPlayer={onSelectPlayer}
             onRefreshPlayer={onRefreshPlayer}
@@ -189,8 +187,6 @@ const PlayersListContent: React.FC<PlayersListContentProps> = ({
             manualPlayerIds={manualPlayerIds}
             onEditPlayer={onEditPlayer}
             onRemovePlayer={onRemovePlayer}
-            hiddenPlayerIds={hiddenPlayerIds}
-            heroes={heroes}
             preferredSite={preferredSite}
           />
         </div>
@@ -214,8 +210,7 @@ export const PlayersList = forwardRef<PlayersListRef, PlayersListProps>(
       manualPlayerIds,
       onEditPlayer,
       onRemovePlayer,
-      hiddenPlayerIds,
-      heroes,
+      playerListViewEntries,
       preferredSite,
     },
     ref,
@@ -242,8 +237,7 @@ export const PlayersList = forwardRef<PlayersListRef, PlayersListProps>(
         manualPlayerIds={manualPlayerIds}
         onEditPlayer={onEditPlayer}
         onRemovePlayer={onRemovePlayer}
-        hiddenPlayerIds={hiddenPlayerIds}
-        heroes={heroes}
+        playerListViewEntries={playerListViewEntries}
         preferredSite={preferredSite}
       />
     );

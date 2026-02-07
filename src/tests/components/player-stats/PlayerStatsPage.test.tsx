@@ -8,32 +8,94 @@ import { renderWithProviders, screen } from '@/tests/utils/test-utils';
 // leaving per-player loading to individual cards.
 
 // Mock AppData context instead of constants context
+const mockPlayerId = 123456789;
+const mockPlayer = {
+  accountId: mockPlayerId,
+  profile: {
+    name: 'Test Player',
+    personaname: 'Test Player',
+    rank_tier: 0,
+  },
+  heroStats: [],
+  overallStats: {
+    wins: 0,
+    losses: 0,
+    totalGames: 0,
+    winRate: 0,
+  },
+  recentMatchIds: [],
+  createdAt: 0,
+  updatedAt: 0,
+};
+
+const mockTeamId = '123-456';
+const mockStoredPlayer = {
+  accountId: mockPlayerId,
+  name: 'Test Player',
+  rank: 'Unranked',
+  rank_tier: 0,
+  games: 0,
+  winRate: 0,
+  topHeroes: [],
+  avatar: '',
+  isManual: true,
+  isHidden: false,
+};
+
+const mockTeam = {
+  id: mockTeamId,
+  teamId: 123,
+  leagueId: 456,
+  name: 'Test Team',
+  leagueName: 'Test League',
+  timeAdded: 0,
+  matches: new Map(),
+  players: new Map([[mockPlayerId, mockStoredPlayer]]),
+  createdAt: 0,
+  updatedAt: 0,
+  isLoading: false,
+  highPerformingHeroes: new Set<string>(),
+};
+
+const mockAppData = {
+  _teams: new Map([[mockTeamId, mockTeam]]),
+  _players: new Map([[mockPlayerId, mockPlayer]]),
+  teams: new Map([[mockTeamId, mockTeam]]),
+  matches: new Map(),
+  players: new Map([[mockPlayerId, mockPlayer]]),
+  heroes: new Map(),
+  items: new Map(),
+  leagues: new Map(),
+  state: {
+    selectedTeamId: mockTeamId,
+    selectedTeamIdParsed: { teamId: 123, leagueId: 456 },
+    selectedMatchId: null,
+    selectedPlayerId: null,
+    isLoading: false,
+    error: null,
+  },
+  getTeamPlayersViewData: jest.fn(() => ({
+    teamPlayerIds: new Set([mockPlayerId]),
+    teamPlayers: [mockPlayer],
+    sortedPlayers: [mockPlayer],
+    manualPlayerIds: new Set([mockPlayerId]),
+  })),
+  getPlayerListViewEntries: jest.fn((players: (typeof mockPlayer)[]) =>
+    players.map((player) => ({ player, topHeroes: [], rank: null })),
+  ),
+  validatePlayerIdInput: jest.fn(() => ({ isValid: false, error: 'Player ID is required' })),
+  getAddManualPlayerDuplicateError: jest.fn(() => undefined),
+  getEditManualPlayerDuplicateError: jest.fn(() => undefined),
+  loadPlayer: jest.fn(),
+  refreshPlayer: jest.fn(),
+  addManualPlayerToTeam: jest.fn(),
+  removeManualPlayerFromTeam: jest.fn(),
+  editManualPlayerToTeam: jest.fn(),
+};
+
 jest.mock('@/contexts/app-data-context', () => ({
-  useAppData: () => ({
-    teams: new Map(),
-    matches: new Map(),
-    players: new Map(),
-    heroes: new Map(),
-    items: new Map(),
-    leagues: new Map(),
-    selectedTeamId: null,
-    setSelectedTeamId: jest.fn(),
-    addTeam: jest.fn(),
-    updateTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    addMatch: jest.fn(),
-    updateMatch: jest.fn(),
-    removeMatch: jest.fn(),
-    addPlayer: jest.fn(),
-    updatePlayer: jest.fn(),
-    removePlayer: jest.fn(),
-    loadTeamData: jest.fn(),
-    loadMatchData: jest.fn(),
-    loadPlayerData: jest.fn(),
-    loadHeroesData: jest.fn(),
-    loadItemsData: jest.fn(),
-    loadLeaguesData: jest.fn(),
-  }),
+  useAppData: () => mockAppData,
+  AppDataProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock ResizablePlayerLayout to render a deterministic marker
@@ -42,8 +104,8 @@ jest.mock('@/frontend/players/components/stateless/ResizablePlayerLayout', () =>
     <div
       data-testid="player-layout"
       data-view-mode={props.viewMode}
-      data-player-count={props.players?.length ?? 0}
-      data-player-ids={(props.players || []).map((p: any) => p.profile.profile.account_id).join(',')}
+      data-player-count={props.visiblePlayers?.length ?? 0}
+      data-player-ids={(props.visiblePlayers || []).map((p: any) => p.accountId).join(',')}
     >
       layout
     </div>

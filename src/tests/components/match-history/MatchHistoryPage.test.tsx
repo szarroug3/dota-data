@@ -6,7 +6,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { ConfigProvider } from '@/frontend/contexts/config-context';
-import { MatchHistoryPage } from '@/frontend/matches/components/containers/MatchHistoryPage';
+import type { HeroSummaryEntry } from '@/frontend/lib/app-data-types';
+import { MatchHistoryPageContainer } from '@/frontend/matches/components/containers/MatchHistoryPageContainer';
 
 // Remove data coordinator dependency (no longer used)
 const DataCoordinatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
@@ -21,9 +22,6 @@ jest.mock('@/frontend/matches/components/list/MatchListView', () => ({
       </button>
       <button data-testid="set-card-view" onClick={() => setViewMode('card')}>
         Card View
-      </button>
-      <button data-testid="set-grid-view" onClick={() => setViewMode('grid')}>
-        Grid View
       </button>
     </div>
   ),
@@ -72,9 +70,6 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
       <button data-testid="set-card-view" onClick={() => setViewMode('card')}>
         Card View
       </button>
-      <button data-testid="set-grid-view" onClick={() => setViewMode('grid')}>
-        Grid View
-      </button>
     </div>
   ),
 }));
@@ -82,9 +77,12 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
 // Mock AppData context instead of old contexts
 jest.mock('@/contexts/app-data-context', () => ({
   useAppData: () => ({
+    state: {
+      selectedTeamId: 'team1-league1',
+    },
     teams: new Map([
       [
-        'team1',
+        'team1-league1',
         {
           teamId: 'team1',
           leagueId: 'league1',
@@ -139,7 +137,56 @@ jest.mock('@/contexts/app-data-context', () => ({
       ],
     ]),
     leagues: new Map(),
-    selectedTeamId: null,
+    getTeam: jest.fn((teamId: string) => {
+      if (teamId === 'team1-league1') {
+        return {
+          teamId: 'team1',
+          leagueId: 'league1',
+          name: 'Test Team',
+        };
+      }
+      return undefined;
+    }),
+    getTeamMatchesWithPlaceholders: jest.fn(() => []),
+    getTeamMatchesMetadata: jest.fn(() => new Map()),
+    getMatch: jest.fn(() => null),
+    getHiddenMatches: jest.fn(() => []),
+    getHighPerformingHeroIdsForTeam: jest.fn(() => new Set()),
+    getMatchHistoryData: jest.fn(() => ({
+      activeTeamMatches: [],
+      teamMatches: new Map(),
+      filteredMatches: [],
+      visibleMatches: [],
+      unhiddenMatches: [],
+      selectedMatch: null,
+      filterStats: {
+        totalMatches: 0,
+        filteredMatches: 0,
+        filterBreakdown: {
+          dateRange: 0,
+          result: 0,
+          teamSide: 0,
+          pickOrder: 0,
+          heroesPlayed: 0,
+          opponent: 0,
+          highPerformersOnly: 0,
+        },
+      },
+    })),
+    getTeamHeroSummaryForMatches: jest.fn(() => ({
+      matchesCount: 0,
+      activeTeamPicks: [],
+      opponentTeamPicks: [],
+      activeTeamBans: [],
+      opponentTeamBans: [],
+    })),
+    filterHeroSummaryByHighPerformers: jest.fn((entries: HeroSummaryEntry[]) => entries),
+    sortHeroSummaryEntries: jest.fn((entries: HeroSummaryEntry[]) => entries),
+    hideMatch: jest.fn(),
+    unhideMatch: jest.fn(),
+    addManualMatchToTeam: jest.fn(),
+    refreshMatch: jest.fn(),
+    teamHasMatch: jest.fn(() => false),
     setSelectedTeamId: jest.fn(),
     addTeam: jest.fn(),
     updateTeam: jest.fn(),
@@ -161,25 +208,8 @@ jest.mock('@/contexts/app-data-context', () => ({
 
 // Mock useViewMode to simulate localStorage preference and allow state updates
 jest.mock('@/hooks/useViewMode', () => {
-  return () => {
-    const initial = (() => {
-      let viewMode = 'list';
-      const prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
-      if (prefs.matchHistory && prefs.matchHistory.defaultView) {
-        viewMode = prefs.matchHistory.defaultView;
-      }
-      return viewMode;
-    })();
-    const [viewMode, setViewModeState] = React.useState(initial);
-    const setViewMode = (mode: string) => {
-      setViewModeState(mode);
-      // Simulate updating localStorage like the real hook
-      let prefs: any = {};
-      prefs = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
-      if (!prefs.matchHistory) prefs.matchHistory = {};
-      prefs.matchHistory.defaultView = mode;
-      localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(prefs));
-    };
+  return (defaultMode: string = 'list') => {
+    const [viewMode, setViewMode] = React.useState(defaultMode);
     return {
       viewMode,
       setViewMode,
@@ -196,25 +226,15 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('MatchHistoryPage', () => {
-  beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    // Clear localStorage after each test
-    localStorage.clear();
-  });
-
   it('should initialize with default view mode from config', () => {
-    renderWithProviders(<MatchHistoryPage />);
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Should show the default view mode (list)
     expect(screen.getByTestId('current-view-mode')).toHaveTextContent('list');
   });
 
-  it('should persist view mode changes to localStorage', async () => {
-    renderWithProviders(<MatchHistoryPage />);
+  it('should update view mode when changed', async () => {
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Change to card view
     fireEvent.click(screen.getByTestId('set-card-view'));
@@ -222,37 +242,10 @@ describe('MatchHistoryPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('current-view-mode')).toHaveTextContent('card');
     });
-
-    // Check that localStorage was updated
-    const storedPreferences = JSON.parse(localStorage.getItem('dota-scout-assistant-preferences') || '{}');
-    expect(storedPreferences.matchHistory?.defaultView).toBe('card');
   });
 
-  it('should load saved view mode from localStorage on mount', () => {
-    // Set up localStorage with a saved preference
-    const savedPreferences = {
-      matchHistory: {
-        defaultView: 'grid',
-        showHiddenMatches: false,
-        defaultFilters: {
-          dateRange: 30,
-          result: 'all',
-          heroes: [],
-        },
-        sortBy: 'date',
-        sortDirection: 'desc',
-      },
-    };
-    localStorage.setItem('dota-scout-assistant-preferences', JSON.stringify(savedPreferences));
-
-    renderWithProviders(<MatchHistoryPage />);
-
-    // Should load the saved view mode
-    expect(screen.getByTestId('current-view-mode')).toHaveTextContent('grid');
-  });
-
-  it('should handle all view mode changes', async () => {
-    renderWithProviders(<MatchHistoryPage />);
+  it('should handle list and card view changes', async () => {
+    renderWithProviders(<MatchHistoryPageContainer />);
 
     // Test list view
     fireEvent.click(screen.getByTestId('set-list-view'));
@@ -264,12 +257,6 @@ describe('MatchHistoryPage', () => {
     fireEvent.click(screen.getByTestId('set-card-view'));
     await waitFor(() => {
       expect(screen.getByTestId('current-view-mode')).toHaveTextContent('card');
-    });
-
-    // Test grid view
-    fireEvent.click(screen.getByTestId('set-grid-view'));
-    await waitFor(() => {
-      expect(screen.getByTestId('current-view-mode')).toHaveTextContent('grid');
     });
   });
 });

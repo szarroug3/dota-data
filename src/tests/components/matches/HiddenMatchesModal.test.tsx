@@ -1,6 +1,17 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { AppDataProvider } from '@/contexts/app-data-context';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
+
+jest.mock('@/contexts/app-data-context', () => ({
+  AppDataProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAppData: () => ({
+    getMatchResultLabel: () => 'Victory',
+    getMatchPickOrderLabel: () => null,
+    getMatchHeroesForTeam: () => [],
+    isHighPerformingHero: () => false,
+  }),
+}));
 
 jest.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: any) => <span>{children}</span>,
@@ -26,16 +37,38 @@ describe('HiddenMatchesModal', () => {
   it('renders list of hidden matches and calls unhide', () => {
     const onUnhide = jest.fn();
     const onClose = jest.fn();
-    render(<HiddenMatchesModal hiddenMatches={[mockMatch]} onUnhide={onUnhide} onClose={onClose} teamMatches={{}} />);
+    render(
+      <AppDataProvider>
+        <HiddenMatchesModal
+          hiddenMatches={[mockMatch]}
+          onUnhide={onUnhide}
+          onClose={onClose}
+          teamMatches={new Map()}
+          selectedTeamId="1-1"
+        />
+      </AppDataProvider>,
+    );
 
     expect(screen.getByText('Hidden Matches')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Unhide'));
     expect(onUnhide).toHaveBeenCalledWith(1);
   });
 
-  it('closes when there are no hidden matches', () => {
+  it('closes when there are no hidden matches', async () => {
     const onClose = jest.fn();
-    render(<HiddenMatchesModal hiddenMatches={[]} onUnhide={() => {}} onClose={onClose} teamMatches={{}} />);
-    expect(onClose).toHaveBeenCalled();
+    render(
+      <AppDataProvider>
+        <HiddenMatchesModal
+          hiddenMatches={[]}
+          onUnhide={() => {}}
+          onClose={onClose}
+          teamMatches={new Map()}
+          selectedTeamId="1-1"
+        />
+      </AppDataProvider>,
+    );
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 });

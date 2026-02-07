@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
-import type { Match } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { ResizableMatchLayout } from '@/frontend/matches/components/containers/ResizableMatchLayout';
 import { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
@@ -21,9 +21,9 @@ jest.mock('@/components/ui/resizable', () => ({
     maxSize,
   }: {
     children: React.ReactNode;
-    defaultSize?: number;
-    minSize?: number;
-    maxSize?: number;
+    defaultSize?: number | string;
+    minSize?: number | string;
+    maxSize?: number | string;
   }) => (
     <div
       data-testid="resizable-panel"
@@ -46,15 +46,12 @@ jest.mock('@/frontend/matches/components/filters/MatchFilters', () => ({
   MatchFilters: ({
     filters,
     onFiltersChange,
-    matches,
   }: {
     filters: MatchFiltersType;
     onFiltersChange: (filters: MatchFiltersType) => void;
-    matches: Match[];
   }) => (
     <div data-testid="match-filters">
       <div>Filters: {JSON.stringify(filters)}</div>
-      <div>Matches: {matches.length}</div>
       <button onClick={() => onFiltersChange({ ...filters, result: 'wins' })}>Change Filter</button>
     </div>
   ),
@@ -184,8 +181,7 @@ const defaultProps = {
     highPerformersOnly: false,
   },
   onFiltersChange: jest.fn(),
-  activeTeamMatches: [mockMatch],
-  teamMatches: {},
+  teamMatches: new Map<number, TeamMatchParticipation>(),
   visibleMatches: [mockMatch],
   filteredMatches: [mockMatch],
   unhiddenMatches: [mockMatch],
@@ -199,6 +195,7 @@ const defaultProps = {
   onShowHiddenMatches: jest.fn(),
   hiddenMatchIds: new Set<number>(),
   selectedMatch: null,
+  selectedTeamId: 'team-1',
   matchDetailsViewMode: 'summary' as MatchDetailsPanelMode,
   setMatchDetailsViewMode: jest.fn(),
 };
@@ -236,10 +233,10 @@ describe('ResizableMatchLayout', () => {
     expect(panels[1]).toBeInTheDocument();
 
     // Check panel constraints - both panels should be fully flexible
-    expect(panels[0]).toHaveAttribute('data-min-size', '0');
-    expect(panels[0]).toHaveAttribute('data-max-size', '100');
-    expect(panels[1]).toHaveAttribute('data-min-size', '0');
-    expect(panels[1]).toHaveAttribute('data-max-size', '100');
+    expect(panels[0]).toHaveAttribute('data-min-size', '0%');
+    expect(panels[0]).toHaveAttribute('data-max-size', '100%');
+    expect(panels[1]).toHaveAttribute('data-min-size', '0%');
+    expect(panels[1]).toHaveAttribute('data-max-size', '100%');
   });
 
   it('renders match filters at the top', () => {
@@ -248,7 +245,6 @@ describe('ResizableMatchLayout', () => {
     const filters = screen.getByTestId('match-filters');
     expect(filters).toBeInTheDocument();
     expect(filters.textContent).toContain('Filters:');
-    expect(filters.textContent).toContain('Matches: 1');
   });
 
   it('renders matches list in left panel', () => {
@@ -342,6 +338,6 @@ describe('ResizableMatchLayout', () => {
 
     // Check that filters are at the top
     const filtersContainer = screen.getByTestId('match-filters').parentElement;
-    expect(filtersContainer).toHaveClass('flex-shrink-0');
+    expect(filtersContainer).toHaveClass('shrink-0');
   });
 });

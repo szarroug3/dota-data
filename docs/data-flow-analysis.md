@@ -60,7 +60,7 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 - Constants data (heroes, items, leagues) loads in parallel
 - Stored team, match, and player metadata appear immediately after hydration from localStorage
 - Active team is marked in app data context using stored selection
-- Active team refresh runs in the background; once complete, match and player data are replaced with fresh API responses
+- Active team refresh runs (and is awaited); once complete, match and player data are replaced with fresh API responses and full player payloads are available (e.g. Player Stats page does not require clicking a player to load data)
 - Manual matches/players trigger background fetches for their full payloads
 - LocalStorage is updated only if the selected team changes during hydration
 

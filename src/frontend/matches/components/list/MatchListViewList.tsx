@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
@@ -33,8 +33,8 @@ interface MatchListViewProps {
   onRefreshMatch: (matchId: number) => void;
   className?: string;
   teamMatches: Map<number, TeamMatchMetadata>;
-  hiddenMatchIds: Set<number>;
-  allMatches: Match[];
+  hiddenMatchIds?: Set<number>;
+  allMatches?: Match[];
   onScrollToMatch?: (matchId: number) => void;
   highPerformingHeroes?: Set<string>;
 }
@@ -87,14 +87,6 @@ function MatchInfo({
   );
 }
 
-const didActiveTeamWin = (teamMatch: TeamMatchMetadata | undefined): boolean => teamMatch?.result === 'won';
-
-const getPickOrder = (match: Match, teamMatch: TeamMatchMetadata | undefined): string | null => {
-  if (!match.pickOrder || !teamMatch) return null;
-  const pickOrder = match.pickOrder[teamMatch.side];
-  return pickOrder === 'first' ? 'First Pick' : pickOrder === 'second' ? 'Second Pick' : null;
-};
-
 const MatchBadgesContent: React.FC<{
   hasError: boolean;
   isLoading: boolean;
@@ -112,14 +104,11 @@ const MatchBadgesContent: React.FC<{
   return <>{badges}</>;
 };
 
-const MatchBadges: React.FC<{ match: Match; teamMatches: Map<number, TeamMatchMetadata> }> = ({
-  match,
-  teamMatches,
-}) => {
-  const teamMatch = teamMatches.get(match.id);
-  const teamWon = didActiveTeamWin(teamMatch);
-  const pickOrder = getPickOrder(match, teamMatch);
-  const teamSide = teamMatch?.side;
+const MatchBadges: React.FC<{ match: Match }> = ({ match }) => {
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId ?? '';
+  const { teamWon, teamSide } = appData.getMatchResultBadgeData(match.id, selectedTeamId);
+  const pickOrder = appData.getMatchPickOrderLabel(match.id, selectedTeamId);
   const hasError = Boolean(match.error);
   const isLoading = Boolean(match.isLoading);
   return (
@@ -137,7 +126,6 @@ const MatchBadges: React.FC<{ match: Match; teamMatches: Map<number, TeamMatchMe
 
 function MatchCardFooterSection({
   match,
-  teamMatches,
   preferredSite,
   isManualMatch,
   onRefreshMatch,
@@ -146,7 +134,6 @@ function MatchCardFooterSection({
   onHideMatch,
 }: {
   match: Match;
-  teamMatches: Map<number, TeamMatchMetadata>;
   preferredSite: PreferredExternalSite;
   isManualMatch: boolean;
   onRefreshMatch: (id: number) => void;
@@ -156,7 +143,7 @@ function MatchCardFooterSection({
 }) {
   return (
     <div className="flex items-center justify-between gap-2 min-w-0">
-      <MatchBadges match={match} teamMatches={teamMatches} />
+      <MatchBadges match={match} />
       <div
         className="flex items-center gap-0.5 opacity-0 invisible @[200px]:opacity-100 @[200px]:visible"
         style={{ marginRight: '-0.2rem' }}
@@ -187,16 +174,7 @@ interface MatchCardProps {
   highPerformingHeroes: Set<string>;
 }
 
-const getHeroesFromDraft = (match: Match, teamSide: 'radiant' | 'dire'): Hero[] => {
-  const draftPicks = teamSide === 'radiant' ? match.draft.radiantPicks : match.draft.direPicks;
-  const heroes = draftPicks?.map((pick) => pick.hero).slice(0, 5) || [];
-  return heroes;
-};
-
-function useMatchCardState(
-  match: Match,
-  teamMatches: Map<number, TeamMatchMetadata>,
-): {
+function useMatchCardState(match: Match): {
   config: ReturnType<typeof useConfigContext>['config'];
   appData: ReturnType<typeof useAppData>;
   selectedTeamId: string;
@@ -208,45 +186,20 @@ function useMatchCardState(
   setError: (s: string | undefined) => void;
   hasError: boolean;
   isManualMatch: boolean;
-  currentTeamSide: 'radiant' | 'dire';
+  currentTeamSide: '' | 'radiant' | 'dire';
   matchHeroes: Hero[];
 } {
   const { config } = useConfigContext();
   const appData = useAppData();
-  const selectedTeamId = appData.state.selectedTeamId;
+  const selectedTeamId = appData.state.selectedTeamId ?? '';
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const hasError = Boolean(match.error);
 
-  const isManualMatch = useMemo(() => {
-    const selectedTeam = appData.getTeam(selectedTeamId);
-    if (!selectedTeam) {
-      throw new Error(`Selected team ${selectedTeamId} not found`);
-    }
-    const matchMetadata = selectedTeam.matches.get(match.id);
-    return matchMetadata?.isManual ?? false;
-  }, [match.id, appData, selectedTeamId]);
-
-  const currentTeamSide = useMemo(() => {
-    if (!isManualMatch) return 'radiant' as const;
-    const selectedTeam = appData.getTeam(selectedTeamId);
-    if (!selectedTeam) {
-      throw new Error(`Selected team ${selectedTeamId} not found`);
-    }
-    const matchMetadata = selectedTeam.matches.get(match.id);
-    return matchMetadata?.side || 'radiant';
-  }, [isManualMatch, match.id, appData, selectedTeamId]);
-
-  const matchHeroes = useMemo(() => {
-    const teamMatch = teamMatches.get(match.id);
-    if (!teamMatch?.side) return [];
-    const teamPlayers = match.players[teamMatch.side] || [];
-    let heroes = teamPlayers.map((player) => player.hero).filter((hero) => hero);
-    if (heroes.length === 0 && match.draft) heroes = getHeroesFromDraft(match, teamMatch.side).filter((hero) => hero);
-    if (heroes.length === 0) return [];
-    return heroes as Hero[];
-  }, [match, teamMatches]);
+  const { isManual: isManualMatch, side } = appData.getMatchManualMetadata(match.id, selectedTeamId);
+  const currentTeamSide = side ?? '';
+  const matchHeroes = appData.getMatchHeroesForTeam(match.id, selectedTeamId);
 
   return {
     config,
@@ -287,6 +240,9 @@ function useMatchCardHandlers(
     deps.setIsSubmitting(true);
     deps.setError(undefined);
     try {
+      if (deps.currentTeamSide === '') {
+        throw new Error('Team side is missing for this match');
+      }
       // Pass the current team side (user's selected side for this match)
       await deps.appData.editManualMatchToTeam(match.id, newMatchId, deps.selectedTeamId, deps.currentTeamSide);
       onScrollToMatch?.(newMatchId);
@@ -311,7 +267,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   onScrollToMatch,
   highPerformingHeroes,
 }) => {
-  const state = useMatchCardState(match, teamMatches);
+  const state = useMatchCardState(match);
   const { handleClick, handleKeyDown, handleEditManualMatch } = useMatchCardHandlers(
     match,
     state,
@@ -339,7 +295,6 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           </div>
           <MatchCardFooterSection
             match={match}
-            teamMatches={teamMatches}
             preferredSite={state.config.preferredExternalSite}
             isManualMatch={state.isManualMatch}
             onRefreshMatch={onRefreshMatch}

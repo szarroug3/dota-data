@@ -72,6 +72,5 @@ export function calculateHighPerformingHeroes(
       highPerformingHeroes.add(heroId);
     }
   });
-
   return highPerformingHeroes;
 }

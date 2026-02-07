@@ -1,27 +1,19 @@
 'use client';
 
-import type { Match, TeamMatchParticipation, TeamHeroSummary } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
 import { validateMatchId } from '@/utils/validation';
 
 export function HeroSummarySection({
-  summary,
+  visibleMatches,
   highPerformingHeroes,
-  showHighPerformersOnly,
 }: {
-  summary: TeamHeroSummary;
-  highPerformingHeroes?: Set<string>;
-  showHighPerformersOnly?: boolean;
+  visibleMatches: Match[];
+  highPerformingHeroes: Set<string>;
 }) {
-  return (
-    <HeroSummaryTable
-      summary={summary}
-      highPerformingHeroes={highPerformingHeroes}
-      showHighPerformersOnly={showHighPerformersOnly}
-    />
-  );
+  return <HeroSummaryTable matches={visibleMatches} highPerformingHeroes={highPerformingHeroes} />;
 }
 
 export function HiddenMatchesModalSection({
@@ -30,12 +22,14 @@ export function HiddenMatchesModalSection({
   handleUnhideMatch,
   setShowHiddenModal,
   teamMatches,
+  selectedTeamId,
 }: {
   showHiddenModal: boolean;
   hiddenMatches: Match[];
   handleUnhideMatch: (id: number) => void;
   setShowHiddenModal: (show: boolean) => void;
   teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
   if (!showHiddenModal) return null;
   return (
@@ -44,6 +38,7 @@ export function HiddenMatchesModalSection({
       onUnhide={handleUnhideMatch}
       onClose={() => setShowHiddenModal(false)}
       teamMatches={teamMatches}
+      selectedTeamId={selectedTeamId}
     />
   );
 }

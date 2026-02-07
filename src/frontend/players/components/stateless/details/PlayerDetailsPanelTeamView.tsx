@@ -1,19 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { Hero, Match, Player, Team, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
+import { useAppData } from '@/contexts/app-data-context';
+import type { TeamRoleStats, TeamPlayerDetailStats } from '@/frontend/lib/app-data-statistics-ops';
+import type { Player } from '@/frontend/lib/app-data-types';
+import type { HeroStats } from '@/frontend/lib/player-statistics-calculator';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import { processPlayerDetailedStats, type TeamHeroStats } from '@/utils/player-statistics';
 
 interface PlayerDetailsPanelTeamProps {
   player: Player;
-  heroes: Map<number, Hero>;
-  matchesArray: Match[];
-  selectedTeam: Team;
 }
 
+// PlayerTeamStats type matches TeamPlayerStats from player-statistics-calculator
 type PlayerTeamStats = {
   totalGames: number;
   totalWins: number;
@@ -22,90 +22,6 @@ type PlayerTeamStats = {
   averageGPM: number;
   averageXPM: number;
 };
-
-function getPlayerParticipatedMatches(
-  matchesArray: Match[],
-  teamMatches: Record<number, TeamMatchMetadata>,
-  accountId: number,
-) {
-  return matchesArray.filter((match) => {
-    if (!match.players || !match.players.radiant || !match.players.dire) return false;
-    const teamMatch = teamMatches[match.id];
-    if (!teamMatch || !teamMatch.side) return false;
-    const teamPlayers = teamMatch.side === 'radiant' ? match.players.radiant : match.players.dire;
-    return teamPlayers.some((p: { accountId: number }) => p.accountId === accountId);
-  });
-}
-
-function getPlayerSide(match: Match, accountId: number): 'radiant' | 'dire' | null {
-  if (!match.players) return null;
-  const isRadiant = match.players.radiant?.some((p: { accountId: number }) => p.accountId === accountId);
-  return isRadiant ? 'radiant' : 'dire';
-}
-
-function findPlayerInMatch(match: Match, accountId: number) {
-  const side = getPlayerSide(match, accountId);
-  if (!side || !match.players) return null;
-  const teamPlayers = side === 'radiant' ? match.players.radiant : match.players.dire;
-  return teamPlayers.find((p: { accountId: number }) => p.accountId === accountId) || null;
-}
-
-function safeStat(value: number | undefined): number {
-  return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
-}
-
-function calculateKda(kills: number, deaths: number, assists: number): number {
-  return deaths > 0 ? (kills + assists) / deaths : kills + assists;
-}
-
-function accumulateStats(
-  total: { kda: number; gpm: number; xpm: number; count: number },
-  match: Match,
-  accountId: number,
-) {
-  const me = findPlayerInMatch(match, accountId);
-  if (!me) return total;
-  const kills = safeStat(me.stats?.kills);
-  const deaths = safeStat(me.stats?.deaths);
-  const assists = safeStat(me.stats?.assists);
-  const gpm = safeStat(me.stats?.gpm);
-  const xpm = safeStat(me.stats?.xpm);
-  return {
-    kda: total.kda + calculateKda(kills, deaths, assists),
-    gpm: total.gpm + gpm,
-    xpm: total.xpm + xpm,
-    count: total.count + 1,
-  };
-}
-
-function computeAverages(
-  matches: Match[],
-  accountId: number,
-): { averageKDA: number; averageGPM: number; averageXPM: number } {
-  const totals = matches.reduce((acc, m) => accumulateStats(acc, m, accountId), { kda: 0, gpm: 0, xpm: 0, count: 0 });
-  const divisor = totals.count > 0 ? totals.count : 1;
-  return {
-    averageKDA: totals.kda / divisor,
-    averageGPM: totals.gpm / divisor,
-    averageXPM: totals.xpm / divisor,
-  };
-}
-
-function computePlayerTeamStats(
-  selectedTeam: Team | undefined | null,
-  playerParticipatedMatches: Match[],
-  accountId: number,
-): PlayerTeamStats | null {
-  if (!selectedTeam || playerParticipatedMatches.length === 0) return null;
-  const totalGames = playerParticipatedMatches.length;
-  const totalWins = playerParticipatedMatches.filter((match) => {
-    const side = getPlayerSide(match, accountId);
-    return side !== null && side === match.result;
-  }).length;
-  const { averageKDA, averageGPM, averageXPM } = computeAverages(playerParticipatedMatches, accountId);
-  const winRate = totalGames > 0 ? (totalWins / totalGames) * 100 : 0;
-  return { totalGames, totalWins, winRate, averageKDA, averageGPM, averageXPM };
-}
 
 function getWinRateBarColor(winRate: number): string {
   if (winRate >= 80) return 'bg-primary';
@@ -136,22 +52,18 @@ function PlayerOverviewMetrics({ stats }: { stats: PlayerTeamStats }) {
   );
 }
 
-function TeamRolesSection({
-  teamStatsLocal,
-}: {
-  teamStatsLocal: { teamRoles: Array<{ role: string; games: number; winRate: number }> } | null;
-}) {
-  if (!teamStatsLocal || teamStatsLocal.teamRoles.length === 0) return null;
+function TeamRolesSection({ teamRoles }: { teamRoles: TeamRoleStats[] }) {
+  if (teamRoles.length === 0) return null;
   return (
     <div className="space-y-4 min-w-0 @container">
       <h3 className="@[35px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">
         Team Roles
       </h3>
       <ul role="list" className="space-y-2">
-        {teamStatsLocal.teamRoles.slice(0, 5).map((role, index) => (
+        {teamRoles.slice(0, 5).map((role, index) => (
           <li key={index} className="text-sm text-foreground dark:text-foreground flex items-center min-w-0">
             <span className="@[35px]:inline hidden font-semibold truncate flex-1 min-w-0">{role.role}</span>
-            <span className="@[165px]:inline hidden ml-2 text-muted-foreground dark:text-muted-foreground flex-shrink-0">
+            <span className="@[165px]:inline hidden ml-2 text-muted-foreground dark:text-muted-foreground shrink-0">
               <span className="@[280px]:inline hidden">
                 {role.games} Games{' '}
                 <span className="mx-1" aria-hidden="true">
@@ -174,7 +86,7 @@ function TeamRolesSection({
   );
 }
 
-function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
+function TeamHeroesSection({ heroesData }: { heroesData: HeroStats[] }) {
   if (!heroesData || heroesData.length === 0) return null;
   return (
     <Card className="@container">
@@ -194,7 +106,7 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {heroesData.map((hero: TeamHeroStats, index: number) => {
+            {heroesData.map((hero: HeroStats, index: number) => {
               const roleCounts = new Map<string, number>();
               (hero.roles || []).forEach((r) => {
                 const current = roleCounts.get(r) || 0;
@@ -251,53 +163,88 @@ function TeamHeroesSection({ heroesData }: { heroesData: TeamHeroStats[] }) {
   );
 }
 
-export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = React.memo(
-  ({ player, heroes, matchesArray, selectedTeam }) => {
-    // Convert StoredMatchData to TeamMatchMetadata for UI display
-    const teamMatches: Record<number, TeamMatchMetadata> = {};
-    selectedTeam.matches.forEach((matchData, matchId) => {
-      teamMatches[matchId] = {
-        side: matchData.side,
-        result: matchData.result,
-        opponentName: matchData.opponentName,
-        isManual: matchData.isManual,
-        isHidden: matchData.isHidden,
-      };
+export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = React.memo(({ player }) => {
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  console.log('[PlayerDetailsPanelTeam] Component rendering:', {
+    accountId: player.accountId,
+    selectedTeamId,
+    playerRecentMatchIdsCount: player.recentMatchIds.length,
+  });
+
+  // Get team-specific player stats from AppData
+  const playerTeamStats = useMemo(() => {
+    const stats = appData.getTeamPlayerStats(player.accountId, selectedTeamId);
+    console.log('[PlayerDetailsPanelTeam] getTeamPlayerStats result:', {
+      accountId: player.accountId,
+      selectedTeamId,
+      stats,
+      totalGames: stats.totalGames,
+      totalWins: stats.totalWins,
+      winRate: stats.winRate,
     });
-    const accountId = player.accountId;
-    const playerParticipatedMatches = getPlayerParticipatedMatches(matchesArray, teamMatches, accountId);
-    const playerTeamStats = computePlayerTeamStats(selectedTeam, playerParticipatedMatches, accountId);
+    // Return null if no games (matches AppData behavior)
+    const result = stats.totalGames > 0 ? stats : null;
+    console.log('[PlayerDetailsPanelTeam] playerTeamStats (final):', {
+      isNull: result === null,
+      stats: result,
+    });
+    return result;
+    // Dependencies:
+    // - appData: access to methods
+    // - player.accountId: re-run when player changes
+    // - selectedTeamId: re-run when selected team changes
+    // - appData.matches: re-run when matches change (triggered by updateMatchesRef)
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, player.accountId, selectedTeamId, appData.matches, appData.teams]);
 
-    // Convert heroes Map to Record for processPlayerDetailedStats
-    const heroesData = Object.fromEntries(Array.from(heroes.entries()).map(([id, hero]) => [id.toString(), hero]));
+  const teamDetailStats: TeamPlayerDetailStats = useMemo(() => {
+    const stats = appData.getTeamPlayerDetailStats(player.accountId, selectedTeamId);
+    console.log('[PlayerDetailsPanelTeam] getTeamPlayerDetailStats result:', {
+      accountId: player.accountId,
+      selectedTeamId,
+      teamRolesCount: stats.teamRoles.length,
+      teamHeroesCount: stats.teamHeroes.length,
+      teamRoles: stats.teamRoles.slice(0, 5),
+      teamHeroes: stats.teamHeroes.slice(0, 5).map((hero) => ({
+        heroName: hero.hero.localizedName,
+        games: hero.games,
+      })),
+    });
+    return stats;
+    // Dependencies:
+    // - appData: access to methods
+    // - player.accountId: re-run when player changes
+    // - selectedTeamId: re-run when selected team changes
+    // - appData.matches: re-run when matches change (triggered by updateMatchesRef)
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, player.accountId, selectedTeamId, appData.matches, appData.teams]);
 
-    const teamStats = processPlayerDetailedStats(player, matchesArray, heroesData);
-
-    const sortedTeamHeroes: TeamHeroStats[] = teamStats.teamHeroes || [];
-
-    return (
-      <div className="space-y-6">
-        <div className="space-y-4 min-w-0 @container">
-          <h3 className="@[110px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">
-            Team Overview
-          </h3>
-          {playerTeamStats ? (
-            <>
-              <div className="@[110px]:hidden block h-[28px]" aria-hidden="true" />
-              <PlayerOverviewMetrics stats={playerTeamStats} />
-            </>
-          ) : (
-            <div className="text-center p-6 bg-muted dark:bg-muted rounded-lg">
-              <p className="text-muted-foreground dark:text-muted-foreground">No team statistics available.</p>
-            </div>
-          )}
-        </div>
-
-        <TeamRolesSection teamStatsLocal={teamStats} />
-        <TeamHeroesSection heroesData={sortedTeamHeroes} />
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4 min-w-0 @container">
+        <h3 className="@[110px]:block hidden text-lg font-semibold text-foreground dark:text-foreground truncate">
+          Team Overview
+        </h3>
+        {playerTeamStats ? (
+          <>
+            <div className="@[110px]:hidden block h-[28px]" aria-hidden="true" />
+            <PlayerOverviewMetrics stats={playerTeamStats} />
+          </>
+        ) : (
+          <div className="text-center p-6 bg-muted dark:bg-muted rounded-lg">
+            <p className="text-muted-foreground dark:text-muted-foreground">No team statistics available.</p>
+          </div>
+        )}
       </div>
-    );
-  },
-);
+
+      <TeamRolesSection teamRoles={teamDetailStats.teamRoles} />
+      <TeamHeroesSection heroesData={teamDetailStats.teamHeroes} />
+    </div>
+  );
+});
 
 PlayerDetailsPanelTeam.displayName = 'PlayerDetailsPanelTeam';

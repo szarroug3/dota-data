@@ -56,7 +56,7 @@ describe('AppLoader', () => {
       <ThemeContextProvider>
         <ConfigProvider>
           <AppLoader>
-            <div data-testid="app-content">App Content</div>
+            <div>App Content</div>
           </AppLoader>
         </ConfigProvider>
       </ThemeContextProvider>,
@@ -75,7 +75,7 @@ describe('AppLoader', () => {
       <ThemeContextProvider>
         <ConfigProvider>
           <AppLoader>
-            <div data-testid="app-content">App Content</div>
+            <div>App Content</div>
           </AppLoader>
         </ConfigProvider>
       </ThemeContextProvider>,

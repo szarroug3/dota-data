@@ -133,9 +133,9 @@ export async function refreshAllTeams(appData: AppDataInitializationOpsContext):
  * @returns The loaded match or null on error
  */
 export async function loadMatch(appData: AppDataInitializationOpsContext, matchId: number): Promise<Match | null> {
-  // Check if already loaded with full data
+  // Check if already loaded with full data (both sides must have players)
   const existing = appData._matches.get(matchId);
-  if (existing && existing.players) {
+  if (existing && existing.players && existing.players.radiant.length > 0 && existing.players.dire.length > 0) {
     return existing;
   }
 
@@ -173,10 +173,10 @@ export async function refreshMatch(appData: AppDataInitializationOpsContext, mat
 
   // Update team participation and load players for teams that have this match
   for (const [teamKey, team] of appData._teams.entries()) {
-    const manualMatchIds = Array.from(team.matches.entries())
+    const manualMatchIds: number[] = Array.from(team.matches.entries())
       .filter(([, matchData]) => matchData.isManual)
       .map(([matchId]) => matchId);
-    const allMatchIds = [...manualMatchIds, ...Array.from(team.matches.keys())];
+    const allMatchIds: number[] = [...manualMatchIds, ...Array.from(team.matches.keys())];
     if (allMatchIds.includes(matchId)) {
       appData.updateTeamMatchParticipation(teamKey, allMatchIds);
 
@@ -227,9 +227,9 @@ export async function loadAllManualMatches(appData: AppDataInitializationOpsCont
  * @returns The loaded player or null on error
  */
 export async function loadPlayer(appData: AppDataInitializationOpsContext, accountId: number): Promise<Player | null> {
-  // Check if already loaded
+  // Check if already fully loaded (has API payload). Placeholders from storage have profile but recentMatches === undefined.
   const existing = appData._players.get(accountId);
-  if (existing && existing.profile) {
+  if (existing && existing.profile && existing.recentMatches !== undefined) {
     return existing;
   }
 
@@ -267,7 +267,7 @@ export async function refreshPlayer(
   appData.addPlayer(player);
 
   // Update team player metadata for all teams that have this player
-  for (const [teamKey, team] of appData._teams.entries()) {
+  for (const teamKey of appData._teams.keys()) {
     const playerIds = appData.getTeamPlayerIds(teamKey);
     if (playerIds.has(accountId)) {
       appData.updateTeamPlayersMetadata(teamKey);

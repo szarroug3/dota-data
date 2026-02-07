@@ -3,7 +3,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Hero, Match, Player, Team } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
+import type { Player } from '@/frontend/lib/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
@@ -11,9 +12,7 @@ import { PlayersList, type PlayersListRef } from '@/frontend/players/components/
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 
 interface ResizablePlayerLayoutProps {
-  players: Player[];
   visiblePlayers: Player[];
-  filteredPlayers: Player[];
   onHidePlayer: (playerId: number) => void;
   onRefreshPlayer: (playerId: number) => void;
   viewMode: PlayerListViewMode;
@@ -22,19 +21,16 @@ interface ResizablePlayerLayoutProps {
   onSelectPlayer?: (playerId: number) => void;
   hiddenPlayersCount?: number;
   onShowHiddenPlayers?: () => void;
-  hiddenPlayerIds?: Set<number>;
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
+  playerListViewEntries: PlayerListViewEntry[];
   selectedPlayer: Player | null;
   playerDetailsViewMode: PlayerDetailsPanelMode;
   setPlayerDetailsViewMode: (mode: PlayerDetailsPanelMode) => void;
   onScrollToPlayer?: (playerId: number) => void;
   onAddPlayer?: () => void;
-  heroes: Map<number, Hero>;
   preferredSite: PreferredExternalSite;
-  matchesArray: Match[];
-  selectedTeam: Team;
 }
 
 export interface ResizablePlayerLayoutRef {
@@ -42,7 +38,6 @@ export interface ResizablePlayerLayoutRef {
 }
 
 function PlayersListSection(props: {
-  players: Player[];
   visiblePlayers: Player[];
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
@@ -52,13 +47,12 @@ function PlayersListSection(props: {
   setViewMode: (mode: PlayerListViewMode) => void;
   hiddenPlayersCount?: number;
   onShowHiddenPlayers?: () => void;
-  hiddenPlayerIds?: Set<number>;
   onScrollToPlayer?: (playerId: number) => void;
   onAddPlayer?: () => void;
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  heroes: Map<number, Hero>;
+  playerListViewEntries: PlayerListViewEntry[];
   preferredSite: PreferredExternalSite;
   playersListRef: React.RefObject<PlayersListRef>;
 }) {
@@ -72,13 +66,12 @@ function PlayersListSection(props: {
     setViewMode,
     hiddenPlayersCount = 0,
     onShowHiddenPlayers,
-    hiddenPlayerIds = new Set(),
     onScrollToPlayer,
     onAddPlayer,
     manualPlayerIds,
     onEditPlayer,
     onRemovePlayer,
-    heroes,
+    playerListViewEntries,
     preferredSite,
     playersListRef,
   } = props;
@@ -96,13 +89,12 @@ function PlayersListSection(props: {
         setViewMode={setViewMode}
         hiddenPlayersCount={hiddenPlayersCount}
         onShowHiddenPlayers={onShowHiddenPlayers}
-        hiddenPlayerIds={hiddenPlayerIds}
         onScrollToPlayer={onScrollToPlayer}
         onAddPlayer={onAddPlayer}
         manualPlayerIds={manualPlayerIds}
         onEditPlayer={onEditPlayer}
         onRemovePlayer={onRemovePlayer}
-        heroes={heroes}
+        playerListViewEntries={playerListViewEntries}
         preferredSite={preferredSite}
       />
     </div>
@@ -113,22 +105,8 @@ function PlayerDetailsSection(props: {
   selectedPlayer: Player | null;
   playerDetailsViewMode: PlayerDetailsPanelMode;
   setPlayerDetailsViewMode: (mode: PlayerDetailsPanelMode) => void;
-  players: Player[];
-  hiddenPlayerIds?: Set<number>;
-  heroes: Map<number, Hero>;
-  matchesArray: Match[];
-  selectedTeam: Team;
 }) {
-  const {
-    selectedPlayer,
-    playerDetailsViewMode,
-    setPlayerDetailsViewMode,
-    players,
-    hiddenPlayerIds = new Set(),
-    heroes,
-    matchesArray,
-    selectedTeam,
-  } = props;
+  const { selectedPlayer, playerDetailsViewMode, setPlayerDetailsViewMode } = props;
   return (
     <div className="h-fit pt-2 pl-3">
       {selectedPlayer ? (
@@ -136,11 +114,6 @@ function PlayerDetailsSection(props: {
           player={selectedPlayer}
           viewMode={playerDetailsViewMode}
           onViewModeChange={setPlayerDetailsViewMode}
-          allPlayers={players}
-          hiddenPlayerIds={hiddenPlayerIds}
-          heroes={heroes}
-          matchesArray={matchesArray}
-          selectedTeam={selectedTeam}
         />
       ) : (
         <div className="bg-card rounded-lg shadow-md flex items-center justify-center p-8 text-muted-foreground min-h-[calc(100vh-10rem)] max-h-[calc(100vh-10rem)]">
@@ -158,7 +131,6 @@ export const ResizablePlayerLayout = React.memo(
   forwardRef<ResizablePlayerLayoutRef, ResizablePlayerLayoutProps>(
     (
       {
-        players,
         visiblePlayers,
         onHidePlayer,
         onRefreshPlayer,
@@ -168,7 +140,6 @@ export const ResizablePlayerLayout = React.memo(
         onSelectPlayer,
         hiddenPlayersCount = 0,
         onShowHiddenPlayers,
-        hiddenPlayerIds = new Set(),
         selectedPlayer,
         playerDetailsViewMode,
         setPlayerDetailsViewMode,
@@ -177,10 +148,8 @@ export const ResizablePlayerLayout = React.memo(
         manualPlayerIds,
         onEditPlayer,
         onRemovePlayer,
-        heroes,
+        playerListViewEntries,
         preferredSite,
-        matchesArray,
-        selectedTeam,
       },
       ref,
     ) => {
@@ -195,10 +164,15 @@ export const ResizablePlayerLayout = React.memo(
       return (
         <div className="h-fit flex flex-col">
           <div className="h-fit">
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel id="player-list" defaultSize={50} minSize={0} maxSize={100} className="overflow-visible">
+            <ResizablePanelGroup orientation="horizontal">
+              <ResizablePanel
+                id="player-list"
+                defaultSize="50%"
+                minSize="0%"
+                maxSize="100%"
+                className="overflow-visible"
+              >
                 <PlayersListSection
-                  players={players}
                   visiblePlayers={visiblePlayers}
                   selectedPlayerId={selectedPlayerId}
                   onSelectPlayer={onSelectPlayer}
@@ -208,13 +182,12 @@ export const ResizablePlayerLayout = React.memo(
                   setViewMode={setViewMode}
                   hiddenPlayersCount={hiddenPlayersCount}
                   onShowHiddenPlayers={onShowHiddenPlayers}
-                  hiddenPlayerIds={hiddenPlayerIds}
                   onScrollToPlayer={onScrollToPlayer}
                   onAddPlayer={onAddPlayer}
                   manualPlayerIds={manualPlayerIds}
                   onEditPlayer={onEditPlayer}
                   onRemovePlayer={onRemovePlayer}
-                  heroes={heroes}
+                  playerListViewEntries={playerListViewEntries}
                   preferredSite={preferredSite}
                   playersListRef={playersListRef}
                 />
@@ -224,20 +197,15 @@ export const ResizablePlayerLayout = React.memo(
 
               <ResizablePanel
                 id="player-details"
-                defaultSize={50}
-                minSize={0}
-                maxSize={100}
+                defaultSize="50%"
+                minSize="0%"
+                maxSize="100%"
                 className="overflow-hidden"
               >
                 <PlayerDetailsSection
                   selectedPlayer={selectedPlayer}
                   playerDetailsViewMode={playerDetailsViewMode}
                   setPlayerDetailsViewMode={setPlayerDetailsViewMode}
-                  players={players}
-                  hiddenPlayerIds={hiddenPlayerIds}
-                  heroes={heroes}
-                  matchesArray={matchesArray}
-                  selectedTeam={selectedTeam}
                 />
               </ResizablePanel>
             </ResizablePanelGroup>

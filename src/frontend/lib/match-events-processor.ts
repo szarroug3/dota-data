@@ -8,11 +8,15 @@ import type { OpenDotaMatch } from '@/types/external-apis';
 
 import type { Hero, Match, MatchEvent, GameEvent } from './app-data-types';
 
+type OpenDotaObjective = NonNullable<OpenDotaMatch['objectives']>[number];
+
 /**
  * Get team name from side
  */
-function getTeamName(side: 'radiant' | 'dire'): string {
-  return side === 'radiant' ? 'Radiant' : 'Dire';
+function getTeamName(side: 'radiant' | 'dire' | 'neutral'): string {
+  if (side === 'radiant') return 'Radiant';
+  if (side === 'dire') return 'Dire';
+  return 'Neutral';
 }
 
 /**
@@ -71,7 +75,7 @@ function getPlayerNameFromPlayerSlot(playerSlot: number, players: OpenDotaMatch[
  * Create first blood event
  */
 function createFirstBloodEvent(
-  objective: { time: number; player_slot?: number; slot?: number; type: string },
+  objective: OpenDotaObjective,
   players: OpenDotaMatch['players'],
   heroes: Map<number, Hero>,
 ): MatchEvent {
@@ -110,7 +114,7 @@ function createFirstBloodEvent(
 /**
  * Create Roshan kill event
  */
-function createRoshanKillEvent(objective: { time: number; player_slot?: number; type: string }): MatchEvent {
+function createRoshanKillEvent(objective: OpenDotaObjective): MatchEvent {
   return {
     timestamp: objective.time,
     type: objective.type as MatchEvent['type'],
@@ -123,31 +127,34 @@ function createRoshanKillEvent(objective: { time: number; player_slot?: number; 
  * Create Aegis pickup event
  */
 function createAegisPickupEvent(
-  objective: { time: number; player_slot?: number; type: string },
+  objective: OpenDotaObjective,
   players: OpenDotaMatch['players'],
+  heroes?: Map<number, Hero>,
 ): MatchEvent {
   const aegisHolder =
     objective.player_slot !== undefined
       ? getPlayerNameFromPlayerSlot(objective.player_slot, players)
       : 'unknown player';
+  let aegisHolderHero: Hero | undefined;
+  if (objective.player_slot !== undefined && heroes) {
+    const player = players.find((p) => p.player_slot === objective.player_slot);
+    if (player) {
+      aegisHolderHero = heroes.get(player.hero_id);
+    }
+  }
 
   return {
     timestamp: objective.time,
     type: objective.type as MatchEvent['type'],
     side: getSideFromPlayerSlot(objective.player_slot),
-    details: { aegisHolder },
+    details: { aegisHolder, aegisHolderHero },
   };
 }
 
 /**
  * Create building kill event
  */
-function createBuildingKillEvent(objective: {
-  time: number;
-  player_slot?: number;
-  type: string;
-  unit?: string;
-}): MatchEvent | null {
+function createBuildingKillEvent(objective: OpenDotaObjective): MatchEvent | null {
   if (!objective.unit) return null;
 
   return {
@@ -159,43 +166,86 @@ function createBuildingKillEvent(objective: {
 }
 
 /**
+ * Create team fight event
+ */
+function createTeamFightEvent(teamfight: {
+  start: number;
+  end: number;
+  deaths: number;
+  players: Array<{
+    deaths: number;
+    buybacks: number;
+    gold_delta: number;
+    xp_delta: number;
+    damage: number;
+    healing: number;
+  }>;
+}): MatchEvent {
+  const duration = teamfight.end - teamfight.start;
+  const playerDetails = teamfight.players.map((player, index) => ({
+    playerIndex: index,
+    deaths: player.deaths || 0,
+    buybacks: player.buybacks || 0,
+    goldDelta: player.gold_delta || 0,
+    xpDelta: player.xp_delta || 0,
+    damage: player.damage || 0,
+    healing: player.healing || 0,
+  }));
+  return {
+    timestamp: teamfight.start,
+    type: 'team_fight',
+    side: 'neutral',
+    details: {
+      participants: teamfight.players.map((_, index) => index.toString()),
+      duration,
+      casualties: teamfight.deaths,
+      playerDetails,
+    },
+  };
+}
+
+function getObjectiveEvent(
+  objective: OpenDotaObjective,
+  players: OpenDotaMatch['players'],
+  heroes: Map<number, Hero>,
+): MatchEvent | null {
+  switch (objective.type) {
+    case 'CHAT_MESSAGE_FIRSTBLOOD':
+      return createFirstBloodEvent(objective, players, heroes);
+    case 'CHAT_MESSAGE_ROSHAN_KILL':
+      return createRoshanKillEvent(objective);
+    case 'CHAT_MESSAGE_AEGIS':
+      return createAegisPickupEvent(objective, players, heroes);
+    case 'building_kill':
+      return createBuildingKillEvent(objective);
+    case 'CHAT_MESSAGE_COURIER_LOST':
+    default:
+      return null;
+  }
+}
+
+/**
  * Generate events from OpenDota objectives
  */
 export function generateEvents(matchData: OpenDotaMatch, heroes: Map<number, Hero>): MatchEvent[] {
   const events: MatchEvent[] = [];
 
-  if (!matchData.objectives) {
-    return events;
-  }
-
-  for (const objective of matchData.objectives) {
-    switch (objective.type) {
-      case 'CHAT_MESSAGE_FIRSTBLOOD':
-        events.push(createFirstBloodEvent(objective, matchData.players, heroes));
-        break;
-      case 'CHAT_MESSAGE_ROSHAN_KILL':
-        events.push(createRoshanKillEvent(objective));
-        break;
-      case 'CHAT_MESSAGE_AEGIS':
-        events.push(createAegisPickupEvent(objective, matchData.players));
-        break;
-      case 'building_kill': {
-        const buildingEvent = createBuildingKillEvent(objective);
-        if (buildingEvent) {
-          events.push(buildingEvent);
-        }
-        break;
-      }
-      case 'CHAT_MESSAGE_COURIER_LOST':
-        // Skip courier lost events
-        break;
-      default:
-        // Skip unknown event types
-        break;
+  const objectives = matchData.objectives ?? [];
+  for (const objective of objectives) {
+    const event = getObjectiveEvent(objective, matchData.players, heroes);
+    if (event) {
+      events.push(event);
     }
   }
 
-  return events;
+  // Process teamfights
+  if (matchData.teamfights) {
+    matchData.teamfights.forEach((teamfight) => {
+      events.push(createTeamFightEvent(teamfight));
+    });
+  }
+
+  return events.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**
@@ -211,5 +261,6 @@ export function processGameEvents(match: Match): GameEvent[] {
     time: event.timestamp,
     description: generateEventDescription(event),
     team: event.side,
+    details: event.details,
   }));
 }

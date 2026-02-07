@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
 import type { Player } from '@/frontend/lib/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
@@ -20,9 +21,9 @@ jest.mock('@/components/ui/resizable', () => ({
     maxSize,
   }: {
     children: React.ReactNode;
-    defaultSize?: number;
-    minSize?: number;
-    maxSize?: number;
+    defaultSize?: number | string;
+    minSize?: number | string;
+    maxSize?: number | string;
   }) => (
     <div
       data-testid="resizable-panel"
@@ -72,7 +73,7 @@ jest.mock('@/frontend/players/components/stateless/details/PlayerDetailsPanel', 
   }) => (
     <div data-testid="player-details-panel">
       <div>View Mode: {viewMode}</div>
-      <div>Player: {player.profile.profile.personaname}</div>
+      <div>Player: {player.profile.personaname}</div>
       <button onClick={() => onViewModeChange?.('details')}>Set Details</button>
     </div>
   ),
@@ -80,64 +81,30 @@ jest.mock('@/frontend/players/components/stateless/details/PlayerDetailsPanel', 
 
 // Minimal player factory matching the Player type shape used by the component
 const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
+  accountId: 111111111,
   profile: {
-    profile: {
-      account_id: 111111111,
-      personaname: 'Test Player',
-      name: 'Test Player',
-      plus: false,
-      cheese: 0,
-      steamid: '76561198000000000',
-      avatar: '',
-      avatarmedium: '',
-      avatarfull: '',
-      profileurl: '',
-      last_login: '2024-01-01T00:00:00Z',
-      loccountrycode: 'US',
-      status: 'online',
-      fh_unavailable: false,
-      is_contributor: false,
-      is_subscriber: false,
-    },
+    name: 'Test Player',
+    personaname: 'Test Player',
+    avatar: '',
+    avatarfull: '',
+    profileurl: '',
     rank_tier: 0,
     leaderboard_rank: 0,
   },
-  counts: {
-    leaver_status: {},
-    game_mode: {},
-    lobby_type: {},
-    lane_role: {},
-    region: {},
-    patch: {},
-  },
-  heroes: [],
-  rankings: [],
-  ratings: [],
-  recentMatches: [],
-  totals: {
-    np: 0,
-    fantasy: 0,
-    cosmetic: 0,
-    all_time: 0,
-    ranked: 0,
-    turbo: 0,
-    matched: 0,
-  },
-  wl: { win: 0, lose: 0 },
-  wardMap: { obs: {}, sen: {} },
+  heroStats: [],
+  overallStats: { wins: 0, losses: 0, totalGames: 0, winRate: 0 },
+  recentMatchIds: [],
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
   ...overrides,
 });
 
 const mockPlayer = createMockPlayer();
 
-const heroes: Record<string, any> = {};
-const matchesArray: any[] = [];
-const selectedTeam: any = null;
+const playerListViewEntries: PlayerListViewEntry[] = [{ player: mockPlayer, topHeroes: [], rank: null }];
 
 const defaultProps = {
-  players: [mockPlayer],
   visiblePlayers: [mockPlayer],
-  filteredPlayers: [mockPlayer],
   onHidePlayer: jest.fn(),
   onRefreshPlayer: jest.fn(),
   viewMode: 'list' as PlayerListViewMode,
@@ -146,16 +113,13 @@ const defaultProps = {
   onSelectPlayer: jest.fn(),
   hiddenPlayersCount: 0,
   onShowHiddenPlayers: jest.fn(),
-  hiddenPlayerIds: new Set<number>(),
   selectedPlayer: null as Player | null,
   playerDetailsViewMode: 'summary' as PlayerDetailsPanelMode,
   setPlayerDetailsViewMode: jest.fn(),
   onScrollToPlayer: jest.fn(),
   onAddPlayer: jest.fn(),
-  heroes,
+  playerListViewEntries,
   preferredSite: 'dotabuff' as any,
-  matchesArray,
-  selectedTeam,
 };
 
 describe('ResizablePlayerLayout', () => {
@@ -174,11 +138,7 @@ describe('ResizablePlayerLayout', () => {
 
   it('renders details panel when a player is selected', () => {
     render(
-      <ResizablePlayerLayout
-        {...defaultProps}
-        selectedPlayerId={mockPlayer.profile.profile.account_id}
-        selectedPlayer={mockPlayer}
-      />,
+      <ResizablePlayerLayout {...defaultProps} selectedPlayerId={mockPlayer.accountId} selectedPlayer={mockPlayer} />,
     );
 
     const detailsPanel = screen.getByTestId('player-details-panel');

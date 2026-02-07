@@ -430,12 +430,8 @@ export function calculateTeamPlayerStats(
   matches: Match[],
   teamMatches: Map<number, TeamMatchParticipation>,
 ): TeamPlayerStats {
-  // Filter matches to only those where the team participated
-  // For now, we'll use all matches since TeamMatchParticipation doesn't have teamId/leagueId
-  const teamMatchesArray = Array.from(teamMatches.keys());
-
-  const teamMatchesOnly = matches.filter((match) => teamMatchesArray.includes(match.id));
-
+  const teamMatchIds = new Set(teamMatches.keys());
+  const teamMatchesOnly = matches.filter((match) => teamMatchIds.has(match.id));
   const stats = calculatePlayerStats(playerId, teamMatchesOnly);
 
   return {
@@ -464,6 +460,14 @@ export function filterPlayerMatches(matches: Match[], dateRange: DateRangeSelect
   });
 }
 
+function hasPlayerInMatch(match: Match, accountId: number): boolean {
+  const radiantPlayer = match.players?.radiant?.find((player) => player.accountId === accountId);
+  if (radiantPlayer) {
+    return true;
+  }
+  return Boolean(match.players?.dire?.find((player) => player.accountId === accountId));
+}
+
 /**
  * Get player participated matches for a team
  */
@@ -473,14 +477,10 @@ export function getPlayerParticipatedMatches(
   accountId: number,
 ): Match[] {
   return matches.filter((match) => {
-    const teamMatch = teamMatches.get(match.id);
-    if (!teamMatch) return false;
-
-    // Check if player participated in this match
-    const radiantPlayer = match.players.radiant.find((p) => p.accountId === accountId);
-    const direPlayer = match.players.dire.find((p) => p.accountId === accountId);
-
-    return !!(radiantPlayer || direPlayer);
+    if (!teamMatches.has(match.id)) {
+      return false;
+    }
+    return hasPlayerInMatch(match, accountId);
   });
 }
 

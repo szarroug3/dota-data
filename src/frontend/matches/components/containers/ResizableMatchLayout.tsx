@@ -14,7 +14,6 @@ import type { MatchListViewMode } from '@/frontend/matches/components/list/Match
 interface ResizableMatchLayoutProps {
   filters: MatchFiltersType;
   onFiltersChange: (filters: MatchFiltersType) => void;
-  activeTeamMatches: Match[];
   teamMatches: Map<number, TeamMatchParticipation>;
   visibleMatches: Match[];
   filteredMatches: Match[];
@@ -29,6 +28,7 @@ interface ResizableMatchLayoutProps {
   onShowHiddenMatches?: () => void;
   hiddenMatchIds: Set<number>;
   selectedMatch: Match | null;
+  selectedTeamId: string;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   onScrollToMatch?: (matchId: number) => void;
@@ -42,22 +42,15 @@ export interface ResizableMatchLayoutRef {
 function FiltersSection({
   filters,
   onFiltersChange,
-  activeTeamMatches,
-  teamMatches,
+  selectedTeamId,
 }: {
   filters: MatchFiltersType;
   onFiltersChange: (filters: MatchFiltersType) => void;
-  activeTeamMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
   return (
-    <div className="flex-shrink-0 pb-2">
-      <MatchFilters
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-        matches={activeTeamMatches}
-        teamMatches={teamMatches}
-      />
+    <div className="shrink-0 pb-2">
+      <MatchFilters filters={filters} onFiltersChange={onFiltersChange} selectedTeamId={selectedTeamId} />
     </div>
   );
 }
@@ -96,7 +89,7 @@ function MatchListPane({
   onAddMatch?: () => void;
 }) {
   return (
-    <ResizablePanel id="match-list" defaultSize={50} minSize={0} maxSize={100} className="overflow-visible">
+    <ResizablePanel id="match-list" defaultSize="50%" minSize="0%" maxSize="100%" className="overflow-visible">
       <div className="h-fit pt-2 pr-3 @container" style={{ containerType: 'inline-size' }}>
         <MatchesList
           ref={matchesListRef}
@@ -123,6 +116,7 @@ function MatchListPane({
 function MatchDetailsPane({
   selectedMatch,
   teamMatches,
+  selectedTeamId,
   matchDetailsViewMode,
   setMatchDetailsViewMode,
   unhiddenMatches,
@@ -130,13 +124,14 @@ function MatchDetailsPane({
 }: {
   selectedMatch: Match | null;
   teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   unhiddenMatches: Match[];
   hiddenMatchIds: Set<number>;
 }) {
   return (
-    <ResizablePanel id="match-details" defaultSize={50} minSize={0} maxSize={100} className="overflow-hidden">
+    <ResizablePanel id="match-details" defaultSize="50%" minSize="0%" maxSize="100%" className="overflow-hidden">
       <div className="h-fit pt-2 pl-3">
         {selectedMatch ? (
           (() => {
@@ -150,6 +145,7 @@ function MatchDetailsPane({
                 allMatches={unhiddenMatches}
                 teamMatches={teamMatches}
                 hiddenMatchIds={hiddenMatchIds}
+                selectedTeamId={selectedTeamId}
               />
             );
           })()
@@ -171,7 +167,6 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
     {
       filters,
       onFiltersChange,
-      activeTeamMatches,
       teamMatches,
       visibleMatches,
       unhiddenMatches,
@@ -185,6 +180,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
       onShowHiddenMatches,
       hiddenMatchIds = new Set(),
       selectedMatch,
+      selectedTeamId,
       matchDetailsViewMode,
       setMatchDetailsViewMode,
       onScrollToMatch,
@@ -202,14 +198,9 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
 
     return (
       <div className="h-fit flex flex-col">
-        <FiltersSection
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          activeTeamMatches={activeTeamMatches}
-          teamMatches={teamMatches}
-        />
+        <FiltersSection filters={filters} onFiltersChange={onFiltersChange} selectedTeamId={selectedTeamId} />
         <div className="h-fit">
-          <ResizablePanelGroup direction="horizontal">
+          <ResizablePanelGroup orientation="horizontal">
             <MatchListPane
               matchesListRef={matchesListRef}
               visibleMatches={visibleMatches}
@@ -231,6 +222,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
             <MatchDetailsPane
               selectedMatch={selectedMatch}
               teamMatches={teamMatches}
+              selectedTeamId={selectedTeamId}
               matchDetailsViewMode={matchDetailsViewMode}
               setMatchDetailsViewMode={setMatchDetailsViewMode}
               unhiddenMatches={unhiddenMatches}

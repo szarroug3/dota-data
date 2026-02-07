@@ -6,22 +6,6 @@ import { AddTeamForm } from '@/frontend/teams/components/stateless/AddTeamForm';
 import { EditTeamSheet } from '@/frontend/teams/components/stateless/EditTeamSheet';
 import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
 import { useAppData } from '@/hooks/use-app-data';
-import { validateTeamForm } from '@/utils/validation';
-
-function convertToNumber(value: string, fieldName: string): number {
-  const num = parseInt(value, 10);
-  if (isNaN(num) || num <= 0) {
-    throw new Error(`Invalid ${fieldName}: must be a positive number`);
-  }
-  return num;
-}
-
-function convertTeamIds(teamId: string, leagueId: string): { teamId: number; leagueId: number } {
-  return {
-    teamId: convertToNumber(teamId, 'team ID'),
-    leagueId: convertToNumber(leagueId, 'league ID'),
-  };
-}
 
 function useAddTeamForm(appData: ReturnType<typeof useAppData>) {
   const [teamId, setTeamId] = useState('');
@@ -34,24 +18,33 @@ function useAddTeamForm(appData: ReturnType<typeof useAppData>) {
   }, []);
 
   const handleSubmit = useCallback(
-    async (newTeamId: string, newLeagueId: string) => {
+    async (teamIdInput: string, leagueIdInput: string) => {
       try {
         setIsSubmitting(true);
-        const { teamId: tId, leagueId: lId } = convertTeamIds(newTeamId, newLeagueId);
-        await appData.loadTeam(tId, lId);
-        reset();
+        await appData.addTeamFromInputs(teamIdInput, leagueIdInput);
       } catch (error) {
         console.error('Failed to add team:', error);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [appData, reset],
+    [appData],
   );
 
   const checkTeamExists = useCallback(() => {
-    const key = `${teamId}-${leagueId}`;
-    return appData.getTeam(key) !== undefined;
+    const validation = appData.validateTeamFormInputs(teamId, leagueId);
+    if (!validation.isValid) {
+      return false;
+    }
+
+    try {
+      const parsedIds = appData.parseTeamIdsFromInputs(teamId, leagueId);
+      const key = `${parsedIds.teamId}-${parsedIds.leagueId}`;
+      return appData.getTeam(key) !== undefined;
+    } catch (error) {
+      console.error('Failed to parse team inputs for existence check:', error);
+      return false;
+    }
   }, [appData, teamId, leagueId]);
 
   return { teamId, leagueId, setTeamId, setLeagueId, isSubmitting, handleSubmit, checkTeamExists, reset };
@@ -63,6 +56,7 @@ function useEditTeamSheet(appData: ReturnType<typeof useAppData>) {
   const [currentLeagueId, setCurrentLeagueId] = useState('');
   const [newTeamId, setNewTeamId] = useState('');
   const [newLeagueId, setNewLeagueId] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const open = useCallback((t: string, l: string) => {
     setCurrentTeamId(t);
@@ -78,52 +72,54 @@ function useEditTeamSheet(appData: ReturnType<typeof useAppData>) {
     setCurrentLeagueId('');
     setNewTeamId('');
     setNewLeagueId('');
+    setIsSubmitting(false);
   }, []);
 
   const handleEditTeam = useCallback((tId: number, lId: number) => open(String(tId), String(lId)), [open]);
 
-  const handleSave = useCallback(async () => {
-    try {
-      const { teamId: newT, leagueId: newL } = convertTeamIds(newTeamId, newLeagueId);
-      const { teamId: curT, leagueId: curL } = convertTeamIds(currentTeamId, currentLeagueId);
+  const handleSave = useCallback(
+    async (payload: { current: { teamId: string; leagueId: string }; next: { teamId: string; leagueId: string } }) => {
+      try {
+        setIsSubmitting(true);
+        const result = await appData.editTeamFromInputs(
+          payload.current.teamId,
+          payload.current.leagueId,
+          payload.next.teamId,
+          payload.next.leagueId,
+        );
+        if (!result.didChange) {
+          close();
+          return;
+        }
 
-      const oldKey = `${curT}-${curL}`;
-      const newKey = `${newT}-${newL}`;
-
-      // If IDs haven't changed, nothing to do
-      if (oldKey === newKey) {
         close();
-        return;
+      } catch (error) {
+        console.error('Failed to save edited team:', error);
+        close();
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [appData, close],
+  );
+
+  const teamExistsFor = useCallback(
+    (t: string, l: string) => {
+      const validation = appData.validateTeamFormInputs(t, l);
+      if (!validation.isValid) {
+        return false;
       }
 
-      appData.removeTeam(oldKey);
-      await appData.loadTeam(newT, newL);
-      close();
-    } catch (error) {
-      console.error('Failed to save edited team:', error);
-      appData.saveToStorage();
-      close();
-    }
-  }, [appData, currentTeamId, currentLeagueId, newTeamId, newLeagueId, close]);
-
-  const teamExistsFor = useCallback((t: string, l: string) => appData.getTeam(`${t}-${l}`) !== undefined, [appData]);
-
-  const validation = useMemo(() => validateTeamForm(newTeamId, newLeagueId), [newTeamId, newLeagueId]);
-
-  const buttonState = useMemo(() => {
-    if (!newTeamId.trim() || !newLeagueId.trim()) {
-      return { text: 'Save Changes', disabled: true } as const;
-    }
-    if (!validation.isValid) {
-      return { text: 'Save Changes', disabled: true } as const;
-    }
-    return teamExistsFor(newTeamId, newLeagueId)
-      ? ({ text: 'Team already imported', disabled: true } as const)
-      : ({ text: 'Save Changes', disabled: false } as const);
-  }, [newTeamId, newLeagueId, validation.isValid, teamExistsFor]);
-
-  const teamIdError = newTeamId.trim().length > 0 ? validation.errors.teamId : undefined;
-  const leagueIdError = newLeagueId.trim().length > 0 ? validation.errors.leagueId : undefined;
+      try {
+        const parsedIds = appData.parseTeamIdsFromInputs(t, l);
+        return appData.getTeam(`${parsedIds.teamId}-${parsedIds.leagueId}`) !== undefined;
+      } catch (error) {
+        console.error('Failed to parse team inputs for duplicate check:', error);
+        return false;
+      }
+    },
+    [appData],
+  );
 
   return {
     isOpen,
@@ -137,9 +133,8 @@ function useEditTeamSheet(appData: ReturnType<typeof useAppData>) {
     setNewLeagueId,
     handleEditTeam,
     handleSave,
-    buttonState,
-    teamIdError,
-    leagueIdError,
+    teamExistsFor,
+    isSubmitting,
   };
 }
 
@@ -154,8 +149,7 @@ function useActiveTeam(appData: ReturnType<typeof useAppData>) {
 
   const handleSetActiveTeam = useCallback(
     async (t: number, l: number) => {
-      const teamKey = `${t}-${l}`;
-      appData.setSelectedTeam(teamKey);
+      appData.setSelectedTeamByIds(t, l);
     },
     [appData],
   );
@@ -167,9 +161,7 @@ function useRemoveTeam(appData: ReturnType<typeof useAppData>) {
   const handleRemoveTeam = useCallback(
     async (teamId: number, leagueId: number) => {
       try {
-        const teamKey = `${teamId}-${leagueId}`;
-        appData.removeTeam(teamKey);
-        appData.saveToStorage();
+        appData.removeTeamByIds(teamId, leagueId);
       } catch (error) {
         console.error('Failed to remove team:', error);
       }
@@ -204,24 +196,21 @@ export function DashboardPageContainer(): React.ReactElement {
   const { handleRemoveTeam } = useRemoveTeam(appData);
   const { handleRefreshTeam } = useRefreshTeam(appData);
 
+  const addFormValidation = useMemo(() => {
+    return appData.validateTeamFormInputs(addForm.teamId, addForm.leagueId);
+  }, [addForm.leagueId, addForm.teamId, appData]);
+
+  const editFormValidation = useMemo(() => {
+    return appData.validateTeamFormInputs(editSheet.newTeamId, editSheet.newLeagueId);
+  }, [appData, editSheet.newLeagueId, editSheet.newTeamId]);
+
   const orderedTeams = useMemo(() => {
-    const list = appData.getAllTeamsForDisplay();
-
-    if (!activeTeam) return list;
-
-    const activeIndex = list.findIndex(
-      (t) => t && t.team.id === activeTeam.teamId && t.league.id === activeTeam.leagueId,
-    );
-
-    if (activeIndex <= 0) return list;
-
-    const [active] = list.splice(activeIndex, 1);
-
-    if (!active) return list;
-    return [active, ...list];
-    // this okay because we're using the appData.teams map inside the functions
+    return appData.getAllTeamsForDisplayOrdered();
+    // Dependencies:
+    // - appData: access to methods
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData.teams, activeTeam]);
+  }, [appData, appData.teams]);
 
   return (
     <>
@@ -232,6 +221,7 @@ export function DashboardPageContainer(): React.ReactElement {
         onLeagueIdChange={addForm.setLeagueId}
         onAddTeam={addForm.handleSubmit}
         teamExists={addForm.checkTeamExists}
+        validation={addFormValidation}
         isSubmitting={addForm.isSubmitting}
         onReset={addForm.reset}
       />
@@ -255,12 +245,10 @@ export function DashboardPageContainer(): React.ReactElement {
         onChangeTeamId={editSheet.setNewTeamId}
         onChangeLeagueId={editSheet.setNewLeagueId}
         onSubmit={editSheet.handleSave}
-        isSubmitting={false}
+        teamExists={editSheet.teamExistsFor}
+        validation={editFormValidation}
+        isSubmitting={editSheet.isSubmitting}
         error={undefined}
-        teamIdError={editSheet.teamIdError}
-        leagueIdError={editSheet.leagueIdError}
-        buttonText={editSheet.buttonState.text}
-        buttonDisabled={editSheet.buttonState.disabled}
       />
     </>
   );

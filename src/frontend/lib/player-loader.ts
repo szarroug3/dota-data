@@ -98,6 +98,13 @@ export function processPlayerData(playerData: OpenDotaPlayerComprehensive): Play
     heroStats: processHeroStats(playerData.heroes),
     overallStats: calculateOverallStats(playerData.wl),
     recentMatchIds: playerData.recentMatches?.map((match) => match.match_id) || [],
+    recentMatches: playerData.recentMatches?.map((match) => ({
+      match_id: match.match_id,
+      player_slot: match.player_slot,
+      radiant_win: match.radiant_win,
+      hero_id: match.hero_id,
+      start_time: match.start_time,
+    })),
     createdAt: now,
     updatedAt: now,
   };

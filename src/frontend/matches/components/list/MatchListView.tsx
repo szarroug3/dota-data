@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage-manager';
 
 import { MatchListViewCard } from './MatchListViewCard';
 import { MatchListViewList } from './MatchListViewList';
@@ -40,7 +41,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        teamMatches={teamMatches}
+        teamMatches={teamMatches as Map<number, StoredMatchData>}
         hiddenMatchIds={hiddenMatchIds}
         allMatches={allMatches}
         onScrollToMatch={onScrollToMatch}
@@ -55,7 +56,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        teamMatches={teamMatches}
+        teamMatches={teamMatches as Map<number, StoredMatchData>}
         onScrollToMatch={onScrollToMatch}
       />
     );

@@ -3,7 +3,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import MatchesList, { type MatchesListRef } from '@/frontend/matches/components/list/MatchesList';
@@ -21,12 +21,13 @@ interface ResizableMatchLayoutProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
+  hiddenMatchIds: Set<number>;
   selectedMatch: Match | null;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
-  selectedTeam: Team;
+  selectedTeamId: string;
 }
 
 export interface ResizableMatchLayoutRef {
@@ -44,6 +45,7 @@ function MatchListPane({
   onSelectMatch,
   hiddenMatchesCount,
   onShowHiddenMatches,
+  hiddenMatchIds,
   teamMatches,
   unhiddenMatches,
   onScrollToMatch,
@@ -59,6 +61,7 @@ function MatchListPane({
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
+  hiddenMatchIds: Set<number>;
   teamMatches: Map<number, TeamMatchParticipation>;
   unhiddenMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
@@ -78,6 +81,7 @@ function MatchListPane({
           onSelectMatch={onSelectMatch}
           hiddenMatchesCount={hiddenMatchesCount}
           onShowHiddenMatches={onShowHiddenMatches}
+          hiddenMatchIds={hiddenMatchIds}
           teamMatches={teamMatches}
           allMatches={unhiddenMatches}
           onScrollToMatch={onScrollToMatch}
@@ -94,14 +98,16 @@ function MatchDetailsPane({
   matchDetailsViewMode,
   setMatchDetailsViewMode,
   unhiddenMatches,
-  selectedTeam,
+  selectedTeamId,
+  hiddenMatchIds,
 }: {
   selectedMatch: Match | null;
   teamMatches: Map<number, TeamMatchParticipation>;
   matchDetailsViewMode: MatchDetailsPanelMode;
   setMatchDetailsViewMode: (mode: MatchDetailsPanelMode) => void;
   unhiddenMatches: Match[];
-  selectedTeam: Team;
+  selectedTeamId: string;
+  hiddenMatchIds: Set<number>;
 }) {
   return (
     <ResizablePanel id="match-details" defaultSize={50} minSize={0} maxSize={100} className="overflow-hidden">
@@ -116,7 +122,9 @@ function MatchDetailsPane({
                 viewMode={matchDetailsViewMode}
                 onViewModeChange={setMatchDetailsViewMode}
                 allMatches={unhiddenMatches}
-                selectedTeam={selectedTeam}
+                teamMatches={teamMatches}
+                hiddenMatchIds={hiddenMatchIds}
+                selectedTeamId={selectedTeamId}
               />
             );
           })()
@@ -147,12 +155,13 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
       onSelectMatch,
       hiddenMatchesCount = 0,
       onShowHiddenMatches,
+      hiddenMatchIds,
       selectedMatch,
       matchDetailsViewMode,
       setMatchDetailsViewMode,
       onScrollToMatch,
       onAddMatch,
-      selectedTeam,
+      selectedTeamId,
     },
     ref,
   ) => {
@@ -165,7 +174,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
     }));
 
     return (
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup orientation="horizontal">
         <MatchListPane
           matchesListRef={matchesListRef}
           visibleMatches={visibleMatches}
@@ -177,6 +186,7 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
           onSelectMatch={onSelectMatch}
           hiddenMatchesCount={hiddenMatchesCount}
           onShowHiddenMatches={onShowHiddenMatches}
+          hiddenMatchIds={hiddenMatchIds}
           teamMatches={teamMatches}
           unhiddenMatches={unhiddenMatches}
           onScrollToMatch={onScrollToMatch}
@@ -189,7 +199,8 @@ export const ResizableMatchLayout = forwardRef<ResizableMatchLayoutRef, Resizabl
           matchDetailsViewMode={matchDetailsViewMode}
           setMatchDetailsViewMode={setMatchDetailsViewMode}
           unhiddenMatches={unhiddenMatches}
-          selectedTeam={selectedTeam}
+          selectedTeamId={selectedTeamId}
+          hiddenMatchIds={hiddenMatchIds}
         />
       </ResizablePanelGroup>
     );

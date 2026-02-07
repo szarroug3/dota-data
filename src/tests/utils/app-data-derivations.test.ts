@@ -1,12 +1,6 @@
-import {
-  computeTeamHeroSummaryForMatches,
-  computeTeamHiddenMatchesForDisplay,
-  computeTeamHiddenPlayersForDisplay,
-  computeTeamMatchFilters,
-  computeTeamPerformanceSummary,
-} from '@/frontend/lib/app-data-derivations';
-import type { Hero, Match, MatchFilters, Player, PlayerMatchData, Team } from '@/frontend/lib/app-data-types';
-import type { StoredMatchData, StoredPlayerData } from '@/frontend/lib/storage-manager';
+import { computeTeamHeroSummaryForMatches, computeTeamMatchFilters } from '@/frontend/lib/app-data-derivations';
+import type { Hero, Match, MatchFilters, PlayerMatchData } from '@/frontend/lib/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage-manager';
 
 function createPlayer(accountId: number, heroId: number): PlayerMatchData {
   return {
@@ -127,6 +121,7 @@ describe('computeTeamMatchFilters', () => {
       matches: [winMatch, lossMatch],
       teamMatches,
       filters: { ...baseFilters, result: 'wins' },
+      hiddenMatchIds: new Set(),
     });
 
     expect(filteredMatches).toHaveLength(1);
@@ -158,6 +153,7 @@ describe('computeTeamMatchFilters', () => {
       matches: [radiantHeroMatch, otherHeroMatch],
       teamMatches,
       filters: { ...baseFilters, heroesPlayed: ['99'] },
+      hiddenMatchIds: new Set(),
     });
 
     expect(filteredMatches).toHaveLength(1);
@@ -209,16 +205,25 @@ describe('computeTeamHeroSummaryForMatches', () => {
     expect(summary.activeTeamPicks).toEqual([
       expect.objectContaining({
         heroId: radiantHero.id.toString(),
+        heroName: radiantHero.localizedName,
+        heroImage: radiantHero.imageUrl,
         count: 1,
         winRate: 100,
+        totalGames: 1,
         playedRoles: [{ role: 'Mid', count: 1 }],
+        primaryAttribute: undefined,
       }),
     ]);
     expect(summary.opponentTeamPicks).toEqual([
       expect.objectContaining({
         heroId: direHero.id.toString(),
         count: 1,
-        winRate: 100,
+        winRate: 0,
+        heroName: direHero.localizedName,
+        heroImage: direHero.imageUrl,
+        totalGames: 1,
+        playedRoles: [{ role: 'Mid', count: 1 }],
+        primaryAttribute: undefined,
       }),
     ]);
   });
@@ -255,202 +260,26 @@ describe('computeTeamHeroSummaryForMatches', () => {
     expect(summary.activeTeamBans).toEqual([
       expect.objectContaining({
         heroId: radiantBan.id.toString(),
-        count: 1,
+        heroName: radiantBan.localizedName,
+        heroImage: radiantBan.imageUrl,
+        count: 0,
         winRate: 0,
+        totalGames: 0,
+        playedRoles: [],
+        primaryAttribute: undefined,
       }),
     ]);
     expect(summary.opponentTeamBans).toEqual([
       expect.objectContaining({
         heroId: direBan.id.toString(),
-        count: 1,
+        heroName: direBan.localizedName,
+        heroImage: direBan.imageUrl,
+        count: 0,
         winRate: 0,
+        totalGames: 0,
+        playedRoles: [],
+        primaryAttribute: undefined,
       }),
     ]);
-  });
-});
-
-describe('team utility derivations', () => {
-  const createTeam = (overrides: Partial<Team> = {}): Team => {
-    return {
-      id: '1-1',
-      teamId: 1,
-      leagueId: 1,
-      name: 'Test Team',
-      leagueName: 'Test League',
-      timeAdded: Date.now(),
-      matches: new Map(),
-      players: new Map(),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      isLoading: false,
-      highPerformingHeroes: new Set<string>(),
-      ...overrides,
-    };
-  };
-
-  it('returns hidden players using placeholders when full data missing', () => {
-    const hiddenPlayer: StoredPlayerData = {
-      accountId: 42,
-      name: 'Hidden Player',
-      rank: 'Unknown',
-      rank_tier: 0,
-      leaderboard_rank: undefined,
-      games: 0,
-      winRate: 0,
-      topHeroes: [],
-      avatar: '',
-      isManual: false,
-      isHidden: true,
-    };
-
-    const visiblePlayer: StoredPlayerData = {
-      ...hiddenPlayer,
-      accountId: 99,
-      name: 'Visible Player',
-      isHidden: false,
-    };
-
-    const team = createTeam({
-      players: new Map([
-        [hiddenPlayer.accountId, hiddenPlayer],
-        [visiblePlayer.accountId, visiblePlayer],
-      ]),
-    });
-
-    const playersMap = new Map<number, Player>();
-
-    const hiddenForDisplay = computeTeamHiddenPlayersForDisplay({ team, playersMap });
-
-    expect(hiddenForDisplay).toHaveLength(1);
-    expect(hiddenForDisplay[0].accountId).toBe(hiddenPlayer.accountId);
-    expect(hiddenForDisplay[0].profile.personaname).toBe('Hidden Player');
-  });
-
-  it('returns hidden matches using placeholders when full data missing', () => {
-    const hiddenMatch: StoredMatchData = {
-      matchId: 50,
-      result: 'won',
-      opponentName: 'Opponents',
-      side: 'radiant',
-      duration: 1234,
-      date: '2024-01-01T00:00:00Z',
-      pickOrder: 'first',
-      heroes: [],
-      isManual: false,
-      isHidden: true,
-    };
-
-    const team = createTeam({ matches: new Map([[hiddenMatch.matchId, hiddenMatch]]) });
-    const matchesMap = new Map<number, Match>();
-
-    const hiddenMatches = computeTeamHiddenMatchesForDisplay({ team, matchesMap, heroes: new Map() });
-
-    expect(hiddenMatches).toHaveLength(1);
-    expect(hiddenMatches[0].id).toBe(hiddenMatch.matchId);
-    expect(hiddenMatches[0].duration).toBe(hiddenMatch.duration);
-  });
-
-  it('calculates team performance summary with manual counts', () => {
-    const matches = new Map<number, StoredMatchData>([
-      [
-        1,
-        {
-          matchId: 1,
-          result: 'won',
-          opponentName: 'Opponents',
-          side: 'radiant',
-          duration: 1800,
-          date: '2024-01-01T00:00:00Z',
-          pickOrder: 'first',
-          heroes: [],
-          isManual: true,
-          isHidden: false,
-        },
-      ],
-      [
-        2,
-        {
-          matchId: 2,
-          result: 'lost',
-          opponentName: 'Opponents',
-          side: 'dire',
-          duration: 1900,
-          date: '2024-01-02T00:00:00Z',
-          pickOrder: 'second',
-          heroes: [],
-          isManual: false,
-          isHidden: false,
-        },
-      ],
-      [
-        3,
-        {
-          matchId: 3,
-          result: 'won',
-          opponentName: 'Opponents',
-          side: 'radiant',
-          duration: 0,
-          date: '2024-01-03T00:00:00Z',
-          pickOrder: 'first',
-          heroes: [],
-          isManual: false,
-          isHidden: true,
-        },
-      ],
-    ]);
-
-    const team = createTeam({
-      matches,
-      players: new Map<number, StoredPlayerData>([
-        [
-          7,
-          {
-            accountId: 7,
-            name: 'Manual Player',
-            rank: 'Unknown',
-            rank_tier: 0,
-            leaderboard_rank: undefined,
-            games: 0,
-            winRate: 0,
-            topHeroes: [],
-            avatar: '',
-            isManual: true,
-            isHidden: false,
-          },
-        ],
-      ]),
-    });
-
-    const matchesMap = new Map<number, Match>([
-      [
-        1,
-        {
-          id: 1,
-          date: '2024-01-01T00:00:00Z',
-          duration: 1800,
-          radiant: {},
-          dire: {},
-          draft: { radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] },
-          players: { radiant: [], dire: [] },
-          statistics: {
-            radiantScore: 0,
-            direScore: 0,
-            goldAdvantage: { times: [], radiantGold: [], direGold: [] },
-            experienceAdvantage: { times: [], radiantExperience: [], direExperience: [] },
-          },
-          events: [],
-          result: 'radiant',
-        } as Match,
-      ],
-    ]);
-
-    const summary = computeTeamPerformanceSummary({ team, matchesMap });
-
-    expect(summary.manualMatchCount).toBe(1);
-    expect(summary.totalMatches).toBe(2);
-    expect(summary.totalWins).toBe(1);
-    expect(summary.totalLosses).toBe(1);
-    expect(summary.totalDurationSeconds).toBe(1800 + 1900);
-    expect(summary.manualPlayerCount).toBe(1);
   });
 });

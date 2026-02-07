@@ -29,7 +29,7 @@ export function convertDraftData(matchData: OpenDotaMatch, heroes: Record<string
       const hero = heroes[pickBan.hero_id.toString()];
       if (!hero) return;
       if (pickBan.is_pick) {
-        const heroPick: HeroPick = { accountId: 0, hero };
+        const heroPick: HeroPick = { accountId: 0, hero, order: pickBan.order };
         if (pickBan.team === 0) {
           radiantPicks.push(heroPick);
         } else {

@@ -31,12 +31,14 @@ describe('Event descriptions and tooltip items', () => {
     type: 'CHAT_MESSAGE_FIRSTBLOOD',
     time: 10,
     description: 'First blood',
+    team: 'radiant',
     details: { killer: 'A', victim: 'B' } as any,
   };
   const aegisEvent: GameEvent = {
     type: 'CHAT_MESSAGE_AEGIS',
     time: 20,
     description: 'Aegis',
+    team: 'dire',
     details: { aegisHolder: 'C' } as any,
   };
   const otherEvent: GameEvent = { type: 'OTHER', time: 30, description: 'Other event' } as any;

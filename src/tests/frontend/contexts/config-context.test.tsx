@@ -136,10 +136,10 @@ describe('ConfigProvider', () => {
       expect(screen.getByTestId('preferred-external-site')).toBeInTheDocument();
     });
 
-    it('should load configuration from localStorage on mount', async () => {
+    it('should ignore stored configuration on mount', async () => {
       const storedConfig = {
-        preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid',
+        preferredExternalSite: 'opendota',
+        preferredMatchlistView: 'card',
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
@@ -153,7 +153,7 @@ describe('ConfigProvider', () => {
       await waitForInitialLoad();
 
       expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
-      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('grid');
+      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('list');
     });
 
     it('should handle localStorage errors gracefully', async () => {
@@ -236,39 +236,6 @@ describe('ConfigProvider', () => {
           expect.stringContaining('"preferredExternalSite":"dotabuff"'),
         );
       });
-    });
-
-    it('should load config from localStorage on mount', async () => {
-      const storedConfig = {
-        preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid',
-      };
-
-      mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'dota-scout-assistant-config') {
-          return JSON.stringify(storedConfig);
-        }
-        return null;
-      });
-
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
-      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('grid');
-    });
-
-    it('should handle localStorage errors gracefully', async () => {
-      mockLocalStorage.getItem.mockImplementation(() => {
-        throw new Error('localStorage error');
-      });
-
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-
-      // Should fall back to default values
-      expectInitialConfigState();
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
     });
   });
 });

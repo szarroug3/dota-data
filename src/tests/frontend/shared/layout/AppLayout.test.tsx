@@ -20,6 +20,11 @@ jest.mock('@/components/ui/sidebar', () => ({
       {children}
     </div>
   ),
+  SidebarTrigger: ({ className }: { className?: string }) => (
+    <button type="button" className={className} data-testid="sidebar-trigger">
+      Toggle
+    </button>
+  ),
 }));
 
 describe('AppLayout', () => {
@@ -57,18 +62,19 @@ describe('AppLayout', () => {
 
     // The main content area should be present
     expect(screen.getByTestId('test-content')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-trigger')).toBeInTheDocument();
   });
 
-  it('renders children directly without grid wrapper', () => {
+  it('renders children inside the grid wrapper', () => {
     render(
       <AppLayout>
         <div data-testid="test-content">Test Content</div>
       </AppLayout>,
     );
 
-    // The content should be rendered directly without a grid wrapper
+    // The content should be rendered inside the grid wrapper
     const content = screen.getByTestId('test-content');
-    const sidebarInset = screen.getByTestId('sidebar-inset');
-    expect(sidebarInset).toContainElement(content);
+    const gridWrapper = content.closest('.grid');
+    expect(gridWrapper).not.toBeNull();
   });
 });

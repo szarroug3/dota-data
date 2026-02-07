@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormField, FormRow } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getValidationAriaAttributes, validateTeamForm } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation';
 
 interface AddTeamFormProps {
   teamId: string;
@@ -15,6 +15,7 @@ interface AddTeamFormProps {
   onLeagueIdChange: (value: string) => void;
   onAddTeam: (teamId: string, leagueId: string) => Promise<void>;
   teamExists: (teamId: string, leagueId: string) => boolean;
+  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
   isSubmitting?: boolean;
   onReset?: () => void;
 }
@@ -105,11 +106,10 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
   onLeagueIdChange,
   onAddTeam,
   teamExists,
+  validation,
   isSubmitting = false,
   onReset,
 }) => {
-  const validation = validateTeamForm(teamId, leagueId);
-
   const isDisabled =
     teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim() || !validation.isValid;
 
@@ -117,8 +117,8 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
     e.preventDefault();
 
     if (!isDisabled) {
-      const currentTeamId = teamId;
-      const currentLeagueId = leagueId;
+      const currentTeamId = teamId.trim();
+      const currentLeagueId = leagueId.trim();
       onTeamIdChange('');
       onLeagueIdChange('');
       await onAddTeam(currentTeamId, currentLeagueId);

@@ -6,15 +6,7 @@
  */
 
 import * as DataOps from './app-data-data-ops';
-import {
-  computeTeamHeroSummaryForMatches,
-  computeTeamHiddenMatchesForDisplay,
-  computeTeamMatchFilters,
-  computeTeamMatchesForDisplay,
-  computeTeamPlayersForDisplay,
-  computeTeamHiddenPlayersForDisplay,
-  sortPlayersByName,
-} from './app-data-derivations';
+import { computeTeamHeroSummaryForMatches, computeTeamMatchFilters } from './app-data-derivations';
 import type {
   Hero,
   Item,
@@ -85,67 +77,24 @@ export function getTeams(appData: AppDataCrudOpsContext): Team[] {
   return DataOps.getTeams(appData);
 }
 
-export function getTeamPlayersForDisplay(appData: AppDataCrudOpsContext, teamKey: string): Player[] {
-  const team = getTeam(appData, teamKey);
-  if (!team) {
-    return Array.from(appData._players.values());
-  }
-
-  return computeTeamPlayersForDisplay({
-    team,
-    playersMap: appData._players,
-  });
-}
-
-export function getTeamPlayersSortedForDisplay(appData: AppDataCrudOpsContext, teamKey: string): Player[] {
-  const players = getTeamPlayersForDisplay(appData, teamKey);
-  return sortPlayersByName(players);
-}
-
-export function getTeamHiddenPlayersForDisplay(appData: AppDataCrudOpsContext, teamKey: string): Player[] {
-  const team = getTeam(appData, teamKey);
-  if (!team) {
-    return [];
-  }
-
-  return computeTeamHiddenPlayersForDisplay({
-    team,
-    playersMap: appData._players,
-  });
-}
-
-export function getTeamHiddenMatchesForDisplay(appData: AppDataCrudOpsContext, teamKey: string): Match[] {
-  const team = getTeam(appData, teamKey);
-  if (!team) {
-    return [];
-  }
-
-  return computeTeamHiddenMatchesForDisplay({
-    team,
-    matchesMap: appData._matches,
-  });
-}
-
-export function getTeamMatchesForDisplay(appData: AppDataCrudOpsContext, teamKey: string): Match[] {
-  const team = getTeam(appData, teamKey);
-  if (!team) {
-    return [];
-  }
-
-  return computeTeamMatchesForDisplay({
-    team,
-    matchesMap: appData._matches,
-  });
-}
-
-export function getTeamMatchFilters(
+/**
+ * Filter matches using the provided filters
+ * This method can be used with any array of matches (e.g., from getTeamMatchesWithPlaceholders)
+ *
+ * @param matches - Array of matches to filter
+ * @param teamKey - The team key (teamId-leagueId) to get team match metadata
+ * @param filters - Filter configuration
+ * @param hiddenMatchIds - Set of match IDs that are manually hidden
+ */
+export function filterMatches(
   appData: AppDataCrudOpsContext,
+  matches: Match[],
   teamKey: string,
   filters: MatchFilters,
   hiddenMatchIds: Set<number>,
 ): MatchFiltersResult {
   return computeTeamMatchFilters({
-    matches: getTeamMatchesForDisplay(appData, teamKey),
+    matches,
     teamMatches: appData.getTeamMatchesMetadata(teamKey),
     filters,
     hiddenMatchIds,

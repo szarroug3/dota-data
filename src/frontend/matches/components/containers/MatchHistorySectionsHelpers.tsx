@@ -6,16 +6,8 @@ import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/Hidd
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
 import { validateMatchId } from '@/utils/validation';
 
-export function HeroSummarySection({
-  visibleMatches,
-  teamMatches,
-  allMatches,
-}: {
-  visibleMatches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
-  allMatches: Match[];
-}) {
-  return <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} allMatches={allMatches} />;
+export function HeroSummarySection({ visibleMatches }: { visibleMatches: Match[] }) {
+  return <HeroSummaryTable matches={visibleMatches} />;
 }
 
 export function HiddenMatchesModalSection({
@@ -24,12 +16,14 @@ export function HiddenMatchesModalSection({
   handleUnhideMatch,
   setShowHiddenModal,
   teamMatches,
+  selectedTeamId,
 }: {
   showHiddenModal: boolean;
   hiddenMatches: Match[];
   handleUnhideMatch: (id: number) => void;
   setShowHiddenModal: (show: boolean) => void;
   teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
   if (!showHiddenModal) return null;
   return (
@@ -38,6 +32,7 @@ export function HiddenMatchesModalSection({
       onUnhide={handleUnhideMatch}
       onClose={() => setShowHiddenModal(false)}
       teamMatches={teamMatches}
+      selectedTeamId={selectedTeamId}
     />
   );
 }

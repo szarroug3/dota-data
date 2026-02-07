@@ -11,7 +11,7 @@ import type { StoredMatchData, StoredPlayerData } from './storage-manager';
 /**
  * Player role types for Dota 2
  */
-export type PlayerRole = 'Carry' | 'Mid' | 'Offlane' | 'Soft Support' | 'Hard Support';
+export type PlayerRole = 'Carry' | 'Mid' | 'Offlane' | 'Soft Support' | 'Hard Support' | 'Roaming';
 
 // ============================================================================
 // MATCH DATA
@@ -81,11 +81,24 @@ export interface Match {
 
   processedDraft?: DraftPhase[];
   processedEvents?: GameEvent[];
+  computed?: MatchComputedData;
   teamFightStats?: unknown;
 
   // State
   error?: string;
   isLoading?: boolean;
+}
+
+export interface HeroPerformanceStats {
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  isHighPerforming: boolean;
+}
+
+export interface MatchComputedData {
+  heroPerformance: Map<number, HeroPerformanceStats>;
 }
 
 export interface HeroPick {
@@ -128,7 +141,7 @@ export interface PlayerMatchData {
 export interface MatchEvent {
   timestamp: number;
   type: EventType;
-  side: 'radiant' | 'dire';
+  side: 'radiant' | 'dire' | 'neutral';
   details: EventDetails;
 }
 
@@ -195,7 +208,7 @@ export interface GameEvent {
   type: EventType;
   time: number;
   description: string;
-  team: 'radiant' | 'dire';
+  team: 'radiant' | 'dire' | 'neutral';
   details?: EventDetails;
 }
 
@@ -232,6 +245,21 @@ export interface TeamDisplayData {
   isLoading: boolean;
   error?: string;
   isGlobal?: boolean;
+}
+
+/**
+ * Computed performance summary for a team across matches.
+ */
+export interface TeamPerformanceSummary {
+  totalMatches: number;
+  totalWins: number;
+  totalLosses: number;
+  overallWinRate: number;
+  erroredMatches: number;
+  totalDurationSeconds: number;
+  averageMatchDurationSeconds: number;
+  manualMatchCount: number;
+  manualPlayerCount: number;
 }
 
 /**
@@ -299,6 +327,16 @@ export interface Player {
 
   // Recent matches (just IDs, full data in matches Map)
   recentMatchIds: number[];
+
+  // Recent matches raw data (from OpenDota API, used for Details tab hero stats)
+  // Contains hero_id, player_slot, radiant_win, start_time for date filtering
+  recentMatches?: Array<{
+    match_id: number;
+    player_slot: number;
+    radiant_win: boolean;
+    hero_id: number;
+    start_time: number;
+  }>;
 
   // State
   error?: string;
@@ -382,6 +420,31 @@ export interface TeamPlayerMetadata {
 export type TeamMatchParticipation = TeamMatchMetadata;
 
 /**
+ * Hero summary entry for team hero statistics
+ */
+export interface HeroSummaryEntry {
+  heroId: string;
+  heroName: string;
+  heroImage: string;
+  count: number;
+  winRate: number;
+  totalGames: number;
+  primaryAttribute?: string;
+  playedRoles: Array<{ role: string; count: number }>;
+}
+
+/**
+ * Team hero summary containing pick/ban statistics
+ */
+export interface TeamHeroSummary {
+  matchesCount: number;
+  activeTeamPicks: HeroSummaryEntry[];
+  opponentTeamPicks: HeroSummaryEntry[];
+  activeTeamBans: HeroSummaryEntry[];
+  opponentTeamBans: HeroSummaryEntry[];
+}
+
+/**
  * UI state interface
  * Note: selectedTeamId is NEVER null - defaults to GLOBAL_TEAM_KEY
  */
@@ -392,4 +455,50 @@ export interface AppDataState {
   selectedPlayerId: number | null;
   isLoading: boolean;
   error: string | null;
+}
+
+// ============================================================================
+// MATCH FILTERS
+// ============================================================================
+
+/**
+ * Match filter configuration
+ */
+export interface MatchFilters {
+  dateRange: 'all' | '7days' | '30days' | 'custom';
+  customDateRange: {
+    start: string | null;
+    end: string | null;
+  };
+  result: 'all' | 'wins' | 'losses';
+  opponent: string[];
+  teamSide: 'all' | 'radiant' | 'dire';
+  pickOrder: 'all' | 'first' | 'second';
+  heroesPlayed: string[];
+  highPerformersOnly: boolean;
+}
+
+/**
+ * Filter statistics showing how many matches pass each filter
+ */
+export interface MatchFilterStats {
+  totalMatches: number;
+  filteredMatches: number;
+  filterBreakdown: {
+    dateRange: number;
+    result: number;
+    teamSide: number;
+    pickOrder: number;
+    heroesPlayed: number;
+    opponent: number;
+    highPerformersOnly: number;
+  };
+}
+
+/**
+ * Result of applying filters to matches
+ */
+export interface MatchFiltersResult {
+  filteredMatches: Match[];
+  filterStats: MatchFilterStats;
 }

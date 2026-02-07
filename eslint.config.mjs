@@ -12,7 +12,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  { ignores: ['.next/**', 'next-env.d.ts', '.backup/**', 'coverage/**', 'src/components/ui/**'] },
+  {
+    ignores: [
+      '.next/**',
+      'next-env.d.ts',
+      '.backup/**',
+      'coverage/**',
+      'src/components/ui/**',
+      '*.config.mjs',
+      '*.config.js',
+    ],
+  },
   {
     plugins: {
       '@next/next': nextPlugin,
@@ -63,16 +73,28 @@ export default defineConfig([
   },
   tseslint.configs.recommended,
   {
-    ...pluginReact.configs.flat.recommended,
+    files: ['src/**/*.{js,jsx,ts,tsx}'],
+    plugins: {
+      react: pluginReact,
+    },
     settings: {
       react: {
         version: 'detect',
       },
     },
+    rules: {
+      'react/display-name': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react/no-unknown-property': 'warn',
+      'react/no-unescaped-entities': 'warn',
+      'react/jsx-no-undef': 'error',
+    },
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
+      react: pluginReact,
       'react-hooks': reactHooks,
       import: pluginImport,
     },

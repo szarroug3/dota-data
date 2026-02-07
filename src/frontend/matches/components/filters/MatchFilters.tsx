@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { MultiSelectCombobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import { useAppData } from '@/contexts/app-data-context';
 
 export interface MatchFilters {
   dateRange: 'all' | '7days' | '30days' | 'custom';
@@ -22,8 +22,7 @@ export interface MatchFilters {
 interface MatchFiltersProps {
   filters: MatchFilters;
   onFiltersChange: (filters: MatchFilters) => void;
-  matches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
   className?: string;
 }
 
@@ -153,31 +152,14 @@ function PickOrderFilter({
 function HeroesPlayedFilter({
   value,
   onChange,
-  matches,
-  teamMatches,
+  selectedTeamId,
 }: {
   value: string[];
   onChange: (v: string[]) => void;
-  matches: Match[];
-  teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
-  // Build heroes map from match data (heroes are already embedded in matches)
-  const heroMap = new Map<number, Hero>();
-  matches.forEach((match) => {
-    const teamMatchData = teamMatches.get(match.id);
-    if (!teamMatchData || !teamMatchData.side) return;
-    if (match.draft) {
-      const picks = teamMatchData.side === 'radiant' ? match.draft.radiantPicks : match.draft.direPicks;
-      picks?.forEach((pick) => {
-        if (pick.hero?.id) {
-          heroMap.set(pick.hero.id, pick.hero);
-        }
-      });
-    }
-  });
-
-  const playedHeroes = Array.from(heroMap.values()).sort((a, b) => a.localizedName.localeCompare(b.localizedName));
-  const options = playedHeroes.map((hero) => ({ value: String(hero.id), label: hero.localizedName }));
+  const appData = useAppData();
+  const options = appData.getHeroesPlayedOptions(selectedTeamId);
   return (
     <div>
       <Label className="mb-2 block">Heroes Played</Label>
@@ -218,20 +200,14 @@ function HighPerformersFilter({ value, onChange }: { value: boolean; onChange: (
 function OpponentFilter({
   value,
   onChange,
-  teamMatches,
+  selectedTeamId,
 }: {
   value: string[];
   onChange: (v: string[]) => void;
-  teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
-  const opponentNames = useMemo(() => {
-    const names = new Set<string>();
-    Object.values(teamMatches).forEach((teamMatch) => {
-      if (teamMatch.opponentName) names.add(teamMatch.opponentName);
-    });
-    return Array.from(names).sort();
-  }, [teamMatches]);
-  const options = opponentNames.map((opponentName) => ({ value: opponentName, label: opponentName }));
+  const appData = useAppData();
+  const options = appData.getOpponentNameOptions(selectedTeamId);
   return (
     <div>
       <Label className="mb-2 block">Opponent Teams</Label>
@@ -248,13 +224,7 @@ function OpponentFilter({
   );
 }
 
-export const MatchFilters: React.FC<MatchFiltersProps> = ({
-  filters,
-  onFiltersChange,
-  matches,
-  teamMatches,
-  className,
-}) => {
+export const MatchFilters: React.FC<MatchFiltersProps> = ({ filters, onFiltersChange, selectedTeamId, className }) => {
   const handleChange = <K extends keyof MatchFilters>(key: K, value: MatchFilters[K]) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -272,13 +242,12 @@ export const MatchFilters: React.FC<MatchFiltersProps> = ({
       <HeroesPlayedFilter
         value={filters.heroesPlayed}
         onChange={(v) => handleChange('heroesPlayed', v)}
-        matches={matches}
-        teamMatches={teamMatches}
+        selectedTeamId={selectedTeamId}
       />
       <OpponentFilter
         value={filters.opponent}
         onChange={(v) => handleChange('opponent', v)}
-        teamMatches={teamMatches}
+        selectedTeamId={selectedTeamId}
       />
       <HighPerformersFilter
         value={filters.highPerformersOnly}

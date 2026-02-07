@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import type { Match, Team, TeamHeroSummary, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import {
   AddMatchFormSection,
@@ -22,8 +22,7 @@ export type MatchHistoryPageProps = {
   visibleMatches: Match[];
   unhiddenMatches: Match[];
   teamMatches: Map<number, TeamMatchParticipation>;
-  heroSummary: TeamHeroSummary;
-  highPerformingHeroes: Set<string>;
+  highPerformingHeroes?: Set<string>;
   handleHideMatch: (id: number) => void;
   handleUnhideMatch: (id: number) => void;
   viewMode: MatchListViewMode;
@@ -57,8 +56,7 @@ export function MatchHistoryPageView(props: MatchHistoryPageProps): React.ReactE
     visibleMatches,
     unhiddenMatches,
     teamMatches,
-    heroSummary,
-    highPerformingHeroes,
+    highPerformingHeroes = new Set(),
     handleHideMatch,
     handleUnhideMatch,
     viewMode,
@@ -83,6 +81,7 @@ export function MatchHistoryPageView(props: MatchHistoryPageProps): React.ReactE
     onAddMatch,
     selectedTeam,
   } = props;
+  const hiddenMatchIds = React.useMemo(() => new Set(hiddenMatches.map((match) => match.id)), [hiddenMatches]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,16 +116,18 @@ export function MatchHistoryPageView(props: MatchHistoryPageProps): React.ReactE
         setMatchDetailsViewMode={setMatchDetailsViewMode}
         onScrollToMatch={scrollToMatch || (() => {})}
         onAddMatch={onAddMatch || (() => {})}
-        selectedTeam={selectedTeam}
+        hiddenMatchIds={hiddenMatchIds}
+        selectedTeamId={selectedTeam.id}
       />
 
-      <HeroSummarySection summary={heroSummary} highPerformingHeroes={highPerformingHeroes} />
+      <HeroSummarySection visibleMatches={visibleMatches} highPerformingHeroes={highPerformingHeroes} />
       <HiddenMatchesModalSection
         showHiddenModal={showHiddenModal}
         hiddenMatches={hiddenMatches}
         handleUnhideMatch={handleUnhideMatch}
         setShowHiddenModal={setShowHiddenModal}
         teamMatches={teamMatches}
+        selectedTeamId={selectedTeam.id}
       />
     </div>
   );

@@ -36,14 +36,21 @@ function addRole(aggregate: HeroAggregate, role?: string): void {
   }
 }
 
-function createHeroSummaryEntry(heroId: number, aggregate: HeroAggregate): HeroSummaryEntry {
+function createHeroSummaryEntry(
+  heroId: number,
+  aggregate: HeroAggregate,
+  heroesMap: Map<number, Hero>,
+): HeroSummaryEntry {
   const totalGames = aggregate.picks;
   const winRate = totalGames > 0 ? (aggregate.wins / totalGames) * 100 : 0;
+  const hero = heroesMap.get(heroId);
+  const heroName = hero?.localizedName || `Hero ${heroId}`;
+  const heroImage = hero?.imageUrl || '';
 
   return {
     heroId: heroId.toString(),
-    heroName: `Hero ${heroId}`,
-    heroImage: '',
+    heroName,
+    heroImage,
     count: aggregate.picks,
     winRate,
     totalGames: aggregate.picks,
@@ -90,7 +97,8 @@ function processPicks(
     const agg = ensureAggregate(activePicks, pick.hero.id);
     agg.picks++;
     addRole(agg, hero.roles?.[0]);
-    if (meta.result === 'won') agg.wins++; else agg.losses++;
+    if (meta.result === 'won') agg.wins++;
+    else agg.losses++;
   }
 
   for (const pick of theirPicks) {
@@ -98,7 +106,8 @@ function processPicks(
     const agg = ensureAggregate(opponentPicks, pick.hero.id);
     agg.picks++;
     addRole(agg, hero.roles?.[0]);
-    if (meta.result === 'lost') agg.wins++; else agg.losses++;
+    if (meta.result === 'lost') agg.wins++;
+    else agg.losses++;
   }
 }
 
@@ -149,7 +158,7 @@ export function computeTeamHeroSummaryForMatches({
   const { activePicks, opponentPicks, activeBans, opponentBans } = aggregateHeroes(matches, teamMatches, heroesMap);
 
   const buildEntries = (aggregates: Map<number, HeroAggregate>): HeroSummaryEntry[] =>
-    Array.from(aggregates.entries()).map(([heroId, aggregate]) => createHeroSummaryEntry(heroId, aggregate));
+    Array.from(aggregates.entries()).map(([heroId, aggregate]) => createHeroSummaryEntry(heroId, aggregate, heroesMap));
 
   return {
     matchesCount: matches.length,

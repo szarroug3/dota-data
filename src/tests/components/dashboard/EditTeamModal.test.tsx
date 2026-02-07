@@ -1,8 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { EditTeamSheet } from '@/frontend/teams/components/stateless/EditTeamSheet';
+import { validateTeamForm } from '@/utils/validation';
+
+const getValidation = (teamId: string, leagueId: string) => validateTeamForm(teamId, leagueId);
 
 // Controlled harness to adapt stateless EditTeamSheet to previous stateful test expectations
 const ControlledEditTeamHarness = ({
@@ -17,7 +20,10 @@ const ControlledEditTeamHarness = ({
   onClose: () => void;
   currentTeamId: string;
   currentLeagueId: string;
-  onSave: (oldTeamId: string, oldLeagueId: string, newTeamId: string, newLeagueId: string) => Promise<void>;
+  onSave: (payload: {
+    current: { teamId: string; leagueId: string };
+    next: { teamId: string; leagueId: string };
+  }) => Promise<void>;
   teamExists: (teamId: string, leagueId: string) => boolean;
 }) => {
   const [newTeamId, setNewTeamId] = useState(currentTeamId);
@@ -25,33 +31,21 @@ const ControlledEditTeamHarness = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const { buttonText, buttonDisabled } = useMemo(() => {
-    if (!newTeamId.trim() || !newLeagueId.trim()) {
-      return { buttonText: 'Save Changes', buttonDisabled: true };
-    }
-    if (newTeamId !== currentTeamId || newLeagueId !== currentLeagueId) {
-      if (teamExists(newTeamId.trim(), newLeagueId.trim())) {
-        return { buttonText: 'Team already imported', buttonDisabled: true };
-      }
-    }
-    return { buttonText: isSubmitting ? 'Saving...' : 'Save Changes', buttonDisabled: isSubmitting };
-  }, [newTeamId, newLeagueId, currentTeamId, currentLeagueId, teamExists, isSubmitting]);
-
-  const handleSubmit = async () => {
-    if (buttonDisabled) return;
+  const handleSubmit = async (payload: {
+    current: { teamId: string; leagueId: string };
+    next: { teamId: string; leagueId: string };
+  }) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setError(undefined);
     try {
-      await onSave(currentTeamId, currentLeagueId, newTeamId, newLeagueId);
+      await onSave(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update team');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const teamIdError = newTeamId.trim().length > 0 ? undefined : undefined;
-  const leagueIdError = newLeagueId.trim().length > 0 ? undefined : undefined;
 
   return (
     <EditTeamSheet
@@ -64,12 +58,10 @@ const ControlledEditTeamHarness = ({
       onChangeTeamId={setNewTeamId}
       onChangeLeagueId={setNewLeagueId}
       onSubmit={handleSubmit}
+      teamExists={teamExists}
+      validation={getValidation(newTeamId, newLeagueId)}
       isSubmitting={isSubmitting}
       error={error}
-      teamIdError={teamIdError}
-      leagueIdError={leagueIdError}
-      buttonText={buttonText}
-      buttonDisabled={buttonDisabled}
     />
   );
 };
@@ -126,7 +118,10 @@ describe('EditTeamSheet', () => {
     const saveButton = screen.getByText('Save Changes');
     await user.click(saveButton);
 
-    expect(mockOnSave).toHaveBeenCalledWith('12345', '67890', '12345', '67890');
+    expect(mockOnSave).toHaveBeenCalledWith({
+      current: { teamId: '12345', leagueId: '67890' },
+      next: { teamId: '12345', leagueId: '67890' },
+    });
   });
 
   it('should call onClose when cancel is clicked', async () => {
@@ -175,9 +170,9 @@ describe('EditTeamSheet', () => {
 
     // Change to a different team
     await user.clear(teamIdInput);
-    await user.type(teamIdInput, 'team2');
+    await user.type(teamIdInput, '12346');
     await user.clear(leagueIdInput);
-    await user.type(leagueIdInput, 'league2');
+    await user.type(leagueIdInput, '67891');
 
     // Wait for the button text to update
     await waitFor(() => {

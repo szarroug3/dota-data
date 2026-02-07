@@ -2,12 +2,11 @@ import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, use
 
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Hero, Player } from '@/frontend/lib/app-data-types';
 import type { StoredPlayerData } from '@/frontend/lib/storage-manager';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
 import type { ResizablePlayerLayoutRef } from '@/frontend/players/components/stateless/ResizablePlayerLayout';
-import type { PlayerDetailedStats } from '@/utils/player-statistics';
 
 export interface PlayerStats {
   player: Player;
@@ -40,6 +39,18 @@ export interface PlayerStats {
   };
   detailedStats?: PlayerDetailedStats;
 }
+
+type PlayerRankSummary = { displayText: string; isImmortal: boolean; stars: number };
+type PlayerHeroSummary = { hero: Hero; games: number; winRate: number; roles?: string[] };
+type PlayerTeamRoleSummary = { role: string; games: number; winRate: number };
+
+type PlayerDetailedStats = {
+  rank: PlayerRankSummary | null;
+  topHeroesAllTime: PlayerHeroSummary[];
+  topHeroesRecent: PlayerHeroSummary[];
+  teamRoles: PlayerTeamRoleSummary[];
+  teamHeroes: PlayerHeroSummary[];
+};
 
 export function usePlayerData() {
   const appData = useAppData();
@@ -80,7 +91,6 @@ export function usePlayerData() {
     // - selectedTeamId: selected team changes should recompute the list
     // - teams: getTeamPlayerIds reads team metadata (manual players + matches)
     // - playersMap: ensures re-run when hydrated player data arrives
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, selectedTeamId, teams, playersMap]);
 
   const refreshPlayer = useCallback(

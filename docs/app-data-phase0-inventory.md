@@ -8,12 +8,12 @@ This document captures the present-day behaviour before we begin the refactor. I
 
 ## 1. Data Sources & Fetchers
 
-| Data type | Fetch entry point | Notes |
-| --------- | ---------------- | ----- |
-| Teams / Leagues | `AppData.fetchTeamAndLeagueData` → `team-loader.ts` / `league-matches-loader.ts` | `refreshTeam` invokes `fetchTeamAndLeagueData`. League matches cached in `leagueMatchesCache`. |
-| Matches | `AppData.loadMatch` / `InitializationOps.loadMatch` → `fetchAndProcessMatch` | Called from `loadTeamMatches`, `loadAllManualMatches`, manual-match operations. |
-| Players | `AppData.loadPlayer` / `InitializationOps.loadPlayer` → `fetchAndProcessPlayer` | Invoked when loading manual players, refreshing matches, or manual player ops. |
-| Reference data (heroes/items/leagues) | `AppData.loadHeroesData`, `.loadItemsData`, `.loadLeaguesData` | Triggered in `AppDataProvider` on mount. |
+| Data type                             | Fetch entry point                                                                | Notes                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Teams / Leagues                       | `AppData.fetchTeamAndLeagueData` → `team-loader.ts` / `league-matches-loader.ts` | `refreshTeam` invokes `fetchTeamAndLeagueData`. League matches cached in `leagueMatchesCache`. |
+| Matches                               | `AppData.loadMatch` / `InitializationOps.loadMatch` → `fetchAndProcessMatch`     | Called from `loadTeamMatches`, `loadAllManualMatches`, manual-match operations.                |
+| Players                               | `AppData.loadPlayer` / `InitializationOps.loadPlayer` → `fetchAndProcessPlayer`  | Invoked when loading manual players, refreshing matches, or manual player ops.                 |
+| Reference data (heroes/items/leagues) | `AppData.loadHeroesData`, `.loadItemsData`, `.loadLeaguesData`                   | Triggered in `AppDataProvider` on mount.                                                       |
 
 ## 2. Storage & In-Memory State
 
@@ -38,6 +38,7 @@ This document captures the present-day behaviour before we begin the refactor. I
 ## 4. Fetch Order (Current Behaviour)
 
 Inside `AppDataProvider` initialisation effect:
+
 1. Hydrate from storage (`appData.loadFromStorage`).
 2. Immediately set `isInitialized`.
 3. Load heroes/items/leagues in parallel.
@@ -46,18 +47,19 @@ Inside `AppDataProvider` initialisation effect:
 6. Refresh inactive teams sequentially (matches/players currently not forced).
 
 Observed gaps vs desired order:
+
 - Active team matches/players fetched via `loadAllManualMatches/Players`; league matches handled in `refreshTeam`, but extra match fetches not forced.
 - Inactive/global teams do not refresh players after league data.
 
 ## 5. File Responsibilities Snapshot
 
-| File | Responsibility | Notes |
-| ---- | -------------- | ----- |
-| `app-data.ts` | Core store, public API, delegates to ops modules | Large (900+ lines), mixes orchestration with CRUD. |
-| `app-data-*-ops.ts` | Split logic (UI, data, player metadata, match participation, storage) | Reasonably focused but cross-dependencies exist. |
-| `app-data-initialization-ops.ts` | Fetch orchestration (matches/players/teams) | Handles refresh flows and manual data loaders. |
-| `storage-manager.ts` | Persistence format, validation, sanitisation | Already canonical for storage; placeholders built here. |
-| Hooks (`usePlayerStatsPage`, etc.) | Compose store data for UI | Contain logic that should move into context-derived selectors. |
+| File                               | Responsibility                                                        | Notes                                                          |
+| ---------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `app-data.ts`                      | Core store, public API, delegates to ops modules                      | Large (900+ lines), mixes orchestration with CRUD.             |
+| `app-data-*-ops.ts`                | Split logic (UI, data, player metadata, match participation, storage) | Reasonably focused but cross-dependencies exist.               |
+| `app-data-initialization-ops.ts`   | Fetch orchestration (matches/players/teams)                           | Handles refresh flows and manual data loaders.                 |
+| `storage-manager.ts`               | Persistence format, validation, sanitisation                          | Already canonical for storage; placeholders built here.        |
+| Hooks (`usePlayerStatsPage`, etc.) | Compose store data for UI                                             | Contain logic that should move into context-derived selectors. |
 
 ## 6. Testing Baseline
 
@@ -91,6 +93,7 @@ Observed gaps vs desired order:
 ---
 
 ### Next Steps (Phase 0 continued)
+
 1. Stabilise automated tests around hydration and refresh flows.
 2. Tighten lint/type settings (no stray `any`, enforce strict mode).
 3. Use this inventory as the reference when validating phases 1–6.

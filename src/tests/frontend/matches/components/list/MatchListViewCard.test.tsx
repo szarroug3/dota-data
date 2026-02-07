@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data-types';
+import type { Match, Team } from '@/frontend/lib/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage-manager';
 import { MatchListViewCard } from '@/frontend/matches/components/list/MatchListViewCard';
 
 // Mock config context used by components
@@ -13,32 +14,82 @@ jest.mock('@/frontend/contexts/config-context', () => ({
 }));
 
 // Mock AppData context instead of old team context
+const mockTeamMatches = new Map<number, StoredMatchData>([
+  [
+    1,
+    {
+      matchId: 1,
+      result: 'won',
+      opponentName: 'Test Opponent 1',
+      side: 'radiant',
+      duration: 3120,
+      date: '2024-11-25',
+      pickOrder: 'first',
+      heroes: [],
+      isManual: false,
+      isHidden: false,
+    },
+  ],
+  [
+    2,
+    {
+      matchId: 2,
+      result: 'lost',
+      opponentName: 'Test Opponent 2',
+      side: 'dire',
+      duration: 2400,
+      date: '2024-11-24',
+      pickOrder: 'second',
+      heroes: [],
+      isManual: false,
+      isHidden: false,
+    },
+  ],
+  [
+    3,
+    {
+      matchId: 3,
+      result: 'won',
+      opponentName: 'Test Opponent 3',
+      side: 'radiant',
+      duration: 3600,
+      date: '2024-11-23',
+      pickOrder: 'first',
+      heroes: [],
+      isManual: false,
+      isHidden: false,
+    },
+  ],
+]);
+
+const mockTeam: Team = {
+  id: '1-1',
+  teamId: 1,
+  leagueId: 1,
+  name: 'Test Team',
+  leagueName: 'Test League',
+  timeAdded: 0,
+  matches: new Map(mockTeamMatches),
+  players: new Map(),
+  createdAt: 0,
+  updatedAt: 0,
+  isLoading: false,
+  highPerformingHeroes: new Set(),
+};
+
+const mockAppData = {
+  state: { selectedTeamId: '1-1' },
+  heroes: new Map(),
+  getTeam: jest.fn(() => mockTeam),
+  getMatchManualMetadata: jest.fn(() => ({ isManual: false, side: 'radiant' })),
+  getMatchHeroesForTeamWithStored: jest.fn(() => []),
+  removeManualMatchFromTeam: jest.fn(),
+  editManualMatchToTeam: jest.fn(),
+  getEditManualMatchDuplicateError: jest.fn(() => undefined),
+};
+
 jest.mock('@/contexts/app-data-context', () => ({
-  useAppData: () => ({
-    teams: new Map(),
-    matches: new Map(),
-    players: new Map(),
-    heroes: new Map(),
-    items: new Map(),
-    leagues: new Map(),
-    selectedTeamId: null,
-    setSelectedTeamId: jest.fn(),
-    addTeam: jest.fn(),
-    updateTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    addMatch: jest.fn(),
-    updateMatch: jest.fn(),
-    removeMatch: jest.fn(),
-    addPlayer: jest.fn(),
-    updatePlayer: jest.fn(),
-    removePlayer: jest.fn(),
-    loadTeamData: jest.fn(),
-    loadMatchData: jest.fn(),
-    loadPlayerData: jest.fn(),
-    loadHeroesData: jest.fn(),
-    loadItemsData: jest.fn(),
-    loadLeaguesData: jest.fn(),
-  }),
+  useAppData: () => mockAppData,
 }));
 
 // Polyfill ResizeObserver used by MatchListViewCard responsive grid hook
@@ -112,38 +163,7 @@ const defaultProps = {
   onHideMatch: jest.fn() as (id: number) => void,
   onRefreshMatch: jest.fn() as (id: number) => void,
   className: '',
-  teamMatches: {
-    1: {
-      matchId: 1,
-      duration: 3120,
-      opponentName: 'Test Opponent 1',
-      leagueId: 'league-1',
-      startTime: 1732492800,
-      side: 'radiant',
-      result: 'won',
-      pickOrder: 'first',
-    },
-    2: {
-      matchId: 2,
-      duration: 2400,
-      opponentName: 'Test Opponent 2',
-      leagueId: 'league-2',
-      startTime: 1732406400,
-      side: 'dire',
-      result: 'lost',
-      pickOrder: 'second',
-    },
-    3: {
-      matchId: 3,
-      duration: 3600,
-      opponentName: 'Test Opponent 3',
-      leagueId: 'league-3',
-      startTime: 1732320000,
-      side: 'radiant',
-      result: 'won',
-      pickOrder: 'first',
-    },
-  } as Record<number, TeamMatchParticipation>,
+  teamMatches: new Map(mockTeamMatches),
 };
 
 describe('MatchListViewCard', () => {
@@ -154,9 +174,9 @@ describe('MatchListViewCard', () => {
   it('renders without crashing', () => {
     render(<MatchListViewCard {...defaultProps} />);
 
-    expect(screen.getByText('Test Opponent 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Opponent 2')).toBeInTheDocument();
-    expect(screen.getByText('Test Opponent 3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 2/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 3/i })).toBeInTheDocument();
   });
 
   it('renders empty state when no matches', () => {
@@ -169,7 +189,7 @@ describe('MatchListViewCard', () => {
     const onSelectMatch = jest.fn();
     render(<MatchListViewCard {...defaultProps} onSelectMatch={onSelectMatch} />);
 
-    const firstCard = screen.getByText('Test Opponent 1').closest('[class*="cursor-pointer"]');
+    const firstCard = screen.getByRole('button', { name: /select match vs test opponent 1/i });
     fireEvent.click(firstCard!);
 
     expect(onSelectMatch).toHaveBeenCalledWith(1);
@@ -179,7 +199,7 @@ describe('MatchListViewCard', () => {
     const onHideMatch = jest.fn();
     render(<MatchListViewCard {...defaultProps} onHideMatch={onHideMatch} />);
 
-    const hideButtons = screen.getAllByLabelText(/hide match/i);
+    const hideButtons = screen.getAllByRole('button', { name: /hide match/i, hidden: true });
     fireEvent.click(hideButtons[0]);
 
     expect(onHideMatch).toHaveBeenCalledWith(1);
@@ -189,7 +209,7 @@ describe('MatchListViewCard', () => {
     const onRefreshMatch = jest.fn();
     render(<MatchListViewCard {...defaultProps} onRefreshMatch={onRefreshMatch} />);
 
-    const refreshButtons = screen.getAllByLabelText(/refresh match/i);
+    const refreshButtons = screen.getAllByRole('button', { name: /refresh match vs/i, hidden: true });
     fireEvent.click(refreshButtons[0]);
 
     expect(onRefreshMatch).toHaveBeenCalledWith(1);
@@ -198,7 +218,7 @@ describe('MatchListViewCard', () => {
   it('applies selected state styling when match is selected', () => {
     render(<MatchListViewCard {...defaultProps} selectedMatchId={1} />);
 
-    const selectedCard = screen.getByText('Test Opponent 1').closest('[role="button"]');
+    const selectedCard = screen.getByRole('button', { name: /select match vs test opponent 1/i });
     expect(selectedCard).toBeTruthy();
   });
 
@@ -207,8 +227,8 @@ describe('MatchListViewCard', () => {
   it('renders action buttons with proper accessibility', () => {
     render(<MatchListViewCard {...defaultProps} />);
 
-    const refreshButtons = screen.getAllByLabelText(/refresh match/i);
-    const hideButtons = screen.getAllByLabelText(/hide match/i);
+    const refreshButtons = screen.getAllByRole('button', { name: /refresh match vs/i, hidden: true });
+    const hideButtons = screen.getAllByRole('button', { name: /hide match/i, hidden: true });
 
     refreshButtons.forEach((button) => {
       expect(button).toHaveAttribute('aria-label');
@@ -226,9 +246,9 @@ describe('MatchListViewCard', () => {
 
     // Check that the component renders without errors
     // The date might be hidden due to responsive classes, so just check the component renders
-    expect(screen.getByText('Test Opponent 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Opponent 2')).toBeInTheDocument();
-    expect(screen.getByText('Test Opponent 3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 2/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select match vs test opponent 3/i })).toBeInTheDocument();
   });
 
   it('renders with custom className', () => {
@@ -245,8 +265,8 @@ describe('MatchListViewCard', () => {
   it('renders refresh and hide buttons in correct order', () => {
     render(<MatchListViewCard {...defaultProps} />);
 
-    const refreshButtons = screen.getAllByLabelText(/refresh match/i);
-    const hideButtons = screen.getAllByLabelText(/hide match/i);
+    const refreshButtons = screen.getAllByRole('button', { name: /refresh match vs/i, hidden: true });
+    const hideButtons = screen.getAllByRole('button', { name: /hide match/i, hidden: true });
 
     // Check that we have both types of buttons
     expect(refreshButtons.length).toBeGreaterThan(0);
@@ -262,9 +282,9 @@ describe('MatchListViewCard', () => {
       render(<MatchListViewCard {...defaultProps} />);
 
       // The component should render without errors regardless of container size
-      expect(screen.getByText('Test Opponent 1')).toBeInTheDocument();
-      expect(screen.getByText('Test Opponent 2')).toBeInTheDocument();
-      expect(screen.getByText('Test Opponent 3')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /select match vs test opponent 1/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /select match vs test opponent 2/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /select match vs test opponent 3/i })).toBeInTheDocument();
     });
   });
 
@@ -282,8 +302,8 @@ describe('MatchListViewCard', () => {
     it('renders action buttons in header', () => {
       render(<MatchListViewCard {...defaultProps} />);
 
-      const refreshButtons = screen.getAllByLabelText(/refresh match vs/i);
-      const hideButtons = screen.getAllByLabelText(/hide match/i);
+      const refreshButtons = screen.getAllByRole('button', { name: /refresh match vs/i, hidden: true });
+      const hideButtons = screen.getAllByRole('button', { name: /hide match/i, hidden: true });
 
       expect(refreshButtons.length).toBeGreaterThan(0);
       expect(hideButtons.length).toBeGreaterThan(0);

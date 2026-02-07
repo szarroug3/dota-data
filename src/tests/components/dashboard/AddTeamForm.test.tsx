@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { AddTeamForm } from '@/frontend/teams/components/stateless/AddTeamForm';
+import { validateTeamForm } from '@/utils/validation';
+
+const getValidation = (teamId: string, leagueId: string) => validateTeamForm(teamId, leagueId);
 
 describe('AddTeamForm', () => {
   const mockOnAddTeam = jest.fn();
@@ -23,6 +26,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -41,6 +45,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -56,6 +61,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('9517508', '16435')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -72,6 +78,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('existing-team', 'existing-league')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Team Already Imported' });
@@ -88,6 +95,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('existing-team', 'existing-league')}
       />,
     );
     expect(screen.getByRole('button', { name: 'Team Already Imported' })).toBeInTheDocument();
@@ -102,6 +110,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -126,6 +135,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -150,6 +160,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -166,6 +177,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -182,6 +194,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -199,6 +212,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -219,6 +233,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -239,6 +254,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('9517508', '16435')}
       />,
     );
 
@@ -260,6 +276,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('', '')}
       />,
     );
 
@@ -280,6 +297,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('existing-team', 'existing-league')}
       />,
     );
 
@@ -299,6 +317,7 @@ describe('AddTeamForm', () => {
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
         isSubmitting={true}
+        validation={getValidation('test-team', 'test-league')}
       />,
     );
 
@@ -318,6 +337,7 @@ describe('AddTeamForm', () => {
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
         onReset={mockOnReset}
+        validation={getValidation('test-team', 'test-league')}
       />,
     );
 
@@ -336,6 +356,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('test-team', 'test-league')}
       />,
     );
 
@@ -352,6 +373,7 @@ describe('AddTeamForm', () => {
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
         isSubmitting={true}
+        validation={getValidation('test-team', 'test-league')}
       />,
     );
 
@@ -371,6 +393,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('test-team', 'test-league')}
       />,
     );
 
@@ -386,6 +409,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('9517508', '16435')}
       />,
     );
 
@@ -402,6 +426,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('0', '16435')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -417,6 +442,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('9517508', '0')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -432,6 +458,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('-123', '16435')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -447,6 +474,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('abc123', '16435')}
       />,
     );
     const submitButton = screen.getByRole('button', { name: 'Add Team' });
@@ -463,6 +491,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('0', '16435')}
       />,
     );
 
@@ -481,6 +510,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('0', '16435')}
       />,
     );
 
@@ -496,6 +526,7 @@ describe('AddTeamForm', () => {
         onLeagueIdChange={mockOnLeagueIdChange}
         onAddTeam={mockOnAddTeam}
         teamExists={mockTeamExists}
+        validation={getValidation('9517508', '0')}
       />,
     );
 

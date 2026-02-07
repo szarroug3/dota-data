@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React from 'react';
 
-import { createPlaceholderMatch } from '@/frontend/lib/app-data-match-placeholder';
 import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
-import { useAppData } from '@/hooks/use-app-data';
-import { useMatchFilters } from '@/hooks/use-match-filters';
-import useViewMode, { type MatchListViewMode } from '@/hooks/useViewMode';
+import type { MatchListViewMode } from '@/hooks/useViewMode';
 
-import { AddMatchFormSection, HeroSummarySection, HiddenMatchesModalSection } from './MatchHistorySectionsHelpers';
+import { HeroSummarySection } from '../stateless/MatchHistorySectionsHelpers';
+
+import { AddMatchFormSection, HiddenMatchesModalSection } from './MatchHistorySectionsHelpers';
 import { ResizableMatchLayout, type ResizableMatchLayoutRef } from './ResizableMatchLayout';
 
 export type MatchHistoryContentProps = {
@@ -23,7 +22,9 @@ export type MatchHistoryContentProps = {
   activeTeamMatches: Match[];
   filteredMatches: Match[];
   unhiddenMatches: Match[];
+  highPerformingHeroes: Set<string>;
   teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
   handleHideMatch: (id: number) => void;
   handleUnhideMatch: (id: number) => void;
   viewMode: MatchListViewMode;
@@ -51,11 +52,11 @@ export type MatchHistoryContentProps = {
 export function MatchListSection({
   filters,
   setFilters,
-  activeTeamMatches,
   teamMatches,
   visibleMatches,
   filteredMatches,
   unhiddenMatches,
+  selectedTeamId,
   handleHideMatch,
   handleRefreshMatch,
   viewMode,
@@ -73,11 +74,11 @@ export function MatchListSection({
   MatchHistoryContentProps,
   | 'filters'
   | 'setFilters'
-  | 'activeTeamMatches'
   | 'teamMatches'
   | 'visibleMatches'
   | 'filteredMatches'
   | 'unhiddenMatches'
+  | 'selectedTeamId'
   | 'handleHideMatch'
   | 'handleRefreshMatch'
   | 'viewMode'
@@ -95,7 +96,6 @@ export function MatchListSection({
       ref={resizableLayoutRef as React.RefObject<ResizableMatchLayoutRef>}
       filters={filters}
       onFiltersChange={setFilters}
-      activeTeamMatches={activeTeamMatches}
       teamMatches={teamMatches}
       visibleMatches={visibleMatches}
       filteredMatches={filteredMatches}
@@ -110,6 +110,7 @@ export function MatchListSection({
       onShowHiddenMatches={() => setShowHiddenModal(true)}
       hiddenMatchIds={new Set(hiddenMatches.map((m) => m.id))}
       selectedMatch={selectedMatch}
+      selectedTeamId={selectedTeamId}
       matchDetailsViewMode={matchDetailsViewMode}
       setMatchDetailsViewMode={setMatchDetailsViewMode}
       onScrollToMatch={scrollToMatch || (() => {})}
@@ -121,24 +122,32 @@ export function MatchListSection({
 export function SummaryAndHiddenSection({
   visibleMatches,
   teamMatches,
-  unhiddenMatches,
+  highPerformingHeroes,
+  selectedTeamId = '',
   showHiddenModal,
   hiddenMatches,
   handleUnhideMatch,
   setShowHiddenModal,
 }: Pick<
   MatchHistoryContentProps,
-  'visibleMatches' | 'teamMatches' | 'unhiddenMatches' | 'showHiddenModal' | 'handleUnhideMatch' | 'setShowHiddenModal'
+  | 'visibleMatches'
+  | 'teamMatches'
+  | 'highPerformingHeroes'
+  | 'selectedTeamId'
+  | 'showHiddenModal'
+  | 'handleUnhideMatch'
+  | 'setShowHiddenModal'
 > & { hiddenMatches: Match[] }) {
   return (
     <>
-      <HeroSummarySection visibleMatches={visibleMatches} teamMatches={teamMatches} allMatches={unhiddenMatches} />
+      <HeroSummarySection visibleMatches={visibleMatches} highPerformingHeroes={highPerformingHeroes} />
       <HiddenMatchesModalSection
         showHiddenModal={showHiddenModal}
         hiddenMatches={hiddenMatches}
         handleUnhideMatch={handleUnhideMatch}
         setShowHiddenModal={setShowHiddenModal}
         teamMatches={teamMatches}
+        selectedTeamId={selectedTeamId}
       />
     </>
   );
@@ -152,10 +161,11 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
     filters,
     setFilters,
     visibleMatches,
-    activeTeamMatches,
     filteredMatches,
     unhiddenMatches,
+    highPerformingHeroes,
     teamMatches,
+    selectedTeamId,
     handleHideMatch,
     handleUnhideMatch,
     viewMode,
@@ -198,11 +208,11 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
       <MatchListSection
         filters={filters}
         setFilters={setFilters}
-        activeTeamMatches={activeTeamMatches}
         teamMatches={teamMatches}
         visibleMatches={visibleMatches}
         filteredMatches={filteredMatches}
         unhiddenMatches={unhiddenMatches}
+        selectedTeamId={selectedTeamId}
         handleHideMatch={handleHideMatch}
         handleRefreshMatch={handleRefreshMatch}
         viewMode={viewMode}
@@ -221,7 +231,8 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
       <SummaryAndHiddenSection
         visibleMatches={visibleMatches}
         teamMatches={teamMatches}
-        unhiddenMatches={unhiddenMatches}
+        highPerformingHeroes={highPerformingHeroes}
+        selectedTeamId={selectedTeamId}
         showHiddenModal={showHiddenModal}
         hiddenMatches={hiddenMatches}
         handleUnhideMatch={handleUnhideMatch}
@@ -229,263 +240,4 @@ export function MatchHistoryContent(props: MatchHistoryContentProps) {
       />
     </div>
   );
-}
-
-function useMatchData() {
-  const appData = useAppData();
-
-  const activeTeamMatches = useMemo(() => {
-    const selectedTeamId = appData.state.selectedTeamId;
-    const team = appData.getTeam(selectedTeamId);
-
-    if (!team) {
-      throw new Error(`Selected team ${selectedTeamId} not found - this should never happen`);
-    }
-
-    const leagueCache = appData.leagueMatchesCache.get(team.leagueId);
-    const leagueMatchIds = leagueCache?.matchIdsByTeam.get(team.teamId) || [];
-    const storedMatchIds = Array.from(team.matches.keys());
-    const allMatchIds = new Set([...leagueMatchIds, ...storedMatchIds]);
-
-    return Array.from(allMatchIds)
-      .map((id) => {
-        const fullMatch = appData.getMatch(id);
-        if (fullMatch) {
-          return fullMatch;
-        }
-
-        const metadata = team.matches.get(id);
-        if (!metadata) {
-          return undefined;
-        }
-
-        return createPlaceholderMatch(team, id, metadata, appData.heroes);
-      })
-      .filter((m): m is Match => m !== undefined);
-    // Dependencies:
-    // - appData: access to methods and state
-    // - appData.state.selectedTeamId: re-run when team changes
-    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
-    // - appData.matches: re-run when matches change (triggered by updateMatchesRef)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, appData.state.selectedTeamId, appData.teams, appData.matches]);
-
-  return { activeTeamMatches };
-}
-
-function useHiddenMatches(filteredMatches: Match[]) {
-  const [hiddenMatches, setHiddenMatches] = useState<Match[]>([]);
-  const [showHiddenModal, setShowHiddenModal] = useState(false);
-
-  const handleHideMatch = useCallback(
-    (id: number) => {
-      setHiddenMatches((prev) => {
-        const matchToHide = filteredMatches.find((m) => m.id === id);
-        if (!matchToHide) return prev;
-        return [...prev, matchToHide];
-      });
-    },
-    [filteredMatches],
-  );
-
-  const handleUnhideMatch = useCallback((id: number) => {
-    setHiddenMatches((prev) => prev.filter((m) => m.id !== id));
-  }, []);
-
-  const visibleMatches = useMemo(() => {
-    const hiddenIds = new Set(hiddenMatches.map((m) => m.id));
-    return filteredMatches.filter((m) => !hiddenIds.has(m.id));
-  }, [filteredMatches, hiddenMatches]);
-  return { hiddenMatches, showHiddenModal, setShowHiddenModal, handleHideMatch, handleUnhideMatch, visibleMatches };
-}
-
-function useAddMatchForm() {
-  const [showAddMatchForm, setShowAddMatchForm] = useState(false);
-  const [matchId, setMatchId] = useState('');
-  const [teamSide, setTeamSide] = useState<'radiant' | 'dire' | ''>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string>();
-  return {
-    showAddMatchForm,
-    setShowAddMatchForm,
-    matchId,
-    setMatchId,
-    teamSide,
-    setTeamSide,
-    isSubmitting,
-    setIsSubmitting,
-    error,
-    setError,
-  };
-}
-
-function useScheduledScroll(ref: React.RefObject<ResizableMatchLayoutRef | null>) {
-  const scheduledScrollRef = useRef<NodeJS.Timeout | null>(null);
-  return useCallback(
-    (matchId: number) => {
-      if (scheduledScrollRef.current) clearTimeout(scheduledScrollRef.current);
-      scheduledScrollRef.current = setTimeout(() => {
-        ref.current?.scrollToMatch(matchId);
-        scheduledScrollRef.current = null;
-      }, 100);
-    },
-    [ref],
-  );
-}
-
-function useAddMatchHandler(
-  appData: ReturnType<typeof useAppData>,
-  setShowAddMatchForm: (show: boolean) => void,
-  setIsSubmitting: (v: boolean) => void,
-  setError: (e: string | undefined) => void,
-  selectMatch: (id: number) => void,
-  scrollToMatch: (id: number) => void,
-) {
-  return useCallback(
-    async (matchId: string, teamSide: 'radiant' | 'dire' | '') => {
-      const matchIdNum = parseInt(matchId, 10);
-      if (isNaN(matchIdNum)) return;
-      setShowAddMatchForm(false);
-      setIsSubmitting(true);
-      setError(undefined);
-      try {
-        // Form validation ensures teamSide is always 'radiant' or 'dire' (never empty)
-        // selectedTeamId is always set (defaults to GLOBAL_TEAM_KEY)
-        if (teamSide !== 'radiant' && teamSide !== 'dire') {
-          throw new Error('Invalid team side - form validation failed');
-        }
-
-        const selectedTeamId = appData.state.selectedTeamId;
-        // Add to AppData (loads full match data and tracks association)
-        // User-selected side is stored in participation data
-        await appData.addManualMatchToTeam(matchIdNum, selectedTeamId, teamSide);
-
-        selectMatch(matchIdNum);
-        scrollToMatch(matchIdNum);
-      } catch (error) {
-        console.error('Failed to add match:', error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [appData, setShowAddMatchForm, setIsSubmitting, setError, selectMatch, scrollToMatch],
-  );
-}
-
-function useTeamMatchesMemo(appData: ReturnType<typeof useAppData>, selectedTeamId: string) {
-  return useMemo(() => {
-    const team = appData.getTeam(selectedTeamId);
-    if (!team) return new Map<number, TeamMatchParticipation>();
-
-    // Get metadata from AppData - includes match participation for all teams (including global)
-    return appData.getTeamMatchesMetadata(selectedTeamId);
-    // Dependencies:
-    // - appData: access to methods
-    // - appData.teams: re-run when team participation data changes
-    // - appData.matches: re-run when match data changes
-    // - selectedTeamId: re-run when selected team changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appData, appData.teams, appData.matches, selectedTeamId]);
-}
-
-function useSelectedMatchMemo(selectedMatchId: number | null, appData: ReturnType<typeof useAppData>) {
-  return useMemo(
-    () => (selectedMatchId ? appData.getMatch(selectedMatchId) || null : null),
-    [selectedMatchId, appData],
-  );
-}
-
-function useMatchExistsCallback(appData: ReturnType<typeof useAppData>) {
-  return useCallback(
-    (mid: string) => {
-      const selectedTeamId = appData.state.selectedTeamId;
-      if (!selectedTeamId) return false;
-      const matchIdNum = parseInt(mid, 10);
-      if (isNaN(matchIdNum)) return false;
-      return appData.teamHasMatch(matchIdNum, selectedTeamId);
-    },
-    [appData],
-  );
-}
-
-export function useMatchHistoryPageState(): MatchHistoryContentProps {
-  const appData = useAppData();
-  const selectedTeamId = appData.state.selectedTeamId;
-
-  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
-  const resizableLayoutRef = React.useRef<ResizableMatchLayoutRef>(null);
-  const [filters, setFilters] = useState<MatchFiltersType>({
-    dateRange: 'all',
-    customDateRange: { start: null, end: null },
-    result: 'all',
-    opponent: [],
-    teamSide: 'all',
-    pickOrder: 'all',
-    heroesPlayed: [],
-    highPerformersOnly: false,
-  });
-  const { viewMode, setViewMode } = useViewMode();
-  const [matchDetailsViewMode, setMatchDetailsViewMode] = useState<MatchDetailsPanelMode>('draft');
-  const { activeTeamMatches } = useMatchData();
-  const teamMatches = useTeamMatchesMemo(appData, selectedTeamId);
-  const addMatchForm = useAddMatchForm();
-  const { filteredMatches } = useMatchFilters(activeTeamMatches, teamMatches, filters, new Set());
-  const hidden = useHiddenMatches(filteredMatches);
-  const unhiddenMatches = useMemo(() => {
-    const hiddenIds = new Set(hidden.hiddenMatches.map((m) => m.id));
-    return activeTeamMatches.filter((m) => !hiddenIds.has(m.id));
-  }, [activeTeamMatches, hidden.hiddenMatches]);
-  const selectedMatch = useSelectedMatchMemo(selectedMatchId, appData);
-  const scrollToMatch = useScheduledScroll(resizableLayoutRef);
-  const handleAddMatch = useAddMatchHandler(
-    appData,
-    addMatchForm.setShowAddMatchForm,
-    addMatchForm.setIsSubmitting,
-    addMatchForm.setError,
-    (id) => setSelectedMatchId(id),
-    scrollToMatch,
-  );
-  const handleRefreshMatch = useCallback(
-    async (id: number) => {
-      // Refresh match by force reloading from API
-      await appData.refreshMatch(id);
-    },
-    [appData],
-  );
-  const matchExists = useMatchExistsCallback(appData);
-  const selectMatch = (id: number) => setSelectedMatchId(id);
-
-  return {
-    hiddenMatches: hidden.hiddenMatches,
-    showHiddenModal: hidden.showHiddenModal,
-    setShowHiddenModal: hidden.setShowHiddenModal,
-    filters,
-    setFilters,
-    visibleMatches: hidden.visibleMatches,
-    activeTeamMatches,
-    filteredMatches,
-    unhiddenMatches,
-    teamMatches,
-    handleHideMatch: hidden.handleHideMatch,
-    handleUnhideMatch: hidden.handleUnhideMatch,
-    viewMode,
-    setViewMode,
-    selectedMatch,
-    selectMatch,
-    matchDetailsViewMode,
-    setMatchDetailsViewMode,
-    handleRefreshMatch,
-    showAddMatchForm: addMatchForm.showAddMatchForm,
-    setShowAddMatchForm: addMatchForm.setShowAddMatchForm,
-    matchId: addMatchForm.matchId,
-    teamSide: addMatchForm.teamSide,
-    setMatchId: addMatchForm.setMatchId,
-    setTeamSide: addMatchForm.setTeamSide,
-    handleAddMatch,
-    matchExists,
-    isSubmitting: addMatchForm.isSubmitting,
-    error: addMatchForm.error,
-    resizableLayoutRef,
-    scrollToMatch,
-  };
 }
