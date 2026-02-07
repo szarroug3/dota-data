@@ -225,6 +225,7 @@ export function useTeamPlayerIds(): Set<number> {
     // - team.players Map (for manual players) and team.matches Map (for manual matches) from the teams Map
     // - match.players data from the matches Map (for extracting player IDs from manual matches)
     // Without these deps, the player list won't update when matches/teams change
+    // Intentional: use appData.matches/teams ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, selectedTeamId, teams, matches]);
 }

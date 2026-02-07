@@ -209,6 +209,7 @@ export function DashboardPageContainer(): React.ReactElement {
     // Dependencies:
     // - appData: access to methods
     // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.teams ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, appData.teams]);
 

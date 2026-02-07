@@ -405,6 +405,7 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({
     // - selectedTeamId: re-run when team changes
     // - matches: re-run when matches change
     // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.teams ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, selectedTeamId, matches, appData.teams]);
 

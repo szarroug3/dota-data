@@ -150,6 +150,7 @@ function useHiddenMatches(appData: ReturnType<typeof useAppData>, selectedTeamId
     // - appData: access to methods
     // - appData.teams: re-run when hidden metadata changes
     // - appData.matches: re-run when match data changes
+    // Intentional: use appData.teams/matches ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, appData.teams, appData.matches, selectedTeamId]);
 
@@ -172,6 +173,7 @@ function useHighPerformingHeroes(
     // - hiddenMatchIds: re-run when hidden matches change
     // - appData.teams: re-run when team participation data changes
     // - appData.matches: re-run when match data changes
+    // Intentional: use appData.teams/matches ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, selectedTeamId, hiddenMatchIds, appData.teams, appData.matches]);
 }
@@ -199,6 +201,7 @@ function useMatchHistoryData({
     // - selectedMatchId: re-run when selection changes
     // - appData.teams: re-run when team participation data changes
     // - appData.matches: re-run when match data changes
+    // Intentional: use appData.teams/matches ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, selectedTeamId, filters, hiddenMatchIds, selectedMatchId, appData.teams, appData.matches]);
 

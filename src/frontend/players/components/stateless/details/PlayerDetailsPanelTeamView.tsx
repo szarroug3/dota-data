@@ -197,6 +197,7 @@ export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = Rea
     // - selectedTeamId: re-run when selected team changes
     // - appData.matches: re-run when matches change (triggered by updateMatchesRef)
     // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.matches/teams ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, player.accountId, selectedTeamId, appData.matches, appData.teams]);
 
@@ -220,6 +221,7 @@ export const PlayerDetailsPanelTeam: React.FC<PlayerDetailsPanelTeamProps> = Rea
     // - selectedTeamId: re-run when selected team changes
     // - appData.matches: re-run when matches change (triggered by updateMatchesRef)
     // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.matches/teams ref updates to refresh this memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appData, player.accountId, selectedTeamId, appData.matches, appData.teams]);
 
