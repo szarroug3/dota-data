@@ -85,20 +85,30 @@ function getDraftViewState(
   appData: ReturnType<typeof useAppData>,
   match: Match,
   filter: DraftFilter,
-): { status: 'loading' | 'empty' | 'ready'; filteredDraft: DraftPhase[]; showPickOrder: boolean } {
+): {
+  status: 'loading' | 'empty' | 'ready';
+  filteredDraft: DraftPhase[];
+  showPickOrder: boolean;
+  isStaggered: boolean;
+} {
   if (match.isLoading) {
-    return { status: 'loading', filteredDraft: [], showPickOrder: false };
+    return { status: 'loading', filteredDraft: [], showPickOrder: false, isStaggered: false };
   }
 
   const hasProcessedDraft = Boolean(match.processedDraft?.length);
   const fallbackDraft = hasProcessedDraft ? [] : buildFallbackDraftPhases(match);
 
   if (!hasProcessedDraft && fallbackDraft.length === 0) {
-    return { status: 'empty', filteredDraft: [], showPickOrder: false };
+    return { status: 'empty', filteredDraft: [], showPickOrder: false, isStaggered: false };
   }
 
   const filteredDraft = hasProcessedDraft ? appData.getDraftPhases(match.id, filter) : fallbackDraft;
-  return { status: 'ready', filteredDraft, showPickOrder: hasProcessedDraft };
+  return {
+    status: 'ready',
+    filteredDraft,
+    showPickOrder: hasProcessedDraft,
+    isStaggered: hasProcessedDraft,
+  };
 }
 
 const FilterButtons: React.FC<{ filter: DraftFilter; setFilter: (filter: DraftFilter) => void }> = ({
@@ -197,6 +207,7 @@ const DraftEntry: React.FC<{
 const DraftTimeline: React.FC<{
   radiantDraft: DraftPhase[];
   direDraft: DraftPhase[];
+  timelineDraft: DraftPhase[];
   leftDisplayName: string;
   rightDisplayName: string;
   isRadiantWin: boolean;
@@ -204,9 +215,11 @@ const DraftTimeline: React.FC<{
   selectedTeamId: string;
   hiddenMatchIds: Set<number>;
   showPickOrder: boolean;
+  isStaggered: boolean;
 }> = ({
   radiantDraft,
   direDraft,
+  timelineDraft,
   leftDisplayName,
   rightDisplayName,
   isRadiantWin,
@@ -214,6 +227,7 @@ const DraftTimeline: React.FC<{
   selectedTeamId,
   hiddenMatchIds = new Set(),
   showPickOrder,
+  isStaggered,
 }) => (
   <div>
     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -232,34 +246,67 @@ const DraftTimeline: React.FC<{
     </div>
     <div className="@[210px]:hidden h-2 mb-4"></div>
     <div className="w-full h-px bg-border mb-4"></div>
-    <div className="grid grid-cols-2 gap-4">
-      <div className="space-y-2 pr-4">
-        {radiantDraft.map((phase, index) => (
-          <DraftEntry
-            key={`radiant-${phase.time ?? index}`}
-            phase={phase}
-            team="radiant"
-            teamMatch={teamMatch}
-            selectedTeamId={selectedTeamId}
-            hiddenMatchIds={hiddenMatchIds}
-            showPickOrder={showPickOrder}
-          />
+    {isStaggered ? (
+      <div className="space-y-2">
+        {timelineDraft.map((phase, index) => (
+          <div
+            key={`${phase.team}-${phase.time}-${index}`}
+            className="grid grid-cols-2 gap-4"
+            data-testid="draft-row"
+          >
+            <div className="pr-4">
+              <DraftEntry
+                phase={phase}
+                team="radiant"
+                teamMatch={teamMatch}
+                selectedTeamId={selectedTeamId}
+                hiddenMatchIds={hiddenMatchIds}
+                showPickOrder={showPickOrder}
+              />
+            </div>
+            <div className="pl-4">
+              <DraftEntry
+                phase={phase}
+                team="dire"
+                teamMatch={teamMatch}
+                selectedTeamId={selectedTeamId}
+                hiddenMatchIds={hiddenMatchIds}
+                showPickOrder={showPickOrder}
+              />
+            </div>
+          </div>
         ))}
       </div>
-      <div className="space-y-2 pl-4">
-        {direDraft.map((phase, index) => (
-          <DraftEntry
-            key={`dire-${phase.time ?? index}`}
-            phase={phase}
-            team="dire"
-            teamMatch={teamMatch}
-            selectedTeamId={selectedTeamId}
-            hiddenMatchIds={hiddenMatchIds}
-            showPickOrder={showPickOrder}
-          />
-        ))}
+    ) : (
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2 pr-4">
+          {radiantDraft.map((phase, index) => (
+            <DraftEntry
+              key={`radiant-${phase.time ?? index}`}
+              phase={phase}
+              team="radiant"
+              teamMatch={teamMatch}
+              selectedTeamId={selectedTeamId}
+              hiddenMatchIds={hiddenMatchIds}
+              showPickOrder={showPickOrder}
+            />
+          ))}
+        </div>
+        <div className="space-y-2 pl-4">
+          {direDraft.map((phase, index) => (
+            <DraftEntry
+              key={`dire-${phase.time ?? index}`}
+              phase={phase}
+              team="dire"
+              teamMatch={teamMatch}
+              selectedTeamId={selectedTeamId}
+              hiddenMatchIds={hiddenMatchIds}
+              showPickOrder={showPickOrder}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    )}
   </div>
 );
 
@@ -291,7 +338,7 @@ const DraftSummary: React.FC<{
 
   const isRadiantWin = match.result === 'radiant';
   const { leftDisplayName, rightDisplayName } = getTeamDisplayNames(teamMatch, selectedTeam, match);
-  const { filteredDraft, showPickOrder } = draftView;
+  const { filteredDraft, showPickOrder, isStaggered } = draftView;
   const radiantDraft = filteredDraft.filter((phase) => phase.team === 'radiant');
   const direDraft = filteredDraft.filter((phase) => phase.team === 'dire');
 
@@ -303,6 +350,7 @@ const DraftSummary: React.FC<{
         <DraftTimeline
           radiantDraft={radiantDraft}
           direDraft={direDraft}
+          timelineDraft={filteredDraft}
           leftDisplayName={leftDisplayName}
           rightDisplayName={rightDisplayName}
           isRadiantWin={isRadiantWin}
@@ -310,6 +358,7 @@ const DraftSummary: React.FC<{
           selectedTeamId={selectedTeamId}
           hiddenMatchIds={hiddenMatchIds}
           showPickOrder={showPickOrder}
+          isStaggered={isStaggered}
         />
       </div>
     </div>

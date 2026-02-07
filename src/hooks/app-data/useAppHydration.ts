@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data/app-data-metadata-helpers';
-import { useAppData } from '@/hooks/use-app-data';
+
+import { useAppData } from './use-app-data';
 
 /**
  * Hook for app-wide data hydration

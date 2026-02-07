@@ -2,7 +2,7 @@ import { FileCacheBackend } from '@/lib/cache-backends/file';
 import { MemoryCacheBackend } from '@/lib/cache-backends/memory';
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
 import { getEnv } from '@/lib/config/environment';
-import { CacheBackend, CacheStats, CacheValue } from '@/types/cache';
+import { CacheBackend, CacheStats, CacheValue } from '@/types/cache/cache';
 
 // One-time log guard to avoid noisy logs from multiple instantiations
 

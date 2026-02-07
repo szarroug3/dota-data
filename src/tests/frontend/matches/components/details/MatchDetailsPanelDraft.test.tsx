@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 
-import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
+import type { DraftPhase, Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
+
+type DraftFilter = 'picks' | 'bans' | 'both';
 
 const mockTeam: Team = {
   id: '1-1',
@@ -21,7 +23,7 @@ const mockTeam: Team = {
 const mockAppData = {
   state: { selectedTeamId: '1-1' },
   getTeam: jest.fn(() => mockTeam),
-  getDraftPhases: jest.fn(() => []),
+  getDraftPhases: jest.fn<DraftPhase[], [number, DraftFilter]>(() => []),
   isHighPerformingHero: jest.fn(() => false),
 };
 
@@ -88,6 +90,7 @@ describe('MatchDetailsPanelDraft', () => {
     expect(screen.getByText('Anti-Mage')).toBeInTheDocument();
     expect(screen.getByText('Axe')).toBeInTheDocument();
     expect(screen.queryByText('#1')).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('draft-row')).toHaveLength(0);
   });
 
   it('uses players as fallback picks when draft picks are empty', () => {
@@ -143,6 +146,34 @@ describe('MatchDetailsPanelDraft', () => {
     expect(screen.getByText('Bane')).toBeInTheDocument();
     expect(screen.getByText('Bloodseeker')).toBeInTheDocument();
     expect(screen.queryByText('#1')).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('draft-row')).toHaveLength(0);
+  });
+
+  it('staggered timeline uses processed draft order', () => {
+    const processedDraft: Match['processedDraft'] = [
+      {
+        phase: 'pick',
+        team: 'radiant',
+        hero: { id: 5, name: 'npc_dota_hero_crystal_maiden', localizedName: 'Crystal Maiden', imageUrl: '' },
+        time: 1,
+      },
+      {
+        phase: 'pick',
+        team: 'dire',
+        hero: { id: 6, name: 'npc_dota_hero_drow_ranger', localizedName: 'Drow Ranger', imageUrl: '' },
+        time: 2,
+      },
+    ];
+    const match = createMatch({ processedDraft });
+
+    mockAppData.getDraftPhases.mockReturnValue(processedDraft);
+
+    render(<MatchDetailsPanelDraft match={match} teamMatch={teamMatch} hiddenMatchIds={new Set()} />);
+
+    expect(screen.getByText('Crystal Maiden')).toBeInTheDocument();
+    expect(screen.getByText('Drow Ranger')).toBeInTheDocument();
+    expect(screen.getByText('#1')).toBeInTheDocument();
+    expect(screen.getAllByTestId('draft-row')).toHaveLength(processedDraft.length);
   });
 
   it('shows empty state when no picks are available', () => {

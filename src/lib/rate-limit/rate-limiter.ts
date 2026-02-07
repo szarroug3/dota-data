@@ -7,9 +7,9 @@
 
 import { Redis } from '@upstash/redis';
 
-import { CacheService } from '@/lib/cache-service';
+import { CacheService } from '@/lib/cache/cache-service';
 import { getEnv } from '@/lib/config/environment';
-import { cacheLogger } from '@/lib/logger';
+import { cacheLogger } from '@/lib/config/logger';
 import {
   RateLimitBackend,
   ExternalService,
@@ -17,7 +17,7 @@ import {
   RateLimitError,
   RateLimitErrorType,
   DEFAULT_SERVICE_LIMITS,
-} from '@/types/rate-limit';
+} from '@/types/rate-limit/rate-limit';
 
 // ============================================================================
 // REDIS RATE LIMITER IMPLEMENTATION

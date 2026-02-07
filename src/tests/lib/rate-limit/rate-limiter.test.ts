@@ -2,7 +2,7 @@
  * Tests for Redis-based rate limiter
  */
 
-import { createRateLimiter } from '@/lib/rate-limiter';
+import { createRateLimiter } from '@/lib/rate-limit/rate-limiter';
 
 describe('Rate Limiter', () => {
   describe('Memory Fallback', () => {
