@@ -46,12 +46,12 @@ interface FormFieldInputProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  isValid: boolean;
 }
 
-const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder, value, onChange, error, isValid }) => {
+const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder, value, onChange, error }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -74,10 +74,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({ id, label, placeholder,
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
+      ) : null}
+      {!hasError && (
         <p className="text-xs text-muted-foreground">
           {id === 'teamId' ? (
             <>
@@ -275,7 +276,6 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
             value={newTeamId}
             onChange={setNewTeamId}
             error={teamIdError}
-            isValid={!teamIdError}
           />
           <FormFieldInput
             id="leagueId"
@@ -284,7 +284,6 @@ const EditTeamSheetContent: React.FC<EditTeamSheetContentProps> = ({
             value={newLeagueId}
             onChange={setNewLeagueId}
             error={leagueIdError}
-            isValid={!leagueIdError}
           />
         </div>
       </div>

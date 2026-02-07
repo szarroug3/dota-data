@@ -43,7 +43,6 @@ interface FormFieldInputProps {
   disabled: boolean;
   helpText: React.ReactNode;
   error?: string;
-  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -55,10 +54,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid,
 }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -83,12 +82,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      ) : null}
+      {!hasError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </FormField>
   );
 };
@@ -107,7 +105,6 @@ function EditPlayerForm({
   isDisabled,
   handleSubmit,
   combinedError,
-  isFieldValid,
 }: {
   playerId: string;
   setPlayerId: (value: string) => void;
@@ -115,7 +112,6 @@ function EditPlayerForm({
   isDisabled: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   combinedError?: string;
-  isFieldValid: boolean;
 }) {
   return (
     <div
@@ -158,7 +154,6 @@ function EditPlayerForm({
           </>
         }
         error={combinedError}
-        isValid={isFieldValid}
       />
     </div>
   );
@@ -204,11 +199,10 @@ export function EditPlayerSheet({
               isDisabled={isDisabled}
               handleSubmit={handleSubmit}
               combinedError={combinedError}
-              isFieldValid={playerId.trim().length === 0 || (isValid && !isDuplicate)}
             />
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}

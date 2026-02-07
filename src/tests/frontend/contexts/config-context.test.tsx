@@ -136,10 +136,12 @@ describe('ConfigProvider', () => {
       expect(screen.getByTestId('preferred-external-site')).toBeInTheDocument();
     });
 
-    it('should ignore stored configuration on mount', async () => {
+    it('should load stored configuration on mount', async () => {
       const storedConfig = {
         preferredExternalSite: 'opendota',
         preferredMatchlistView: 'card',
+        preferredPlayerlistView: 'card',
+        theme: 'dark',
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
@@ -152,8 +154,8 @@ describe('ConfigProvider', () => {
       renderWithProvider(<TestComponent />);
       await waitForInitialLoad();
 
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
-      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('list');
+      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('opendota');
+      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('card');
     });
 
     it('should handle localStorage errors gracefully', async () => {

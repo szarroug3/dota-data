@@ -43,7 +43,6 @@ interface FormFieldInputProps {
   disabled: boolean;
   helpText: React.ReactNode;
   error?: string;
-  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -55,10 +54,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid,
 }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -84,12 +83,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      ) : null}
+      {!hasError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </FormField>
   );
 };
@@ -103,7 +101,6 @@ function AddMatchFields({
   isDisabled,
   handleSubmit,
   shouldShowMatchError,
-  isValid,
 }: {
   matchId: string;
   teamSide: '' | 'radiant' | 'dire';
@@ -113,7 +110,6 @@ function AddMatchFields({
   isDisabled: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   shouldShowMatchError?: string;
-  isValid: boolean;
 }) {
   return (
     <div
@@ -156,7 +152,6 @@ function AddMatchFields({
           </>
         }
         error={shouldShowMatchError}
-        isValid={isValid}
       />
       <FormField>
         <Label htmlFor="team-side" className="text-sm font-medium">
@@ -167,7 +162,7 @@ function AddMatchFields({
           onValueChange={(value: 'radiant' | 'dire' | '') => onTeamSideChange(value)}
           disabled={isSubmitting}
         >
-          <SelectTrigger className="data-[placeholder]:text-foreground">
+          <SelectTrigger className="data-placeholder:text-foreground">
             <SelectValue placeholder="Select team side" />
           </SelectTrigger>
           <SelectContent>
@@ -232,12 +227,11 @@ export function AddMatchForm({
               isDisabled={isDisabled}
               handleSubmit={handleSubmit}
               shouldShowMatchError={shouldShowMatchError}
-              isValid={!validationError}
             />
 
             {error && (
               <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}

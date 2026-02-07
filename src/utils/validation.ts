@@ -222,19 +222,20 @@ export function validatePlayerForm(playerId: string): {
  * Get ARIA attributes for validation state
  */
 export function getValidationAriaAttributes(
-  isValid: boolean,
   hasError: boolean,
-  errorMessage?: string,
+  errorId?: string,
 ): {
   'aria-invalid': boolean;
   'aria-describedby'?: string;
   'aria-errormessage'?: string;
 } {
+  const describedBy = hasError && errorId ? errorId : undefined;
+
   return {
     'aria-invalid': hasError,
-    ...(hasError &&
-      errorMessage && {
-        'aria-errormessage': errorMessage,
-      }),
+    ...(describedBy && {
+      'aria-describedby': describedBy,
+      'aria-errormessage': describedBy,
+    }),
   };
 }

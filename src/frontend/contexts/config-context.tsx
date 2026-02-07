@@ -73,7 +73,9 @@ const getDefaultConfig = (): AppConfig => ({
   theme: 'system',
 });
 
-// removed: config is now in-memory only
+function mergeWithDefaultConfig(config: AppConfig): AppConfig {
+  return { ...getDefaultConfig(), ...config };
+}
 
 function toTeamsMapFromPayload(payload: SharePayload | null): Map<string, Team> {
   if (!payload || !payload.teams) return new Map();
@@ -241,6 +243,7 @@ function useUpdateConfig(
   setConfig: (c: AppConfig) => void,
   setIsSaving: (b: boolean) => void,
   setError: (e: string | null) => void,
+  shouldPersist: boolean,
 ) {
   return useCallback(
     async (updates: Partial<AppConfig>): Promise<void> => {
@@ -249,7 +252,9 @@ function useUpdateConfig(
       try {
         const newConfig = { ...config, ...updates };
         setConfig(newConfig);
-        saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
+        if (shouldPersist) {
+          saveToStorage(STORAGE_KEYS.CONFIG, newConfig);
+        }
       } catch (error) {
         console.error('Failed to update configuration:', error);
         setError('Failed to update configuration');
@@ -257,7 +262,7 @@ function useUpdateConfig(
         setIsSaving(false);
       }
     },
-    [config, setConfig, setIsSaving, setError],
+    [config, setConfig, setIsSaving, setError, shouldPersist],
   );
 }
 
@@ -265,6 +270,7 @@ function useResetConfig(
   setConfig: (c: AppConfig) => void,
   setIsSaving: (b: boolean) => void,
   setError: (e: string | null) => void,
+  shouldPersist: boolean,
 ) {
   return useCallback(async (): Promise<void> => {
     setIsSaving(true);
@@ -272,14 +278,16 @@ function useResetConfig(
     try {
       const defaultConfig = getDefaultConfig();
       setConfig(defaultConfig);
-      saveToStorage(STORAGE_KEYS.CONFIG, defaultConfig);
+      if (shouldPersist) {
+        saveToStorage(STORAGE_KEYS.CONFIG, defaultConfig);
+      }
     } catch (error) {
       console.error('Failed to reset configuration:', error);
       setError('Failed to reset configuration');
     } finally {
       setIsSaving(false);
     }
-  }, [setConfig, setIsSaving, setError]);
+  }, [setConfig, setIsSaving, setError, shouldPersist]);
 }
 
 function useClearErrors(setError: (e: string | null) => void) {
@@ -329,14 +337,20 @@ export function ConfigProvider({ children }: ConfigContextProviderProps) {
       setPayload,
     );
 
-  // Keep config purely in-memory
   useEffect(() => {
-    setConfig((prev) => ({ ...prev }));
-    setIsLoading(false);
-  }, []);
+    if (isShareMode) {
+      setConfig(getDefaultConfig());
+      setIsLoading(false);
+      return;
+    }
 
-  const updateConfig = useUpdateConfig(config, setConfig, setIsSaving, setError);
-  const resetConfig = useResetConfig(setConfig, setIsSaving, setError);
+    const storedConfig = loadFromStorage<AppConfig>(STORAGE_KEYS.CONFIG, getDefaultConfig());
+    setConfig(mergeWithDefaultConfig(storedConfig));
+    setIsLoading(false);
+  }, [isShareMode]);
+
+  const updateConfig = useUpdateConfig(config, setConfig, setIsSaving, setError, !isShareMode);
+  const resetConfig = useResetConfig(setConfig, setIsSaving, setError, !isShareMode);
   const clearErrors = useClearErrors(setError);
 
   const contextValue: ConfigContextValue = {
