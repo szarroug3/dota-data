@@ -29,18 +29,6 @@ This directory contains the core documentation for the Dota Data application.
 - Loading state management
 - Cache management strategies
 
-### [`architecture-inventory.md`](./architecture-inventory.md)
-
-**Code vs. architecture documentation alignment**
-
-- Current implementation status
-- Single context architecture implementation
-- Generic state management completion
-- Code quality review
-- Testing coverage
-- Performance validation
-- Architecture compliance check
-
 ### [`typescript-unknown-usage.md`](./typescript-unknown-usage.md)
 
 **TypeScript `unknown` type usage guidelines**
@@ -54,7 +42,6 @@ This directory contains the core documentation for the Dota Data application.
 
 - **New to the project?** Start with `architecture.md`
 - **Understanding data flows?** See `data-flow-analysis.md`
-- **Checking implementation status?** Review `architecture-inventory.md`
 - **TypeScript questions?** Check `typescript-unknown-usage.md`
 
 ## 📝 Document Status

@@ -123,6 +123,22 @@ describe('Leagues API Route', () => {
       expect(data.details).toBe('League data is invalid or corrupted.');
     });
 
+    it('should return 422 when response validation fails', async () => {
+      const invalidResponse = null as SteamLeague;
+      mockFetchSteamLeague.mockResolvedValue(invalidResponse);
+
+      const request = new NextRequest('http://localhost:3000/api/leagues/16435');
+      const params = Promise.resolve({ id: '16435' });
+
+      const response = await GET(request, { params });
+
+      expect(response.status).toBe(422);
+      const data = await response.json();
+      expect(data.error).toBe('Invalid league data');
+      expect(data.status).toBe(422);
+      expect(data.details).toBe('League data is invalid or corrupted.');
+    });
+
     it('should handle tournament not found errors', async () => {
       mockFetchSteamLeague.mockRejectedValue(new Error('Tournament not found'));
 

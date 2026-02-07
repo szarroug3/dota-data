@@ -50,7 +50,7 @@ The `AppData` class is the single source of truth for all application data:
 - `matches: Map<number, Match>` - All matches (key: matchId)
 - `players: Map<number, Player>` - All players (key: playerId)
 - `heroes: Map<number, Hero>` - All heroes (key: heroId)
-- `items: Map<string, Item>` - All items (key: itemName)
+- `items: Map<number, Item>` - All items (key: itemId)
 - `leagues: Map<number, League>` - All leagues (key: leagueId)
 
 #### Manual Data Tracking

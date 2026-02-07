@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchSteamLeague } from '@/lib/api/steam/leagues';
 import { ApiErrorResponse } from '@/types/api';
+import { schemas } from '@/types/api-zod';
 
 /**
  * Handle league API errors
@@ -201,7 +202,14 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
     const response = await fetchSteamLeague(leagueId, force);
-    return NextResponse.json(response);
+
+    try {
+      const validated = schemas.getApiLeaguesId.parse(response);
+      return NextResponse.json(validated);
+    } catch {
+      // Normalize validation errors to our 422 handler branch
+      throw new Error('Invalid league data');
+    }
   } catch (error) {
     console.error('Leagues API Error:', error);
 
