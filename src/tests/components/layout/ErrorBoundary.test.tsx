@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Component } from 'react';
 
 import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
@@ -146,6 +146,17 @@ describe('ErrorBoundary - Development mode', () => {
 
 // Accessibility
 describe('ErrorBoundary - Accessibility', () => {
+  it('should announce the error state as an alert', () => {
+    const consoleSpy = suppressConsoleError();
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+    const alertRegion = screen.getByRole('alert');
+    expect(alertRegion).toBeInTheDocument();
+    consoleSpy.mockRestore();
+  });
   it('should have proper button roles', () => {
     const consoleSpy = suppressConsoleError();
     render(
@@ -155,6 +166,17 @@ describe('ErrorBoundary - Accessibility', () => {
     );
     const retryButton = screen.getByRole('button', { name: 'Try Again' });
     expect(retryButton).toBeInTheDocument();
+    consoleSpy.mockRestore();
+  });
+  it('should move focus to the retry button on error', async () => {
+    const consoleSpy = suppressConsoleError();
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+    const retryButton = screen.getByRole('button', { name: 'Try Again' });
+    await waitFor(() => expect(retryButton).toHaveFocus());
     consoleSpy.mockRestore();
   });
   it('should have proper heading structure', () => {

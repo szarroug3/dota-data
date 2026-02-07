@@ -1,6 +1,6 @@
 'use client';
 
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, createRef, ErrorInfo, ReactNode } from 'react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -14,6 +14,8 @@ interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private retryButtonRef = createRef<HTMLButtonElement>();
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -31,6 +33,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
+  componentDidUpdate(_: ErrorBoundaryProps, prevState: ErrorBoundaryState) {
+    if (!prevState.hasError && this.state.hasError) {
+      this.retryButtonRef.current?.focus();
+    }
+  }
+
   handleRetry = () => {
     this.setState({ hasError: false, error: undefined });
   };
@@ -44,7 +52,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen flex items-center justify-center w-full bg-muted dark:bg-background">
           <div className="max-w-md w-full bg-card dark:bg-card rounded-lg shadow-lg p-6">
-            <div className="text-center">
+            <div className="text-center" role="alert">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
                 <svg
                   className="h-6 w-6 text-destructive dark:text-red-400"
@@ -70,6 +78,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <div className="space-y-3">
                 <button
                   onClick={this.handleRetry}
+                  ref={this.retryButtonRef}
+                  autoFocus
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 >
                   Try Again
