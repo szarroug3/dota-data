@@ -33,13 +33,19 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
   selectedTeamId,
 }) => {
   const [draftFilter, setDraftFilter] = useState<DraftFilter>('both');
+  const isLoading = Boolean(match.isLoading);
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)] @container">
       <CardHeader className="shrink-0">
         <MatchDetailsPanelHeader match={match} viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto min-h-0 @[90px]:block hidden">
-        {viewMode === 'draft' && (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" aria-label="Loading" />
+            <div className="text-sm mt-3">Refreshing match...</div>
+          </div>
+        ) : viewMode === 'draft' ? (
           <div className="space-y-4">
             <MatchDetailsPanelDraft
               match={match}
@@ -51,8 +57,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
               hiddenMatchIds={hiddenMatchIds}
             />
           </div>
-        )}
-        {viewMode === 'players' && (
+        ) : viewMode === 'players' ? (
           <div className="space-y-4" data-testid="players-panel">
             <MatchDetailsPanelPlayers
               match={match}
@@ -61,8 +66,7 @@ export const MatchDetailsPanel: React.FC<MatchDetailsPanelProps> = ({
               selectedTeamId={selectedTeamId}
             />
           </div>
-        )}
-        {viewMode === 'events' && (
+        ) : (
           <div className="space-y-4">
             <MatchDetailsPanelEvents match={match} />
           </div>

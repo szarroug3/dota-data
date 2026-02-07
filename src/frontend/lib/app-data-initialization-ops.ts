@@ -182,12 +182,20 @@ export async function loadMatch(appData: AppDataInitializationOpsContext, matchI
  * @returns The refreshed match or null on error
  */
 export async function refreshMatch(appData: AppDataInitializationOpsContext, matchId: number): Promise<Match | null> {
+  const existing = appData._matches.get(matchId);
+  if (existing) {
+    appData.addMatch({ ...existing, isLoading: true, error: undefined });
+  }
+
   await ensureMatchReferenceData(appData);
 
   // Fetch fresh data from API with force=true to bypass cache
   const match = await fetchAndProcessMatch(matchId, appData.heroes, appData.items, true);
 
   if (!match) {
+    if (existing) {
+      appData.addMatch({ ...existing, isLoading: false, error: `Failed to refresh match ${matchId}` });
+    }
     console.error(`Failed to refresh match ${matchId}`);
     return null;
   }

@@ -82,4 +82,16 @@ describe('MatchDetailsPanel', () => {
     expect(screen.getByTestId('players-panel')).toBeInTheDocument();
     expect(screen.getByText('Players Panel')).toBeInTheDocument();
   });
+
+  it('shows loading state when match is refreshing', () => {
+    render(
+      <MatchDetailsPanel
+        {...defaultProps}
+        match={{ ...mockMatch, isLoading: true }}
+        viewMode="draft"
+      />,
+    );
+
+    expect(screen.getByText('Refreshing match...')).toBeInTheDocument();
+  });
 });

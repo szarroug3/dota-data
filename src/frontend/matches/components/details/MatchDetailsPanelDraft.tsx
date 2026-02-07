@@ -184,7 +184,13 @@ const DraftEntry: React.FC<{
   const isHigh = isOnActiveTeamSide && isPick && appData.isHighPerformingHero(hero.id, selectedTeamId, hiddenMatchIds);
   if (!isTeamPhase) return <div className="h-6"></div>;
   return (
-    <DraftEntryRow hero={hero} heroName={heroName} phase={phase} isHighPerforming={isHigh} showPickOrder={showPickOrder} />
+    <DraftEntryRow
+      hero={hero}
+      heroName={heroName}
+      phase={phase}
+      isHighPerforming={isHigh}
+      showPickOrder={showPickOrder}
+    />
   );
 };
 

@@ -1,4 +1,4 @@
-import { loadMatch, refreshPlayer } from '@/frontend/lib/app-data-initialization-ops';
+import { loadMatch, refreshMatch, refreshPlayer } from '@/frontend/lib/app-data-initialization-ops';
 import type { AppDataInitializationOpsContext } from '@/frontend/lib/app-data-initialization-ops';
 import type { Hero, Item, Match, Player, Team } from '@/frontend/lib/app-data-types';
 import { fetchAndProcessMatch } from '@/frontend/lib/match-loader';
@@ -84,6 +84,118 @@ describe('refreshPlayer', () => {
     expect(appData.addPlayer).toHaveBeenCalledWith(expect.objectContaining({ accountId: playerId, isLoading: true }));
     expect(appData.addPlayer).toHaveBeenCalledWith(refreshedPlayer);
     expect(appData.updateTeamPlayersMetadata).toHaveBeenCalledWith(teamKey);
+  });
+});
+
+describe('refreshMatch', () => {
+  it('marks match as loading and replaces it on refresh', async () => {
+    const matchId = 789;
+    const existingMatch: Match = {
+      id: matchId,
+      date: '2024-01-15T10:30:00Z',
+      duration: 3600,
+      radiant: { name: 'Radiant Team' },
+      dire: { name: 'Dire Team' },
+      draft: { radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] },
+      players: { radiant: [], dire: [] },
+      statistics: {
+        radiantScore: 25,
+        direScore: 20,
+        goldAdvantage: { times: [], radiantGold: [], direGold: [] },
+        experienceAdvantage: { times: [], radiantExperience: [], direExperience: [] },
+      },
+      events: [],
+      result: 'radiant',
+    };
+
+    const refreshedMatch: Match = {
+      ...existingMatch,
+      duration: 3800,
+      players: {
+        radiant: [
+          {
+            accountId: 1,
+            playerName: 'Player 1',
+            hero: { id: 1, name: 'npc_dota_hero_antimage', localizedName: 'Anti-Mage', imageUrl: '' },
+            stats: {
+              kills: 1,
+              deaths: 1,
+              assists: 1,
+              lastHits: 1,
+              denies: 0,
+              gpm: 0,
+              xpm: 0,
+              netWorth: 0,
+              level: 1,
+            },
+            items: [],
+            heroStats: { damageDealt: 0, healingDone: 0, towerDamage: 0 },
+          },
+        ],
+        dire: [
+          {
+            accountId: 2,
+            playerName: 'Player 2',
+            hero: { id: 2, name: 'npc_dota_hero_axe', localizedName: 'Axe', imageUrl: '' },
+            stats: {
+              kills: 1,
+              deaths: 1,
+              assists: 1,
+              lastHits: 1,
+              denies: 0,
+              gpm: 0,
+              xpm: 0,
+              netWorth: 0,
+              level: 1,
+            },
+            items: [],
+            heroStats: { damageDealt: 0, healingDone: 0, towerDamage: 0 },
+          },
+        ],
+      },
+    };
+
+    const mockFetch = fetchAndProcessMatch as jest.MockedFunction<typeof fetchAndProcessMatch>;
+    mockFetch.mockResolvedValue(refreshedMatch);
+
+    const appData = {
+      _matches: new Map([[matchId, existingMatch]]),
+      _teams: new Map([[teamKey, createTeam()]]),
+      _players: new Map(),
+      heroes: new Map(),
+      items: new Map(),
+      leagues: new Map(),
+      leagueMatchesCache: new Map(),
+      getTeam: jest.fn(),
+      getMatch: jest.fn(),
+      getPlayer: jest.fn(),
+      addMatch: jest.fn(),
+      addPlayer: jest.fn(),
+      addTeam: jest.fn(),
+      updateTeam: jest.fn(),
+      setSelectedTeam: jest.fn(),
+      saveToStorage: jest.fn(),
+      updateTeamMatchParticipation: jest.fn(),
+      updateTeamPlayersMetadata: jest.fn(),
+      getTeamPlayerIds: jest.fn(),
+      loadPlayersFromMatchForTeam: jest.fn(),
+      loadTeamMatches: jest.fn(),
+      fetchTeamAndLeagueData: jest.fn(),
+      getTeams: jest.fn(),
+      state: {
+        selectedTeamId: '0-0',
+        selectedTeamIdParsed: { teamId: 0, leagueId: 0 },
+        selectedMatchId: null,
+        selectedPlayerId: null,
+        isLoading: false,
+        error: null,
+      },
+    } as AppDataInitializationOpsContext;
+
+    await refreshMatch(appData, matchId);
+
+    expect(appData.addMatch).toHaveBeenCalledWith(expect.objectContaining({ id: matchId, isLoading: true }));
+    expect(appData.addMatch).toHaveBeenCalledWith(refreshedMatch);
   });
 });
 
