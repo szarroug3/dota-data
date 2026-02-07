@@ -169,6 +169,10 @@ export async function loadFromSharePayload(
 ): Promise<LoadedStorageResult> {
   // Clear existing teams before hydrating from share payload
   appData._teams.clear();
+  appData._matches.clear();
+  appData._players.clear();
+  appData.updateMatchesRef();
+  appData.updatePlayersRef();
 
   // Always ensure we have the global team available
   ensureGlobalTeam(appData);

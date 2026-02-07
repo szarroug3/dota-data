@@ -244,3 +244,94 @@ describe('AppData.loadFromStorage', () => {
     expect(appData.players.has(99)).toBe(true);
   });
 });
+
+describe('AppData.loadFromSharePayload', () => {
+  const createStoredTeamData = ({
+    teamId,
+    leagueId,
+    teamName,
+    leagueName,
+    matchId,
+    playerId,
+  }: {
+    teamId: number;
+    leagueId: number;
+    teamName: string;
+    leagueName: string;
+    matchId: number;
+    playerId: number;
+  }) => ({
+    team: { id: teamId, name: teamName },
+    league: { id: leagueId, name: leagueName },
+    timeAdded: new Date('2024-01-01T00:00:00.000Z').toISOString(),
+    matches: {
+      [matchId]: {
+        matchId,
+        result: 'won',
+        opponentName: 'Opponent',
+        side: 'radiant',
+        duration: 2000,
+        date: '2024-01-02T00:00:00.000Z',
+        pickOrder: 'first',
+        heroes: [],
+        isManual: false,
+        isHidden: false,
+      },
+    },
+    players: {
+      [playerId]: {
+        accountId: playerId,
+        name: `Player ${playerId}`,
+        rank: 'Legend 1',
+        rank_tier: 41,
+        leaderboard_rank: 0,
+        games: 10,
+        winRate: 60,
+        topHeroes: [],
+        avatar: 'avatar.png',
+        isManual: false,
+        isHidden: false,
+      },
+    },
+  });
+
+  it('clears matches and players before loading a new share payload', async () => {
+    const appData = new AppData();
+
+    await appData.loadFromSharePayload({
+      teams: {
+        '111-222': createStoredTeamData({
+          teamId: 111,
+          leagueId: 222,
+          teamName: 'First Team',
+          leagueName: 'First League',
+          matchId: 1111,
+          playerId: 42,
+        }),
+      },
+      activeTeam: { teamId: 111, leagueId: 222 },
+    });
+
+    expect(appData.matches.has(1111)).toBe(true);
+    expect(appData.players.has(42)).toBe(true);
+
+    await appData.loadFromSharePayload({
+      teams: {
+        '333-444': createStoredTeamData({
+          teamId: 333,
+          leagueId: 444,
+          teamName: 'Second Team',
+          leagueName: 'Second League',
+          matchId: 2222,
+          playerId: 99,
+        }),
+      },
+      activeTeam: { teamId: 333, leagueId: 444 },
+    });
+
+    expect(appData.matches.has(1111)).toBe(false);
+    expect(appData.players.has(42)).toBe(false);
+    expect(appData.matches.has(2222)).toBe(true);
+    expect(appData.players.has(99)).toBe(true);
+  });
+});
