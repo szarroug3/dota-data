@@ -11,7 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <ErrorBoundary>
       <AppSidebar />
       <SidebarInset className="p-6">
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 md:hidden">
           <SidebarTrigger className="-ml-1" />
         </div>
         <div className="grid grid-cols-1 gap-6">{children}</div>

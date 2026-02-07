@@ -22,6 +22,7 @@ jest.mock('@/frontend/contexts/config-context', () => ({
     updateConfig: jest.fn(),
     getTeams: jest.fn(() => new Map()),
     activeTeam: null,
+    setActiveTeam: jest.fn(),
   }),
 }));
 
@@ -57,6 +58,15 @@ type SwitchButtonProps = PropsWithChildren<
     id?: string;
   }
 >;
+type SelectProps = PropsWithChildren<{
+  value?: string;
+  onValueChange?: (value: string) => void;
+}>;
+type SelectItemProps = PropsWithChildren<{
+  value: string;
+  disabled?: boolean;
+}>;
+type SelectTriggerProps = PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { id?: string }>;
 
 jest.mock('@/components/ui/sidebar', () => ({
   Sidebar: ({ children, ...props }: SidebarDivProps) => (
@@ -134,6 +144,26 @@ jest.mock('@/components/ui/tooltip', () => ({
   ),
 }));
 
+jest.mock('@/components/ui/select', () => ({
+  Select: ({ children, value }: SelectProps) => (
+    <div data-testid="select" data-value={value}>
+      {children}
+    </div>
+  ),
+  SelectTrigger: ({ children, id, ...props }: SelectTriggerProps) => (
+    <button type="button" data-testid="select-trigger" id={id} {...props}>
+      {children}
+    </button>
+  ),
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <span data-testid="select-value">{placeholder}</span>,
+  SelectContent: ({ children }: PropsWithChildren) => <div data-testid="select-content">{children}</div>,
+  SelectItem: ({ children, value, disabled }: SelectItemProps) => (
+    <div data-testid="select-item" data-value={value} data-disabled={disabled ? 'true' : 'false'}>
+      {children}
+    </div>
+  ),
+}));
+
 // Mock external site icons
 jest.mock('@/frontend/shared/icons/ExternalSiteIcons', () => ({
   DotabuffIcon: () => <div data-testid="dotabuff-icon">Dotabuff</div>,
@@ -179,6 +209,7 @@ describe('AppSidebar', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams() as ReturnType<typeof useSearchParams>);
     mockUseAppData.mockReturnValue({
       state: { selectedTeamId: GLOBAL_TEAM_KEY },
+      teams: new Map(),
       getTeam: jest.fn(() => ({
         teamId: 0,
         leagueId: 0,
@@ -186,6 +217,45 @@ describe('AppSidebar', () => {
         matches: new Map(),
         players: new Map(),
       })),
+      getAllTeamsForDisplayOrdered: jest.fn(() => [
+        {
+          team: { id: 0, name: '' },
+          league: { id: 0, name: '' },
+          timeAdded: new Date(0).toISOString(),
+          matches: {},
+          manualMatches: {},
+          manualPlayers: [],
+          players: [],
+          performance: {
+            totalMatches: 0,
+            totalWins: 0,
+            totalLosses: 0,
+            overallWinRate: 0,
+            erroredMatches: 0,
+          },
+          isLoading: false,
+          isGlobal: true,
+        },
+        {
+          team: { id: 123, name: 'Team Alpha' },
+          league: { id: 456, name: 'League Beta' },
+          timeAdded: new Date(1).toISOString(),
+          matches: {},
+          manualMatches: {},
+          manualPlayers: [],
+          players: [],
+          performance: {
+            totalMatches: 1,
+            totalWins: 1,
+            totalLosses: 0,
+            overallWinRate: 100,
+            erroredMatches: 0,
+          },
+          isLoading: false,
+          isGlobal: false,
+        },
+      ]),
+      setSelectedTeam: jest.fn(),
     });
   });
 
@@ -221,6 +291,14 @@ describe('AppSidebar', () => {
     render(<AppSidebar />);
 
     expect(screen.getByText('Navigation')).toBeInTheDocument();
+  });
+
+  it('renders team selector with available teams', () => {
+    render(<AppSidebar />);
+
+    expect(screen.getByText('Team')).toBeInTheDocument();
+    expect(screen.getByText('Global (manual items)')).toBeInTheDocument();
+    expect(screen.getByText('Team Alpha - League Beta')).toBeInTheDocument();
   });
 
   it('does not render quick links for global team', () => {

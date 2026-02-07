@@ -1,5 +1,6 @@
 'use client';
 
+import * as SelectPrimitive from '@radix-ui/react-select';
 import {
   BarChart,
   Building,
@@ -154,6 +155,7 @@ const getTeamDisplayLabel = (teamData: TeamDisplayData): string => {
 const TeamSelector = () => {
   const appData = useAppData();
   const { setActiveTeam } = useConfigContext();
+  const { state, isMobile } = useSidebar();
 
   const teams = React.useMemo(() => {
     return appData.getAllTeamsForDisplayOrdered();
@@ -179,31 +181,55 @@ const TeamSelector = () => {
     [appData, setActiveTeam],
   );
 
+  const isCollapsed = state === 'collapsed' && !isMobile;
+
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+    <SidebarGroup>
       <div className="flex justify-center">
         <SidebarSeparator />
       </div>
       <SidebarGroupLabel asChild>
-        <label htmlFor={TEAM_SELECTOR_ID}>Team</label>
+        <label htmlFor={TEAM_SELECTOR_ID} className={isCollapsed ? 'sr-only' : ''}>
+          Team
+        </label>
       </SidebarGroupLabel>
-      <div className="px-2">
-        <Select value={selectedTeamId} onValueChange={handleTeamChange}>
-          <SelectTrigger id={TEAM_SELECTOR_ID} aria-label="Select team" className="w-full">
-            <SelectValue placeholder="Select team" />
-          </SelectTrigger>
-          <SelectContent>
-            {teams.map((teamData) => {
-              const teamKey = `${teamData.team.id}-${teamData.league.id}`;
-              return (
-                <SelectItem key={teamKey} value={teamKey} disabled={Boolean(teamData.error)}>
-                  {getTeamDisplayLabel(teamData)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
+      <Select value={selectedTeamId} onValueChange={handleTeamChange}>
+        {isCollapsed ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectPrimitive.Trigger id={TEAM_SELECTOR_ID} aria-label="Select team" asChild>
+                    <SidebarMenuButton>
+                      <Users className="h-4 w-4" />
+                      <span className="sr-only">Select team</span>
+                    </SidebarMenuButton>
+                  </SelectPrimitive.Trigger>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">
+                  Select team
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : (
+          <div className="px-2">
+            <SelectTrigger id={TEAM_SELECTOR_ID} aria-label="Select team" className="w-full">
+              <SelectValue placeholder="Select team" />
+            </SelectTrigger>
+          </div>
+        )}
+        <SelectContent>
+          {teams.map((teamData) => {
+            const teamKey = `${teamData.team.id}-${teamData.league.id}`;
+            return (
+              <SelectItem key={teamKey} value={teamKey} disabled={Boolean(teamData.error)}>
+                {getTeamDisplayLabel(teamData)}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
     </SidebarGroup>
   );
 };
