@@ -109,7 +109,7 @@ export function usePlayerData() {
 
   return {
     players: playersArray,
-    isLoading: false, // TODO: Track loading state in AppData
+    isLoading: playersArray.some((player) => player.isLoading === true),
     error: null as null,
     selectedTeamId: appData.state.selectedTeamIdParsed,
     refreshPlayer,

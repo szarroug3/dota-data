@@ -41,11 +41,12 @@ const buildStoredPlayer = (): StoredPlayerData => ({
 });
 
 function HookProbe(): React.ReactElement {
-  const { players } = usePlayerData();
+  const { players, isLoading } = usePlayerData();
   return (
     <div>
       <div data-testid="player-count">{players.length}</div>
       <div data-testid="player-names">{players.map((p: Player) => p.profile.personaname).join(', ')}</div>
+      <div data-testid="players-loading">{isLoading ? 'true' : 'false'}</div>
     </div>
   );
 }
@@ -87,5 +88,54 @@ describe('usePlayerData', () => {
 
     expect(screen.getByTestId('player-count').textContent).toBe('1');
     expect(screen.getByTestId('player-names').textContent).toContain('Invoker Main');
+    expect(screen.getByTestId('players-loading').textContent).toBe('false');
+  });
+
+  it('reports loading when a player is currently loading', () => {
+    const team = buildTeam();
+    const stored = buildStoredPlayer();
+    team.players.set(stored.accountId, stored);
+
+    const loadingPlayer: Player = {
+      accountId: stored.accountId,
+      profile: {
+        name: stored.name,
+        personaname: stored.name,
+        rank_tier: stored.rank_tier,
+      },
+      heroStats: [],
+      overallStats: {
+        wins: 0,
+        losses: 0,
+        totalGames: 0,
+        winRate: 0,
+      },
+      recentMatchIds: [],
+      isLoading: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    mockUseAppData.mockReturnValue({
+      state: {
+        selectedTeamId: team.id,
+        selectedTeamIdParsed: { teamId: team.teamId, leagueId: team.leagueId },
+        selectedMatchId: null,
+        selectedPlayerId: null,
+        isLoading: false,
+        error: null,
+      },
+      teams: new Map([[team.id, team]]),
+      matches: new Map(),
+      players: new Map([[loadingPlayer.accountId, loadingPlayer]]),
+      getTeam: () => team,
+      getTeamPlayerIds: () => new Set([stored.accountId]),
+      getPlayer: () => loadingPlayer,
+      loadPlayer: jest.fn(),
+      refreshPlayer: jest.fn(),
+    });
+
+    render(<HookProbe />);
+    expect(screen.getByTestId('players-loading').textContent).toBe('true');
   });
 });
