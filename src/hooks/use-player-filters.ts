@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 
 export interface PlayerFilters {
   search: string;

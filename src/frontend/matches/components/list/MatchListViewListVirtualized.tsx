@@ -1,7 +1,7 @@
 import React from 'react';
 import { List } from 'react-window';
 
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 
 import { MatchCard } from './MatchListViewList';
 

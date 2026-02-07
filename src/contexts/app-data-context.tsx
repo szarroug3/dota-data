@@ -9,10 +9,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
-import { AppData } from '@/frontend/lib/app-data';
-import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data-metadata-helpers';
-import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data-types';
-import type { Match, Player, Team } from '@/frontend/lib/app-data-types';
+import { AppData } from '@/frontend/lib/app-data/app-data';
+import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data/app-data-metadata-helpers';
+import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
+import type { Match, Player, Team } from '@/frontend/lib/app-data/app-data-types';
 
 // ============================================================================
 // CONTEXT

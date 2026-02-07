@@ -1,7 +1,7 @@
 import type React from 'react';
 
-import { AppData } from '@/frontend/lib/app-data';
-import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data-types';
+import { AppData } from '@/frontend/lib/app-data/app-data';
+import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
 
 const TEAMS_STORAGE_KEY = 'dota-scout-assistant-teams';
 const ACTIVE_TEAM_STORAGE_KEY = 'dota-scout-assistant-active-team';

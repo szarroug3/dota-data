@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { Match, Team } from '@/frontend/lib/app-data-types';
-import type { StoredMatchData } from '@/frontend/lib/storage-manager';
+import type { Match, Team } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 import { MatchListViewCard } from '@/frontend/matches/components/list/MatchListViewCard';
 
 // Mock config context used by components

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data-types';
+import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data/app-data-types';
 import { MatchListViewList } from '@/frontend/matches/components/list/MatchListViewList';
 
 // Mock config context used by components

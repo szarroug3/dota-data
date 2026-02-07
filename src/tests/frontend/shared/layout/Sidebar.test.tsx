@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { ButtonHTMLAttributes, HTMLAttributes, LiHTMLAttributes, PropsWithChildren } from 'react';
 
-import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data-types';
+import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
 import { AppSidebar } from '@/frontend/shared/layout/Sidebar';
 
 // Mock Next.js navigation hooks

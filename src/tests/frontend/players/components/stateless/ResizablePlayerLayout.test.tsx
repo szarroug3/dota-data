@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
 import { ResizablePlayerLayout } from '@/frontend/players/components/stateless/ResizablePlayerLayout';

@@ -3,8 +3,8 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import { PlayerDetailsPanel } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';

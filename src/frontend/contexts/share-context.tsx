@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, Suspense } from 'react';
 
-import type { Team } from '@/frontend/lib/app-data-types';
+import type { Team } from '@/frontend/lib/app-data/app-data-types';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 

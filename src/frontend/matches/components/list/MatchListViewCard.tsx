@@ -3,8 +3,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Hero, Match, Team } from '@/frontend/lib/app-data-types';
-import type { StoredMatchData } from '@/frontend/lib/storage-manager';
+import type { Hero, Match, Team } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';
 import { ExternalSiteButton } from '@/frontend/matches/components/stateless/common/ExternalSiteButton';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';

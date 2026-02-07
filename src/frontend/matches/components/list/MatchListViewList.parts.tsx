@@ -2,7 +2,7 @@ import { AlertCircle } from 'lucide-react';
 import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
-import type { Hero } from '@/frontend/lib/app-data-types';
+import type { Hero } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 export interface HeroIndicatorProps {

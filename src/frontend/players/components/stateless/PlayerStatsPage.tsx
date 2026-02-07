@@ -4,8 +4,8 @@ import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { AddPlayerSheet } from '@/frontend/players/components/stateless/AddPlayerSheet';
 import { EditPlayerSheet } from '@/frontend/players/components/stateless/EditPlayerSheet';
 import { ErrorContent } from '@/frontend/players/components/stateless/ErrorContent';

@@ -2,8 +2,8 @@ import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, use
 
 import { useAppData } from '@/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Hero, Player } from '@/frontend/lib/app-data-types';
-import type { StoredPlayerData } from '@/frontend/lib/storage-manager';
+import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredPlayerData } from '@/frontend/lib/storage/storage-manager';
 import type { PlayerDetailsPanelMode } from '@/frontend/players/components/stateless/details/PlayerDetailsPanel';
 import type { PlayerListViewMode } from '@/frontend/players/components/stateless/PlayerListView';
 import type { ResizablePlayerLayoutRef } from '@/frontend/players/components/stateless/ResizablePlayerLayout';

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
-import type { StoredMatchData } from '@/frontend/lib/storage-manager';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 import { MatchListViewCard } from './MatchListViewCard';
 import { MatchListViewList } from './MatchListViewList';

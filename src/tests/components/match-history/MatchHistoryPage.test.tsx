@@ -6,7 +6,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { ConfigProvider } from '@/frontend/contexts/config-context';
-import type { HeroSummaryEntry } from '@/frontend/lib/app-data-types';
+import type { HeroSummaryEntry } from '@/frontend/lib/app-data/app-data-types';
 import { MatchHistoryPageContainer } from '@/frontend/matches/components/containers/MatchHistoryPageContainer';
 
 // Remove data coordinator dependency (no longer used)

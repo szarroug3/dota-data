@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { Hero } from '@/frontend/lib/app-data-types';
+import type { Hero } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import type { PlayerStats } from '@/frontend/players/hooks/usePlayerStatsPage';

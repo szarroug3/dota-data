@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
-import { Match, PlayerMatchData } from '@/frontend/lib/app-data-types';
-import type { TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import { Match, PlayerMatchData } from '@/frontend/lib/app-data/app-data-types';
+import type { TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 interface MatchDetailsPanelPlayersProps {

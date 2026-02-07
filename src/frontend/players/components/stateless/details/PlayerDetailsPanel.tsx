@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 
 import { PlayerDetailsPanelDetails } from './PlayerDetailsPanelDetails';
 import { PlayerDetailsPanelHeader } from './PlayerDetailsPanelHeader';

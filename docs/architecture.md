@@ -22,10 +22,10 @@
 
 ### **Core Principle**
 
-- **Single Data Store**: All data in one place (`AppData` class in `src/frontend/lib/app-data.ts`)
+- **Single Data Store**: All data in one place (`AppData` class in `src/frontend/lib/app-data/app-data.ts`)
 - **Simple Contexts**: Just wrap the store, no complex state management
 - **Computed Data**: Pre-calculated and stored, not computed in UI
-- **Easy to Find**: Everything in 3 files total
+- **Easy to Find**: AppData and related logic live under `src/frontend/lib/app-data/`; other domains under `match/`, `player/`, `team/`, `storage/`, `reference/`
 
 ### **File Structure**
 
@@ -33,11 +33,19 @@
 src/
   frontend/
     lib/
-      app-data.ts          // Single AppData class - ~500 lines
+      app-data/
+        app-data.ts        // Single AppData class - ~500 lines
+        app-data-types.ts  // Types and interfaces
+        app-data-*-ops.ts  // Operations and derivations
+      match/              // Match loaders and timeline
+      player/             // Player loader and statistics
+      team/               // Team/league loaders and formatter
+      storage/            // localStorage manager and optimization
+      reference/          // Reference data loader
   contexts/
     app-data-context.tsx   // Simple React context wrapper - ~50 lines
   hooks/
-    use-app-data.ts        // Simple hook - ~50 lines
+    use-app-data.ts       // Simple hook - ~50 lines
 ```
 
 ### **AppData Class Structure**

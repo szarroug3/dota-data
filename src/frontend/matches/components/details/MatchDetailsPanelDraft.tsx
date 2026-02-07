@@ -4,7 +4,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAppData } from '@/contexts/app-data-context';
-import type { DraftPhase, Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { DraftPhase, Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { getTeamDisplayNames } from '@/frontend/matches/utils/match-name-helpers';
 

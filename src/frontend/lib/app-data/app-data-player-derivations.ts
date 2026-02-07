@@ -1,4 +1,4 @@
-import type { Player } from './app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 
 export function sortPlayersByName(players: Player[]): Player[] {
   return [...players].sort((a, b) => {

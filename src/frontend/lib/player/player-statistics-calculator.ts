@@ -5,7 +5,7 @@
  * This replaces scattered calculations in UI components with a single source of truth.
  */
 
-import type { Hero, Match, TeamMatchParticipation } from './app-data-types';
+import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 
 // ============================================================================
 // TYPES

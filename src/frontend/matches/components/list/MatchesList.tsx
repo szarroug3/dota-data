@@ -4,7 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 
 import { MatchListView, type MatchListViewMode } from './MatchListView';
 

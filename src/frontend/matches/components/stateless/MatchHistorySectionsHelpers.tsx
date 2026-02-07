@@ -1,6 +1,6 @@
 'use client';
 
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';

@@ -5,7 +5,7 @@
  * Contains loadTeam and refreshTeam functions.
  */
 
-import type { AppDataState, League, LeagueMatchesCache, Team } from './app-data-types';
+import type { AppDataState, League, LeagueMatchesCache, Team } from '@/frontend/lib/app-data/app-data-types';
 
 /**
  * Interface for AppData instance methods needed by team operations

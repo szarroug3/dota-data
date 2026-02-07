@@ -3,7 +3,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';

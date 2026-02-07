@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { PlayerRole } from '@/frontend/lib/app-data-types';
+import type { PlayerRole } from '@/frontend/lib/app-data/app-data-types';
 
 /**
  * Player statistics view mode options

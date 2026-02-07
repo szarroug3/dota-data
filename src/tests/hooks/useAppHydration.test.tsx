@@ -8,7 +8,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Team } from '@/frontend/lib/app-data-types';
+import type { Team } from '@/frontend/lib/app-data/app-data-types';
 import { useAppData } from '@/hooks/use-app-data';
 import { useAppHydration } from '@/hooks/useAppHydration';
 

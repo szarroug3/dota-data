@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 
-import type { Player, Team } from '@/frontend/lib/app-data-types';
-import type { StoredPlayerData } from '@/frontend/lib/storage-manager';
+import type { Player, Team } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredPlayerData } from '@/frontend/lib/storage/storage-manager';
 import { usePlayerData } from '@/frontend/players/hooks/usePlayerStatsPage';
 
 const mockUseAppData = jest.fn();

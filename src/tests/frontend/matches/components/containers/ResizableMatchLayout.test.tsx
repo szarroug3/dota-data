@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
-import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { ResizableMatchLayout } from '@/frontend/matches/components/containers/ResizableMatchLayout';
 import { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';

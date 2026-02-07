@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
 
 const mockTeam: Team = {

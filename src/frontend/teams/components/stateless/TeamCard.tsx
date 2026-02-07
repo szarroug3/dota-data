@@ -4,7 +4,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
+import type { TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
 
 interface TeamCardProps {
   teamData: TeamDisplayData;

@@ -5,7 +5,7 @@
  * Handles the hierarchy: User team name → Match data team name → Default side name
  */
 
-import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 
 /**
  * Determines the display name for a team based on a hierarchy

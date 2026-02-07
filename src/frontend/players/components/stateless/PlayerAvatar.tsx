@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
 
 interface PlayerAvatarProps {

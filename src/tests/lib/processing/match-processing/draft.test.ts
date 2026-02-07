@@ -1,4 +1,4 @@
-import type { Hero } from '@/frontend/lib/app-data-types';
+import type { Hero } from '@/frontend/lib/app-data/app-data-types';
 import { convertDraftData, determinePickOrder } from '@/lib/processing/match-processing/draft';
 import type { OpenDotaMatch } from '@/types/external-apis';
 

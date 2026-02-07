@@ -1,64 +1,65 @@
 # Frontend Library
 
-This directory contains the core data management logic for the Dota Scout Assistant application.
+This directory contains the core data management logic for the Dota Scout Assistant application. Modules are grouped by **domain** to keep the codebase navigable.
 
-## File Structure
+## Directory Structure
 
-### Core Files
+### `app-data/`
 
-- **`app-data.ts`** (15KB, 543 lines)
-  - Main `AppData` class - single source of truth for application state
-  - CRUD operations for teams, matches, and players
-  - Orchestrates data loading and persistence
-  - Entry point for all data operations
+Core AppData class, types, and all operation/derivation modules.
 
-- **`app-data-types.ts`** (3.1KB)
-  - All TypeScript interfaces and types for AppData
-  - Includes: `Team`, `Match`, `Player`, `Hero`, `Item`, `League`
-  - UI types: `TeamDisplayData`, `AppDataState`
-  - Cache types: `LeagueMatchesCache`, `LeagueMatchInfo`
+- **`app-data.ts`** – Main `AppData` class; single source of truth for application state. CRUD, loading, and persistence orchestration.
+- **`app-data-types.ts`** – TypeScript interfaces and types: `Team`, `Match`, `Player`, `Hero`, `Item`, `League`, `TeamDisplayData`, `AppDataState`, `LeagueMatchesCache`, etc.
+- **`app-data-*-ops.ts`** – Operation modules: computed-ops, crud-ops, data-ops, loading-ops, initialization-ops, match-ops, match-participation-ops, player-ops, player-metadata-ops, statistics-ops, storage-ops, team-ops, ui-ops, hero-performance-ops, hero-summary-ops.
+- **`app-data-*-derivations.ts`** – Derivations and helpers: derivations, match-derivations, hero-derivations, player-derivations, participation-helpers, metadata-helpers.
+- **`app-data-match-placeholder.ts`** – Placeholder match creation for storage/metadata.
 
-### Helper Modules
+### `match/`
 
-- **`reference-data-loader.ts`** (2.5KB)
-  - Loads global reference data (heroes, items, leagues)
-  - Functions: `loadHeroes()`, `loadItems()`, `loadLeagues()`
-  - Called once on app initialization
+Match-specific loading, event processing, and timeline utilities.
 
-- **`storage-manager.ts`** (5.8KB)
-  - Handles localStorage persistence
-  - Functions: `saveTeamsToStorage()`, `loadTeamsFromStorage()`
-  - Maintains backwards compatibility with old storage format
+- **`match-loader.ts`** – Fetches and processes full match data from OpenDota API; in-flight deduplication; `fetchAndProcessMatch()`, `processMatchData()`.
+- **`match-events-processor.ts`** – Game event generation and processing: `generateEvents()`, `processGameEvents()`.
+- **`match-performance-timeline.ts`** – Chart data and bounds: `createMatchPerformanceTimelineChartData()`, `computeChartBounds()`, `ChartDataPoint`, `ChartBounds`.
 
-- **`team-loader.ts`** (899B)
-  - Fetches individual team data from Steam API
-  - Function: `fetchTeamData(teamId)`
-  - Used during team addition/refresh
+### `player/`
 
-- **`league-matches-loader.ts`** (3.9KB)
-  - Processes league matches data from Steam API
-  - Extracts match IDs, team IDs, and player IDs
-  - Implements caching to avoid redundant fetches
-  - Functions: `processLeagueMatches()`, `fetchAndProcessLeagueMatches()`, `getOrFetchLeagueMatches()`
+Player loading and statistics.
 
-- **`match-loader.ts`** (7.5KB)
-  - Fetches and processes full match data from OpenDota API
-  - Converts raw API data into AppData Match format
-  - Includes draft, player stats, and match statistics
-  - Implements in-flight request deduplication
-  - Function: `fetchAndProcessMatch(matchId)`
+- **`player-loader.ts`** – Fetches and processes player data: `fetchAndProcessPlayer()`.
+- **`player-statistics-calculator.ts`** – Player/hero/team stats types and calculations: `PlayerStats`, `HeroStats`, `TeamPlayerStats`, `DateRangeSelection`.
 
-- **`team-display-formatter.ts`** (1.4KB)
-  - Converts internal `Team` data to UI display format (`TeamDisplayData`)
-  - Functions: `formatTeamForDisplay()`, `formatTeamsForDisplay()`
-  - Handles error message formatting
+### `team/`
+
+Team and league loading and display formatting.
+
+- **`team-loader.ts`** – Fetches team data from API: `fetchTeamData()`, `getTeamMatchIdsFromCache()`.
+- **`team-display-formatter.ts`** – Converts `Team` to UI format: `formatTeamForDisplay()`, `formatTeamsForDisplay()`.
+- **`league-matches-loader.ts`** – League matches from Steam API; caching and deduplication: `processLeagueMatches()`, `getOrFetchLeagueMatches()`.
+
+### `storage/`
+
+Local persistence and optimization.
+
+- **`storage-manager.ts`** – localStorage read/write: `loadTeamsFromStorage()`, `saveTeamsToStorage()`. Defines `StoredMatchData`, `StoredPlayerData`, `StoredHero`.
+- **`storage-manager-optimization.ts`** – `cleanupOldTeams()`, `optimizeStorageData()` for quota and size control.
+
+### `reference/`
+
+Global reference data loading.
+
+- **`reference-data-loader.ts`** – Loads heroes, items, leagues: `loadHeroes()`, `loadItems()`, `loadLeagues()`. Used once on app init.
+
+### Other
+
+- **`api-client/`** – API client utilities.
+- **`cache/`** – Caching utilities.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         AppData                              │
-│                   (Main orchestrator)                        │
+│                    AppData (app-data/app-data.ts)            │
 └──────────────┬────────────────────────────────┬─────────────┘
                │                                │
        ┌───────▼────────┐              ┌───────▼────────┐
@@ -66,17 +67,17 @@ This directory contains the core data management logic for the Dota Scout Assist
        └───────┬────────┘              └───────┬────────┘
                │                                │
      ┌─────────┼──────────┐           ┌────────▼────────┐
-     │         │          │           │ storage-manager │
+     │         │          │           │ storage/       │
      │         │          │           └─────────────────┘
 ┌────▼───┐ ┌──▼──────┐ ┌─▼──────────────┐
-│ team-  │ │reference│ │ league-matches │
-│ loader │ │  -data  │ │   -processor   │
-│        │ │ -loader │ │                │
+│ team/  │ │reference│ │ team/          │
+│        │ │  /      │ │ league-matches │
 └────────┘ └─────────┘ └────────────────┘
                 │
         ┌───────▼──────────┐
-        │ team-display     │
-        │  -formatter      │
+        │ team/            │
+        │ team-display-    │
+        │ formatter        │
         └──────────────────┘
 ```
 
@@ -84,25 +85,23 @@ This directory contains the core data management logic for the Dota Scout Assist
 
 ### App Initialization
 
-1. `AppDataProvider` creates `AppData` instance
-2. Calls `loadHeroesData()`, `loadItemsData()`, `loadLeaguesData()` in parallel
-3. Calls `loadFromStorage()` to restore saved teams
-4. React Context makes `AppData` available to components
+1. `AppDataProvider` creates `AppData` instance (from `app-data/app-data.ts`).
+2. Calls `loadHeroesData()`, `loadItemsData()`, `loadLeaguesData()` (via `reference/reference-data-loader`).
+3. Calls `loadFromStorage()` to restore saved teams (via `storage/storage-manager`).
+4. React Context exposes `AppData` to components.
 
 ### Adding a Team
 
-1. UI calls `appData.loadTeam(teamId, leagueId)`
-2. `AppData` creates placeholder team with `isLoading: true`
-3. Fetches team data (via `team-loader`) and league matches (via `league-matches-loader`) in parallel
-4. Updates team with fetched data and sets `isLoading: false`
-5. Calls `saveToStorage()` to persist
+1. UI calls `appData.loadTeam(teamId, leagueId)`.
+2. `AppData` creates a placeholder team with `isLoading: true`.
+3. Fetches team data (`team/team-loader`) and league matches (`team/league-matches-loader`) in parallel.
+4. Updates team and sets `isLoading: false`; calls `saveToStorage()`.
 
 ### Displaying Teams
 
-1. UI calls `appData.getAllTeamsForDisplay()`
-2. `AppData` delegates to `formatTeamsForDisplay()`
-3. Formatter converts each `Team` to `TeamDisplayData` with error messages
-4. UI renders the formatted data
+1. UI calls `appData.getAllTeamsForDisplay()`.
+2. `AppData` uses `team/team-display-formatter` to produce `TeamDisplayData`.
+3. UI renders the formatted data.
 
 ## Usage Example
 
@@ -112,32 +111,23 @@ import { useAppData } from '@/contexts/app-data-context';
 function MyComponent() {
   const appData = useAppData();
 
-  // Get teams for display
   const teams = appData.getAllTeamsForDisplay();
-
-  // Add a new team
   await appData.loadTeam(9517508, 18324);
-
-  // Refresh a team
   await appData.refreshTeam(9517508, 18324);
-
-  // Remove a team
   appData.removeTeam('9517508-18324');
   appData.saveToStorage();
 }
 ```
 
-## Benefits of This Structure
+## Testing
 
-1. **Separation of Concerns**: Each file has a single, well-defined responsibility
-2. **Maintainability**: Smaller files (< 200 lines each) are easier to understand and modify
-3. **Testability**: Helper functions can be unit tested independently
-4. **Reusability**: Formatters and loaders can be used in different contexts
-5. **Scalability**: Easy to add new helpers without bloating the main file
+Unit tests mirror this layout under `src/tests/frontend/lib/`: e.g. `app-data/app-data.test.ts`, `match/match-loader.test.ts`, `team/team-loader.test.ts`, `storage/storage-manager-optimization.test.ts`. Add or move tests so each module’s test lives in the matching subfolder.
 
-## Future Improvements
+## Import Paths
 
-- Extract team operations (`loadTeam`, `refreshTeam`) into `team-operations.ts`
-- Create computed data helpers for match/player statistics
-- Add more granular loading states per entity
-- Implement data validation layer
+Use `@` aliases; no barrel files. Examples:
+
+- `import { AppData } from '@/frontend/lib/app-data/app-data';`
+- `import type { Match, Team } from '@/frontend/lib/app-data/app-data-types';`
+- `import { formatTeamForDisplay } from '@/frontend/lib/team/team-display-formatter';`
+- `import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';`

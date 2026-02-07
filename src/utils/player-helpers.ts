@@ -4,7 +4,7 @@
  * Utility functions for player data processing and error handling
  */
 
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 
 // ============================================================================
 // ERROR HANDLING

@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAppData } from '@/contexts/app-data-context';
-import type { TeamRoleStats, TeamPlayerDetailStats } from '@/frontend/lib/app-data-statistics-ops';
-import type { Player } from '@/frontend/lib/app-data-types';
-import type { HeroStats } from '@/frontend/lib/player-statistics-calculator';
+import type { TeamRoleStats, TeamPlayerDetailStats } from '@/frontend/lib/app-data/app-data-statistics-ops';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
+import type { HeroStats } from '@/frontend/lib/player/player-statistics-calculator';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 interface PlayerDetailsPanelTeamProps {

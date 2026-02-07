@@ -4,7 +4,7 @@ import React from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import { processPlayerRank } from '@/utils/player-statistics';
 

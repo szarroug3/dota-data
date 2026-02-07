@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
+import type { TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
 
 import { TeamCard } from './TeamCard';
 

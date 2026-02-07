@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data/app-data-types';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
 
 // Mock the child components

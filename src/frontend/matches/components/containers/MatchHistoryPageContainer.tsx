@@ -2,7 +2,7 @@
 
 import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 
-import type { MatchFilters as MatchFiltersType } from '@/frontend/lib/app-data-types';
+import type { MatchFilters as MatchFiltersType } from '@/frontend/lib/app-data/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import { useAppData } from '@/hooks/use-app-data';
 import useViewMode from '@/hooks/useViewMode';

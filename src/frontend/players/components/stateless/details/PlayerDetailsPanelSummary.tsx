@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAppData } from '@/contexts/app-data-context';
-import type { Hero, Player } from '@/frontend/lib/app-data-types';
+import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 interface PlayerDetailsPanelSummaryProps {

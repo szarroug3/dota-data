@@ -2,7 +2,7 @@ import { Clock, TrendingUp, Users } from 'lucide-react';
 import React from 'react';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Match } from '@/frontend/lib/app-data-types';
+import type { Match } from '@/frontend/lib/app-data/app-data-types';
 
 import type { MatchDetailsPanelMode } from './MatchDetailsPanel';
 

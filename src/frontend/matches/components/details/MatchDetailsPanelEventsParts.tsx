@@ -6,9 +6,9 @@ import {
   computeTeamfightTotals,
   deriveTeamfightRowData,
   type TeamfightRowData,
-} from '@/frontend/lib/app-data-match-derivations';
-import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data-types';
-import type { ChartDataPoint } from '@/frontend/lib/match-performance-timeline';
+} from '@/frontend/lib/app-data/app-data-match-derivations';
+import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data/app-data-types';
+import type { ChartDataPoint } from '@/frontend/lib/match/match-performance-timeline';
 
 export type { ChartDataPoint };
 

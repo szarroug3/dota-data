@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { PlayerDetailsPanelDetails } from '@/frontend/players/components/stateless/details/PlayerDetailsPanelDetails';
 
 // Mock AppData context instead of constants context

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 
-import type { GameEvent } from '@/frontend/lib/app-data-types';
+import type { GameEvent } from '@/frontend/lib/app-data/app-data-types';
 import {
   AdvantagesList,
   formatTime,

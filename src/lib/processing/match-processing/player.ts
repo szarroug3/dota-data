@@ -1,4 +1,4 @@
-import type { Hero, Item, PlayerMatchData, PlayerRole } from '@/frontend/lib/app-data-types';
+import type { Hero, Item, PlayerMatchData, PlayerRole } from '@/frontend/lib/app-data/app-data-types';
 import type { OpenDotaMatchPlayer } from '@/types/external-apis';
 
 export function getPlayerItems(player: OpenDotaMatchPlayer, items: Record<number, Item>): Item[] {

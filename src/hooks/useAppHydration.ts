@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data-metadata-helpers';
+import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data/app-data-metadata-helpers';
 import { useAppData } from '@/hooks/use-app-data';
 
 /**

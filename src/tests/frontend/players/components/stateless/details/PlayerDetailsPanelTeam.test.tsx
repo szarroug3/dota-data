@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 
 import { useAppData } from '@/contexts/app-data-context';
-import type { AppData } from '@/frontend/lib/app-data';
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { AppData } from '@/frontend/lib/app-data/app-data';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { PlayerDetailsPanelTeam } from '@/frontend/players/components/stateless/details/PlayerDetailsPanelTeamView';
 
 jest.mock('@/contexts/app-data-context', () => ({

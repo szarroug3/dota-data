@@ -1,4 +1,4 @@
-import type { Match, MatchEvent } from '@/frontend/lib/app-data-types';
+import type { Match, MatchEvent } from '@/frontend/lib/app-data/app-data-types';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 export interface DraftPhase {

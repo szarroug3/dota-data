@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppData } from '@/contexts/app-data-context';
-import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Hero, Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 
 interface HiddenMatchesModalProps {

@@ -4,7 +4,7 @@
  * Utility functions for processing player data into detailed statistics
  */
 
-import type { Hero } from '@/frontend/lib/app-data-types';
+import type { Hero } from '@/frontend/lib/app-data/app-data-types';
 import type { OpenDotaPlayerHero } from '@/types/external-apis';
 
 // ============================================================================

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import type { Player } from '@/frontend/lib/app-data-types';
+import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 
 const basePlayer = (overrides: Partial<Player> = {}): Player => ({

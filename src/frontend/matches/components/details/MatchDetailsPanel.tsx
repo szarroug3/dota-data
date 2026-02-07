@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data-types';
+import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data/app-data-types';
 import { MatchDetailsPanelDraft } from '@/frontend/matches/components/details/MatchDetailsPanelDraft';
 import { MatchDetailsPanelEvents } from '@/frontend/matches/components/details/MatchDetailsPanelEvents';
 import { MatchDetailsPanelHeader } from '@/frontend/matches/components/details/MatchDetailsPanelHeader';

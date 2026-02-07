@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data-types';
+import type { Match, Team, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import {
   AddMatchFormSection,

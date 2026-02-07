@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import type { TeamDisplayData } from '@/frontend/lib/app-data-types';
+import type { TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
 import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
 
 describe('TeamList', () => {

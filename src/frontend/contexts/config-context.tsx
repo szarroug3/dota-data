@@ -11,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import type { Serializable, SharePayload } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
-import type { Team } from '@/frontend/lib/app-data-types';
+import type { Team } from '@/frontend/lib/app-data/app-data-types';
 import type { AppConfig, ConfigContextProviderProps, ConfigContextValue } from '@/types/contexts/config-context-value';
 import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage';
 

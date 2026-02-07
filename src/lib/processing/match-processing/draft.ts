@@ -1,4 +1,4 @@
-import type { Hero, HeroPick } from '@/frontend/lib/app-data-types';
+import type { Hero, HeroPick } from '@/frontend/lib/app-data/app-data-types';
 import type { OpenDotaMatch } from '@/types/external-apis';
 
 export function determinePickOrder(matchData: OpenDotaMatch): {

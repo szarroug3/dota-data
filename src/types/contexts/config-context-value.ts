@@ -5,7 +5,7 @@
  * in the frontend application.
  */
 
-import type { Team } from '@/frontend/lib/app-data-types';
+import type { Team } from '@/frontend/lib/app-data/app-data-types';
 
 // ============================================================================
 // CONFIG DATA TYPES

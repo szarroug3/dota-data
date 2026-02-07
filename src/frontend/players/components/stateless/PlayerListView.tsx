@@ -2,8 +2,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
-import type { PlayerListViewEntry } from '@/frontend/lib/app-data-computed-ops';
-import type { Hero, Player } from '@/frontend/lib/app-data-types';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
+import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
