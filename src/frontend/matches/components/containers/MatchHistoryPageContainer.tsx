@@ -176,37 +176,19 @@ function useHighPerformingHeroes(
   }, [appData, selectedTeamId, hiddenMatchIds, appData.teams, appData.matches]);
 }
 
-export function MatchHistoryPageContainer(): React.ReactElement {
-  const appData = useAppData();
-  const selectedTeamId = appData.state.selectedTeamId;
-
-  const {
-    selectedMatchId,
-    setSelectedMatchId,
-    resizableLayoutRef,
-    filters,
-    setFilters,
-    viewMode,
-    setViewMode,
-    matchDetailsViewMode,
-    setMatchDetailsViewMode,
-    showHiddenModal,
-    setShowHiddenModal,
-    showAddMatchForm,
-    setShowAddMatchForm,
-    matchId,
-    setMatchId,
-    teamSide,
-    setTeamSide,
-    isSubmitting,
-    setIsSubmitting,
-    error,
-    setError,
-  } = useMatchHistoryPageState();
-
-  const { hiddenMatches, hiddenMatchIds } = useHiddenMatches(appData, selectedTeamId);
-  const highPerformingHeroes = useHighPerformingHeroes(appData, selectedTeamId, hiddenMatchIds);
-
+function useMatchHistoryData({
+  appData,
+  selectedTeamId,
+  filters,
+  hiddenMatchIds,
+  selectedMatchId,
+}: {
+  appData: ReturnType<typeof useAppData>;
+  selectedTeamId: string;
+  filters: MatchFiltersType;
+  hiddenMatchIds: Set<number>;
+  selectedMatchId: number | null;
+}) {
   const matchHistoryData = useMemo(() => {
     return appData.getMatchHistoryData(selectedTeamId, filters, hiddenMatchIds, selectedMatchId);
     // Dependencies:
@@ -222,7 +204,36 @@ export function MatchHistoryPageContainer(): React.ReactElement {
 
   const { activeTeamMatches, teamMatches, filteredMatches, visibleMatches, unhiddenMatches, selectedMatch } =
     matchHistoryData;
+  const isMatchListLoading = appData.state.isLoading && visibleMatches.length === 0;
 
+  return {
+    activeTeamMatches,
+    teamMatches,
+    filteredMatches,
+    visibleMatches,
+    unhiddenMatches,
+    selectedMatch,
+    isMatchListLoading,
+  };
+}
+
+function useMatchHistoryHandlers({
+  appData,
+  selectedTeamId,
+  setSelectedMatchId,
+  resizableLayoutRef,
+  setShowAddMatchForm,
+  setIsSubmitting,
+  setError,
+}: {
+  appData: ReturnType<typeof useAppData>;
+  selectedTeamId: string;
+  setSelectedMatchId: (id: number | null) => void;
+  resizableLayoutRef: React.RefObject<ResizableMatchLayoutRef | null>;
+  setShowAddMatchForm: (show: boolean) => void;
+  setIsSubmitting: (value: boolean) => void;
+  setError: (value: string | undefined) => void;
+}) {
   const selectMatch = useCallback(
     (id: number) => {
       setSelectedMatchId(id);
@@ -255,6 +266,82 @@ export function MatchHistoryPageContainer(): React.ReactElement {
     },
     [appData, selectedTeamId],
   );
+
+  return {
+    selectMatch,
+    scrollToMatch,
+    handleAddMatch,
+    handleRefreshMatch,
+    matchExists,
+    handleHideMatch,
+    handleUnhideMatch,
+  };
+}
+
+export function MatchHistoryPageContainer(): React.ReactElement {
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  const {
+    selectedMatchId,
+    setSelectedMatchId,
+    resizableLayoutRef,
+    filters,
+    setFilters,
+    viewMode,
+    setViewMode,
+    matchDetailsViewMode,
+    setMatchDetailsViewMode,
+    showHiddenModal,
+    setShowHiddenModal,
+    showAddMatchForm,
+    setShowAddMatchForm,
+    matchId,
+    setMatchId,
+    teamSide,
+    setTeamSide,
+    isSubmitting,
+    setIsSubmitting,
+    error,
+    setError,
+  } = useMatchHistoryPageState();
+
+  const { hiddenMatches, hiddenMatchIds } = useHiddenMatches(appData, selectedTeamId);
+  const highPerformingHeroes = useHighPerformingHeroes(appData, selectedTeamId, hiddenMatchIds);
+
+  const {
+    activeTeamMatches,
+    teamMatches,
+    filteredMatches,
+    visibleMatches,
+    unhiddenMatches,
+    selectedMatch,
+    isMatchListLoading,
+  } = useMatchHistoryData({
+    appData,
+    selectedTeamId,
+    filters,
+    hiddenMatchIds,
+    selectedMatchId,
+  });
+
+  const {
+    selectMatch,
+    scrollToMatch,
+    handleAddMatch,
+    handleRefreshMatch,
+    matchExists,
+    handleHideMatch,
+    handleUnhideMatch,
+  } = useMatchHistoryHandlers({
+    appData,
+    selectedTeamId,
+    setSelectedMatchId,
+    resizableLayoutRef,
+    setShowAddMatchForm,
+    setIsSubmitting,
+    setError,
+  });
 
   return (
     <MatchHistoryPageContent
@@ -292,6 +379,7 @@ export function MatchHistoryPageContainer(): React.ReactElement {
       resizableLayoutRef={resizableLayoutRef}
       scrollToMatch={scrollToMatch}
       onAddMatch={() => setShowAddMatchForm(true)}
+      isMatchListLoading={isMatchListLoading}
     />
   );
 }

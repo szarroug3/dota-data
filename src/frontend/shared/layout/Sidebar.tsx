@@ -1,22 +1,9 @@
 'use client';
 
 import * as SelectPrimitive from '@radix-ui/react-select';
-import {
-  BarChart,
-  Building,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Clipboard,
-  Link,
-  Moon,
-  Sun,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Clipboard, Link, Moon, Sun, Trophy, Users } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import React, { Suspense } from 'react';
+import React from 'react';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -41,7 +28,11 @@ import { useShareContext } from '@/frontend/contexts/share-context';
 import { GLOBAL_TEAM_KEY, type TeamDisplayData } from '@/frontend/lib/app-data-types';
 import { useAppData } from '@/hooks/use-app-data';
 
-import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
+import { DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
+
+import { formatShortcutAria, formatShortcutVisual, getShortcutModifier } from './sidebar-shortcuts';
+import { SidebarExternalSites } from './SidebarExternalSites';
+import { SidebarNavigation } from './SidebarNavigation';
 const TEAM_SELECTOR_ID = 'sidebar-team-selector';
 /**
  * Sidebar title component that shows the app name when expanded
@@ -65,80 +56,6 @@ const Title = ({ open }: { open: boolean }) => {
         <SidebarSeparator />
       </div>
     </SidebarHeader>
-  );
-};
-
-/**
- * Navigation section with main app navigation items
- */
-const NavigationContent = () => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { isShareMode, shareKey } = useShareContext();
-  const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Building />, path: '/dashboard' },
-    { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
-    { id: 'player-stats', label: 'Player Stats', icon: <BarChart />, path: '/player-stats' },
-  ];
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-        Navigation
-      </SidebarGroupLabel>
-      <SidebarMenu className="overflow-hidden">
-        {navigationItems.map((item) => {
-          const isActive = pathname === item.path;
-          const handleClick = () => {
-            if (isShareMode && shareKey) {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('config', shareKey);
-              router.push(`${item.path}?${params.toString()}`);
-            } else {
-              router.push(item.path);
-            }
-          };
-          return (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton onClick={handleClick} className={isActive ? 'bg-accent' : ''} tooltip={item.label}>
-                {React.cloneElement(item.icon, {
-                  className: isActive ? 'text-primary' : '',
-                })}
-                <span className="truncate">{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
-};
-
-/**
- * Navigation section wrapped in Suspense boundary
- */
-const Navigation = () => {
-  return (
-    <Suspense
-      fallback={
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarMenu className="overflow-hidden">
-            <SidebarMenuItem>
-              <SidebarMenuButton disabled>
-                <Building className="animate-pulse" />
-                <span className="truncate">Loading...</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-      }
-    >
-      <NavigationContent />
-    </Suspense>
   );
 };
 
@@ -230,42 +147,6 @@ const TeamSelector = () => {
           })}
         </SelectContent>
       </Select>
-    </SidebarGroup>
-  );
-};
-
-/**
- * External sites section for Dota 2 resources
- */
-const ExternalSites = () => {
-  const externalSites = [
-    { id: 'dotabuff', label: 'Dotabuff', icon: <DotabuffIcon />, url: 'https://dotabuff.com' },
-    { id: 'opendota', label: 'OpenDota', icon: <OpenDotaIcon />, url: 'https://opendota.com' },
-    {
-      id: 'dota2protracker',
-      label: 'Dota2ProTracker',
-      icon: <Dota2ProTrackerIcon />,
-      url: 'https://dota2protracker.com',
-    },
-  ];
-
-  return (
-    <SidebarGroup>
-      <div className="flex justify-center">
-        <SidebarSeparator />
-      </div>
-      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-        External Sites
-      </SidebarGroupLabel>
-      <SidebarMenu className="overflow-hidden">
-        {externalSites.map((site) => (
-          <SidebarMenuItem key={site.id}>
-            <SidebarMenuButton onClick={() => window.open(site.url, '_blank')} tooltip={site.label}>
-              {site.icon} <span className="truncate">{site.label}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
     </SidebarGroup>
   );
 };
@@ -520,14 +401,24 @@ function Toggle() {
 
   // Use the correct state based on whether we're on mobile or desktop
   const isOpen = isMobile ? openMobile : open;
+  const shortcutModifier = getShortcutModifier();
+  const shortcutLabel = formatShortcutVisual(shortcutModifier, 'B');
+  const shortcutAria = formatShortcutAria(shortcutModifier, 'B');
+  const actionLabel = isOpen ? 'Collapse sidebar' : 'Expand sidebar';
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button onClick={toggleSidebar}>{isOpen ? <ChevronLeft /> : <ChevronRight />}</button>
+        <button
+          onClick={toggleSidebar}
+          aria-label={`${actionLabel} (${shortcutAria})`}
+          title={`${actionLabel} (${shortcutLabel})`}
+        >
+          {isOpen ? <ChevronLeft /> : <ChevronRight />}
+        </button>
       </TooltipTrigger>
       <TooltipContent side="right" align="center" hidden={state !== 'collapsed' || isMobile}>
-        {isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        {actionLabel} ({shortcutLabel})
       </TooltipContent>
     </Tooltip>
   );
@@ -547,9 +438,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <Title open={shouldShowFullVersion} />
       <SidebarContent>
-        <Navigation />
+        <SidebarNavigation />
         <TeamSelector />
-        <ExternalSites />
+        <SidebarExternalSites />
         <QuickLinks />
       </SidebarContent>
       <SidebarFooter>
