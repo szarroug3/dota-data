@@ -84,13 +84,7 @@ describe('MatchDetailsPanel', () => {
   });
 
   it('shows loading state when match is refreshing', () => {
-    render(
-      <MatchDetailsPanel
-        {...defaultProps}
-        match={{ ...mockMatch, isLoading: true }}
-        viewMode="draft"
-      />,
-    );
+    render(<MatchDetailsPanel {...defaultProps} match={{ ...mockMatch, isLoading: true }} viewMode="draft" />);
 
     expect(screen.getByText('Refreshing match...')).toBeInTheDocument();
   });
