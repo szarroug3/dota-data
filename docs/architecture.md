@@ -45,7 +45,9 @@ src/
   contexts/
     app-data-context.tsx   // Simple React context wrapper - ~50 lines
   hooks/
-    use-app-data.ts       // Simple hook - ~50 lines
+    app-data/
+      use-app-data.ts     // Simple hook - ~50 lines
+      useAppHydration.ts
 ```
 
 ### **AppData Class Structure**

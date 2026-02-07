@@ -26,7 +26,7 @@ import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
 import { GLOBAL_TEAM_KEY, type TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
-import { useAppData } from '@/hooks/use-app-data';
+import { useAppData } from '@/hooks/app-data/use-app-data';
 
 import { DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
 

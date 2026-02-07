@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
-import { useShouldVirtualize } from '@/hooks/use-virtualization';
+import { useShouldVirtualize } from '@/hooks/common/use-virtualization';
 
 import { MatchListViewList } from './MatchListViewList';
 import { MatchListViewListVirtualized } from './MatchListViewListVirtualized';

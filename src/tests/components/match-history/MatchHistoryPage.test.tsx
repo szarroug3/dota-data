@@ -207,7 +207,7 @@ jest.mock('@/contexts/app-data-context', () => ({
 }));
 
 // Mock useViewMode to simulate localStorage preference and allow state updates
-jest.mock('@/hooks/useViewMode', () => {
+jest.mock('@/hooks/layout/useViewMode', () => {
   return (defaultMode: string = 'list') => {
     const [viewMode, setViewMode] = React.useState(defaultMode);
     return {

@@ -13,7 +13,7 @@ import {
   ResizableMatchLayout,
   type ResizableMatchLayoutRef,
 } from '@/frontend/matches/components/stateless/ResizableMatchLayout';
-import type { MatchListViewMode } from '@/hooks/useViewMode';
+import type { MatchListViewMode } from '@/hooks/layout/useViewMode';
 
 export type MatchHistoryPageProps = {
   hiddenMatches: Match[];

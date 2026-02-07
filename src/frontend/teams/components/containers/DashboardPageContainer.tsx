@@ -5,7 +5,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { AddTeamForm } from '@/frontend/teams/components/stateless/AddTeamForm';
 import { EditTeamSheet } from '@/frontend/teams/components/stateless/EditTeamSheet';
 import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
-import { useAppData } from '@/hooks/use-app-data';
+import { useAppData } from '@/hooks/app-data/use-app-data';
 
 function useAddTeamForm(appData: ReturnType<typeof useAppData>) {
   const [teamId, setTeamId] = useState('');

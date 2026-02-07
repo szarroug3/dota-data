@@ -26,7 +26,7 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   }),
 }));
 
-jest.mock('@/hooks/use-app-data', () => ({
+jest.mock('@/hooks/app-data/use-app-data', () => ({
   useAppData: jest.fn(),
 }));
 
@@ -200,7 +200,7 @@ describe('AppSidebar', () => {
   const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
   const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
   const mockUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
-  const mockUseAppData = jest.requireMock('@/hooks/use-app-data').useAppData as jest.Mock;
+  const mockUseAppData = jest.requireMock('@/hooks/app-data/use-app-data').useAppData as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();

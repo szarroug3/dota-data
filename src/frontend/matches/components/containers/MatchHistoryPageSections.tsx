@@ -5,7 +5,7 @@ import React from 'react';
 import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import type { MatchDetailsPanelMode } from '@/frontend/matches/components/details/MatchDetailsPanel';
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
-import type { MatchListViewMode } from '@/hooks/useViewMode';
+import type { MatchListViewMode } from '@/hooks/layout/useViewMode';
 
 import { HeroSummarySection } from '../stateless/MatchHistorySectionsHelpers';
 
