@@ -335,6 +335,10 @@ export class AppData {
 
   saveToStorage = (): void => StorageOps.saveToStorage(this);
   loadFromStorage = async (): Promise<LoadedStorageResult> => StorageOps.loadFromStorage(this);
+  loadFromSharePayload = async (payload: {
+    teams: Record<string, unknown>;
+    activeTeam?: { teamId: number; leagueId: number } | null;
+  }): Promise<LoadedStorageResult> => StorageOps.loadFromSharePayload(this, payload);
   refreshAllTeams = async (): Promise<void> => InitializationOps.refreshAllTeams(this);
   getPlayerStats = (playerId: number): PlayerStats => StatisticsOps.getPlayerStats(this, playerId);
   getPlayerHeroStats = (playerId: number): Map<number, HeroStats> => StatisticsOps.getPlayerHeroStats(this, playerId);

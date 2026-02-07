@@ -20,7 +20,6 @@ jest.mock('@/frontend/contexts/config-context', () => ({
       preferredExternalSite: 'dotabuff' as const,
     },
     updateConfig: jest.fn(),
-    getTeams: jest.fn(() => new Map()),
     activeTeam: null,
     setActiveTeam: jest.fn(),
   }),

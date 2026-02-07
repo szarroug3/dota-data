@@ -4,15 +4,27 @@
  */
 
 import type { Team } from '@/frontend/lib/app-data/app-data-types';
+import {
+  parseRankFromString,
+  sanitizeAvatar,
+  sanitizeBoolean,
+  sanitizeDateValue,
+  sanitizeDuration,
+  sanitizeGames,
+  sanitizeMatchResult,
+  sanitizeMatchSide,
+  sanitizePickOrder,
+  sanitizeStoredHeroes,
+  sanitizeText,
+  sanitizeWinRate,
+  type StoredHero,
+} from '@/frontend/lib/storage/storage-manager-helpers';
 import { cleanupOldTeams, optimizeStorageData } from '@/frontend/lib/storage/storage-manager-optimization';
 
 const STORAGE_KEY = 'dota-scout-assistant-teams';
 const ACTIVE_TEAM_STORAGE_KEY = 'dota-scout-assistant-active-team';
-const DEFAULT_DATE = new Date(0).toISOString();
+export type { StoredHero } from '@/frontend/lib/storage/storage-manager-helpers';
 
-/**
- * Basic match information stored in localStorage
- */
 export interface StoredMatchData {
   matchId: number;
   result: 'won' | 'lost';
@@ -26,19 +38,6 @@ export interface StoredMatchData {
   isHidden: boolean;
 }
 
-/**
- * Stored hero summary for match metadata
- */
-export interface StoredHero {
-  id: number;
-  name: string;
-  localizedName: string;
-  imageUrl: string;
-}
-
-/**
- * Basic player information stored in localStorage
- */
 export interface StoredPlayerData {
   accountId: number;
   name: string;
@@ -53,60 +52,7 @@ export interface StoredPlayerData {
   isHidden: boolean;
 }
 
-/**
- * Parse rank string to extract rank_tier and leaderboard_rank
- * Handles formats like "Legend 5", "Immortal #1493", "Ancient 3", etc.
- * Returns { rankTier: number, leaderboardRank?: number }
- */
-function parseRankFromString(rank: string): { rankTier: number; leaderboardRank?: number } {
-  const normalized = rank.toLowerCase().trim();
-
-  // Base tier mapping
-  const tiers: Record<string, number> = {
-    herald: 10,
-    guardian: 20,
-    crusader: 30,
-    archon: 40,
-    legend: 50,
-    ancient: 60,
-    divine: 70,
-    immortal: 80,
-  };
-
-  // Find the base tier
-  const tier = Object.keys(tiers).find((key) => normalized.includes(key));
-  if (!tier) {
-    return { rankTier: 0 };
-  }
-
-  const baseTier = tiers[tier];
-
-  // Handle immortal rank (e.g., "Immortal #1493" -> rank_tier: 80, leaderboard_rank: 1493)
-  if (tier === 'immortal') {
-    const rankMatch = normalized.match(/#(\d+)/);
-    if (rankMatch) {
-      const immortalRank = parseInt(rankMatch[1], 10);
-      return { rankTier: 80, leaderboardRank: immortalRank };
-    }
-    return { rankTier: 80 };
-  }
-
-  // Handle other ranks with star count (e.g., "Legend 5" -> rank_tier: 54)
-  const starMatch = normalized.match(/\b(\d+)\b/);
-  if (starMatch) {
-    const stars = parseInt(starMatch[1], 10);
-    if (stars >= 1 && stars <= 5) {
-      return { rankTier: baseTier + stars };
-    }
-  }
-
-  return { rankTier: baseTier };
-}
-
-/**
- * Storage format for a single team (matches old system format)
- */
-interface StoredTeamData {
+export interface StoredTeamData {
   team: { id: number; name: string };
   league: { id: number; name: string };
   timeAdded: string;
@@ -126,28 +72,22 @@ interface LoadedTeamsResult {
   activeTeamKey: string | null;
 }
 
-/**
- * Load teams data from localStorage and convert to Team objects.
- */
+export interface LoadedTeamsFromDataResult {
+  teams: Team[];
+  placeholders: PlaceholderTeamData[];
+}
+
 export function loadTeamsFromStorage(): LoadedTeamsResult {
   try {
     if (typeof window === 'undefined') {
       return { teams: [], placeholders: [], activeTeamKey: null };
     }
-
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) {
       return { teams: [], placeholders: [], activeTeamKey: null };
     }
-
-    const storageData = JSON.parse(stored) as Record<string, StoredTeamData>;
-
-    const teams: Team[] = [];
-    const placeholders: PlaceholderTeamData[] = [];
-
-    Object.entries(storageData).forEach(([teamKey, data]) => {
-      processTeamData(teamKey, data, teams, placeholders);
-    });
+    const storageData = JSON.parse(stored) as Record<string, unknown>;
+    const { teams, placeholders } = loadTeamsFromStoredData(storageData);
 
     // Load active team
     let activeTeamKey: string | null = null;
@@ -168,9 +108,15 @@ export function loadTeamsFromStorage(): LoadedTeamsResult {
   }
 }
 
-/**
- * Process a single team's data from storage
- */
+export function loadTeamsFromStoredData(storageData: Record<string, unknown>): LoadedTeamsFromDataResult {
+  const teams: Team[] = [];
+  const placeholders: PlaceholderTeamData[] = [];
+  Object.entries(storageData).forEach(([teamKey, data]) => {
+    processTeamData(teamKey, data, teams, placeholders);
+  });
+  return { teams, placeholders };
+}
+
 function processTeamData(teamKey: string, data: unknown, teams: Team[], placeholders: PlaceholderTeamData[]): void {
   try {
     if (isValidStoredTeamData(data)) {
@@ -191,9 +137,6 @@ function processTeamData(teamKey: string, data: unknown, teams: Team[], placehol
   }
 }
 
-/**
- * Handle invalid team data by extracting minimal placeholder information
- */
 function handleInvalidTeamData(teamKey: string, data: unknown): PlaceholderTeamData | null {
   console.warn(`Invalid stored team data for ${teamKey}, will try to load from API:`, data);
   const fromKey = parseTeamKey(teamKey);
@@ -349,7 +292,6 @@ function convertStorageDataToTeam(teamKey: string, data: StoredTeamData): Team {
   const matches = new Map<number, StoredMatchData>();
   const players = new Map<number, StoredPlayerData>();
 
-  // Process matches
   if (data.matches) {
     Object.entries(data.matches).forEach(([matchIdStr, matchData]) => {
       const matchId = parseInt(matchIdStr);
@@ -359,7 +301,6 @@ function convertStorageDataToTeam(teamKey: string, data: StoredTeamData): Team {
     });
   }
 
-  // Process players
   if (data.players) {
     Object.entries(data.players).forEach(([playerIdStr, playerData]) => {
       const playerId = parseInt(playerIdStr);
@@ -389,60 +330,6 @@ function convertStorageDataToTeam(teamKey: string, data: StoredTeamData): Team {
 function safeTimeValue(time: string): number {
   const parsed = Date.parse(time);
   return Number.isNaN(parsed) ? Date.now() : parsed;
-}
-
-function sanitizeText(value: unknown, fallback: string): string {
-  return typeof value === 'string' && value.trim().length > 0 ? value : fallback;
-}
-
-function sanitizeMatchResult(value: unknown): 'won' | 'lost' {
-  return value === 'won' ? 'won' : 'lost';
-}
-
-function sanitizeMatchSide(value: unknown): 'radiant' | 'dire' {
-  return value === 'dire' ? 'dire' : 'radiant';
-}
-
-function sanitizeDuration(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return 0;
-  }
-  return Math.max(0, Math.floor(value));
-}
-
-function sanitizeDateValue(value: unknown): string {
-  if (typeof value === 'string' && !Number.isNaN(Date.parse(value))) {
-    return new Date(value).toISOString();
-  }
-  return DEFAULT_DATE;
-}
-
-function sanitizePickOrder(value: unknown): string {
-  return sanitizeText(value, 'unknown');
-}
-
-function sanitizeBoolean(value: unknown): boolean {
-  return Boolean(value);
-}
-
-function sanitizeGames(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return 0;
-  }
-  return Math.max(0, Math.trunc(value));
-}
-
-function sanitizeWinRate(value: unknown): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return 0;
-  }
-  if (value < 0) return 0;
-  if (value > 100) return 100;
-  return value;
-}
-
-function sanitizeAvatar(value: unknown): string {
-  return typeof value === 'string' ? value : '';
 }
 
 function normalizeMatchData(matchId: number, data: unknown): StoredMatchData {
@@ -509,46 +396,6 @@ function normalizePlayerData(playerId: number, data: unknown): StoredPlayerData 
   };
 }
 
-function sanitizeStoredHeroes(value: unknown): StoredHero[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const heroes: StoredHero[] = [];
-  value.forEach((entry) => {
-    if (typeof entry === 'number' && Number.isFinite(entry)) {
-      heroes.push(createFallbackHeroSummary(entry));
-      return;
-    }
-
-    if (entry && typeof entry === 'object') {
-      const obj = entry as Record<string, unknown>;
-      const id = typeof obj.id === 'number' && Number.isFinite(obj.id) ? Math.trunc(obj.id) : null;
-      if (id === null) return;
-
-      heroes.push({
-        id,
-        name: sanitizeText(obj.name, `npc_dota_hero_${id}`),
-        localizedName: sanitizeText(obj.localizedName, `Hero ${id}`),
-        imageUrl: sanitizeText(obj.imageUrl, ''),
-      });
-    }
-  });
-
-  const unique = new Map<number, StoredHero>();
-  heroes.forEach((hero) => unique.set(hero.id, hero));
-  return Array.from(unique.values());
-}
-
-function createFallbackHeroSummary(id: number): StoredHero {
-  return {
-    id,
-    name: `npc_dota_hero_${id}`,
-    localizedName: `Hero ${id}`,
-    imageUrl: '',
-  };
-}
-
 function buildStorageData(teams: Map<string, Team>): Record<string, StoredTeamData> {
   const storageData: Record<string, StoredTeamData> = {};
 
@@ -573,6 +420,10 @@ function buildStorageData(teams: Map<string, Team>): Record<string, StoredTeamDa
   });
 
   return storageData;
+}
+
+export function buildStoredTeamsPayload(teams: Map<string, Team>): Record<string, StoredTeamData> {
+  return buildStorageData(teams);
 }
 
 function isStorageQuotaError(error: unknown): boolean {

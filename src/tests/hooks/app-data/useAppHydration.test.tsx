@@ -8,16 +8,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import { useShareContext } from '@/frontend/contexts/share-context';
+import type { SharePayload } from '@/frontend/contexts/share-context';
 import type { Team } from '@/frontend/lib/app-data/app-data-types';
 import { useAppData } from '@/hooks/app-data/use-app-data';
 import { useAppHydration } from '@/hooks/app-data/useAppHydration';
 
 jest.mock('@/frontend/contexts/config-context');
+jest.mock('@/frontend/contexts/share-context');
 jest.mock('@/hooks/app-data/use-app-data');
 
 const mockConfigContext = {
-  getTeams: jest.fn(),
-  setTeams: jest.fn(),
   activeTeam: null as { teamId: number; leagueId: number } | null,
   setActiveTeam: jest.fn(),
   getGlobalManualMatches: jest.fn(),
@@ -46,6 +47,7 @@ const mockAppData = {
   loadItemsData: jest.fn(),
   loadLeaguesData: jest.fn(),
   loadFromStorage: jest.fn(),
+  loadFromSharePayload: jest.fn(),
   loadAllManualMatches: jest.fn(),
   loadAllManualPlayers: jest.fn(),
   loadTeam: jest.fn(),
@@ -63,6 +65,20 @@ const mockAppData = {
     isLoading: false,
     error: null,
   },
+};
+
+const mockShareContext: {
+  isShareMode: boolean;
+  shareKey: string | null;
+  payload: SharePayload | null;
+  setPayload: jest.Mock;
+  createShare: jest.Mock;
+} = {
+  isShareMode: false,
+  shareKey: null,
+  payload: null,
+  setPayload: jest.fn(),
+  createShare: jest.fn(),
 };
 
 const createTeam = (overrides: Partial<Team> = {}): Team => ({
@@ -100,10 +116,13 @@ describe('useAppHydration', () => {
 
     // Reset mock implementations
     mockConfigContext.activeTeam = null;
+    mockShareContext.isShareMode = false;
+    mockShareContext.payload = null;
     mockAppData.loadHeroesData.mockResolvedValue(undefined);
     mockAppData.loadItemsData.mockResolvedValue(undefined);
     mockAppData.loadLeaguesData.mockResolvedValue(undefined);
     mockAppData.loadFromStorage.mockResolvedValue(undefined);
+    mockAppData.loadFromSharePayload.mockResolvedValue(undefined);
     mockAppData.loadAllManualMatches.mockResolvedValue(undefined);
     mockAppData.loadAllManualPlayers.mockResolvedValue(undefined);
     mockAppData.loadTeam.mockResolvedValue(undefined);
@@ -114,6 +133,7 @@ describe('useAppHydration', () => {
 
     // Setup mocks
     (useConfigContext as jest.Mock).mockReturnValue(mockConfigContext);
+    (useShareContext as jest.Mock).mockReturnValue(mockShareContext);
     (useAppData as jest.Mock).mockReturnValue(mockAppData);
   });
 
@@ -222,5 +242,35 @@ describe('useAppHydration', () => {
     // Verify hydration was only called once
     expect(mockAppData.loadHeroesData).toHaveBeenCalledTimes(1);
     expect(mockAppData.loadItemsData).toHaveBeenCalledTimes(1);
+  });
+
+  it('should hydrate from share payload when in share mode', async () => {
+    mockShareContext.isShareMode = true;
+    mockShareContext.payload = {
+      teams: {
+        '1-2': {
+          team: { id: 1, name: 'Team 1' },
+          league: { id: 2, name: 'League 1' },
+          timeAdded: new Date().toISOString(),
+          matches: {},
+          players: {},
+        },
+      },
+      activeTeam: { teamId: 1, leagueId: 2 },
+      globalManualMatches: [],
+      globalManualPlayers: [],
+    };
+
+    render(<TestComponent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('has-hydrated')).toHaveTextContent('true');
+    });
+
+    expect(mockAppData.loadFromSharePayload).toHaveBeenCalledWith({
+      teams: mockShareContext.payload.teams,
+      activeTeam: mockShareContext.payload.activeTeam,
+    });
+    expect(mockAppData.loadFromStorage).not.toHaveBeenCalled();
   });
 });

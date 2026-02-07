@@ -32,10 +32,8 @@ jest.mock('@/frontend/matches/components/list/MatchListView', () => ({
 jest.mock('@/frontend/contexts/config-context', () => ({
   useConfigContext: () => ({
     activeTeam: { teamId: 'team1', leagueId: 'league1' },
-    getTeams: () => new Map(),
     isLoading: false,
     config: { preferredMatchlistView: 'list' },
-    setTeams: jest.fn(),
     setActiveTeam: jest.fn(),
     updateConfig: jest.fn(),
     resetConfig: jest.fn(),

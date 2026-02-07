@@ -18,15 +18,15 @@ function AppContent({ children }: ClientRootProps) {
 export function ClientRoot({ children }: ClientRootProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      {/* AppData Context - centralized data store for teams, matches, players */}
-      <AppDataProvider>
-        {/* Share mode and config contexts */}
-        <ShareProvider>
+      {/* Share mode and config contexts */}
+      <ShareProvider>
+        {/* AppData Context - centralized data store for teams, matches, players */}
+        <AppDataProvider>
           <ConfigProvider>
             <AppContent>{children}</AppContent>
           </ConfigProvider>
-        </ShareProvider>
-      </AppDataProvider>
+        </AppDataProvider>
+      </ShareProvider>
     </ThemeProvider>
   );
 }

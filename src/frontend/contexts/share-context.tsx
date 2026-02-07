@@ -4,10 +4,19 @@ import { useSearchParams } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, Suspense } from 'react';
 
 import type { Team } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredTeamData } from '@/frontend/lib/storage/storage-manager';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 
-export type Serializable = string | number | boolean | null | Serializable[] | { [key: string]: Serializable } | Team;
+export type Serializable =
+  | string
+  | number
+  | boolean
+  | null
+  | Serializable[]
+  | { [key: string]: Serializable }
+  | Team
+  | StoredTeamData;
 
 export interface SharePayload {
   teams: Record<string, Serializable>;

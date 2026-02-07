@@ -27,13 +27,12 @@ Object.defineProperty(window, 'localStorage', {
 // ============================================================================
 
 const StateDisplay: React.FC = () => {
-  const { config, activeTeam, getTeams, isLoading, isSaving, error } = useConfigContext();
+  const { config, activeTeam, isLoading, isSaving, error } = useConfigContext();
 
   const renderConfigState = () => (
     <>
       <div data-testid="preferred-external-site">{config.preferredExternalSite}</div>
       <div data-testid="preferred-matchlist-view">{config.preferredMatchlistView}</div>
-      <div data-testid="team-list-count">{getTeams().size}</div>
       <div data-testid="active-team-id">{activeTeam?.teamId || 'none'}</div>
       <div data-testid="active-team-league">{activeTeam?.leagueId || 'none'}</div>
     </>

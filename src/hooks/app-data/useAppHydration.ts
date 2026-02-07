@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useConfigContext } from '@/frontend/contexts/config-context';
+import { useShareContext } from '@/frontend/contexts/share-context';
 import { refreshTeamsCachedMetadata } from '@/frontend/lib/app-data/app-data-metadata-helpers';
 
 import { useAppData } from './use-app-data';
@@ -16,12 +17,14 @@ export function useAppHydration() {
 
   const configContext = useConfigContext();
   const appData = useAppData();
+  const { isShareMode, payload } = useShareContext();
 
   const contextsRef = useRef({ configContext, appData });
   contextsRef.current = { configContext, appData };
 
   useEffect(() => {
     if (hasHydratedRef.current) return;
+    if (isShareMode && !payload) return;
 
     const { configContext: currentConfig, appData: currentAppData } = contextsRef.current;
 
@@ -32,8 +35,10 @@ export function useAppHydration() {
       hasHydratedRef,
       setHasHydrated,
       setHydrationError,
+      isShareMode,
+      sharePayload: payload,
     });
-  }, []);
+  }, [isShareMode, payload]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -85,6 +90,8 @@ async function hydrateAppData({
   hasHydratedRef,
   setHasHydrated,
   setHydrationError,
+  isShareMode,
+  sharePayload,
 }: {
   configContext: ReturnType<typeof useConfigContext>;
   appData: ReturnType<typeof useAppData>;
@@ -92,12 +99,22 @@ async function hydrateAppData({
   hasHydratedRef: React.MutableRefObject<boolean>;
   setHasHydrated: (value: boolean) => void;
   setHydrationError: (value: string | null) => void;
+  isShareMode: boolean;
+  sharePayload: { teams: Record<string, unknown>; activeTeam: { teamId: number; leagueId: number } | null } | null;
 }): Promise<void> {
   try {
     setHydrationError(null);
 
-    if (appData.getTeams().length === 0) {
-      await appData.loadFromStorage();
+    const existingTeamsCount = appData.getTeams().length;
+    if (existingTeamsCount === 0) {
+      if (isShareMode && sharePayload) {
+        await appData.loadFromSharePayload({
+          teams: sharePayload.teams,
+          activeTeam: sharePayload.activeTeam,
+        });
+      } else {
+        await appData.loadFromStorage();
+      }
     }
 
     await fetchConstantsIfNeeded(appData);

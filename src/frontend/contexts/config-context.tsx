@@ -11,7 +11,6 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import type { Serializable, SharePayload } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
-import type { Team } from '@/frontend/lib/app-data/app-data-types';
 import type { AppConfig, ConfigContextProviderProps, ConfigContextValue } from '@/types/contexts/config-context-value';
 import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage/storage';
 
@@ -19,7 +18,6 @@ const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
 const STORAGE_KEYS = {
   CONFIG: 'dota-scout-assistant-config',
-  TEAMS: 'dota-scout-assistant-teams',
   ACTIVE_TEAM: 'dota-scout-assistant-active-team',
   GLOBAL_MANUAL_MATCHES: 'dota-scout-assistant-global-manual-matches',
   GLOBAL_MANUAL_PLAYERS: 'dota-scout-assistant-global-manual-players',
@@ -41,31 +39,6 @@ function saveToStorage<T>(key: string, value: T): void {
   }
 }
 
-function loadTeamsFromStorage(): Map<string, Team> {
-  if (typeof window === 'undefined') return new Map();
-  if (!isLocalStorageAvailable()) return new Map();
-  const teamsData = getParsedData<{ [key: string]: Team }>(STORAGE_KEYS.TEAMS);
-  if (teamsData) {
-    const restored = new Map<string, Team>();
-    Object.entries(teamsData).forEach(([key, value]) => {
-      const next: Team = { ...value };
-      restored.set(key, next);
-    });
-    return restored;
-  }
-  return new Map();
-}
-
-function saveTeamsToStorage(teams: Map<string, Team>): void {
-  if (typeof window === 'undefined') return;
-  if (!isLocalStorageAvailable()) return;
-  const teamsObject = Object.fromEntries(teams);
-  const success = setData(STORAGE_KEYS.TEAMS, teamsObject);
-  if (!success) {
-    console.warn('Failed to save teams to localStorage');
-  }
-}
-
 const getDefaultConfig = (): AppConfig => ({
   preferredExternalSite: 'dotabuff',
   preferredMatchlistView: 'list',
@@ -76,35 +49,6 @@ const getDefaultConfig = (): AppConfig => ({
 function mergeWithDefaultConfig(config: AppConfig): AppConfig {
   return { ...getDefaultConfig(), ...config };
 }
-
-function toTeamsMapFromPayload(payload: SharePayload | null): Map<string, Team> {
-  if (!payload || !payload.teams) return new Map();
-  const entries: Array<[string, Team]> = [];
-  Object.entries(payload.teams).forEach(([key, value]) => {
-    if (isTeamLike(value)) {
-      const next: Team = { ...(value as Team) };
-      entries.push([key, next]);
-    }
-  });
-  return new Map(entries);
-}
-
-function isTeamLike(value: Serializable | null | undefined): value is Team {
-  if (!value) return false;
-  const obj = value as Record<string, Serializable>;
-  return (
-    'team' in obj &&
-    'league' in obj &&
-    'timeAdded' in obj &&
-    'matches' in obj &&
-    'manualMatches' in obj &&
-    'manualPlayers' in obj &&
-    'players' in obj &&
-    'performance' in obj
-  );
-}
-
-// Note: coerceTeamsFromShare is now inlined into accessors to avoid unused warnings.
 
 function useInitializeActiveTeam(
   isShareMode: boolean,
@@ -129,62 +73,19 @@ function useInitializeActiveTeam(
   }, [isShareMode, payload, setActiveTeamState, setIsLoading]);
 }
 
-function useTeamAccessors(
-  isShareMode: boolean,
-  payload: SharePayload | null,
-  setSharePayload: ((p: SharePayload) => void) | null,
-) {
-  const coercePayload = useCallback(
-    (base: Partial<SharePayload> = {}): SharePayload => {
-      const teams = (payload && (payload as SharePayload).teams) || {};
-      const activeTeam =
-        (payload as { activeTeam?: { teamId: number; leagueId: number } | null } | null)?.activeTeam || null;
-      const globalManualMatches = (payload as { globalManualMatches?: number[] } | null)?.globalManualMatches || [];
-      const globalManualPlayers = (payload as { globalManualPlayers?: number[] } | null)?.globalManualPlayers || [];
-      return {
-        teams,
-        activeTeam,
-        globalManualMatches,
-        globalManualPlayers,
-        ...base,
-      };
-    },
-    [payload],
-  );
-  const getTeams = useCallback((): Map<string, Team> => {
-    return isShareMode ? toTeamsMapFromPayload(payload) : loadTeamsFromStorage();
-  }, [isShareMode, payload]);
-
-  const setTeams = useCallback(
-    (teams: Map<string, Team>) => {
-      if (isShareMode) {
-        // In share mode, persist to in-memory share payload only (no localStorage)
-        if (!setSharePayload) return;
-        const teamsObject = Object.fromEntries(teams) as Record<string, Team>;
-        setTimeout(() => setSharePayload(coercePayload({ teams: teamsObject })), 0);
-        return;
-      }
-      saveTeamsToStorage(teams);
-    },
-    [isShareMode, setSharePayload, coercePayload],
-  );
-
-  return { getTeams, setTeams };
-}
-
 function useGlobalManualAccessors(
   isShareMode: boolean,
   payload: {
     globalManualMatches?: number[];
     globalManualPlayers?: number[];
-    teams?: Record<string, Team>;
+    teams?: Record<string, Serializable>;
     activeTeam?: { teamId: number; leagueId: number } | null;
   } | null,
   setSharePayload: ((p: SharePayload) => void) | null,
 ) {
   const coercePayload = useCallback(
     (base: Partial<SharePayload> = {}): SharePayload => {
-      const teams = (payload && (payload as { teams?: Record<string, Team> }).teams) || {};
+      const teams = (payload && (payload as { teams?: Record<string, Serializable> }).teams) || {};
       const activeTeam =
         (payload as { activeTeam?: { teamId: number; leagueId: number } | null } | null)?.activeTeam || null;
       const globalManualMatches = (payload as { globalManualMatches?: number[] } | null)?.globalManualMatches || [];
@@ -308,14 +209,12 @@ export function ConfigProvider({ children }: ConfigContextProviderProps) {
 
   useInitializeActiveTeam(isShareMode, payload, setActiveTeamState, setIsLoading);
 
-  const { getTeams, setTeams } = useTeamAccessors(isShareMode, (payload as SharePayload) || null, setPayload);
-
   const setActiveTeam = useCallback(
     (newActiveTeam: { teamId: number; leagueId: number } | null) => {
       setActiveTeamState(newActiveTeam);
       if (isShareMode) {
         if (setPayload) {
-          const teams = (payload && (payload as { teams?: Record<string, Team> }).teams) || {};
+          const teams = (payload && (payload as { teams?: Record<string, Serializable> }).teams) || {};
           const globalManualMatches = (payload as { globalManualMatches?: number[] } | null)?.globalManualMatches || [];
           const globalManualPlayers = (payload as { globalManualPlayers?: number[] } | null)?.globalManualPlayers || [];
           setTimeout(
@@ -355,8 +254,6 @@ export function ConfigProvider({ children }: ConfigContextProviderProps) {
 
   const contextValue: ConfigContextValue = {
     config,
-    getTeams,
-    setTeams,
     activeTeam,
     setActiveTeam,
     getGlobalManualMatches,

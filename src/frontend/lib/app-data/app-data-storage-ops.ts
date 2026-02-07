@@ -11,6 +11,7 @@ import type { Team, Player, AppDataState, Match, Hero } from '@/frontend/lib/app
 import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
 import {
   loadTeamsFromStorage,
+  loadTeamsFromStoredData,
   saveTeamsToStorage,
   type PlaceholderTeamData,
   type StoredPlayerData,
@@ -127,6 +128,77 @@ export async function loadFromStorage(appData: AppDataStorageOpsContext): Promis
   ensurePlaceholderPlayers(appData);
 
   // Determine which team should be selected
+  const resolvedActiveTeamKey = activeTeamKey && appData._teams.has(activeTeamKey) ? activeTeamKey : GLOBAL_TEAM_KEY;
+
+  try {
+    appData.setSelectedTeam(resolvedActiveTeamKey);
+  } catch (error) {
+    console.warn(`Failed to set selected team ${resolvedActiveTeamKey}, defaulting to global team`, error);
+    appData.setSelectedTeam(GLOBAL_TEAM_KEY);
+  }
+
+  const refreshableTeams = Array.from(appData._teams.values()).filter(
+    (team) => !team.isGlobal && team.teamId && team.leagueId,
+  );
+
+  const activeTeam = refreshableTeams.find((team) => team.id === appData.state.selectedTeamId) ?? null;
+
+  const otherTeams = refreshableTeams
+    .filter((team) => !activeTeam || team.id !== activeTeam.id)
+    .map((team) => ({
+      teamKey: team.id,
+      teamId: team.teamId,
+      leagueId: team.leagueId,
+    }));
+
+  return {
+    activeTeam: activeTeam
+      ? { teamKey: activeTeam.id, teamId: activeTeam.teamId, leagueId: activeTeam.leagueId }
+      : null,
+    otherTeams,
+  };
+}
+
+export async function loadFromSharePayload(
+  appData: AppDataStorageOpsContext,
+  payload: { teams: Record<string, unknown>; activeTeam?: { teamId: number; leagueId: number } | null },
+): Promise<LoadedStorageResult> {
+  // Clear existing teams before hydrating from share payload
+  appData._teams.clear();
+
+  // Always ensure we have the global team available
+  ensureGlobalTeam(appData);
+
+  const { teams, placeholders } = loadTeamsFromStoredData(payload.teams);
+
+  teams.forEach((storedTeam) => {
+    if (!isValidTeamStructure(storedTeam)) {
+      return;
+    }
+
+    const hydratedTeam: Team = {
+      ...storedTeam,
+      matches: new Map(storedTeam.matches),
+      players: new Map(storedTeam.players),
+      highPerformingHeroes: new Set(storedTeam.highPerformingHeroes),
+      isLoading: false,
+    };
+
+    appData._teams.set(hydratedTeam.id, hydratedTeam);
+  });
+
+  placeholders.forEach((placeholder) => {
+    const team = createTeamFromPlaceholder(placeholder);
+    appData._teams.set(team.id, team);
+  });
+
+  ensureGlobalTeam(appData);
+
+  appData.updateTeamsRef();
+  ensurePlaceholderMatches(appData);
+  ensurePlaceholderPlayers(appData);
+
+  const activeTeamKey = payload.activeTeam ? `${payload.activeTeam.teamId}-${payload.activeTeam.leagueId}` : null;
   const resolvedActiveTeamKey = activeTeamKey && appData._teams.has(activeTeamKey) ? activeTeamKey : GLOBAL_TEAM_KEY;
 
   try {

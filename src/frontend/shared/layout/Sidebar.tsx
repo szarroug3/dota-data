@@ -23,9 +23,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
 import { GLOBAL_TEAM_KEY, type TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
+import { buildStoredTeamsPayload } from '@/frontend/lib/storage/storage-manager';
 import { useAppData } from '@/hooks/app-data/use-app-data';
 
 import { DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
@@ -293,26 +293,13 @@ const PreferredSiteSwitch = ({ open }: { open: boolean }) => {
  */
 const Settings = ({ open }: { open: boolean }) => {
   const { createShare } = useShareContext();
-  const { getTeams, activeTeam } = useConfigContext();
+  const { activeTeam } = useConfigContext();
   const appData = useAppData();
   const [copied, setCopied] = React.useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleShare = async () => {
-    const teamsMap = getTeams();
-    const teamsObject: Record<string, Serializable> = {};
-    teamsMap.forEach((value, key) => {
-      // Use unknown intermediate step for safer type narrowing
-      const serializedValue: unknown = JSON.parse(JSON.stringify(value));
-      const serializableValue = serializedValue as unknown as Serializable;
-
-      // Basic validation - ensure the serialized value is valid
-      if (serializableValue !== null && typeof serializableValue === 'object') {
-        teamsObject[key] = serializableValue;
-      } else {
-        console.warn(`Failed to serialize team data for key ${key}`);
-      }
-    });
+    const teamsObject = buildStoredTeamsPayload(appData.teams);
 
     // Get global manual items from the global team in appData
     const globalTeam = appData.getTeam(GLOBAL_TEAM_KEY);
