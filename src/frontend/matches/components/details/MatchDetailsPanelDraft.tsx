@@ -249,11 +249,7 @@ const DraftTimeline: React.FC<{
     {isStaggered ? (
       <div className="space-y-2">
         {timelineDraft.map((phase, index) => (
-          <div
-            key={`${phase.team}-${phase.time}-${index}`}
-            className="grid grid-cols-2 gap-4"
-            data-testid="draft-row"
-          >
+          <div key={`${phase.team}-${phase.time}-${index}`} className="grid grid-cols-2 gap-4" data-testid="draft-row">
             <div className="pr-4">
               <DraftEntry
                 phase={phase}
