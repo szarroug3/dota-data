@@ -127,7 +127,28 @@ export class AppData {
   };
   addTeam = (team: Omit<Team, 'createdAt' | 'updatedAt' | 'matches' | 'players' | 'highPerformingHeroes'>): void =>
     DataOps.addTeam(this, team);
-  removeTeam = (teamId: string): void => DataOps.removeTeam(this, teamId);
+  removeTeam = (teamId: string): void => {
+    const wasSelected = this.state.selectedTeamId === teamId;
+
+    if (wasSelected) {
+      const fallbackTeamId =
+        teamId !== GLOBAL_TEAM_KEY && this._teams.has(GLOBAL_TEAM_KEY)
+          ? GLOBAL_TEAM_KEY
+          : Array.from(this._teams.keys()).find((id) => id !== teamId);
+
+      if (fallbackTeamId) {
+        this.setSelectedTeam(fallbackTeamId);
+      } else if (teamId === GLOBAL_TEAM_KEY) {
+        return;
+      } else {
+        this.ensureGlobalTeam();
+        this.setSelectedTeam(GLOBAL_TEAM_KEY);
+      }
+    }
+
+    DataOps.removeTeam(this, teamId);
+    this.saveToStorage();
+  };
   updateTeam = (teamId: string, updates: Partial<Omit<Team, 'id' | 'createdAt' | 'updatedAt'>>): void =>
     DataOps.updateTeam(this, teamId, updates);
   getTeam = (teamId: string): Team | undefined => DataOps.getTeam(this, teamId);
@@ -169,6 +190,10 @@ export class AppData {
 
     if (currentKey === nextKey) {
       return { didChange: false };
+    }
+
+    if (this.state.selectedTeamId === currentKey) {
+      this.setSelectedTeam(GLOBAL_TEAM_KEY);
     }
 
     this.removeTeam(currentKey);
@@ -271,13 +296,27 @@ export class AppData {
   }
   loadAllManualPlayers = async (): Promise<void> => LoadingOps.loadAllManualPlayers(this);
   loadAllManualMatches = async (): Promise<void> => LoadingOps.loadAllManualMatches(this);
+  private async ensureReferenceDataLoaded(): Promise<void> {
+    const tasks: Array<Promise<void>> = [];
+    if (this.heroes.size === 0) tasks.push(this.loadHeroesData());
+    if (this.items.size === 0) tasks.push(this.loadItemsData());
+    if (this.leagues.size === 0) tasks.push(this.loadLeaguesData());
+    if (tasks.length > 0) {
+      await Promise.all(tasks);
+    }
+  }
+
   loadHeroesData = async (): Promise<void> => InitializationOps.loadHeroesData(this);
   loadItemsData = async (): Promise<void> => InitializationOps.loadItemsData(this);
   loadLeaguesData = async (): Promise<void> => InitializationOps.loadLeaguesData(this);
-  loadTeam = async (teamId: number, leagueId: number): Promise<void> =>
-    InitializationOps.loadTeam(this, teamId, leagueId);
-  refreshTeam = async (teamId: number, leagueId: number): Promise<void> =>
-    InitializationOps.refreshTeam(this, teamId, leagueId);
+  loadTeam = async (teamId: number, leagueId: number): Promise<void> => {
+    await this.ensureReferenceDataLoaded();
+    return InitializationOps.loadTeam(this, teamId, leagueId);
+  };
+  refreshTeam = async (teamId: number, leagueId: number): Promise<void> => {
+    await this.ensureReferenceDataLoaded();
+    return InitializationOps.refreshTeam(this, teamId, leagueId);
+  };
   fetchTeamAndLeagueData = async (
     teamId: number,
     leagueId: number,

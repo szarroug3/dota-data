@@ -7,6 +7,13 @@ import type { AppData } from './app-data';
 export function refreshTeamsCachedMetadata(appData: AppData): void {
   const teams = appData.getTeams();
   teams.forEach((team) => {
+    if (!team.isGlobal) {
+      const leagueName = appData.leagues.get(team.leagueId)?.name;
+      if (leagueName && leagueName !== team.leagueName) {
+        appData.updateTeam(team.id, { leagueName });
+      }
+    }
+
     const matchIds = Array.from(team.matches.keys());
     if (matchIds.length > 0) {
       appData.updateTeamMatchParticipation(team.id, matchIds);

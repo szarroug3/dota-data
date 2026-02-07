@@ -91,6 +91,32 @@ export async function loadTeam(appData: AppDataTeamOpsContext, teamId: number, l
   }
 }
 
+function resolveLeagueName(appData: AppDataTeamOpsContext, leagueId: number, fallback: string): string {
+  return appData.leagues.get(leagueId)?.name || fallback || `League ${leagueId}`;
+}
+
+async function loadTeamMatchesIfHealthy(
+  appData: AppDataTeamOpsContext,
+  teamKey: string,
+  teamError?: string,
+  leagueError?: string,
+): Promise<void> {
+  if (teamError || leagueError) {
+    return;
+  }
+
+  await appData.loadTeamMatches(teamKey).catch((err: unknown) => {
+    console.error(`Failed to load matches for team ${teamKey}:`, err);
+  });
+}
+
+function clearTeamLoadingState(appData: AppDataTeamOpsContext, teamKey: string): void {
+  const team = appData.getTeam(teamKey);
+  if (team) {
+    appData.updateTeam(teamKey, { isLoading: false });
+  }
+}
+
 /**
  * Refresh team data from API
  * Re-fetches team data and league matches
@@ -123,29 +149,24 @@ export async function refreshTeam(appData: AppDataTeamOpsContext, teamId: number
       true,
     );
 
+    const leagueName = resolveLeagueName(appData, leagueId, existingTeam.leagueName);
+
     // Update team in store with fresh data and clear loading state
     appData.updateTeam(teamKey, {
       name: teamData.name || existingTeam.name,
-      leagueName: existingTeam.leagueName,
+      leagueName,
       isLoading: false,
       teamError,
       leagueError,
     });
 
     // Load/refresh matches and players so hydration completes with full player data
-    if (!teamError && !leagueError) {
-      await appData.loadTeamMatches(teamKey).catch((err: unknown) => {
-        console.error(`Failed to load matches for team ${teamKey}:`, err);
-      });
-    }
+    await loadTeamMatchesIfHealthy(appData, teamKey, teamError, leagueError);
 
     appData.saveToStorage();
   } catch (error) {
     // Clear loading state on error
-    const team = appData.getTeam(teamKey);
-    if (team) {
-      appData.updateTeam(teamKey, { isLoading: false });
-    }
+    clearTeamLoadingState(appData, teamKey);
 
     appData.state.error = error instanceof Error ? error.message : 'Failed to refresh team';
     throw error;

@@ -20,6 +20,8 @@ export function formatTeamForDisplay(team: Team): TeamDisplayData {
     errorMessage = 'Failed to fetch league';
   }
 
+  const performance = computeTeamPerformance(team);
+
   return {
     team: { id: team.teamId, name: team.name },
     league: { id: team.leagueId, name: team.leagueName },
@@ -30,13 +32,7 @@ export function formatTeamForDisplay(team: Team): TeamDisplayData {
       .filter(([, playerData]) => playerData.isManual)
       .map(([playerId]) => playerId),
     players: [],
-    performance: {
-      totalMatches: 0,
-      totalWins: 0,
-      totalLosses: 0,
-      overallWinRate: 0,
-      erroredMatches: 0,
-    },
+    performance,
     isLoading: team.isLoading,
     error: errorMessage,
     isGlobal: team.isGlobal,
@@ -48,4 +44,20 @@ export function formatTeamForDisplay(team: Team): TeamDisplayData {
  */
 export function formatTeamsForDisplay(teams: Team[]): TeamDisplayData[] {
   return teams.map((team) => formatTeamForDisplay(team));
+}
+
+function computeTeamPerformance(team: Team): TeamDisplayData['performance'] {
+  const entries = Array.from(team.matches.values());
+  const totalMatches = entries.length;
+  const totalWins = entries.filter((match) => match.result === 'won').length;
+  const totalLosses = entries.filter((match) => match.result === 'lost').length;
+  const overallWinRate = totalMatches > 0 ? (totalWins / totalMatches) * 100 : 0;
+
+  return {
+    totalMatches,
+    totalWins,
+    totalLosses,
+    overallWinRate,
+    erroredMatches: 0,
+  };
 }

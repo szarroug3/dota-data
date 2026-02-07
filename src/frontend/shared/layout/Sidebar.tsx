@@ -17,6 +17,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import React, { Suspense } from 'react';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
   SidebarContent,
@@ -36,10 +37,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
-import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data-types';
+import { GLOBAL_TEAM_KEY, type TeamDisplayData } from '@/frontend/lib/app-data-types';
 import { useAppData } from '@/hooks/use-app-data';
 
 import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
+const TEAM_SELECTOR_ID = 'sidebar-team-selector';
 /**
  * Sidebar title component that shows the app name when expanded
  * and only the toggle button when collapsed
@@ -136,6 +138,73 @@ const Navigation = () => {
     >
       <NavigationContent />
     </Suspense>
+  );
+};
+
+const getTeamDisplayLabel = (teamData: TeamDisplayData): string => {
+  if (teamData.isGlobal) {
+    return 'Global (manual items)';
+  }
+
+  const teamName = teamData.team.name || `Team ${teamData.team.id}`;
+  const leagueName = teamData.league.name || `League ${teamData.league.id}`;
+  return `${teamName} - ${leagueName}`;
+};
+
+const TeamSelector = () => {
+  const appData = useAppData();
+  const { setActiveTeam } = useConfigContext();
+
+  const teams = React.useMemo(() => {
+    return appData.getAllTeamsForDisplayOrdered();
+    // Dependencies:
+    // - appData: access to methods
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, appData.teams]);
+
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  const handleTeamChange = React.useCallback(
+    (teamKey: string) => {
+      if (!teamKey) {
+        return;
+      }
+      appData.setSelectedTeam(teamKey);
+      const team = appData.getTeam(teamKey);
+      if (team) {
+        setActiveTeam({ teamId: team.teamId, leagueId: team.leagueId });
+      }
+    },
+    [appData, setActiveTeam],
+  );
+
+  return (
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <div className="flex justify-center">
+        <SidebarSeparator />
+      </div>
+      <SidebarGroupLabel asChild>
+        <label htmlFor={TEAM_SELECTOR_ID}>Team</label>
+      </SidebarGroupLabel>
+      <div className="px-2">
+        <Select value={selectedTeamId} onValueChange={handleTeamChange}>
+          <SelectTrigger id={TEAM_SELECTOR_ID} aria-label="Select team" className="w-full">
+            <SelectValue placeholder="Select team" />
+          </SelectTrigger>
+          <SelectContent>
+            {teams.map((teamData) => {
+              const teamKey = `${teamData.team.id}-${teamData.league.id}`;
+              return (
+                <SelectItem key={teamKey} value={teamKey} disabled={Boolean(teamData.error)}>
+                  {getTeamDisplayLabel(teamData)}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+    </SidebarGroup>
   );
 };
 
@@ -449,14 +518,15 @@ export function AppSidebar() {
   const shouldShowFullVersion = isMobile ? openMobile : open;
 
   return (
-    <Sidebar collapsible="icon" className="overflow-hidden">
+    <Sidebar collapsible="icon">
       <Title open={shouldShowFullVersion} />
-      <SidebarContent className="overflow-hidden">
+      <SidebarContent>
         <Navigation />
+        <TeamSelector />
         <ExternalSites />
         <QuickLinks />
       </SidebarContent>
-      <SidebarFooter className="overflow-hidden">
+      <SidebarFooter>
         <Settings open={shouldShowFullVersion} />
       </SidebarFooter>
       <SidebarRail />
