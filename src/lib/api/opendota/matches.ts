@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { rateLimiter } from '@/lib/rate-limiter';
+import { rateLimiter } from '@/lib/rate-limit/rate-limiter';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaMatch } from '@/types/external-apis';
 

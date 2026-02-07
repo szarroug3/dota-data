@@ -1,8 +1,8 @@
-import { CacheService } from '@/lib/cache-service';
+import { CacheService } from '@/lib/cache/cache-service';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
 // Mock dependencies
-jest.mock('@/lib/cache-service');
+jest.mock('@/lib/cache/cache-service');
 jest.mock('@/lib/config/environment', () => ({
   getEnv: {
     USE_MOCK_API: jest.fn(() => false),

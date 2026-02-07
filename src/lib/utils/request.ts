@@ -1,9 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import { CacheService } from '@/lib/cache-service';
+import { CacheService } from '@/lib/cache/cache-service';
 import { getEnv } from '@/lib/config/environment';
-import { CacheValue } from '@/types/cache';
+import { CacheValue } from '@/types/cache/cache';
 
 const mockServices = {
   opendota: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_OPENDOTA(),

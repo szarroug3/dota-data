@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { CacheService } from '@/lib/cache-service';
-import { cacheLogger } from '@/lib/logger';
-import { ApiErrorResponse, CacheInvalidateRequest, CacheInvalidateResponse } from '@/types/api';
+import { CacheService } from '@/lib/cache/cache-service';
+import { cacheLogger } from '@/lib/config/logger';
+import { ApiErrorResponse, CacheInvalidateRequest, CacheInvalidateResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**

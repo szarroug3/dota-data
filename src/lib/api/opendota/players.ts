@@ -1,7 +1,7 @@
 import path from 'path';
 
-import { CacheTtlSeconds } from '@/lib/cache-ttls';
-import { rateLimiter } from '@/lib/rate-limiter';
+import { CacheTtlSeconds } from '@/lib/cache/cache-ttls';
+import { rateLimiter } from '@/lib/rate-limit/rate-limiter';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import {
   OpenDotaPlayer,

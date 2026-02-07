@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaMatch } from '@/lib/api/opendota/matches';
-import { apiLogger } from '@/lib/logger';
-import { ApiErrorResponse } from '@/types/api';
+import { apiLogger } from '@/lib/config/logger';
+import { ApiErrorResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**

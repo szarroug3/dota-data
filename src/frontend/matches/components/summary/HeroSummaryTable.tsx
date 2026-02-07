@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Toggle } from '@/components/ui/toggle';
 import { useAppData } from '@/contexts/app-data-context';
 import type { HeroSummaryEntry, Match } from '@/frontend/lib/app-data/app-data-types';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 
 interface HeroSummary {
   heroId: string;

@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getSharedPayload, setSharedPayload } from '@/app/api/share/cache';
 import { getEnv } from '@/lib/config/environment';
-import { shareLogger } from '@/lib/logger';
-import type { CacheValue } from '@/types/cache';
+import { shareLogger } from '@/lib/config/logger';
+import type { CacheValue } from '@/types/cache/cache';
 
 function buildCacheKey(key: string): string {
   return `config:share:${key}`;

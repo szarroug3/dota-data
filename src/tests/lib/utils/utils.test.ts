@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 
 describe('cn utility function', () => {
   it('should combine class names correctly', () => {

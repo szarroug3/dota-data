@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { CacheTtlSeconds } from '@/lib/cache-ttls';
+import { CacheTtlSeconds } from '@/lib/cache/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import { OpenDotaHero } from '@/types/external-apis';
 
