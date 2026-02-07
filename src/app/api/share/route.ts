@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { cache, getSharedPayload, setSharedPayload } from '@/app/api/share/cache';
 import { getEnv } from '@/lib/config/environment';
-import type { CacheValue } from '@/types/cache';
+import type { CacheValue } from '@/types/cache/cache';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 

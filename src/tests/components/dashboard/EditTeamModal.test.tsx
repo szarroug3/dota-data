@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 
 import { EditTeamSheet } from '@/frontend/teams/components/stateless/EditTeamSheet';
-import { validateTeamForm } from '@/utils/validation';
+import { validateTeamForm } from '@/utils/validation/validation';
 
 const getValidation = (teamId: string, leagueId: string) => validateTeamForm(teamId, leagueId);
 

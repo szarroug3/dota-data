@@ -7,7 +7,7 @@
 
 import { Redis } from '@upstash/redis';
 
-import { CacheBackend, CacheBackendType, CacheStats, CacheValue } from '@/types/cache';
+import { CacheBackend, CacheBackendType, CacheStats, CacheValue } from '@/types/cache/cache';
 
 type UpstashRedisExtended = Redis & {
   expire?: (key: string, seconds: number) => Promise<number>;

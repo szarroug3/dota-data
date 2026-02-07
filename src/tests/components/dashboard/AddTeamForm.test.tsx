@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { AddTeamForm } from '@/frontend/teams/components/stateless/AddTeamForm';
-import { validateTeamForm } from '@/utils/validation';
+import { validateTeamForm } from '@/utils/validation/validation';
 
 const getValidation = (teamId: string, leagueId: string) => validateTeamForm(teamId, leagueId);
 

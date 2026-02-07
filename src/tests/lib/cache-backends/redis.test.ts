@@ -3,7 +3,7 @@
  */
 
 import { RedisCacheBackend } from '@/lib/cache-backends/redis';
-import { CacheValue } from '@/types/cache';
+import { CacheValue } from '@/types/cache/cache';
 
 // Local mock to guarantee no real Upstash client is used in this suite
 const localStore = new Map<string, CacheValue>();

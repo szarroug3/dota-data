@@ -13,7 +13,7 @@ import type { Serializable, SharePayload } from '@/frontend/contexts/share-conte
 import { useShareContext } from '@/frontend/contexts/share-context';
 import type { Team } from '@/frontend/lib/app-data/app-data-types';
 import type { AppConfig, ConfigContextProviderProps, ConfigContextValue } from '@/types/contexts/config-context-value';
-import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage';
+import { getParsedData, isLocalStorageAvailable, setData } from '@/utils/storage/storage';
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { parseOpenDotaMatchWithJobPolling } from '@/lib/api/opendota/matches';
-import { ApiErrorResponse } from '@/types/api';
+import { ApiErrorResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
-import { processPlayerRank } from '@/utils/player-statistics';
+import { processPlayerRank } from '@/utils/player/player-statistics';
 
 import type { PlayerDetailsPanelMode } from './PlayerDetailsPanel';
 

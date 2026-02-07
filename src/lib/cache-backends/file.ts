@@ -8,7 +8,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import { CacheBackend, CacheStats, CacheValue } from '@/types/cache';
+import { CacheBackend, CacheStats, CacheValue } from '@/types/cache/cache';
 
 interface CacheEntry {
   value: CacheValue;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchSteamLeague } from '@/lib/api/steam/leagues';
-import { ApiErrorResponse } from '@/types/api';
+import { ApiErrorResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**
