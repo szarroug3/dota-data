@@ -6,13 +6,16 @@ This directory contains the core data management logic for the Dota Scout Assist
 
 ### `app-data/`
 
-Core AppData class, types, and all operation/derivation modules.
+Core AppData class, types, and all operation/derivation modules. Domain-specific modules live in subfolders; core and cross-cutting ops stay at root.
 
-- **`app-data.ts`** – Main `AppData` class; single source of truth for application state. CRUD, loading, and persistence orchestration.
-- **`app-data-types.ts`** – TypeScript interfaces and types: `Team`, `Match`, `Player`, `Hero`, `Item`, `League`, `TeamDisplayData`, `AppDataState`, `LeagueMatchesCache`, etc.
-- **`app-data-*-ops.ts`** – Operation modules: computed-ops, crud-ops, data-ops, loading-ops, initialization-ops, match-ops, match-participation-ops, player-ops, player-metadata-ops, statistics-ops, storage-ops, team-ops, ui-ops, hero-performance-ops, hero-summary-ops.
-- **`app-data-*-derivations.ts`** – Derivations and helpers: derivations, match-derivations, hero-derivations, player-derivations, participation-helpers, metadata-helpers.
-- **`app-data-match-placeholder.ts`** – Placeholder match creation for storage/metadata.
+- **Root:** `app-data.ts`, `app-data-types.ts`, plus cross-cutting ops: `app-data-computed-ops.ts`, `app-data-crud-ops.ts`, `app-data-data-ops.ts`, `app-data-statistics-ops.ts`, `app-data-ui-ops.ts`, `app-data-metadata-helpers.ts`.
+- **`derivations/`** – Pure derivation modules and barrel: `app-data-derivations.ts`, `app-data-match-derivations.ts`, `app-data-hero-derivations.ts`, `app-data-player-derivations.ts`.
+- **`match/`** – Match ops, placeholder, participation: `app-data-match-ops.ts`, `app-data-match-placeholder.ts`, `app-data-match-participation-ops.ts`, `app-data-participation-helpers.ts`.
+- **`player/`** – `app-data-player-ops.ts`, `app-data-player-metadata-ops.ts`.
+- **`team/`** – `app-data-team-ops.ts`.
+- **`hero/`** – `app-data-hero-performance-ops.ts`, `app-data-hero-summary-ops.ts`.
+- **`storage/`** – `app-data-storage-ops.ts` (persistence).
+- **`lifecycle/`** – `app-data-initialization-ops.ts`, `app-data-loading-ops.ts`.
 
 ### `match/`
 

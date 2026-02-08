@@ -1,8 +1,8 @@
+import type { Hero, Match, MatchFilters, PlayerMatchData } from '@/frontend/lib/app-data/app-data-types';
 import {
   computeTeamHeroSummaryForMatches,
   computeTeamMatchFilters,
-} from '@/frontend/lib/app-data/app-data-derivations';
-import type { Hero, Match, MatchFilters, PlayerMatchData } from '@/frontend/lib/app-data/app-data-types';
+} from '@/frontend/lib/app-data/derivations/app-data-derivations';
 import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 function createPlayer(accountId: number, heroId: number): PlayerMatchData {

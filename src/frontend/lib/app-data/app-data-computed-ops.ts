@@ -1,9 +1,3 @@
-import {
-  computeTeamMatchFilters,
-  filterPlayersByTeam,
-  sortPlayersByName,
-} from '@/frontend/lib/app-data/app-data-derivations';
-import { createPlaceholderMatch } from '@/frontend/lib/app-data/app-data-match-placeholder';
 import type {
   Hero,
   Match,
@@ -13,6 +7,12 @@ import type {
   Team,
   LeagueMatchesCache,
 } from '@/frontend/lib/app-data/app-data-types';
+import {
+  computeTeamMatchFilters,
+  filterPlayersByTeam,
+  sortPlayersByName,
+} from '@/frontend/lib/app-data/derivations/app-data-derivations';
+import { createPlaceholderMatch } from '@/frontend/lib/app-data/match/app-data-match-placeholder';
 import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 import { processPlayerRank, type PlayerRank } from '@/utils/player/player-statistics';
 import { validatePlayerId } from '@/utils/validation/validation';

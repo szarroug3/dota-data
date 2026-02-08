@@ -5,11 +5,11 @@
  * Extracted to reduce app-data.ts file size.
  */
 
+import type { Match, Player, Team, TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
 import {
   filterPlayersByTeam as filterPlayersByTeamDerivation,
   sortPlayersByName as sortPlayersByNameDerivation,
-} from '@/frontend/lib/app-data/app-data-derivations';
-import type { Match, Player, Team, TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
+} from '@/frontend/lib/app-data/derivations/app-data-derivations';
 import { formatTeamForDisplay, formatTeamsForDisplay } from '@/frontend/lib/team/team-display-formatter';
 
 /**

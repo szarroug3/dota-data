@@ -11,28 +11,6 @@ import {
   getTeamHeroSummaryForMatches as getTeamHeroSummaryForMatchesOp,
 } from '@/frontend/lib/app-data/app-data-crud-ops';
 import * as DataOps from '@/frontend/lib/app-data/app-data-data-ops';
-import { computeAllHeroPerformanceStats } from '@/frontend/lib/app-data/app-data-hero-performance-ops';
-import {
-  filterHeroSummaryByHighPerformers,
-  sortHeroSummaryEntries,
-  type HeroSummarySortDirection,
-  type HeroSummarySortField,
-} from '@/frontend/lib/app-data/app-data-hero-summary-ops';
-import * as InitializationOps from '@/frontend/lib/app-data/app-data-initialization-ops';
-import * as LoadingOps from '@/frontend/lib/app-data/app-data-loading-ops';
-import {
-  getDraftPhasesFiltered,
-  getHeroesPlayedOptionsForTeam,
-  getOpponentNameOptionsForTeam,
-  getMatchPlayerKda,
-  getPlayersSortedByDraft,
-  type DraftFilter,
-  type FilterOption,
-} from '@/frontend/lib/app-data/app-data-match-derivations';
-import * as MatchOps from '@/frontend/lib/app-data/app-data-match-ops';
-import { updateTeamMatchParticipation as updateTeamMatchParticipationOp } from '@/frontend/lib/app-data/app-data-match-participation-ops';
-import { updateTeamPlayersMetadata as updateTeamPlayersMetadataOp } from '@/frontend/lib/app-data/app-data-player-metadata-ops';
-import * as PlayerOps from '@/frontend/lib/app-data/app-data-player-ops';
 import * as StatisticsOps from '@/frontend/lib/app-data/app-data-statistics-ops';
 import type {
   PlayerRecentHeroCustomRange,
@@ -42,8 +20,6 @@ import type {
   PlayerRecentHeroSortKey,
   PlayerTopHeroSummaryRow,
 } from '@/frontend/lib/app-data/app-data-statistics-ops';
-import * as StorageOps from '@/frontend/lib/app-data/app-data-storage-ops';
-import type { LoadedStorageResult } from '@/frontend/lib/app-data/app-data-storage-ops';
 import {
   type AppDataState,
   type DraftPhase,
@@ -63,6 +39,30 @@ import {
   type TeamHeroSummary,
 } from '@/frontend/lib/app-data/app-data-types';
 import * as UIOps from '@/frontend/lib/app-data/app-data-ui-ops';
+import {
+  getDraftPhasesFiltered,
+  getHeroesPlayedOptionsForTeam,
+  getOpponentNameOptionsForTeam,
+  getMatchPlayerKda,
+  getPlayersSortedByDraft,
+  type DraftFilter,
+  type FilterOption,
+} from '@/frontend/lib/app-data/derivations/app-data-match-derivations';
+import { computeAllHeroPerformanceStats } from '@/frontend/lib/app-data/hero/app-data-hero-performance-ops';
+import {
+  filterHeroSummaryByHighPerformers,
+  sortHeroSummaryEntries,
+  type HeroSummarySortDirection,
+  type HeroSummarySortField,
+} from '@/frontend/lib/app-data/hero/app-data-hero-summary-ops';
+import * as InitializationOps from '@/frontend/lib/app-data/lifecycle/app-data-initialization-ops';
+import * as LoadingOps from '@/frontend/lib/app-data/lifecycle/app-data-loading-ops';
+import * as MatchOps from '@/frontend/lib/app-data/match/app-data-match-ops';
+import { updateTeamMatchParticipation as updateTeamMatchParticipationOp } from '@/frontend/lib/app-data/match/app-data-match-participation-ops';
+import { updateTeamPlayersMetadata as updateTeamPlayersMetadataOp } from '@/frontend/lib/app-data/player/app-data-player-metadata-ops';
+import * as PlayerOps from '@/frontend/lib/app-data/player/app-data-player-ops';
+import * as StorageOps from '@/frontend/lib/app-data/storage/app-data-storage-ops';
+import type { LoadedStorageResult } from '@/frontend/lib/app-data/storage/app-data-storage-ops';
 import { processMatchData } from '@/frontend/lib/match/match-loader';
 import {
   computeChartBounds,

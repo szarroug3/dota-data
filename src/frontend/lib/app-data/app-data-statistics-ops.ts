@@ -5,7 +5,6 @@
  * Extracted to reduce app-data.ts file size.
  */
 
-import * as ParticipationHelpers from '@/frontend/lib/app-data/app-data-participation-helpers';
 import type {
   Hero,
   LeagueMatchesCache,
@@ -14,6 +13,7 @@ import type {
   Team,
   TeamMatchParticipation,
 } from '@/frontend/lib/app-data/app-data-types';
+import * as ParticipationHelpers from '@/frontend/lib/app-data/match/app-data-participation-helpers';
 import {
   calculatePlayerStats,
   calculateHeroStats,

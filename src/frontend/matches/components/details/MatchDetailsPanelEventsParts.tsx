@@ -2,12 +2,12 @@ import { Check, Coins, Skull, Zap } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 
+import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data/app-data-types';
 import {
   computeTeamfightTotals,
   deriveTeamfightRowData,
   type TeamfightRowData,
-} from '@/frontend/lib/app-data/app-data-match-derivations';
-import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data/app-data-types';
+} from '@/frontend/lib/app-data/derivations/app-data-match-derivations';
 import type { ChartDataPoint } from '@/frontend/lib/match/match-performance-timeline';
 
 export type { ChartDataPoint };

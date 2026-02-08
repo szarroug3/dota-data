@@ -6,10 +6,6 @@
  */
 
 import * as DataOps from '@/frontend/lib/app-data/app-data-data-ops';
-import {
-  computeTeamHeroSummaryForMatches,
-  computeTeamMatchFilters,
-} from '@/frontend/lib/app-data/app-data-derivations';
 import type {
   Hero,
   Item,
@@ -23,6 +19,10 @@ import type {
   TeamDisplayData,
   TeamHeroSummary,
 } from '@/frontend/lib/app-data/app-data-types';
+import {
+  computeTeamHeroSummaryForMatches,
+  computeTeamMatchFilters,
+} from '@/frontend/lib/app-data/derivations/app-data-derivations';
 import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 /**

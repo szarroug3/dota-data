@@ -35,9 +35,17 @@ src/
     lib/
       app-data/
         app-data.ts        // Single AppData class - ~500 lines
-        app-data-types.ts  // Types and interfaces
-        app-data-*-ops.ts  // Operations and derivations
-      match/              // Match loaders and timeline
+        app-data-types.ts // Types and interfaces
+        app-data-computed-ops.ts, app-data-crud-ops.ts, app-data-data-ops.ts
+        app-data-statistics-ops.ts, app-data-ui-ops.ts, app-data-metadata-helpers.ts  // Root: cross-cutting ops
+        derivations/      // Pure derivation helpers (match, hero, player; barrel re-export)
+        match/            // Match ops, placeholder, participation
+        player/           // Player ops, player-metadata-ops
+        team/             // Team ops
+        hero/             // Hero performance and summary ops
+        storage/         // Persistence (save/load)
+        lifecycle/       // Initialization and loading ops
+      match/              // Match loaders and timeline (lib level)
       player/             // Player loader and statistics
       team/               // Team/league loaders and formatter
       storage/            // localStorage manager and optimization
