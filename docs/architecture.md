@@ -166,7 +166,11 @@ function MyComponent() {
 
 ## Data Flow
 
-1. **App Hydration**: On load, `AppData` calls `loadFromStorage()` to restore stored team, match, and player metadata before triggering background refreshes
+**App hydration** is triggered by the `useAppHydration` hook, which is called at the root in `ClientRoot` (inside the provider tree). `AppDataProvider` only holds the `AppData` instance and React state for teams, matches, and players; it does not run `loadFromStorage` or any refresh logic. The hook runs when the app mounts (and when share payload is available in share mode): it calls `loadFromStorage()` (or `loadFromSharePayload()` in share mode) when teams are empty, then `fetchConstantsIfNeeded()` (heroes, items, leagues). Once constants are loaded, the app is shown (`hasHydrated` is set). The rest of hydration—`refreshTeamsCachedMetadata`, `ensureActiveTeam`, refresh active then other teams, `loadAllManualMatches`, `loadAllManualPlayers`—runs in the background without blocking the initial render.
+
+**Storage and Share:** The only writer for the `dota-scout-assistant-teams` localStorage key is the storage-manager (via `AppData.saveToStorage()`). Share builds its payload from AppData (e.g. `buildStoredTeamsPayload(appData.teams)`), not from ConfigContext. ConfigContext no longer reads or writes that key for teams; it only holds `activeTeam` and config preferences.
+
+1. **App Hydration**: On load, `useAppHydration` (at root) calls `loadFromStorage()` (or `loadFromSharePayload()` in share mode) to restore teams, then loads heroes/items/leagues; the app is shown after constants load; team refresh and manual matches/players load in the background.
 2. **Data Loading**: Components call `loadTeam()`, `loadMatch()`, etc. to fetch fresh data
 3. **State Updates**: `AppData` methods update internal state and call `notify()`
 4. **UI Updates**: React context propagates changes to subscribed components
@@ -280,6 +284,7 @@ function MyComponent() {
 
 - Centralized in `src/lib/cache/cache-service.ts`
 - Backends: `src/lib/cache-backends/` (Redis, Memory, File)
+- **Upstash Redis (production):** Expects `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. The rate limiter prefers `UPSTASH_REDIS_REST_TOKEN` when set; URL password is used as fallback. In development, if these env vars are missing, the app falls back to the file cache backend and logs a warning instead of throwing.
 - Family TTLs: players 24h, teams 24h, matches indefinite
 - Cache keys: `family:resource:params:v{CACHE_VERSION}`
 

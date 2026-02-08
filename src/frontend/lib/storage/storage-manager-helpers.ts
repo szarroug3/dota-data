@@ -108,11 +108,6 @@ export function sanitizeStoredHeroes(value: unknown): StoredHero[] {
 
   const heroes: StoredHero[] = [];
   value.forEach((entry) => {
-    if (typeof entry === 'number' && Number.isFinite(entry)) {
-      heroes.push(createFallbackHeroSummary(entry));
-      return;
-    }
-
     if (entry && typeof entry === 'object') {
       const obj = entry as Record<string, unknown>;
       const id = typeof obj.id === 'number' && Number.isFinite(obj.id) ? Math.trunc(obj.id) : null;
@@ -130,13 +125,4 @@ export function sanitizeStoredHeroes(value: unknown): StoredHero[] {
   const unique = new Map<number, StoredHero>();
   heroes.forEach((hero) => unique.set(hero.id, hero));
   return Array.from(unique.values());
-}
-
-export function createFallbackHeroSummary(id: number): StoredHero {
-  return {
-    id,
-    name: `npc_dota_hero_${id}`,
-    localizedName: `Hero ${id}`,
-    imageUrl: '',
-  };
 }

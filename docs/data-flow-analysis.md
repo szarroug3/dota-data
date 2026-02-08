@@ -4,6 +4,8 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 
 ## App Hydration Flows
 
+**Current implementation:** Hydration is triggered by `useAppHydration`, which is called at the root in `ClientRoot`. `AppDataProvider` only holds the AppData instance and React state for teams/matches/players; it does not run `loadFromStorage` or refresh. The hook: (1) when teams are empty, runs `loadFromStorage()` or `loadFromSharePayload()` in share mode; (2) runs `fetchConstantsIfNeeded()` (heroes, items, leagues); (3) sets `hasHydrated` so the app shell is shown; (4) continues in the background with `refreshTeamsCachedMetadata`, `ensureActiveTeam`, refresh active then other teams, `loadAllManualMatches`, `loadAllManualPlayers`.
+
 ### 1. App Hydration with 0 Active Teams and 0 Other Teams
 
 **Initial State:**
@@ -16,10 +18,11 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 
 **Flow:**
 
-1. `useAppHydration` runs on mount
-2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
-3. Store data in ConstantsContext (or AppContext if preferred)
-4. Hydration complete
+1. `useAppHydration` runs on mount (at root)
+2. Teams are empty; no loadFromStorage needed (or loadFromStorage returns empty/global team only)
+3. Call `fetchConstantsIfNeeded` (heroes, items, leagues) via AppData
+4. Set `hasHydrated`; app shell is shown
+5. Background: refreshTeamsCachedMetadata, ensureActiveTeam, loadAllManualMatches, loadAllManualPlayers (no-op or minimal when no teams)
 
 **Expected Behavior:**
 
@@ -47,13 +50,11 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 
 **Flow:**
 
-1. `useAppHydration` runs on mount
-2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
-3. Store constants data in ConstantsContext (or AppContext if preferred)
-4. Call `appData.loadFromStorage()` to hydrate teams, matches, and players from localStorage (global team ensured, active team selected immediately)
-5. UI renders using the stored team metadata while `refreshTeam` starts in the background for the active team (fetches `/api/teams/[id]`, `/api/leagues/[id]`, `/api/matches/[id]`, `/api/players/[id]`)
-6. Manual match and player IDs from storage are loaded (`loadAllManualMatches`, `loadAllManualPlayers`)
-7. When the active team's refresh finishes, hydration is considered complete (no other teams to refresh)
+1. `useAppHydration` runs on mount (at root)
+2. Teams not empty; `loadFromStorage()` restores team metadata from `dota-scout-assistant-teams` (storage-manager; AppData.saveToStorage is the only writer)
+3. `fetchConstantsIfNeeded` (heroes, items, leagues)
+4. Set `hasHydrated`; app shell is shown
+5. Background: refreshTeamsCachedMetadata, ensureActiveTeam, refresh active team (then others), loadAllManualMatches, loadAllManualPlayers; active team is refreshed and marked active in app data context
 
 **Expected Behavior:**
 
@@ -86,13 +87,11 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 
 **Flow:**
 
-1. `useAppHydration` runs on mount
-2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
-3. Store constants data in ConstantsContext (or AppContext if preferred)
-4. Call `appData.loadFromStorage()` to hydrate both teams (and their match/player metadata) from localStorage, ensure the global team, and set the previously selected active team
-5. UI immediately renders using stored metadata; `refreshTeam` starts for the active team first
-6. After the active team's refresh resolves, remaining teams refresh in parallel in the background
-7. Manual matches and players trigger background loads via `loadAllManualMatches` and `loadAllManualPlayers`
+1. `useAppHydration` runs on mount (at root)
+2. `loadFromStorage()` restores both teams from `dota-scout-assistant-teams`
+3. `fetchConstantsIfNeeded` (heroes, items, leagues)
+4. Set `hasHydrated`; app shell is shown
+5. Background: refreshTeamsCachedMetadata, ensureActiveTeam, refresh active team first then inactive (matches/players via API), loadAllManualMatches, loadAllManualPlayers; active team marked active in app data context, inactive team not
 
 **Expected Behavior:**
 
@@ -129,17 +128,11 @@ This document provides a comprehensive analysis of all data flows in the Dota Da
 
 **Flow:**
 
-1. `useAppHydration` runs on mount
-2. Call `/api/items`, `/api/heroes`, and `/api/leagues` in parallel
-3. Store constants data in ConstantsContext (or AppContext if preferred)
-4. **Load Inactive Team:**
-   - Find league name in the league data from `/api/leagues`
-   - Call `/api/teams/[id]` to get team name
-   - Call `/api/leagues/[id]` to get all matches for the league (store for future use)
-   - Find all matches where the team participated in the league
-   - For each match found: call `/api/matches/[id]` and `/api/players/[id]` for team's players
-   - Do NOT mark team as active
-5. Hydration complete
+1. `useAppHydration` runs on mount (at root)
+2. `loadFromStorage()` restores the inactive team from `dota-scout-assistant-teams`
+3. `fetchConstantsIfNeeded` (heroes, items, leagues)
+4. Set `hasHydrated`; app shell is shown
+5. Background: refreshTeamsCachedMetadata, ensureActiveTeam (no active set), refresh the inactive team (matches/players via API), loadAllManualMatches, loadAllManualPlayers; team is not marked active
 
 **Expected Behavior:**
 

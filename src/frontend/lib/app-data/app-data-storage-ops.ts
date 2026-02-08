@@ -1,7 +1,7 @@
 /**
  * Storage Operations for AppData
  *
- * Handles persistence operations (save/load) and data migration.
+ * Handles persistence operations (save/load).
  * Extracted to reduce app-data.ts file size.
  */
 

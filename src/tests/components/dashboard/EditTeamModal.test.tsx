@@ -7,7 +7,7 @@ import { validateTeamForm } from '@/utils/validation/validation';
 
 const getValidation = (teamId: string, leagueId: string) => validateTeamForm(teamId, leagueId);
 
-// Controlled harness to adapt stateless EditTeamSheet to previous stateful test expectations
+// Controlled wrapper for stateless EditTeamSheet
 const ControlledEditTeamHarness = ({
   isOpen,
   onClose,
