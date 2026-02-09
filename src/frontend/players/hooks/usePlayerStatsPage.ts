@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
 import type { StoredPlayerData } from '@/frontend/lib/storage/storage-manager';

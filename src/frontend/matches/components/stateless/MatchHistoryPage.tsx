@@ -8,11 +8,11 @@ import {
   AddMatchFormSection,
   HeroSummarySection,
   HiddenMatchesModalSection,
-} from '@/frontend/matches/components/stateless/MatchHistorySectionsHelpers';
+} from '@/frontend/matches/components/stateless/StatelessMatchHistorySectionsHelpers';
 import {
-  ResizableMatchLayout,
-  type ResizableMatchLayoutRef,
-} from '@/frontend/matches/components/stateless/ResizableMatchLayout';
+  StatelessResizableMatchLayout,
+  type StatelessResizableMatchLayoutRef,
+} from '@/frontend/matches/components/stateless/StatelessResizableMatchLayout';
 import type { MatchListViewMode } from '@/hooks/layout/useViewMode';
 
 export type MatchHistoryPageProps = {
@@ -42,7 +42,7 @@ export type MatchHistoryPageProps = {
   matchExists: (matchId: string) => boolean;
   isSubmitting: boolean;
   error?: string;
-  resizableLayoutRef?: React.RefObject<ResizableMatchLayoutRef | null>;
+  resizableLayoutRef?: React.RefObject<StatelessResizableMatchLayoutRef | null>;
   scrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
   selectedTeam: Team;
@@ -98,8 +98,8 @@ export function MatchHistoryPageView(props: MatchHistoryPageProps): React.ReactE
         error={error}
       />
 
-      <ResizableMatchLayout
-        ref={resizableLayoutRef as React.RefObject<ResizableMatchLayoutRef>}
+      <StatelessResizableMatchLayout
+        ref={resizableLayoutRef as React.RefObject<StatelessResizableMatchLayoutRef>}
         teamMatches={teamMatches}
         visibleMatches={visibleMatches}
         unhiddenMatches={unhiddenMatches}

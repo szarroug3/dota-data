@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import type { HeroSummaryEntry, Match } from '@/frontend/lib/app-data/app-data-types';
 import { cn } from '@/lib/utils/utils';
 

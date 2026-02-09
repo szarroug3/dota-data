@@ -5,4 +5,4 @@
  * This maintains consistency with the existing hook structure in the codebase.
  */
 
-export { useAppData } from '@/contexts/app-data-context';
+export { useAppData } from '@/frontend/contexts/app-data-context';

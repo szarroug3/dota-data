@@ -27,7 +27,7 @@ const mockAppData = {
   isHighPerformingHero: jest.fn(() => false),
 };
 
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => mockAppData,
 }));
 

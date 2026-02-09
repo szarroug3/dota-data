@@ -109,7 +109,7 @@ Global reference data loading.
 ## Usage Example
 
 ```typescript
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 
 function MyComponent() {
   const appData = useAppData();

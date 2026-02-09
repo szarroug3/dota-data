@@ -2,7 +2,7 @@
 
 import React, { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
 import type { Player } from '@/frontend/lib/app-data/app-data-types';

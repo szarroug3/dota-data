@@ -18,6 +18,12 @@
 - **Mock fixtures**: `mock-data/`
 - **Tests**: `src/tests/`
 
+### Frontend roots
+
+- **src/components** – Shared UI only (e.g. shadcn at `src/components/ui`). Do not move.
+- **src/hooks** – App-level hooks at src root.
+- **src/frontend** – Feature/domain code: **src/frontend/contexts** (all React contexts in one place), matches, players, teams, lib, etc. So "frontend" here means feature frontend, not shared UI.
+
 ## Frontend Architecture: Simple Data Store
 
 ### **Core Principle**
@@ -50,8 +56,8 @@ src/
       team/               // Team/league loaders and formatter
       storage/            // localStorage manager and optimization
       reference/          // Reference data loader
-  contexts/
-    app-data-context.tsx   // Simple React context wrapper - ~50 lines
+      contexts/           // All React contexts (app-data, config, share, theme)
+        app-data-context.tsx   // Simple React context wrapper - ~50 lines
   hooks/
     app-data/
       use-app-data.ts     // Simple hook - ~50 lines

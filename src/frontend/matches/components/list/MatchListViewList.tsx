@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import { useConfigContext } from '@/frontend/contexts/config-context';
 import type { Hero, Match, TeamMatchMetadata } from '@/frontend/lib/app-data/app-data-types';
 import { EditManualMatchButton } from '@/frontend/matches/components/stateless/common/EditManualMatchButton';

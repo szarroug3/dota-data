@@ -61,7 +61,7 @@ const mockAppData = {
   getPlayerRecentHeroRows: mockGetPlayerRecentHeroRows,
 };
 
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => mockAppData,
 }));
 

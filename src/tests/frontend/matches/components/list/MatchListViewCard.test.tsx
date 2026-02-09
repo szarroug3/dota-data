@@ -88,7 +88,7 @@ const mockAppData = {
   getEditManualMatchDuplicateError: jest.fn(() => undefined),
 };
 
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => mockAppData,
 }));
 

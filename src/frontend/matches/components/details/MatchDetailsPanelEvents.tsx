@@ -4,7 +4,7 @@ import type { DefaultLegendContentProps } from 'recharts';
 
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip } from '@/components/ui/chart';
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import type { Match } from '@/frontend/lib/app-data/app-data-types';
 import type { ChartDataPoint } from '@/frontend/lib/match/match-performance-timeline';
 

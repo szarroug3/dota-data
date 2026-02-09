@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useAppData } from '@/contexts/app-data-context';
+import { useAppData } from '@/frontend/contexts/app-data-context';
 import type { TeamRoleStats, TeamPlayerDetailStats } from '@/frontend/lib/app-data/app-data-statistics-ops';
 import type { Player } from '@/frontend/lib/app-data/app-data-types';
 import type { HeroStats } from '@/frontend/lib/player/player-statistics-calculator';

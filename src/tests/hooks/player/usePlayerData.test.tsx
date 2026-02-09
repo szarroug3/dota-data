@@ -7,7 +7,7 @@ import { usePlayerData } from '@/frontend/players/hooks/usePlayerStatsPage';
 
 const mockUseAppData = jest.fn();
 
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => mockUseAppData(),
 }));
 

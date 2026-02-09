@@ -7,7 +7,7 @@ import type { MatchDetailsPanelMode } from '@/frontend/matches/components/detail
 import type { MatchFilters as MatchFiltersType } from '@/frontend/matches/components/filters/MatchFilters';
 import type { MatchListViewMode } from '@/hooks/layout/useViewMode';
 
-import { HeroSummarySection } from '../stateless/MatchHistorySectionsHelpers';
+import { HeroSummarySection } from '../stateless/StatelessMatchHistorySectionsHelpers';
 
 import { AddMatchFormSection, HiddenMatchesModalSection } from './MatchHistorySectionsHelpers';
 import { ResizableMatchLayout, type ResizableMatchLayoutRef } from './ResizableMatchLayout';

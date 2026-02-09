@@ -3,7 +3,7 @@
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
-import { AppDataProvider } from '@/contexts/app-data-context';
+import { AppDataProvider } from '@/frontend/contexts/app-data-context';
 import { ConfigProvider } from '@/frontend/contexts/config-context';
 import { ShareProvider } from '@/frontend/contexts/share-context';
 import { AppLayout } from '@/frontend/shared/layout/AppLayout';
@@ -40,10 +40,7 @@ function AppContent({ children }: ClientRootProps) {
         role="status"
         aria-live="polite"
       >
-        <span
-          className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"
-          aria-label="Loading"
-        />
+        <span className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary" aria-label="Loading" />
         <span>Loading app data...</span>
       </div>
     );

@@ -2,7 +2,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import React from 'react';
 
-import { AppDataProvider } from '@/contexts/app-data-context';
+import { AppDataProvider } from '@/frontend/contexts/app-data-context';
 import { ConfigProvider } from '@/frontend/contexts/config-context';
 import { ThemeContextProvider } from '@/frontend/contexts/theme-context';
 
