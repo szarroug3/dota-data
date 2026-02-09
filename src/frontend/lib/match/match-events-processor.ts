@@ -70,6 +70,28 @@ function getPlayerNameFromPlayerSlot(playerSlot: number, players: OpenDotaMatch[
   return player.personaname || `Player ${player.account_id || 'Unknown'}`;
 }
 
+function formatHeroKeyToName(heroKey: string): string {
+  const trimmed = heroKey.replace('npc_dota_hero_', '');
+  if (!trimmed) return 'unknown player';
+  return trimmed
+    .split('_')
+    .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : ''))
+    .join(' ');
+}
+
+function getHeroKey(key: string): string {
+  return key.startsWith('npc_dota_hero_') ? key : `npc_dota_hero_${key}`;
+}
+
+function resolveHeroByKey(heroes: Map<number, Hero>, heroKey: string): Hero | undefined {
+  for (const hero of heroes.values()) {
+    if (hero.name === heroKey) {
+      return hero;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Create first blood event
  */
@@ -82,32 +104,37 @@ function createFirstBloodEvent(
     objective.player_slot !== undefined
       ? getHeroNameFromPlayerSlot(objective.player_slot, players, heroes)
       : 'unknown player';
-  let victimName = 'unknown player';
-  let victimHero: Hero | undefined;
-  let killerHero: Hero | undefined;
-
-  if (objective.player_slot !== undefined) {
-    const killer = players.find((p) => p.player_slot === objective.player_slot);
-    if (killer) {
-      killerHero = heroes.get(killer.hero_id);
-      if (killer.kills_log && killer.kills_log.length > 0) {
-        const firstKill = killer.kills_log.find((kill) => kill.time === objective.time);
-        if (firstKill && firstKill.key) {
-          // Find hero by name in the key
-          const heroName = firstKill.key.replace('npc_dota_hero_', '');
-          victimHero = Array.from(heroes.values()).find((h) => h.name === heroName);
-          victimName = victimHero ? victimHero.localizedName : heroName;
-        }
-      }
-    }
-  }
-
-  return {
+  const buildEvent = (details: MatchEvent['details']): MatchEvent => ({
     timestamp: objective.time,
     type: objective.type as MatchEvent['type'],
     side: getSideFromPlayerSlot(objective.player_slot),
-    details: { killer: killerName, victim: victimName, killerHero, victimHero },
-  };
+    details,
+  });
+
+  if (objective.player_slot === undefined) {
+    return buildEvent({ killer: killerName, victim: 'unknown player' });
+  }
+
+  const killer = players.find((p) => p.player_slot === objective.player_slot);
+  if (!killer) {
+    return buildEvent({ killer: killerName, victim: 'unknown player' });
+  }
+
+  const killerHero = heroes.get(killer.hero_id);
+  if (!killer.kills_log || killer.kills_log.length === 0) {
+    return buildEvent({ killer: killerName, victim: 'unknown player', killerHero });
+  }
+
+  const firstKill = killer.kills_log.find((kill) => kill.time === objective.time);
+  if (!firstKill?.key) {
+    return buildEvent({ killer: killerName, victim: 'unknown player', killerHero });
+  }
+
+  const heroKey = getHeroKey(firstKill.key);
+  const victimHero = resolveHeroByKey(heroes, heroKey);
+  const victimName = victimHero ? victimHero.localizedName : formatHeroKeyToName(heroKey);
+
+  return buildEvent({ killer: killerName, victim: victimName, killerHero, victimHero });
 }
 
 /**
