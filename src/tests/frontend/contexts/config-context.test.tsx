@@ -27,13 +27,12 @@ Object.defineProperty(window, 'localStorage', {
 // ============================================================================
 
 const StateDisplay: React.FC = () => {
-  const { config, activeTeam, getTeams, isLoading, isSaving, error } = useConfigContext();
+  const { config, activeTeam, isLoading, isSaving, error } = useConfigContext();
 
   const renderConfigState = () => (
     <>
       <div data-testid="preferred-external-site">{config.preferredExternalSite}</div>
       <div data-testid="preferred-matchlist-view">{config.preferredMatchlistView}</div>
-      <div data-testid="team-list-count">{getTeams().size}</div>
       <div data-testid="active-team-id">{activeTeam?.teamId || 'none'}</div>
       <div data-testid="active-team-league">{activeTeam?.leagueId || 'none'}</div>
     </>
@@ -136,10 +135,12 @@ describe('ConfigProvider', () => {
       expect(screen.getByTestId('preferred-external-site')).toBeInTheDocument();
     });
 
-    it('should load configuration from localStorage on mount', async () => {
+    it('should load stored configuration on mount', async () => {
       const storedConfig = {
-        preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid',
+        preferredExternalSite: 'opendota',
+        preferredMatchlistView: 'card',
+        preferredPlayerlistView: 'card',
+        theme: 'dark',
       };
 
       mockLocalStorage.getItem.mockImplementation((key: string) => {
@@ -152,8 +153,8 @@ describe('ConfigProvider', () => {
       renderWithProvider(<TestComponent />);
       await waitForInitialLoad();
 
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
-      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('grid');
+      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('opendota');
+      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('card');
     });
 
     it('should handle localStorage errors gracefully', async () => {
@@ -236,39 +237,6 @@ describe('ConfigProvider', () => {
           expect.stringContaining('"preferredExternalSite":"dotabuff"'),
         );
       });
-    });
-
-    it('should load config from localStorage on mount', async () => {
-      const storedConfig = {
-        preferredExternalSite: 'dotabuff',
-        preferredMatchlistView: 'grid',
-      };
-
-      mockLocalStorage.getItem.mockImplementation((key: string) => {
-        if (key === 'dota-scout-assistant-config') {
-          return JSON.stringify(storedConfig);
-        }
-        return null;
-      });
-
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
-      expect(screen.getByTestId('preferred-matchlist-view')).toHaveTextContent('grid');
-    });
-
-    it('should handle localStorage errors gracefully', async () => {
-      mockLocalStorage.getItem.mockImplementation(() => {
-        throw new Error('localStorage error');
-      });
-
-      renderWithProvider(<TestComponent />);
-      await waitForInitialLoad();
-
-      // Should fall back to default values
-      expectInitialConfigState();
-      expect(screen.getByTestId('preferred-external-site')).toHaveTextContent('dotabuff');
     });
   });
 });

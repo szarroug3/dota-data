@@ -1,12 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type { ButtonHTMLAttributes, HTMLAttributes, LiHTMLAttributes, PropsWithChildren } from 'react';
 
+import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
 import { AppSidebar } from '@/frontend/shared/layout/Sidebar';
 
 // Mock Next.js navigation hooks
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   usePathname: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 // Mock context providers
@@ -17,78 +20,95 @@ jest.mock('@/frontend/contexts/config-context', () => ({
       preferredExternalSite: 'dotabuff' as const,
     },
     updateConfig: jest.fn(),
+    activeTeam: null,
+    setActiveTeam: jest.fn(),
   }),
 }));
 
-// Mock team context (correct path)
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    teamDataList: [],
-    activeTeam: null,
-    addTeam: jest.fn(),
-    removeTeam: jest.fn(),
-    refreshTeam: jest.fn(),
-    updateTeam: jest.fn(),
-    setActiveTeam: jest.fn(),
-    teamExists: jest.fn(),
-    clearGlobalError: jest.fn(),
-    getGlobalError: jest.fn(),
-    isInitialized: jest.fn(),
-    getSelectedTeam: () => null,
+jest.mock('@/hooks/app-data/use-app-data', () => ({
+  useAppData: jest.fn(),
+}));
+
+jest.mock('@/frontend/contexts/share-context', () => ({
+  useShareContext: () => ({
+    isShareMode: false,
+    shareKey: null,
+    createShare: jest.fn(async () => null),
   }),
 }));
 
 // Mock next-themes
 jest.mock('next-themes', () => ({
   useTheme: () => ({
-    theme: 'light',
+    resolvedTheme: 'light',
     setTheme: jest.fn(),
   }),
 }));
 
 // Mock the shadcn sidebar components
+type SidebarDivProps = PropsWithChildren<HTMLAttributes<HTMLDivElement>>;
+type SidebarUlProps = PropsWithChildren<HTMLAttributes<HTMLUListElement>>;
+type SidebarLiProps = PropsWithChildren<LiHTMLAttributes<HTMLLIElement>>;
+type SidebarMenuButtonProps = PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { tooltip?: string }>;
+type SwitchButtonProps = PropsWithChildren<
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+    id?: string;
+  }
+>;
+type SelectProps = PropsWithChildren<{
+  value?: string;
+  onValueChange?: (value: string) => void;
+}>;
+type SelectItemProps = PropsWithChildren<{
+  value: string;
+  disabled?: boolean;
+}>;
+type SelectTriggerProps = PropsWithChildren<ButtonHTMLAttributes<HTMLButtonElement> & { id?: string }>;
+
 jest.mock('@/components/ui/sidebar', () => ({
-  Sidebar: ({ children, ...props }: any) => (
+  Sidebar: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar" {...props}>
       {children}
     </div>
   ),
-  SidebarContent: ({ children, ...props }: any) => (
+  SidebarContent: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar-content" {...props}>
       {children}
     </div>
   ),
-  SidebarFooter: ({ children, ...props }: any) => (
+  SidebarFooter: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar-footer" {...props}>
       {children}
     </div>
   ),
-  SidebarGroup: ({ children, ...props }: any) => (
+  SidebarGroup: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar-group" {...props}>
       {children}
     </div>
   ),
-  SidebarGroupLabel: ({ children, ...props }: any) => (
+  SidebarGroupLabel: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar-group-label" {...props}>
       {children}
     </div>
   ),
-  SidebarHeader: ({ children, ...props }: any) => (
+  SidebarHeader: ({ children, ...props }: SidebarDivProps) => (
     <div data-testid="sidebar-header" {...props}>
       {children}
     </div>
   ),
-  SidebarMenu: ({ children, ...props }: any) => (
+  SidebarMenu: ({ children, ...props }: SidebarUlProps) => (
     <ul data-testid="sidebar-menu" {...props}>
       {children}
     </ul>
   ),
-  SidebarMenuButton: ({ children, onClick, tooltip, ...props }: any) => (
+  SidebarMenuButton: ({ children, onClick, tooltip, ...props }: SidebarMenuButtonProps) => (
     <button data-testid="sidebar-menu-button" onClick={onClick} title={tooltip} {...props}>
       {children}
     </button>
   ),
-  SidebarMenuItem: ({ children, ...props }: any) => (
+  SidebarMenuItem: ({ children, ...props }: SidebarLiProps) => (
     <li data-testid="sidebar-menu-item" {...props}>
       {children}
     </li>
@@ -97,16 +117,49 @@ jest.mock('@/components/ui/sidebar', () => ({
   SidebarSeparator: () => <div data-testid="sidebar-separator" />,
   useSidebar: () => ({
     open: true,
+    openMobile: false,
+    state: 'expanded',
+    isMobile: false,
     toggleSidebar: jest.fn(),
   }),
 }));
 
 // Mock the Switch component
 jest.mock('@/components/ui/switch', () => ({
-  Switch: ({ checked, onCheckedChange, id, ...props }: any) => (
+  Switch: ({ checked, onCheckedChange, id, ...props }: SwitchButtonProps) => (
     <button data-testid={`switch-${id}`} onClick={() => onCheckedChange(!checked)} aria-checked={checked} {...props}>
       {checked ? 'ON' : 'OFF'}
     </button>
+  ),
+}));
+
+jest.mock('@/components/ui/tooltip', () => ({
+  Tooltip: ({ children }: SidebarDivProps) => <div data-testid="tooltip">{children}</div>,
+  TooltipTrigger: ({ children }: SidebarDivProps) => <div data-testid="tooltip-trigger">{children}</div>,
+  TooltipContent: ({ children, ...props }: SidebarDivProps) => (
+    <div data-testid="tooltip-content" {...props}>
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock('@/components/ui/select', () => ({
+  Select: ({ children, value }: SelectProps) => (
+    <div data-testid="select" data-value={value}>
+      {children}
+    </div>
+  ),
+  SelectTrigger: ({ children, id, ...props }: SelectTriggerProps) => (
+    <button type="button" data-testid="select-trigger" id={id} {...props}>
+      {children}
+    </button>
+  ),
+  SelectValue: ({ placeholder }: { placeholder?: string }) => <span data-testid="select-value">{placeholder}</span>,
+  SelectContent: ({ children }: PropsWithChildren) => <div data-testid="select-content">{children}</div>,
+  SelectItem: ({ children, value, disabled }: SelectItemProps) => (
+    <div data-testid="select-item" data-value={value} data-disabled={disabled ? 'true' : 'false'}>
+      {children}
+    </div>
   ),
 }));
 
@@ -123,7 +176,9 @@ jest.mock('lucide-react', () => ({
   Building: () => <div data-testid="building-icon">Building</div>,
   ChevronLeft: () => <div data-testid="chevron-left-icon">ChevronLeft</div>,
   ChevronRight: () => <div data-testid="chevron-right-icon">ChevronRight</div>,
+  Clipboard: () => <div data-testid="clipboard-icon">Clipboard</div>,
   Clock: () => <div data-testid="clock-icon">Clock</div>,
+  Link: () => <div data-testid="link-icon">Link</div>,
   Moon: () => <div data-testid="moon-icon">Moon</div>,
   Sun: () => <div data-testid="sun-icon">Sun</div>,
   Target: () => <div data-testid="target-icon">Target</div>,
@@ -143,11 +198,64 @@ describe('AppSidebar', () => {
 
   const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
   const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
+  const mockUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSearchParams>;
+  const mockUseAppData = jest.requireMock('@/hooks/app-data/use-app-data').useAppData as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseRouter.mockReturnValue(mockRouter);
     mockUsePathname.mockReturnValue('/');
+    mockUseSearchParams.mockReturnValue(new URLSearchParams() as ReturnType<typeof useSearchParams>);
+    mockUseAppData.mockReturnValue({
+      state: { selectedTeamId: GLOBAL_TEAM_KEY },
+      teams: new Map(),
+      getTeam: jest.fn(() => ({
+        teamId: 0,
+        leagueId: 0,
+        isGlobal: true,
+        matches: new Map(),
+        players: new Map(),
+      })),
+      getAllTeamsForDisplayOrdered: jest.fn(() => [
+        {
+          team: { id: 0, name: '' },
+          league: { id: 0, name: '' },
+          timeAdded: new Date(0).toISOString(),
+          matches: {},
+          manualMatches: {},
+          manualPlayers: [],
+          players: [],
+          performance: {
+            totalMatches: 0,
+            totalWins: 0,
+            totalLosses: 0,
+            overallWinRate: 0,
+            erroredMatches: 0,
+          },
+          isLoading: false,
+          isGlobal: true,
+        },
+        {
+          team: { id: 123, name: 'Team Alpha' },
+          league: { id: 456, name: 'League Beta' },
+          timeAdded: new Date(1).toISOString(),
+          matches: {},
+          manualMatches: {},
+          manualPlayers: [],
+          players: [],
+          performance: {
+            totalMatches: 1,
+            totalWins: 1,
+            totalLosses: 0,
+            overallWinRate: 100,
+            erroredMatches: 0,
+          },
+          isLoading: false,
+          isGlobal: false,
+        },
+      ]),
+      setSelectedTeam: jest.fn(),
+    });
   });
 
   it('renders sidebar with all main sections', () => {
@@ -184,10 +292,18 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Navigation')).toBeInTheDocument();
   });
 
-  it('does not render quick links when no active team', () => {
+  it('renders team selector with available teams', () => {
     render(<AppSidebar />);
 
-    // Quick Links should not be rendered when activeTeam is null
+    expect(screen.getByText('Team')).toBeInTheDocument();
+    expect(screen.getByText('Global (manual items)')).toBeInTheDocument();
+    expect(screen.getByText('Team Alpha - League Beta')).toBeInTheDocument();
+  });
+
+  it('does not render quick links for global team', () => {
+    render(<AppSidebar />);
+
+    // Quick Links should not be rendered for the global team
     expect(screen.queryByText('Quick Links')).not.toBeInTheDocument();
     expect(screen.queryByText('Team Page')).not.toBeInTheDocument();
     expect(screen.queryByText('League Page')).not.toBeInTheDocument();
@@ -213,10 +329,9 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Player Stats')).toBeInTheDocument();
   });
 
-  it('does not render quick links items when no active team', () => {
+  it('does not render quick links items for global team', () => {
     render(<AppSidebar />);
 
-    // Quick Links should not be rendered when activeTeam is null
     expect(screen.queryByText('Team Page')).not.toBeInTheDocument();
     expect(screen.queryByText('League Page')).not.toBeInTheDocument();
   });

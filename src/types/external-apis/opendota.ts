@@ -346,24 +346,33 @@ export interface OpenDotaMatchPlayer {
 }
 
 export interface OpenDotaMatch {
+  // Core match data (always present)
   match_id: number;
   start_time: number;
   duration: number;
   radiant_win: boolean;
   players: OpenDotaMatchPlayer[];
-  version?: number;
+
+  // Match scores (always present in parsed matches)
+  radiant_score: number;
+  dire_score: number;
+
+  // Optional team information
   radiant_name?: string;
   dire_name?: string;
   radiant_team_id?: number;
   dire_team_id?: number;
-  radiant_score?: number;
-  dire_score?: number;
+
+  // Optional match metadata
+  version?: number;
   leagueid?: number;
   lobby_type?: number;
   game_mode?: number;
   cluster?: number;
   patch?: number;
   region?: number;
+
+  // Optional draft data (only in parsed matches with draft)
   picks_bans?: Array<{
     is_pick: boolean;
     hero_id: number;
@@ -379,6 +388,8 @@ export interface OpenDotaMatch {
     extra_time: number;
     total_time_taken: number;
   }>;
+
+  // Optional parsed data (only in fully parsed matches)
   teamfights?: Array<{
     start: number;
     end: number;
@@ -418,8 +429,12 @@ export interface OpenDotaMatch {
     key: string;
     player_slot: number;
   }>;
+
+  // Optional advantage data (only in parsed matches)
   radiant_gold_adv?: number[];
   radiant_xp_adv?: number[];
+
+  // Optional cosmetics data
   cosmetics?: Record<string, number>;
 }
 
@@ -444,14 +459,11 @@ export interface OpenDotaTeam {
 }
 
 export interface OpenDotaLeague {
-  league_id: number;
+  leagueid: number;
   name: string;
-  description?: string;
-  tournament_url?: string;
-  item_def?: number;
-  is_cup: boolean;
-  is_qualifier: boolean;
-  is_playoff: boolean;
+  ticket?: string | null;
+  banner?: string | null;
+  tier?: string;
 }
 
 export interface OpenDotaItem {

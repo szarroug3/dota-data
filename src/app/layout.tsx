@@ -7,7 +7,7 @@ import { ErrorBoundary } from '@/frontend/shared/layout/ErrorBoundary';
 import { ClientRoot } from './ClientRoot';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], preload: false });
 
 export const metadata: Metadata = {
   title: 'Dota Scout Assistant - Team Performance Analytics',

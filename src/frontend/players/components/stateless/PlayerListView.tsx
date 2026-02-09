@@ -1,20 +1,20 @@
 import { Pencil, Trash2 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
+import type { PlayerListViewEntry } from '@/frontend/lib/app-data/app-data-computed-ops';
+import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
 import { RefreshButton } from '@/frontend/matches/components/stateless/common/RefreshButton';
 import { PlayerAvatar } from '@/frontend/players/components/stateless/PlayerAvatar';
 import { PlayerExternalSiteButton } from '@/frontend/players/components/stateless/PlayerExternalSiteButton';
 import type { PreferredExternalSite } from '@/types/contexts/config-context-value';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import { processPlayerRank } from '@/utils/player-statistics';
+import type { PlayerRank } from '@/utils/player/player-statistics';
 
 export type PlayerListViewMode = 'list' | 'card';
 
 interface PlayerListViewProps {
-  players: Player[];
+  playerEntries: PlayerListViewEntry[];
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
   onRefreshPlayer?: (playerId: number) => void;
@@ -22,26 +22,17 @@ interface PlayerListViewProps {
   manualPlayerIds?: Set<number>;
   onEditPlayer?: (playerId: number) => void;
   onRemovePlayer?: (playerId: number) => void;
-  hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
   preferredSite: PreferredExternalSite;
 }
 
-function getTopHeroes(player: Player, heroes: Record<string, Hero>): Hero[] {
-  if (!player.heroes) return [];
-  const top = [...player.heroes].sort((a, b) => b.games - a.games).slice(0, 5);
-  return top.map((h) => heroes[h.hero_id.toString()]).filter(Boolean) as Hero[];
-}
-
-function renderRank(rankTier?: number | null, leaderboardRank?: number | null): React.ReactNode {
-  const processed = processPlayerRank(rankTier ?? 0, leaderboardRank ?? undefined);
-  if (!processed) return null;
-  const stars = processed.isImmortal ? 0 : processed.stars;
+function renderRank(rank: PlayerRank | null): React.ReactNode {
+  if (!rank) return null;
+  const stars = rank.isImmortal ? 0 : rank.stars;
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className="text-sm font-medium truncate">{processed.displayText}</span>
+      <span className="text-sm font-medium truncate">{rank.displayText}</span>
       {stars > 0 && (
-        <div className="flex gap-0.5 flex-shrink-0">
+        <div className="flex gap-0.5 shrink-0">
           {Array.from({ length: stars }).map((_, i) => (
             <span key={i} className="text-yellow-500 text-xs">
               ★
@@ -123,11 +114,11 @@ function PlayerActions({
 }) {
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-      <PlayerExternalSiteButton playerId={player.profile.profile.account_id} preferredSite={preferredSite} size="sm" />
+      <PlayerExternalSiteButton playerId={player.accountId} preferredSite={preferredSite} size="sm" />
       {onRefresh && !player.error && (
         <RefreshButton
-          onClick={() => onRefresh(player.profile.profile.account_id)}
-          ariaLabel={`Refresh ${player.profile.profile.personaname}`}
+          onClick={() => onRefresh(player.accountId)}
+          ariaLabel={`Refresh ${player.profile.personaname}`}
         />
       )}
     </div>
@@ -142,14 +133,24 @@ function InfoOrPlaceholder({ show, children }: { show: boolean; children: React.
   );
 }
 
-function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; totalGames: number; winRate: number }) {
+function PlayerTextInfo({
+  player,
+  totalGames,
+  winRate,
+  rank,
+}: {
+  player: Player;
+  totalGames: number;
+  winRate: number;
+  rank: PlayerRank | null;
+}) {
   const hasError = Boolean(player.error);
   const showLoading = player.isLoading && !hasError;
   const showData = !hasError && !player.isLoading;
   return (
     <div className="min-w-0 @[120px]:block hidden">
       <div className="font-semibold truncate flex items-center gap-2">
-        <span>{showLoading ? `Loading ${player.profile.profile.account_id}` : player.profile.profile.personaname}</span>
+        <span>{showLoading ? `Loading ${player.accountId}` : player.profile.personaname}</span>
         {showLoading && (
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" aria-label="Loading" />
         )}
@@ -160,9 +161,7 @@ function PlayerTextInfo({ player, totalGames, winRate }: { player: Player; total
         </div>
       ) : (
         <>
-          <InfoOrPlaceholder show={showData}>
-            {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank)}
-          </InfoOrPlaceholder>
+          <InfoOrPlaceholder show={showData}>{renderRank(rank)}</InfoOrPlaceholder>
           <InfoOrPlaceholder show={showData}>
             {totalGames} Games • {winRate.toFixed(1)}% Win Rate
           </InfoOrPlaceholder>
@@ -212,11 +211,25 @@ function ManualPlayerActions({
   );
 }
 
+function getCardClassName(isSelected: boolean, hasError: boolean): string {
+  const base = 'transition-all';
+  const selected = isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md';
+  const error = hasError ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer';
+  return `${base} ${selected} ${error}`;
+}
+
+function getAriaLabel(player: Player): string {
+  return player.error
+    ? `${player.profile.personaname} - Error: ${player.error}`
+    : `Select ${player.profile.personaname}`;
+}
+
 const ListRow: React.FC<{
   player: Player;
   isSelected: boolean;
   onSelect?: (id: number) => void;
   topHeroes: Hero[];
+  rank: PlayerRank | null;
   onRefresh?: (id: number) => void;
   isManual?: boolean;
   onEditPlayer?: (id: number) => void;
@@ -227,27 +240,26 @@ const ListRow: React.FC<{
   isSelected,
   onSelect,
   topHeroes,
+  rank,
   onRefresh,
   isManual,
   onEditPlayer,
   onRemovePlayer,
   preferredSite,
 }) => {
-  const totalGames = player.wl.win + player.wl.lose;
-  const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
+  const totalGames = player.overallStats.totalGames;
+  const winRate = player.overallStats.winRate;
   const handleSelect = () => {
-    if (!player.error) onSelect?.(player.profile.profile.account_id);
+    if (!player.error) onSelect?.(player.accountId);
   };
-  const aria = player.error
-    ? `${player.profile.profile.personaname} - Error: ${player.error}`
-    : `Select ${player.profile.profile.personaname}`;
+
   return (
     <Card
-      className={`transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:shadow-md'} ${player.error ? 'border-destructive bg-destructive/5 cursor-not-allowed' : 'cursor-pointer'}`}
+      className={getCardClassName(isSelected, Boolean(player.error))}
       onClick={handleSelect}
       role="button"
       tabIndex={player.error ? -1 : 0}
-      aria-label={aria}
+      aria-label={getAriaLabel(player)}
     >
       <CardContent className="py-0 @container" style={{ containerType: 'inline-size' }}>
         <div className="flex items-center justify-between gap-3 min-w-0">
@@ -258,9 +270,9 @@ const ListRow: React.FC<{
               showLink={false}
               preferredSite={preferredSite}
             />
-            <PlayerTextInfo player={player} totalGames={totalGames} winRate={winRate} />
+            <PlayerTextInfo player={player} totalGames={totalGames} winRate={winRate} rank={rank} />
           </div>
-          <div className="flex flex-col items-end gap-2 flex-shrink-0 min-w-0">
+          <div className="flex flex-col items-end gap-2 shrink-0 min-w-0">
             {player.isLoading ? (
               <div className="h-8 w-28" aria-hidden="true" />
             ) : (
@@ -270,10 +282,9 @@ const ListRow: React.FC<{
               <div className="@[120px]:flex hidden">
                 <PlayerActions player={player} onRefresh={onRefresh} preferredSite={preferredSite} />
               </div>
-              {/* Placeholder to keep alignment when actions are hidden below 120px */}
               <div className="@[120px]:hidden flex w-10 h-8" aria-hidden="true" />
               <ManualPlayerActions
-                playerId={player.profile.profile.account_id}
+                playerId={player.accountId}
                 isManual={isManual}
                 onEditPlayer={onEditPlayer}
                 onRemovePlayer={onRemovePlayer}
@@ -287,7 +298,7 @@ const ListRow: React.FC<{
 };
 
 export const PlayerListView: React.FC<PlayerListViewProps> = ({
-  players,
+  playerEntries,
   selectedPlayerId,
   onSelectPlayer,
   onRefreshPlayer,
@@ -295,25 +306,16 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
   manualPlayerIds,
   onEditPlayer,
   onRemovePlayer,
-  heroes,
   preferredSite,
 }) => {
-  const processed = useMemo(() => {
-    return players.map((p) => ({
-      player: p,
-      rank: processPlayerRank(p.profile.rank_tier, p.profile.leaderboard_rank),
-      topHeroes: getTopHeroes(p, heroes),
-    }));
-  }, [players, heroes]);
-
-  if (players.length === 0) {
+  if (playerEntries.length === 0) {
     return <PlayersEmptyState />;
   }
 
   if (viewMode === 'card') {
     return (
       <PlayerCardsGrid
-        processed={processed}
+        processed={playerEntries}
         selectedPlayerId={selectedPlayerId}
         onSelectPlayer={onSelectPlayer}
         onRefreshPlayer={onRefreshPlayer}
@@ -324,15 +326,16 @@ export const PlayerListView: React.FC<PlayerListViewProps> = ({
 
   return (
     <div className="grid gap-2 w-full">
-      {processed.map(({ player, topHeroes }) => (
-        <div key={player.profile.profile.account_id} data-player-id={player.profile.profile.account_id}>
+      {playerEntries.map(({ player, topHeroes, rank }) => (
+        <div key={player.accountId} data-player-id={player.accountId}>
           <ListRow
             player={player}
-            isSelected={selectedPlayerId === player.profile.profile.account_id}
+            isSelected={selectedPlayerId === player.accountId}
             onSelect={onSelectPlayer}
             topHeroes={topHeroes}
+            rank={rank}
             onRefresh={onRefreshPlayer}
-            isManual={manualPlayerIds?.has(player.profile.profile.account_id)}
+            isManual={manualPlayerIds?.has(player.accountId)}
             onEditPlayer={onEditPlayer}
             onRemovePlayer={onRemovePlayer}
             preferredSite={preferredSite}
@@ -356,8 +359,113 @@ function PlayersEmptyState(): React.ReactElement {
   );
 }
 
+function PlayerCardActions({
+  player,
+  onRefreshPlayer,
+  preferredSite,
+  showRefresh,
+}: {
+  player: Player;
+  onRefreshPlayer?: (playerId: number) => void;
+  preferredSite: PreferredExternalSite;
+  showRefresh: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <PlayerExternalSiteButton playerId={player.accountId} preferredSite={preferredSite} size="sm" />
+      {showRefresh && (
+        <RefreshButton
+          onClick={() => onRefreshPlayer?.(player.accountId)}
+          ariaLabel={`Refresh ${player.profile.personaname}`}
+        />
+      )}
+    </div>
+  );
+}
+
+const PlayerCard: React.FC<{
+  player: Player;
+  topHeroes: Hero[];
+  rank: PlayerRank | null;
+  isSelected: boolean;
+  onSelectPlayer?: (playerId: number) => void;
+  onRefreshPlayer?: (playerId: number) => void;
+  preferredSite: PreferredExternalSite;
+}> = ({ player, topHeroes, rank, isSelected, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
+  const totalGames = player.overallStats.totalGames;
+  const winRate = player.overallStats.winRate;
+  const hasError = Boolean(player.error);
+  const showLoading = player.isLoading && !hasError;
+  const showData = !hasError && !player.isLoading;
+  const handleSelect = () => {
+    if (!hasError) onSelectPlayer?.(player.accountId);
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleSelect();
+    }
+  };
+
+  return (
+    <Card
+      className={`w-full overflow-hidden ${getCardClassName(isSelected, hasError)}`}
+      onClick={handleSelect}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={hasError ? -1 : 0}
+      aria-label={getAriaLabel(player)}
+    >
+      <CardContent className="p-4">
+        <div className="flex flex-col items-center space-y-3 mb-3">
+          <PlayerAvatar
+            player={player}
+            avatarSize={{ width: 'w-16', height: 'h-16' }}
+            showLink={false}
+            preferredSite={preferredSite}
+          />
+          <div className="text-center w-full min-w-0 overflow-hidden">
+            <div className="font-medium truncate">
+              {showLoading ? `Loading ${player.accountId}` : player.profile.personaname}
+            </div>
+            {hasError ? (
+              <div className="text-xs text-destructive truncate" role="alert">
+                {player.error}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
+                {renderRank(rank) || '\u00A0'}
+              </div>
+            )}
+          </div>
+        </div>
+        {showData ? (
+          <div className="text-xs text-muted-foreground mb-2 text-center truncate">
+            {totalGames} games • {winRate.toFixed(1)}%
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground mb-2 text-center truncate h-4" aria-hidden="true">
+            &nbsp;
+          </div>
+        )}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-center overflow-hidden w-full">
+            {showData ? <PlayerTopHeroes heroes={topHeroes} align="justify-center" /> : null}
+          </div>
+          <PlayerCardActions
+            player={player}
+            onRefreshPlayer={onRefreshPlayer}
+            preferredSite={preferredSite}
+            showRefresh={!hasError}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const PlayerCardsGrid: React.FC<{
-  processed: Array<{ player: Player; topHeroes: Hero[] }>;
+  processed: Array<{ player: Player; topHeroes: Hero[]; rank: PlayerRank | null }>;
   selectedPlayerId?: number | null;
   onSelectPlayer?: (playerId: number) => void;
   onRefreshPlayer?: (playerId: number) => void;
@@ -365,54 +473,19 @@ const PlayerCardsGrid: React.FC<{
 }> = ({ processed, selectedPlayerId, onSelectPlayer, onRefreshPlayer, preferredSite }) => {
   return (
     <div className="grid gap-4 w-full overflow-hidden grid-cols-1 @[430px]:grid-cols-2 @[630px]:grid-cols-3 @[830px]:grid-cols-4">
-      {processed.map(({ player, topHeroes }) => {
-        const totalGames = player.wl.win + player.wl.lose;
-        const winRate = totalGames > 0 ? (player.wl.win / totalGames) * 100 : 0;
-        const isSelected = selectedPlayerId === player.profile.profile.account_id;
-        return (
-          <Card
-            key={player.profile.profile.account_id}
-            className={`transition-all w-full overflow-hidden ${isSelected ? 'ring-2 ring-primary' : 'cursor-pointer hover:shadow-md'}`}
-            onClick={() => onSelectPlayer?.(player.profile.profile.account_id)}
-          >
-            <CardContent className="p-4">
-              <div className="flex flex-col items-center space-y-3 mb-3">
-                <PlayerAvatar
-                  player={player}
-                  avatarSize={{ width: 'w-16', height: 'h-16' }}
-                  showLink={false}
-                  preferredSite={preferredSite}
-                />
-                <div className="text-center w-full min-w-0 overflow-hidden">
-                  <div className="font-medium truncate">{player.profile.profile.personaname}</div>
-                  <div className="text-xs text-muted-foreground h-4 flex items-center justify-center truncate">
-                    {renderRank(player.profile.rank_tier, player.profile.leaderboard_rank) || '\u00A0'}
-                  </div>
-                </div>
-              </div>
-              <div className="text-xs text-muted-foreground mb-2 text-center truncate">
-                {totalGames} games • {winRate.toFixed(1)}%
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="text-center overflow-hidden w-full">
-                  <PlayerTopHeroes heroes={topHeroes} align="justify-center" />
-                </div>
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <PlayerExternalSiteButton
-                    playerId={player.profile.profile.account_id}
-                    preferredSite={preferredSite}
-                    size="sm"
-                  />
-                  <RefreshButton
-                    onClick={() => onRefreshPlayer?.(player.profile.profile.account_id)}
-                    ariaLabel={`Refresh ${player.profile.profile.personaname}`}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+      {processed.map(({ player, topHeroes, rank }) => (
+        <div key={player.accountId} data-player-id={player.accountId}>
+          <PlayerCard
+            player={player}
+            topHeroes={topHeroes}
+            rank={rank}
+            isSelected={selectedPlayerId === player.accountId}
+            onSelectPlayer={onSelectPlayer}
+            onRefreshPlayer={onRefreshPlayer}
+            preferredSite={preferredSite}
+          />
+        </div>
+      ))}
     </div>
   );
 };

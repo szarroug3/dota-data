@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/cache/invalidate/route';
 
-jest.mock('@/lib/cache-service', () => ({
+jest.mock('@/lib/cache/cache-service', () => ({
   CacheService: jest.fn().mockImplementation(() => mockCacheService),
 }));
 

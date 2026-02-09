@@ -1,4 +1,4 @@
-import type { PlayerRole } from '@/types/contexts/team-context-value';
+import type { PlayerRole } from '@/frontend/lib/app-data/app-data-types';
 import type { OpenDotaMatchPlayer } from '@/types/external-apis';
 
 interface PlayerAnalysisResult {
@@ -67,7 +67,7 @@ function assignOffLaneRoles(
   const keys = sortedPlayers.map((p) => safeKey(p.player.account_id)).filter((k): k is string => Boolean(k));
 
   if (keys[0]) roleMap[keys[0]] = 'Offlane';
-  if (keys[1]) roleMap[keys[1]] = 'Support';
+  if (keys[1]) roleMap[keys[1]] = 'Soft Support';
   if (keys[2]) roleMap[keys[2]] = 'Hard Support';
 }
 

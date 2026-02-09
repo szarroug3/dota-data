@@ -23,6 +23,19 @@ describe('Leagues API Route', () => {
   });
 
   describe('GET /api/leagues/[id]', () => {
+    it('should return 400 for invalid league id', async () => {
+      const request = new NextRequest('http://localhost:3000/api/leagues/0');
+      const params = Promise.resolve({ id: '0' });
+
+      const response = await GET(request, { params });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe('Invalid id');
+      expect(data.status).toBe(400);
+      expect(mockFetchSteamLeague).not.toHaveBeenCalled();
+    });
+
     it('should return league data successfully', async () => {
       const request = new NextRequest('http://localhost:3000/api/leagues/16435');
       const params = Promise.resolve({ id: '16435' });

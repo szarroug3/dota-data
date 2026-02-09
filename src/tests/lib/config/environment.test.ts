@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+// Tests re-import config via require to reset module state per case.
 /**
  * Environment Configuration Tests
  *

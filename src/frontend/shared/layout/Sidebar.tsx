@@ -1,22 +1,11 @@
 'use client';
 
-import {
-  BarChart,
-  Building,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Clipboard,
-  Link,
-  Moon,
-  Sun,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import * as SelectPrimitive from '@radix-ui/react-select';
+import { ChevronLeft, ChevronRight, Clipboard, Link, Moon, Sun, Trophy, Users } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import React, { Suspense } from 'react';
+import React from 'react';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
   SidebarContent,
@@ -34,11 +23,17 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useConfigContext } from '@/frontend/contexts/config-context';
-import type { Serializable } from '@/frontend/contexts/share-context';
 import { useShareContext } from '@/frontend/contexts/share-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
+import { GLOBAL_TEAM_KEY, type TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
+import { buildStoredTeamsPayload } from '@/frontend/lib/storage/storage-manager';
+import { useAppData } from '@/hooks/app-data/use-app-data';
 
-import { Dota2ProTrackerIcon, DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
+import { DotabuffIcon, OpenDotaIcon } from '../icons/ExternalSiteIcons';
+
+import { formatShortcutAria, formatShortcutVisual, getShortcutModifier } from './sidebar-shortcuts';
+import { SidebarExternalSites } from './SidebarExternalSites';
+import { SidebarNavigation } from './SidebarNavigation';
+const TEAM_SELECTOR_ID = 'sidebar-team-selector';
 /**
  * Sidebar title component that shows the app name when expanded
  * and only the toggle button when collapsed
@@ -64,112 +59,95 @@ const Title = ({ open }: { open: boolean }) => {
   );
 };
 
-/**
- * Navigation section with main app navigation items
- */
-const NavigationContent = () => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { isShareMode, shareKey } = useShareContext();
-  const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Building />, path: '/dashboard' },
-    { id: 'match-history', label: 'Match History', icon: <Clock />, path: '/match-history' },
-    { id: 'player-stats', label: 'Player Stats', icon: <BarChart />, path: '/player-stats' },
-  ];
+const getTeamDisplayLabel = (teamData: TeamDisplayData): string => {
+  if (teamData.isGlobal) {
+    return 'Global (manual items)';
+  }
 
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-        Navigation
-      </SidebarGroupLabel>
-      <SidebarMenu className="overflow-hidden">
-        {navigationItems.map((item) => {
-          const isActive = pathname === item.path;
-          const handleClick = () => {
-            if (isShareMode && shareKey) {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('config', shareKey);
-              router.push(`${item.path}?${params.toString()}`);
-            } else {
-              router.push(item.path);
-            }
-          };
-          return (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton onClick={handleClick} className={isActive ? 'bg-accent' : ''} tooltip={item.label}>
-                {React.cloneElement(item.icon, {
-                  className: isActive ? 'text-primary' : '',
-                })}
-                <span className="truncate">{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
+  const teamName = teamData.team.name || `Team ${teamData.team.id}`;
+  const leagueName = teamData.league.name || `League ${teamData.league.id}`;
+  return `${teamName} - ${leagueName}`;
 };
 
-/**
- * Navigation section wrapped in Suspense boundary
- */
-const Navigation = () => {
-  return (
-    <Suspense
-      fallback={
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarMenu className="overflow-hidden">
-            <SidebarMenuItem>
-              <SidebarMenuButton disabled>
-                <Building className="animate-pulse" />
-                <span className="truncate">Loading...</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+const TeamSelector = () => {
+  const appData = useAppData();
+  const { setActiveTeam } = useConfigContext();
+  const { state, isMobile } = useSidebar();
+
+  const teams = React.useMemo(() => {
+    return appData.getAllTeamsForDisplayOrdered();
+    // Dependencies:
+    // - appData: access to methods
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.teams ref updates to refresh this memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, appData.teams]);
+
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  const handleTeamChange = React.useCallback(
+    (teamKey: string) => {
+      if (!teamKey) {
+        return;
       }
-    >
-      <NavigationContent />
-    </Suspense>
-  );
-};
-
-/**
- * External sites section for Dota 2 resources
- */
-const ExternalSites = () => {
-  const externalSites = [
-    { id: 'dotabuff', label: 'Dotabuff', icon: <DotabuffIcon />, url: 'https://dotabuff.com' },
-    { id: 'opendota', label: 'OpenDota', icon: <OpenDotaIcon />, url: 'https://opendota.com' },
-    {
-      id: 'dota2protracker',
-      label: 'Dota2ProTracker',
-      icon: <Dota2ProTrackerIcon />,
-      url: 'https://dota2protracker.com',
+      appData.setSelectedTeam(teamKey);
+      const team = appData.getTeam(teamKey);
+      if (team) {
+        setActiveTeam({ teamId: team.teamId, leagueId: team.leagueId });
+      }
     },
-  ];
+    [appData, setActiveTeam],
+  );
+
+  const isCollapsed = state === 'collapsed' && !isMobile;
 
   return (
     <SidebarGroup>
       <div className="flex justify-center">
         <SidebarSeparator />
       </div>
-      <SidebarGroupLabel className="group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0">
-        External Sites
+      <SidebarGroupLabel asChild>
+        <label htmlFor={TEAM_SELECTOR_ID} className={isCollapsed ? 'sr-only' : ''}>
+          Team
+        </label>
       </SidebarGroupLabel>
-      <SidebarMenu className="overflow-hidden">
-        {externalSites.map((site) => (
-          <SidebarMenuItem key={site.id}>
-            <SidebarMenuButton onClick={() => window.open(site.url, '_blank')} tooltip={site.label}>
-              {site.icon} <span className="truncate">{site.label}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
+      <Select value={selectedTeamId} onValueChange={handleTeamChange}>
+        {isCollapsed ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectPrimitive.Trigger id={TEAM_SELECTOR_ID} aria-label="Select team" asChild>
+                    <SidebarMenuButton>
+                      <Users className="h-4 w-4" />
+                      <span className="sr-only">Select team</span>
+                    </SidebarMenuButton>
+                  </SelectPrimitive.Trigger>
+                </TooltipTrigger>
+                <TooltipContent side="right" align="center">
+                  Select team
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : (
+          <div className="px-2">
+            <SelectTrigger id={TEAM_SELECTOR_ID} aria-label="Select team" className="w-full">
+              <SelectValue placeholder="Select team" />
+            </SelectTrigger>
+          </div>
+        )}
+        <SelectContent>
+          {teams.map((teamData) => {
+            const teamKey = `${teamData.team.id}-${teamData.league.id}`;
+            return (
+              <SelectItem key={teamKey} value={teamKey} disabled={Boolean(teamData.error)}>
+                {getTeamDisplayLabel(teamData)}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
     </SidebarGroup>
   );
 };
@@ -178,24 +156,29 @@ const ExternalSites = () => {
  * Quick links section for external team and league pages
  */
 const QuickLinks = () => {
-  const { getSelectedTeam } = useTeamContext();
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+  const activeTeam = appData.getTeam(selectedTeamId);
 
-  const activeTeam = getSelectedTeam();
+  if (!activeTeam) {
+    throw new Error(`Selected team ${selectedTeamId} not found`);
+  }
 
-  if (!activeTeam) return null;
+  // Don't show quick links for the global team
+  if (activeTeam.isGlobal) return null;
 
   const quickLinks = [
     {
       id: 'team-page',
       label: 'Team Page',
       icon: <Users />,
-      url: `https://dotabuff.com/teams/${activeTeam.team.id}`,
+      url: `https://dotabuff.com/teams/${activeTeam.teamId}`,
     },
     {
       id: 'league-page',
       label: 'League Page',
       icon: <Trophy />,
-      url: `https://dotabuff.com/esports/leagues/${activeTeam.league.id}`,
+      url: `https://dotabuff.com/esports/leagues/${activeTeam.leagueId}`,
     },
   ];
 
@@ -310,21 +293,28 @@ const PreferredSiteSwitch = ({ open }: { open: boolean }) => {
  */
 const Settings = ({ open }: { open: boolean }) => {
   const { createShare } = useShareContext();
-  const { getTeams, activeTeam, getGlobalManualMatches, getGlobalManualPlayers } = useConfigContext();
+  const { activeTeam } = useConfigContext();
+  const appData = useAppData();
   const [copied, setCopied] = React.useState(false);
   const copyTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleShare = async () => {
-    const teamsMap = getTeams();
-    const teamsObject: Record<string, Serializable> = {};
-    teamsMap.forEach((value, key) => {
-      teamsObject[key] = JSON.parse(JSON.stringify(value)) as Serializable;
-    });
+    const teamsObject = buildStoredTeamsPayload(appData.teams);
+
+    // Get global manual items from the global team in appData
+    const globalTeam = appData.getTeam(GLOBAL_TEAM_KEY);
+    if (!globalTeam) {
+      throw new Error('Global team not found - this should never happen');
+    }
     const data = {
       teams: teamsObject,
       activeTeam: activeTeam || null,
-      globalManualMatches: getGlobalManualMatches(),
-      globalManualPlayers: getGlobalManualPlayers(),
+      globalManualMatches: Array.from(globalTeam.matches.entries())
+        .filter(([, matchData]) => matchData.isManual)
+        .map(([matchId]) => matchId),
+      globalManualPlayers: Array.from(globalTeam.players.entries())
+        .filter(([, playerData]) => playerData.isManual)
+        .map(([playerId]) => playerId),
     };
     const key = await createShare(data);
     if (key) {
@@ -399,14 +389,24 @@ function Toggle() {
 
   // Use the correct state based on whether we're on mobile or desktop
   const isOpen = isMobile ? openMobile : open;
+  const shortcutModifier = getShortcutModifier();
+  const shortcutLabel = formatShortcutVisual(shortcutModifier, 'B');
+  const shortcutAria = formatShortcutAria(shortcutModifier, 'B');
+  const actionLabel = isOpen ? 'Collapse sidebar' : 'Expand sidebar';
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button onClick={toggleSidebar}>{isOpen ? <ChevronLeft /> : <ChevronRight />}</button>
+        <button
+          onClick={toggleSidebar}
+          aria-label={`${actionLabel} (${shortcutAria})`}
+          title={`${actionLabel} (${shortcutLabel})`}
+        >
+          {isOpen ? <ChevronLeft /> : <ChevronRight />}
+        </button>
       </TooltipTrigger>
       <TooltipContent side="right" align="center" hidden={state !== 'collapsed' || isMobile}>
-        {isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+        {actionLabel} ({shortcutLabel})
       </TooltipContent>
     </Tooltip>
   );
@@ -423,14 +423,15 @@ export function AppSidebar() {
   const shouldShowFullVersion = isMobile ? openMobile : open;
 
   return (
-    <Sidebar collapsible="icon" className="overflow-hidden">
+    <Sidebar collapsible="icon">
       <Title open={shouldShowFullVersion} />
-      <SidebarContent className="overflow-hidden">
-        <Navigation />
-        <ExternalSites />
+      <SidebarContent>
+        <SidebarNavigation />
+        <TeamSelector />
+        <SidebarExternalSites />
         <QuickLinks />
       </SidebarContent>
-      <SidebarFooter className="overflow-hidden">
+      <SidebarFooter>
         <Settings open={shouldShowFullVersion} />
       </SidebarFooter>
       <SidebarRail />

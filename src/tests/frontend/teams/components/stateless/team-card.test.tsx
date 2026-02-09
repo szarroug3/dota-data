@@ -1,10 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
+import type { TeamDisplayData } from '@/frontend/lib/app-data/app-data-types';
 import { TeamCard } from '@/frontend/teams/components/stateless/TeamCard';
 import { TeamCardSkeleton } from '@/frontend/teams/components/stateless/TeamCardSkeleton';
-import { TeamList as TeamCardList } from '@/frontend/teams/components/stateless/TeamList';
+import { TeamList } from '@/frontend/teams/components/stateless/TeamList';
 
-const mockTeamData = {
+type TeamOverrides = Partial<TeamDisplayData> & {
+  team?: Partial<TeamDisplayData['team']>;
+  league?: Partial<TeamDisplayData['league']>;
+  performance?: Partial<TeamDisplayData['performance']>;
+};
+
+const baseTeamData: TeamDisplayData = {
   team: { id: 1, name: 'Team Alpha' },
   league: { id: 1, name: 'Pro League' },
   timeAdded: new Date().toISOString(),
@@ -17,647 +24,173 @@ const mockTeamData = {
     totalWins: 68,
     totalLosses: 32,
     overallWinRate: 68.1,
-    heroUsage: { picks: [], bans: [], picksAgainst: [], bansAgainst: [], picksByPlayer: {} },
-    draftStats: {
-      firstPickCount: 0,
-      secondPickCount: 0,
-      firstPickWinRate: 0,
-      secondPickWinRate: 0,
-      uniqueHeroesPicked: 0,
-      uniqueHeroesBanned: 0,
-      mostPickedHero: '',
-      mostBannedHero: '',
-    },
-    currentWinStreak: 0,
-    currentLoseStreak: 0,
-    averageMatchDuration: 0,
-    averageKills: 0,
-    averageDeaths: 0,
-    averageGold: 0,
-    averageExperience: 0,
+    erroredMatches: 0,
   },
   isLoading: false,
-} as const;
+};
 
-const mockTeams = [
-  { ...mockTeamData },
-  { ...mockTeamData, team: { id: 2, name: 'Team Beta' } },
-  { ...mockTeamData, team: { id: 3, name: 'Team Gamma' }, league: { id: 2, name: 'Championship League' } },
+const createTeamData = (overrides: TeamOverrides = {}): TeamDisplayData => ({
+  ...baseTeamData,
+  ...overrides,
+  team: { ...baseTeamData.team, ...overrides.team },
+  league: { ...baseTeamData.league, ...overrides.league },
+  performance: { ...baseTeamData.performance, ...overrides.performance },
+});
+
+const mockTeams: TeamDisplayData[] = [
+  createTeamData(),
+  createTeamData({ team: { id: 2, name: 'Team Beta' } }),
+  createTeamData({ team: { id: 3, name: 'Team Gamma' }, league: { id: 2, name: 'Championship League' } }),
 ];
 
 describe('TeamCard', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  it('renders team details and stats', () => {
+    render(
+      <TeamCard
+        teamData={baseTeamData}
+        isActive={false}
+        onSetActiveTeam={jest.fn()}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Select team Team Alpha' })).toBeInTheDocument();
+    expect(screen.getByText('Pro League')).toBeInTheDocument();
+    expect(screen.getByText('100 matches')).toBeInTheDocument();
+    expect(screen.getByText('68.1% win rate')).toBeInTheDocument();
   });
 
-  describe('Basic Rendering', () => {
-    it('should render team card with default props', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
+  it('shows active badge when active', () => {
+    render(
+      <TeamCard
+        teamData={baseTeamData}
+        isActive={true}
+        onSetActiveTeam={jest.fn()}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
 
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getByTestId('team-tag')).toHaveTextContent('Team Alpha');
-    });
-
-    it('should render compact layout team card', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should render detailed layout team card', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should render without custom className prop', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should not render when isHidden is true', () => {
-      render(
-        <TeamCard
-          teamData={{ ...mockTeamData, isLoading: false } as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.queryByText('Team Alpha')).not.toBeInTheDocument();
-    });
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
-  describe('Selection and Active States', () => {
-    it('should show selected state when isSelected is true', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
+  it('calls onSetActiveTeam when card is clicked', () => {
+    const onSetActiveTeam = jest.fn();
+    render(
+      <TeamCard
+        teamData={baseTeamData}
+        isActive={false}
+        onSetActiveTeam={onSetActiveTeam}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
 
-      expect(screen.getByText('Selected')).toBeInTheDocument();
-    });
-
-    it('should show active state when isActive is true', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getByText('Active')).toBeInTheDocument();
-    });
-
-    it('should show both selected and active states', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getByText('Active')).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Select team Team Alpha' }));
+    expect(onSetActiveTeam).toHaveBeenCalledWith(1, 1);
   });
 
-  describe('User Interactions', () => {
-    it('should call onActivate when activate button is clicked', () => {
-      render(
-        // TeamCard no longer exposes activate/hide handlers directly; skip interaction test
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
+  it('calls action handlers when buttons are clicked', () => {
+    const onRefreshTeam = jest.fn();
+    const onEditTeam = jest.fn();
+    const onRemoveTeam = jest.fn();
+    render(
+      <TeamCard
+        teamData={baseTeamData}
+        isActive={false}
+        onSetActiveTeam={jest.fn()}
+        onRemoveTeam={onRemoveTeam}
+        onRefreshTeam={onRefreshTeam}
+        onEditTeam={onEditTeam}
+      />,
+    );
 
-    it('should call onHide when hide button is clicked', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
+    fireEvent.click(screen.getByTitle('Refresh team data'));
+    fireEvent.click(screen.getByTitle('Edit team'));
+    fireEvent.click(screen.getByTitle('Delete team'));
 
-    it('should call onViewDetails when view details button is clicked', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should not call handlers when they are not provided', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      // Should not throw errors when handlers are not provided
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
+    expect(onRefreshTeam).toHaveBeenCalledWith(1, 1);
+    expect(onEditTeam).toHaveBeenCalledWith(1, 1);
+    expect(onRemoveTeam).toHaveBeenCalledWith(1, 1);
   });
 
-  describe('Accessibility', () => {
-    it('should have proper button roles for interactions', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getByRole('button', { name: /activate team/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /view team details/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /hide team/i })).toBeInTheDocument();
-    });
+  it('shows error state and hides stats when error is present', () => {
+    render(
+      <TeamCard
+        teamData={{ ...baseTeamData, error: 'Failed to load team data' }}
+        isActive={false}
+        onSetActiveTeam={jest.fn()}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
 
-    it('should be keyboard accessible', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      // Only check for actual buttons present
-      expect(screen.getByRole('button', { name: /activate team/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /view team details/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /hide team/i })).toBeInTheDocument();
-    });
-
-    it('should have proper ARIA labels', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getByTestId('team-tag')).toHaveTextContent('Team Alpha');
-    });
-  });
-
-  describe('Props Configuration', () => {
-    it('should render without showRoster prop', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should render without showStats prop', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should render without showSchedule prop', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-  });
-
-  describe('Data Display', () => {
-    it('should display team stats', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getByText(/32/)).toBeInTheDocument(); // Wins
-      expect(screen.getByText(/68\.1%/)).toBeInTheDocument(); // Win rate
-    });
-
-    it('should display team ranking', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should display recent form', () => {
-      render(
-        <TeamCard
-          teamData={mockTeamData as any}
-          isActive={false}
-          onSetActiveTeam={jest.fn()}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getByText(/Form:/)).toBeInTheDocument();
-    });
+    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Failed to load team data')).toBeInTheDocument();
+    expect(screen.queryByText('100 matches')).not.toBeInTheDocument();
   });
 });
 
 describe('TeamCardSkeleton', () => {
-  describe('Basic Rendering', () => {
-    it('should render skeleton with default props', () => {
-      render(<TeamCardSkeleton />);
-      const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toBeInTheDocument();
-    });
+  it('renders skeleton placeholders', () => {
+    render(<TeamCardSkeleton />);
 
-    it('should render compact layout skeleton', () => {
-      render(<TeamCardSkeleton />);
-      const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toBeInTheDocument();
-    });
-
-    it('should render detailed layout skeleton', () => {
-      render(<TeamCardSkeleton />);
-      const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toBeInTheDocument();
-    });
-
-    it('should apply custom className', () => {
-      render(<TeamCardSkeleton />);
-      const skeleton = document.querySelector('.custom-skeleton');
-      expect(skeleton).toBeInTheDocument();
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have proper ARIA attributes for loading state', () => {
-      render(<TeamCardSkeleton />);
-      const skeleton = document.querySelector('.animate-pulse');
-      expect(skeleton).toBeInTheDocument();
-    });
+    const skeletons = document.querySelectorAll('[data-slot="skeleton"]');
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 });
 
-describe('TeamCardList', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('TeamList', () => {
+  it('renders a list of team cards', () => {
+    render(
+      <TeamList
+        teamDataList={mockTeams}
+        activeTeam={null}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onSetActiveTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Team Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Team Beta')).toBeInTheDocument();
+    expect(screen.getByText('Team Gamma')).toBeInTheDocument();
   });
 
-  describe('Basic Rendering', () => {
-    it('should render list of team cards', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Beta')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Gamma')[0]).toBeInTheDocument();
-    });
+  it('renders empty state when there are no teams', () => {
+    render(
+      <TeamList
+        teamDataList={[]}
+        activeTeam={null}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onSetActiveTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
 
-    it('should render empty message when no teams', () => {
-      render(
-        <TeamCardList
-          teamDataList={[] as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getByText('No teams found')).toBeInTheDocument();
-    });
-
-    it('should apply custom className', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      // Find the container by its className
-      const container = document.querySelector('.custom-list');
-      expect(container).toBeInTheDocument();
-    });
+    expect(screen.getByText('No Teams Added')).toBeInTheDocument();
+    expect(screen.getByText('Add your first team using the add team form to get started.')).toBeInTheDocument();
   });
 
-  describe('Selection and Active States', () => {
-    it('should mark selected team correctly', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams as any}
-          activeTeam={{ teamId: 2, leagueId: 1 }}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
+  it('marks the active team', () => {
+    render(
+      <TeamList
+        teamDataList={mockTeams}
+        activeTeam={{ teamId: 2, leagueId: 1 }}
+        onRemoveTeam={jest.fn()}
+        onRefreshTeam={jest.fn()}
+        onSetActiveTeam={jest.fn()}
+        onEditTeam={jest.fn()}
+      />,
+    );
 
-      expect(screen.getByText('Selected')).toBeInTheDocument();
-    });
-
-    it('should mark active team correctly', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams as any}
-          activeTeam={{ teamId: 1, leagueId: 1 }}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getByText('Active')).toBeInTheDocument();
-    });
-  });
-
-  describe('Hidden Teams', () => {
-    it('should hide specified teams', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Gamma')[0]).toBeInTheDocument();
-    });
-  });
-
-  describe('User Interactions', () => {
-    it('should call onActivateTeam when team is activated', () => {
-      const onSetActive = jest.fn();
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={onSetActive}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      const buttons = screen.getAllByRole('button');
-      buttons[0].click();
-      expect(onSetActive).toHaveBeenCalled();
-    });
-    it('should call onViewDetails when view details is clicked', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-    it('should call onHideTeam when team is hidden', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-  });
-
-  describe('Layout Variants', () => {
-    it('should render default layout by default', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Beta')[0]).toBeInTheDocument();
-    });
-
-    it('should render compact layout when specified', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Beta')[0]).toBeInTheDocument();
-    });
-
-    it('should render detailed layout when specified', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 2) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Team Beta')[0]).toBeInTheDocument();
-    });
-  });
-
-  describe('Props Configuration', () => {
-    it('should pass showRoster prop to team cards', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 1) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should pass showStats prop to team cards', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 1) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
-
-    it('should pass showSchedule prop to team cards', () => {
-      render(
-        <TeamCardList
-          teamDataList={mockTeams.slice(0, 1) as any}
-          activeTeam={null}
-          onRemoveTeam={jest.fn()}
-          onRefreshTeam={jest.fn()}
-          onSetActiveTeam={jest.fn()}
-          onEditTeam={jest.fn()}
-        />,
-      );
-
-      expect(screen.getAllByText('Team Alpha')[0]).toBeInTheDocument();
-    });
+    expect(screen.getByText('Active')).toBeInTheDocument();
   });
 });

@@ -5,8 +5,6 @@
  * in the frontend application.
  */
 
-import type { TeamData } from '@/types/contexts/team-context-value';
-
 // ============================================================================
 // CONFIG DATA TYPES
 // ============================================================================
@@ -52,9 +50,6 @@ export interface ConfigContextValue {
   // Configuration data
   config: AppConfig;
 
-  // Team data (persistent) - now stored as Map for consistency
-  getTeams: () => Map<string, TeamData>;
-  setTeams: (teams: Map<string, TeamData>) => void;
   activeTeam: { teamId: number; leagueId: number } | null;
   setActiveTeam: (activeTeam: { teamId: number; leagueId: number } | null) => void;
 

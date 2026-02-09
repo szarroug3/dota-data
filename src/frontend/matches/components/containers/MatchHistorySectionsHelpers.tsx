@@ -1,22 +1,13 @@
 'use client';
 
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { AddMatchForm } from '@/frontend/matches/components/stateless/AddMatchForm';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 import { HeroSummaryTable } from '@/frontend/matches/components/summary/HeroSummaryTable';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
-import { validateMatchId } from '@/utils/validation';
+import { validateMatchId } from '@/utils/validation/validation';
 
-export function HeroSummarySection({
-  visibleMatches,
-  teamMatches,
-  allMatches,
-}: {
-  visibleMatches: Match[];
-  teamMatches: Record<number, TeamMatchParticipation>;
-  allMatches: Match[];
-}) {
-  return <HeroSummaryTable matches={visibleMatches} teamMatches={teamMatches} allMatches={allMatches} />;
+export function HeroSummarySection({ visibleMatches }: { visibleMatches: Match[] }) {
+  return <HeroSummaryTable matches={visibleMatches} />;
 }
 
 export function HiddenMatchesModalSection({
@@ -25,12 +16,14 @@ export function HiddenMatchesModalSection({
   handleUnhideMatch,
   setShowHiddenModal,
   teamMatches,
+  selectedTeamId,
 }: {
   showHiddenModal: boolean;
   hiddenMatches: Match[];
   handleUnhideMatch: (id: number) => void;
   setShowHiddenModal: (show: boolean) => void;
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
+  selectedTeamId: string;
 }) {
   if (!showHiddenModal) return null;
   return (
@@ -39,6 +32,7 @@ export function HiddenMatchesModalSection({
       onUnhide={handleUnhideMatch}
       onClose={() => setShowHiddenModal(false)}
       teamMatches={teamMatches}
+      selectedTeamId={selectedTeamId}
     />
   );
 }

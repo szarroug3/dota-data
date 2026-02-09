@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 
+import type { GameEvent } from '@/frontend/lib/app-data/app-data-types';
 import {
   AdvantagesList,
   formatTime,
@@ -9,7 +10,6 @@ import {
   renderEventDot,
   type TooltipEntry,
 } from '@/frontend/matches/components/details/MatchDetailsPanelEventsParts';
-import type { GameEvent } from '@/types/contexts/match-context-value';
 
 describe('MatchDetailsPanelEventsParts helpers', () => {
   it('formatTime formats negative and positive seconds', () => {
@@ -31,12 +31,14 @@ describe('Event descriptions and tooltip items', () => {
     type: 'CHAT_MESSAGE_FIRSTBLOOD',
     time: 10,
     description: 'First blood',
+    team: 'radiant',
     details: { killer: 'A', victim: 'B' } as any,
   };
   const aegisEvent: GameEvent = {
     type: 'CHAT_MESSAGE_AEGIS',
     time: 20,
     description: 'Aegis',
+    team: 'dire',
     details: { aegisHolder: 'C' } as any,
   };
   const otherEvent: GameEvent = { type: 'OTHER', time: 30, description: 'Other event' } as any;
@@ -79,6 +81,21 @@ describe('Event descriptions and tooltip items', () => {
     const { container } = render(<AdvantagesList payload={payload} />);
     expect(container.textContent).toContain('advantage');
     expect(container.textContent).not.toContain('other');
+  });
+
+  it('AdvantagesList rounds non-integer values', () => {
+    const payload: TooltipEntry[] = [
+      {
+        dataKey: 'xpAdvantage',
+        value: 186.89999999999998,
+        name: 'XP Advantage',
+        color: '#000',
+        payload: { time: 0, goldAdvantage: 0, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 },
+      },
+    ];
+    const { container } = render(<AdvantagesList payload={payload} />);
+    expect(container.textContent).toContain('187');
+    expect(container.textContent).not.toContain('186.8');
   });
 });
 

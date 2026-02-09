@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { CacheTtlSeconds } from '@/lib/cache-ttls';
+import { CacheTtlSeconds } from '@/lib/cache/cache-ttls';
 import { getEnv } from '@/lib/config/environment';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
@@ -51,7 +51,13 @@ export async function fetchSteamLeague(
 ): Promise<{ result: SteamGetMatchHistoryResult }> {
   const cacheKey = `steam:league:${leagueId}`;
   const cacheTTL = CacheTtlSeconds.steamLeagues;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'leagues', `steam-league-${leagueId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'leagues',
+    `steam-league-${leagueId}.json`,
+  );
 
   const aggregator = async (): Promise<string> => {
     let aggregatedMatches: SteamMatchSummary[] = [];
@@ -91,8 +97,18 @@ export async function fetchSteamLeague(
   const result = await request<{ result: SteamGetMatchHistoryResult }>(
     'steam',
     aggregator,
-    (data: string) => JSON.parse(data) as { result: SteamGetMatchHistoryResult },
-    mockFilename,
+    (data: string) => {
+      const parsed = JSON.parse(data) as { result: SteamGetMatchHistoryResult };
+
+      // Check if league exists - Steam API returns status 15 for invalid leagues
+      // or status 1 with 0 total_results for leagues with no matches yet
+      if (parsed.result.status === 15) {
+        throw new Error(`Data Not Found: League ${leagueId} does not exist or is not accessible`);
+      }
+
+      return parsed;
+    },
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,

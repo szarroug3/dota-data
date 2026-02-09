@@ -4,18 +4,17 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useAppData } from '@/frontend/contexts/app-data-context';
+import { Match, PlayerMatchData } from '@/frontend/lib/app-data/app-data-types';
+import type { TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import { Match, PlayerMatchData } from '@/types/contexts/match-context-value';
-import { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 interface MatchDetailsPanelPlayersProps {
   match?: Match;
   teamMatch?: TeamMatchParticipation;
   className?: string;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
+  hiddenMatchIds: Set<number>;
+  selectedTeamId: string;
 }
 
 function getTeamDisplayNames(match?: Match): { radiantName: string; direName: string } {
@@ -28,53 +27,17 @@ function getTeamDisplayNames(match?: Match): { radiantName: string; direName: st
 }
 
 type PlayerWithTeam = PlayerMatchData & { team: 'radiant' | 'dire' };
-function convertPlayerMatchData(player: PlayerMatchData, team: 'radiant' | 'dire'): PlayerWithTeam {
-  return { ...player, team };
-}
-function getPlayersFromMatch(match?: Match): PlayerWithTeam[] {
-  if (!match) return [];
-  const radiantPlayers = (match.players.radiant || []).map((player) => convertPlayerMatchData(player, 'radiant'));
-  const direPlayers = (match.players.dire || []).map((player) => convertPlayerMatchData(player, 'dire'));
-  return [...radiantPlayers, ...direPlayers];
-}
-
-const isHighPerformingHero = (
-  hero: Hero,
-  allMatches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
-  hiddenMatchIds: Set<number>,
-): boolean => {
-  const heroStats: { count: number; wins: number; totalGames: number } = { count: 0, wins: 0, totalGames: 0 };
-  allMatches.forEach((matchData) => {
-    if (hiddenMatchIds.has(matchData.id)) return;
-    const matchTeamData = teamMatches[matchData.id];
-    if (!matchTeamData?.side) return;
-    const teamPlayers = matchData.players[matchTeamData.side] || [];
-    const isWin = matchTeamData.result === 'won';
-    teamPlayers.forEach((player) => {
-      if (player?.hero?.id === hero.id) {
-        heroStats.count++;
-        heroStats.totalGames++;
-        if (isWin) {
-          heroStats.wins++;
-        }
-      }
-    });
-  });
-  return heroStats.count >= 5 && heroStats.wins / heroStats.count >= 0.6;
-};
 
 const PlayerCard: React.FC<{
   player: PlayerWithTeam;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ player, teamMatch, allMatches = [], teamMatches = {}, hiddenMatchIds = new Set() }) => {
+  selectedTeamId: string;
+  hiddenMatchIds: Set<number>;
+}> = ({ player, teamMatch, selectedTeamId, hiddenMatchIds }) => {
+  const appData = useAppData();
   const isOnActiveTeamSide = player.team === teamMatch?.side;
-  const isHighPerforming = isOnActiveTeamSide
-    ? isHighPerformingHero(player.hero, allMatches, teamMatches, hiddenMatchIds)
-    : false;
+  const isHighPerforming =
+    isOnActiveTeamSide && appData.isHighPerformingHero(player.hero.id, selectedTeamId, hiddenMatchIds);
   return (
     <Card className="p-4">
       <div className="flex items-start gap-4">
@@ -89,8 +52,8 @@ const PlayerCard: React.FC<{
               <div className="flex items-center gap-2 min-w-0">
                 <h3 className="font-medium truncate @[510px]:block hidden">{player.playerName}</h3>
                 {player.role && (
-                  <Badge variant="secondary" className="text-xs flex-shrink-0 @[235px]:block hidden">
-                    {player.role}
+                  <Badge variant="secondary" className="text-xs shrink-0 @[235px]:block hidden">
+                    {player.role.role}
                   </Badge>
                 )}
               </div>
@@ -145,9 +108,7 @@ const PlayerCard: React.FC<{
               </div>
               <div className="flex justify-between">
                 <span>KDA:</span>
-                <span className="font-medium">
-                  {((player.stats.kills + player.stats.assists) / Math.max(player.stats.deaths, 1)).toFixed(2)}
-                </span>
+                <span className="font-medium">{appData.getMatchPlayerKda(player).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -161,42 +122,27 @@ const RadiantPlayers: React.FC<{
   players: PlayerWithTeam[];
   teamName: string;
   isWinner: boolean;
-  match?: Match;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
-  const radiantPlayers = players.filter((p) => p.team === 'radiant');
-  const sortedRadiantPlayers = match?.draft?.radiantPicks
-    ? radiantPlayers.sort((a, b) => {
-        const aPickIndex = match.draft.radiantPicks.findIndex(
-          (pick) => pick.hero.localizedName === a.hero.localizedName,
-        );
-        const bPickIndex = match.draft.radiantPicks.findIndex(
-          (pick) => pick.hero.localizedName === b.hero.localizedName,
-        );
-        return aPickIndex - bPickIndex;
-      })
-    : radiantPlayers;
+  selectedTeamId: string;
+  hiddenMatchIds: Set<number>;
+}> = ({ players, teamName, isWinner, teamMatch, selectedTeamId, hiddenMatchIds }) => {
   return (
     <div>
       <div className="pb-3">
         <h3 className="text-lg font-semibold flex items-center gap-2 min-w-0">
           <span className="truncate">{teamName}</span>
-          {isWinner && <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />}
+          {isWinner && <Crown className="w-4 h-4 text-yellow-500 shrink-0" />}
         </h3>
       </div>
       <div className="space-y-4">
-        {sortedRadiantPlayers.map((player, idx) => {
+        {players.map((player, idx) => {
           const keyId = player.accountId && player.accountId !== 0 ? player.accountId : player.hero?.id || idx;
           return (
             <PlayerCard
               key={`radiant-${keyId}`}
               player={player}
               teamMatch={teamMatch}
-              allMatches={allMatches}
-              teamMatches={teamMatches}
+              selectedTeamId={selectedTeamId}
               hiddenMatchIds={hiddenMatchIds}
             />
           );
@@ -210,38 +156,27 @@ const DirePlayers: React.FC<{
   players: PlayerWithTeam[];
   teamName: string;
   isWinner: boolean;
-  match?: Match;
   teamMatch?: TeamMatchParticipation;
-  allMatches?: Match[];
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-}> = ({ players, teamName, isWinner, match, teamMatch, allMatches, teamMatches, hiddenMatchIds }) => {
-  const direPlayers = players.filter((p) => p.team === 'dire');
-  const sortedDirePlayers = match?.draft?.direPicks
-    ? direPlayers.sort((a, b) => {
-        const aPickIndex = match.draft.direPicks.findIndex((pick) => pick.hero.localizedName === a.hero.localizedName);
-        const bPickIndex = match.draft.direPicks.findIndex((pick) => pick.hero.localizedName === b.hero.localizedName);
-        return aPickIndex - bPickIndex;
-      })
-    : direPlayers;
+  selectedTeamId: string;
+  hiddenMatchIds: Set<number>;
+}> = ({ players, teamName, isWinner, teamMatch, selectedTeamId, hiddenMatchIds }) => {
   return (
     <div>
       <div className="pb-3">
         <h3 className="text-lg font-semibold flex items-center gap-2 min-w-0">
           <span className="truncate">{teamName}</span>
-          {isWinner && <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />}
+          {isWinner && <Crown className="w-4 h-4 text-yellow-500 shrink-0" />}
         </h3>
       </div>
       <div className="space-y-4">
-        {sortedDirePlayers.map((player, idx) => {
+        {players.map((player, idx) => {
           const keyId = player.accountId && player.accountId !== 0 ? player.accountId : player.hero?.id || idx;
           return (
             <PlayerCard
               key={`dire-${keyId}`}
               player={player}
               teamMatch={teamMatch}
-              allMatches={allMatches}
-              teamMatches={teamMatches}
+              selectedTeamId={selectedTeamId}
               hiddenMatchIds={hiddenMatchIds}
             />
           );
@@ -254,34 +189,36 @@ const DirePlayers: React.FC<{
 export const MatchDetailsPanelPlayers: React.FC<MatchDetailsPanelPlayersProps> = ({
   match,
   teamMatch,
-  allMatches = [],
-  teamMatches = {},
   hiddenMatchIds = new Set(),
+  selectedTeamId,
 }) => {
-  const players = getPlayersFromMatch(match);
+  const appData = useAppData();
+  const radiantPlayers: PlayerWithTeam[] = (match ? appData.getPlayersSortedByDraft(match.id, 'radiant') : []).map(
+    (p) => ({ ...p, team: 'radiant' as const }),
+  );
+  const direPlayers: PlayerWithTeam[] = (match ? appData.getPlayersSortedByDraft(match.id, 'dire') : []).map((p) => ({
+    ...p,
+    team: 'dire' as const,
+  }));
   const { radiantName, direName } = getTeamDisplayNames(match);
   const isRadiantWin = match?.result === 'radiant';
   const isDireWin = match?.result === 'dire';
   return (
     <div className="space-y-6">
       <RadiantPlayers
-        players={players.filter((p) => p.team === 'radiant')}
+        players={radiantPlayers}
         teamName={radiantName}
         isWinner={isRadiantWin}
-        match={match}
         teamMatch={teamMatch}
-        allMatches={allMatches}
-        teamMatches={teamMatches}
+        selectedTeamId={selectedTeamId}
         hiddenMatchIds={hiddenMatchIds}
       />
       <DirePlayers
-        players={players.filter((p) => p.team === 'dire')}
+        players={direPlayers}
         teamName={direName}
         isWinner={isDireWin}
-        match={match}
         teamMatch={teamMatch}
-        allMatches={allMatches}
-        teamMatches={teamMatches}
+        selectedTeamId={selectedTeamId}
         hiddenMatchIds={hiddenMatchIds}
       />
     </div>

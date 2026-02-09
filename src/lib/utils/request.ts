@@ -1,13 +1,19 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-import { CacheService } from '@/lib/cache-service';
+import { CacheService } from '@/lib/cache/cache-service';
 import { getEnv } from '@/lib/config/environment';
-import { CacheValue } from '@/types/cache';
+import { CacheValue } from '@/types/cache/cache';
 
 const mockServices = {
   opendota: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_OPENDOTA(),
   steam: getEnv.USE_MOCK_API() || getEnv.USE_MOCK_STEAM(),
+};
+
+const defaultMockDelay = getEnv.MOCK_API_DELAY_MS() ?? 0;
+const mockDelays: Record<keyof typeof mockServices, number> = {
+  opendota: getEnv.MOCK_API_DELAY_OPENDOTA_MS() ?? defaultMockDelay,
+  steam: getEnv.MOCK_API_DELAY_STEAM_MS() ?? defaultMockDelay,
 };
 
 async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boolean): Promise<T | null> {
@@ -17,16 +23,16 @@ async function getFromCache<T>(cache: CacheService, cacheKey: string, force: boo
   return await cache.get<T>(cacheKey);
 }
 
-async function getFromMock(mockFilename: string): Promise<string> {
-  return await fs.readFile(mockFilename, 'utf-8');
+async function getFromExternalData(externalDataFilename: string): Promise<string> {
+  return await fs.readFile(externalDataFilename, 'utf-8');
 }
 
-async function getFromAPI(requestFn: () => Promise<string>, mockFilename: string): Promise<string> {
+async function getFromAPI(requestFn: () => Promise<string>, externalDataFilename: string): Promise<string> {
   const response = await requestFn();
   if (getEnv.WRITE_REAL_DATA_TO_MOCK()) {
-    const folder = path.dirname(mockFilename);
+    const folder = path.dirname(externalDataFilename);
     await fs.mkdir(folder, { recursive: true });
-    await fs.writeFile(mockFilename, response, 'utf-8');
+    await fs.writeFile(externalDataFilename, response, 'utf-8');
   }
   return response;
 }
@@ -48,7 +54,7 @@ export async function request<T>(
   service: keyof typeof mockServices,
   requestFn: () => Promise<string>,
   processingFn: (data: string) => T,
-  mockFilename: string,
+  externalDataFilename: string,
   force: boolean = false,
   cacheTTL: number = 60 * 60,
   cacheKey: string,
@@ -61,12 +67,29 @@ export async function request<T>(
   }
 
   let data: string | null = null;
-  if (mockServices[service]) {
-    data = await getFromMock(mockFilename);
+  const useMock = mockServices[service];
+
+  await applyMockDelay(service, useMock);
+
+  if (useMock) {
+    try {
+      data = await getFromExternalData(externalDataFilename);
+    } catch {
+      data = await getFromAPI(requestFn, externalDataFilename);
+    }
   } else {
-    data = await getFromAPI(requestFn, mockFilename);
+    data = await getFromAPI(requestFn, externalDataFilename);
   }
+
   return await processData(data, processingFn, cache, cacheKey, cacheTTL);
+}
+
+async function applyMockDelay(service: keyof typeof mockServices, useMock: boolean): Promise<void> {
+  if (!useMock) return;
+  const delay = mockDelays[service] ?? defaultMockDelay;
+  if (delay && delay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
 }
 
 export async function requestWithRetry(

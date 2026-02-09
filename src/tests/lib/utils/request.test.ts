@@ -1,14 +1,17 @@
-import { CacheService } from '@/lib/cache-service';
+import { CacheService } from '@/lib/cache/cache-service';
 import { request, requestWithRetry } from '@/lib/utils/request';
 
 // Mock dependencies
-jest.mock('@/lib/cache-service');
+jest.mock('@/lib/cache/cache-service');
 jest.mock('@/lib/config/environment', () => ({
   getEnv: {
     USE_MOCK_API: jest.fn(() => false),
     USE_MOCK_STEAM: jest.fn(() => false),
     USE_MOCK_OPENDOTA: jest.fn(() => false),
     WRITE_REAL_DATA_TO_MOCK: jest.fn(() => false),
+    MOCK_API_DELAY_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_OPENDOTA_MS: jest.fn(() => 0),
+    MOCK_API_DELAY_STEAM_MS: jest.fn(() => 0),
   },
 }));
 
@@ -37,15 +40,16 @@ describe('request utility', () => {
 
     it('should fetch from API when cache is empty and force is false', async () => {
       const apiData = { ok: true };
+      const apiResponse = JSON.stringify(apiData);
       const processedData = { id: '123', name: 'Test' };
-      const requestFn = jest.fn().mockResolvedValue(apiData);
+      const requestFn = jest.fn().mockResolvedValue(apiResponse);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
       const result = await request('steam', requestFn, processingFn, '/mock/file.json', false, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
-      expect(processingFn).toHaveBeenCalledWith(apiData);
+      expect(processingFn).toHaveBeenCalledWith(apiResponse);
       expect(mockCacheService.prototype.set).toHaveBeenCalledWith('test-key', processedData, 3600);
     });
 
@@ -54,15 +58,16 @@ describe('request utility', () => {
       mockCacheService.prototype.get.mockResolvedValue(cachedData);
 
       const apiData = { ok: true };
+      const apiResponse = JSON.stringify(apiData);
       const processedData = { id: '456', name: 'New Test' };
-      const requestFn = jest.fn().mockResolvedValue(apiData);
+      const requestFn = jest.fn().mockResolvedValue(apiResponse);
       const processingFn = jest.fn().mockReturnValue(processedData);
 
       const result = await request('steam', requestFn, processingFn, '/mock/file.json', true, 3600, 'test-key');
 
       expect(result).toEqual(processedData);
       expect(requestFn).toHaveBeenCalled();
-      expect(processingFn).toHaveBeenCalledWith(apiData);
+      expect(processingFn).toHaveBeenCalledWith(apiResponse);
     });
 
     it('should handle errors from request function', async () => {
@@ -76,7 +81,8 @@ describe('request utility', () => {
 
     it('should handle errors from processing function', async () => {
       const apiData = { ok: true };
-      const requestFn = jest.fn().mockResolvedValue(apiData);
+      const apiResponse = JSON.stringify(apiData);
+      const requestFn = jest.fn().mockResolvedValue(apiResponse);
       const processingFn = jest.fn().mockImplementation(() => {
         throw new Error('Processing Error');
       });
@@ -103,7 +109,7 @@ describe('request utility', () => {
       };
       (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      const result = await requestWithRetry('GET', 'https://api.example.com/data');
+      const result = await requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 1, 0);
 
       expect(result).toEqual(mockResponse);
       expect(global.fetch).toHaveBeenCalledWith('https://api.example.com/data', {
@@ -133,7 +139,7 @@ describe('request utility', () => {
 
       (global.fetch as jest.Mock).mockResolvedValueOnce(failedResponse).mockResolvedValueOnce(successResponse);
 
-      const result = await requestWithRetry('GET', 'https://api.example.com/data');
+      const result = await requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 2, 0);
 
       expect(result).toEqual(successResponse);
       expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -151,7 +157,7 @@ describe('request utility', () => {
 
       (global.fetch as jest.Mock).mockResolvedValue(failedResponse);
 
-      await expect(requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 2)).rejects.toThrow(
+      await expect(requestWithRetry('GET', 'https://api.example.com/data', undefined, undefined, 2, 0)).rejects.toThrow(
         'Request failed: 500 Internal Server Error',
       );
     });

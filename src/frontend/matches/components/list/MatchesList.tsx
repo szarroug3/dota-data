@@ -4,8 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
 
 import { MatchListView, type MatchListViewMode } from './MatchListView';
 
@@ -52,11 +51,12 @@ interface MatchesListProps {
   onSelectMatch?: (matchId: number) => void;
   hiddenMatchesCount?: number;
   onShowHiddenMatches?: () => void;
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
   onAddMatch?: () => void;
+  isLoading?: boolean;
 }
 
 export interface MatchesListRef {
@@ -70,15 +70,15 @@ interface MatchListLayoutButtonsProps {
 
 const MatchListLayoutButtons: React.FC<MatchListLayoutButtonsProps> = ({ viewMode, setViewMode }) => (
   <>
-    <div className="@[120px]:flex hidden flex-shrink-0">
+    <div className="@[120px]:flex hidden shrink-0">
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as MatchListViewMode)}>
         <TabsList className="grid w-auto grid-cols-2">
           <TabsTrigger value="list" className="flex items-center gap-2 min-w-0">
-            <List className="w-4 h-4 flex-shrink-0" />
+            <List className="w-4 h-4 shrink-0" />
             <span className="@[420px]:block hidden">List</span>
           </TabsTrigger>
           <TabsTrigger value="card" className="flex items-center gap-2 min-w-0">
-            <SquareStack className="w-4 h-4 flex-shrink-0" />
+            <SquareStack className="w-4 h-4 shrink-0" />
             <span className="@[420px]:block hidden">Card</span>
           </TabsTrigger>
         </TabsList>
@@ -95,7 +95,7 @@ interface MatchesListContentProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
-  teamMatches: Record<number, TeamMatchParticipation>;
+  teamMatches: Map<number, TeamMatchParticipation>;
   hiddenMatchIds: Set<number>;
   allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
@@ -104,6 +104,7 @@ interface MatchesListContentProps {
   onShowHiddenMatches?: () => void;
   setViewMode: (mode: MatchListViewMode) => void;
   cardContentRef: React.RefObject<HTMLDivElement | null>;
+  isLoading: boolean;
 }
 
 const MatchesListContent: React.FC<MatchesListContentProps> = ({
@@ -122,17 +123,19 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
   onShowHiddenMatches,
   setViewMode,
   cardContentRef,
+  isLoading,
 }) => {
+  const shouldShowLoading = isLoading && matches.length === 0;
   return (
     <Card className="flex flex-col min-h-[calc(100vh-19rem)] max-h-[calc(100vh-19rem)]">
-      <CardHeader className="flex items-center justify-between flex-shrink-0 min-w-0">
+      <CardHeader className="flex items-center justify-between shrink-0 min-w-0">
         <div className="min-w-0 overflow-hidden opacity-0 invisible @[250px]:opacity-100 @[250px]:visible">
           <h3 className="text-lg font-semibold text-foreground dark:text-foreground truncate">Match History</h3>
           <p className="text-sm text-muted-foreground dark:text-muted-foreground truncate">
             {matches.length} matches found
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="@[260px]:flex hidden w-[60px]">
             {hiddenMatchesCount > 0 && onShowHiddenMatches && (
               <Button
@@ -151,7 +154,7 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
               onClick={onAddMatch}
               variant="outline"
               size="sm"
-              className="flex items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex hidden"
+              className="hidden items-center gap-1 px-3 py-1 text-xs w-[32px] @[420px]:w-[102px] @[180px]:flex"
             >
               <Plus className="h-3 w-3" />
               <span className="@[420px]:block hidden">Add Match</span>
@@ -164,18 +167,25 @@ const MatchesListContent: React.FC<MatchesListContentProps> = ({
       </CardHeader>
       <CardContent ref={cardContentRef} className="flex-1 min-h-0 px-0 py-0 overflow-y-auto @[35px]:block hidden">
         <div className="px-4 py-2">
-          <MatchListView
-            matches={matches}
-            selectedMatchId={selectedMatchId || null}
-            onSelectMatch={onSelectMatch || (() => {})}
-            onHideMatch={onHideMatch}
-            onRefreshMatch={onRefreshMatch}
-            viewMode={viewMode}
-            teamMatches={teamMatches}
-            hiddenMatchIds={hiddenMatchIds}
-            allMatches={allMatches}
-            onScrollToMatch={onScrollToMatch}
-          />
+          {shouldShowLoading ? (
+            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" aria-label="Loading" />
+              <div className="text-sm mt-3">Loading matches...</div>
+            </div>
+          ) : (
+            <MatchListView
+              matches={matches}
+              selectedMatchId={selectedMatchId || null}
+              onSelectMatch={onSelectMatch || (() => {})}
+              onHideMatch={onHideMatch}
+              onRefreshMatch={onRefreshMatch}
+              viewMode={viewMode}
+              teamMatches={teamMatches}
+              hiddenMatchIds={hiddenMatchIds}
+              allMatches={allMatches}
+              onScrollToMatch={onScrollToMatch}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
@@ -194,11 +204,12 @@ const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
       onSelectMatch,
       hiddenMatchesCount = 0,
       onShowHiddenMatches,
-      teamMatches = {},
+      teamMatches,
       hiddenMatchIds = new Set(),
       allMatches = [],
       onScrollToMatch,
       onAddMatch,
+      isLoading = false,
     },
     ref,
   ) => {
@@ -224,6 +235,7 @@ const MatchesList = forwardRef<MatchesListRef | null, MatchesListProps>(
         onShowHiddenMatches={onShowHiddenMatches}
         setViewMode={setViewMode}
         cardContentRef={cardContentRef}
+        isLoading={isLoading}
       />
     );
   },

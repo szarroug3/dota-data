@@ -2,19 +2,15 @@ import { Check, Coins, Skull, Zap } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 
-import { EventDetails, GameEvent, Match } from '@/types/contexts/match-context-value';
+import { EventDetails, GameEvent, Match } from '@/frontend/lib/app-data/app-data-types';
+import {
+  computeTeamfightTotals,
+  deriveTeamfightRowData,
+  type TeamfightRowData,
+} from '@/frontend/lib/app-data/derivations/app-data-match-derivations';
+import type { ChartDataPoint } from '@/frontend/lib/match/match-performance-timeline';
 
-export interface ChartDataPoint {
-  time: number;
-  goldAdvantage: number | null;
-  xpAdvantage: number | null;
-  radiantGold: number;
-  direGold: number;
-  radiantXP: number;
-  direXP: number;
-  eventLine?: number;
-  event?: GameEvent;
-}
+export type { ChartDataPoint };
 
 export const formatTime = (seconds: number): string => {
   const isNegative = seconds < 0;
@@ -47,10 +43,10 @@ export function AdvantageItem({ entry }: { entry: TooltipEntry }) {
   const team = numValue > 0 ? 'Radiant' : 'Dire';
   const advantage = Math.abs(numValue);
   const absValue = Math.abs(advantage);
-  const formattedValue = absValue >= 1000 ? Math.round(advantage / 1000) : advantage;
+  const formattedValue = absValue >= 1000 ? Math.round(advantage / 1000) : Math.round(advantage);
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+      <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
       <span className="text-sm font-medium truncate min-w-0">
         {team} advantage: {formattedValue}
         {absValue >= 1000 ? 'k' : ''} {entry.name}
@@ -233,7 +229,7 @@ export function TeamfightPlayersTable({ details, match }: { details: NonNullable
           <span className="inline-block w-12 text-right">XP</span>
         </div>
       </div>
-      {details.playerDetails?.map((player, index) => {
+      {details.playerDetails?.map((player, index: number) => {
         const data = deriveTeamfightRowData(player, match);
         return <TeamfightPlayerRowSimple key={index} data={data} />;
       })}
@@ -266,18 +262,6 @@ export function PerformanceTooltip({
   );
 }
 
-function computeTeamfightTotals(playerDetails: NonNullable<EventDetails['playerDetails']> | undefined) {
-  const initial = { gold: 0, xp: 0 } as { gold: number; xp: number };
-  if (!playerDetails || playerDetails.length === 0) return { radiant: initial, dire: initial };
-  const radiant = playerDetails
-    .filter((p) => p.playerIndex < 5)
-    .reduce((acc, p) => ({ gold: acc.gold + p.goldDelta, xp: acc.xp + p.xpDelta }), initial);
-  const dire = playerDetails
-    .filter((p) => p.playerIndex >= 5)
-    .reduce((acc, p) => ({ gold: acc.gold + p.goldDelta, xp: acc.xp + p.xpDelta }), initial);
-  return { radiant, dire };
-}
-
 export function TeamfightDetailsSection({ details, match }: { details: NonNullable<EventDetails>; match?: Match }) {
   const { radiant, dire } = computeTeamfightTotals(details.playerDetails);
 
@@ -292,41 +276,6 @@ export function TeamfightDetailsSection({ details, match }: { details: NonNullab
       <TeamfightPlayersTable details={details} match={match} />
     </div>
   );
-}
-
-type TeamfightRowData = {
-  heroImageUrl?: string;
-  heroName: string;
-  isDead: boolean;
-  damageText: string | number;
-  goldDelta: number;
-  xpDelta: number;
-};
-type TeamfightPlayerDetails = NonNullable<EventDetails['playerDetails']>[number];
-
-function deriveTeamfightRowData(player: TeamfightPlayerDetails, match?: Match): TeamfightRowData {
-  const hero = getHeroForPlayer(match, player.playerIndex);
-  const heroName = getHeroName(hero, player.playerIndex);
-  return {
-    heroImageUrl: hero?.imageUrl,
-    heroName,
-    isDead: player.deaths > 0,
-    damageText: typeof player.damage === 'number' ? (player.damage.toLocaleString?.() ?? player.damage) : 0,
-    goldDelta: player.goldDelta,
-    xpDelta: player.xpDelta,
-  };
-}
-
-function getHeroForPlayer(match: Match | undefined, playerIndex: number) {
-  if (!match?.players) return undefined;
-  const isRadiant = playerIndex < 5;
-  if (isRadiant) return match.players.radiant?.[playerIndex]?.hero;
-  const direIndex = playerIndex - 5;
-  return match.players.dire?.[direIndex]?.hero;
-}
-
-function getHeroName(hero: { localizedName?: string } | undefined, fallbackIndex: number): string {
-  return hero?.localizedName ?? `Player ${fallbackIndex}`;
 }
 
 function TeamfightPlayerRowSimple({ data }: { data: TeamfightRowData }) {

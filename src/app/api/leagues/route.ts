@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchLeaguesFromOpendota } from '@/lib/api/opendota/leagues';
-import { ApiErrorResponse } from '@/types/api';
+import { ApiErrorResponse } from '@/types/api/api';
 
 export const runtime = 'nodejs';
 

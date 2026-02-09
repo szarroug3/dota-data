@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type { Match, TeamMatchMetadata } from '@/frontend/lib/app-data/app-data-types';
 import { MatchDetailsPanel } from '@/frontend/matches/components/details/MatchDetailsPanel';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // Mock the child components
 jest.mock('@/frontend/matches/components/details/MatchDetailsPanelDraft', () => ({
@@ -11,7 +10,7 @@ jest.mock('@/frontend/matches/components/details/MatchDetailsPanelDraft', () => 
 }));
 
 jest.mock('@/frontend/matches/components/details/MatchDetailsPanelPlayers', () => ({
-  MatchDetailsPanelPlayers: () => <div data-testid="players-panel">Players Panel</div>,
+  MatchDetailsPanelPlayers: () => <div>Players Panel</div>,
 }));
 
 jest.mock('@/frontend/matches/components/details/MatchDetailsPanelEvents', () => ({
@@ -36,15 +35,12 @@ const mockMatch: Match = {
   result: 'radiant',
 };
 
-const mockTeamMatch: TeamMatchParticipation = {
-  matchId: 1,
+const mockTeamMatch: TeamMatchMetadata = {
   result: 'won',
-  duration: 3600,
   opponentName: 'Team Liquid',
-  leagueId: 'league-1',
-  startTime: 1705314600,
   side: 'radiant',
-  pickOrder: 'first',
+  isManual: false,
+  isHidden: false,
 };
 
 describe('MatchDetailsPanel', () => {
@@ -53,18 +49,20 @@ describe('MatchDetailsPanel', () => {
     teamMatch: mockTeamMatch,
     viewMode: 'draft' as const,
     onViewModeChange: jest.fn(),
+    allMatches: [mockMatch],
+    teamMatches: new Map([[mockMatch.id, mockTeamMatch]]),
+    hiddenMatchIds: new Set<number>(),
+    selectedTeamId: '1-1',
   };
 
   it('renders with match details header', () => {
     render(<MatchDetailsPanel {...defaultProps} />);
-    expect(screen.getByText('Match Details')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Match Details', hidden: true })).toBeInTheDocument();
   });
 
   it('renders view mode tabs when handler is provided', () => {
     render(<MatchDetailsPanel {...defaultProps} />);
-    expect(screen.getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByText('Players')).toBeInTheDocument();
-    expect(screen.getByText('Events')).toBeInTheDocument();
+    expect(screen.getAllByRole('tab', { hidden: true })).toHaveLength(3);
   });
 
   it('calls onViewModeChange when tabs are clicked', async () => {
@@ -72,15 +70,22 @@ describe('MatchDetailsPanel', () => {
     const onViewModeChange = jest.fn();
     render(<MatchDetailsPanel {...defaultProps} onViewModeChange={onViewModeChange} />);
 
-    await user.click(screen.getByText('Players'));
+    await user.click(screen.getByRole('tab', { name: 'Players', hidden: true }));
     expect(onViewModeChange).toHaveBeenCalledWith('players');
 
-    await user.click(screen.getByText('Events'));
+    await user.click(screen.getByRole('tab', { name: 'Events', hidden: true }));
     expect(onViewModeChange).toHaveBeenCalledWith('events');
   });
 
   it('renders correct content based on view mode', () => {
     render(<MatchDetailsPanel {...defaultProps} viewMode="players" />);
     expect(screen.getByTestId('players-panel')).toBeInTheDocument();
+    expect(screen.getByText('Players Panel')).toBeInTheDocument();
+  });
+
+  it('shows loading state when match is refreshing', () => {
+    render(<MatchDetailsPanel {...defaultProps} match={{ ...mockMatch, isLoading: true }} viewMode="draft" />);
+
+    expect(screen.getByText('Refreshing match...')).toBeInTheDocument();
   });
 });

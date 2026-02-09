@@ -6,12 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Toggle } from '@/components/ui/toggle';
-import { useConstantsContext } from '@/frontend/contexts/constants-context';
-import { useTeamContext } from '@/frontend/teams/contexts/state/team-context';
-import { cn } from '@/lib/utils';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { HeroPick, Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import { useAppData } from '@/frontend/contexts/app-data-context';
+import type { HeroSummaryEntry, Match } from '@/frontend/lib/app-data/app-data-types';
+import { cn } from '@/lib/utils/utils';
 
 interface HeroSummary {
   heroId: string;
@@ -25,122 +22,13 @@ interface HeroSummary {
 }
 interface HeroSummaryTableProps {
   matches: Match[];
-  teamMatches: Record<number, TeamMatchParticipation>;
-  allMatches?: Match[];
   showHighPerformersOnly?: boolean;
   className?: string;
+  highPerformingHeroes?: Set<string>;
 }
 type SortField = 'name' | 'count' | 'winRate';
 type SortDirection = 'asc' | 'desc';
-
-function getHeroPicksForSide(match: Match, teamMatchData: TeamMatchParticipation, isActiveTeam: boolean): HeroPick[] {
-  const draft = match.draft || { radiantPicks: [], direPicks: [] };
-  if (isActiveTeam) {
-    return teamMatchData.side === 'radiant' ? draft.radiantPicks || [] : draft.direPicks || [];
-  }
-  return teamMatchData.side === 'radiant' ? draft.direPicks || [] : draft.radiantPicks || [];
-}
-
-function aggregateHeroes(
-  matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
-  isActiveTeam: boolean,
-  heroes: Hero[],
-): HeroSummary[] {
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number; roles: Record<string, number> }> =
-    {};
-  if (matches.length === 0) return [];
-  matches.forEach((match) => {
-    const teamMatchData = teamMatches[match.id];
-    if (!teamMatchData || !teamMatchData.side) return;
-    const heroPicks = getHeroPicksForSide(match, teamMatchData, isActiveTeam);
-    heroPicks.forEach((pick) => {
-      const heroId = pick.hero.id;
-      const entry = heroCounts[heroId] || (heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0, roles: {} });
-      entry.count++;
-      entry.totalGames++;
-      if (pick.role) entry.roles[pick.role] = (entry.roles[pick.role] || 0) + 1;
-      if (teamMatchData.side === match.result) entry.wins++;
-    });
-  });
-  return Object.entries(heroCounts).map(([heroId, stats]) => {
-    const heroData = heroes.find((h) => h.id === heroId);
-    return {
-      heroId,
-      heroName: heroData?.localizedName || `Hero ${heroId}`,
-      heroImage: heroData?.imageUrl,
-      count: stats.count,
-      winRate: stats.count > 0 ? (stats.wins / stats.count) * 100 : 0,
-      totalGames: stats.totalGames,
-      primaryAttribute: heroData?.primaryAttribute,
-      playedRoles: Object.entries(stats.roles).map(([role, count]) => ({ role, count })),
-    };
-  });
-}
-
-function getBansForSide(match: Match, teamMatchData: TeamMatchParticipation, isActiveTeam: boolean): string[] {
-  const draft = match.draft || ({ radiantPicks: [], direPicks: [], radiantBans: [], direBans: [] } as Match['draft']);
-  return isActiveTeam
-    ? teamMatchData.side === 'radiant'
-      ? draft.radiantBans || []
-      : draft.direBans || []
-    : teamMatchData.side === 'radiant'
-      ? draft.direBans || []
-      : draft.radiantBans || [];
-}
-
-function aggregateBans(
-  matches: Match[],
-  teamMatches: Record<number, TeamMatchParticipation>,
-  isActiveTeam: boolean,
-  heroes: Hero[],
-): HeroSummary[] {
-  const heroCounts: Record<string, { count: number; wins: number; totalGames: number }> = {};
-  if (matches.length === 0) return [];
-  matches.forEach((match) => {
-    const teamMatchData = teamMatches[match.id];
-    if (!teamMatchData || !teamMatchData.side) return;
-    const heroIds = getBansForSide(match, teamMatchData, isActiveTeam);
-    heroIds.forEach((heroId) => {
-      if (!heroCounts[heroId]) heroCounts[heroId] = { count: 0, wins: 0, totalGames: 0 };
-      heroCounts[heroId].count++;
-      heroCounts[heroId].totalGames++;
-      const isWin = teamMatchData.side === match.result;
-      if (isWin) heroCounts[heroId].wins++;
-    });
-  });
-  return Object.entries(heroCounts).map(([heroId, stats]) => {
-    const heroData = heroes.find((h) => h.id === heroId);
-    return {
-      heroId,
-      heroName: heroData?.localizedName || `Hero ${heroId}`,
-      heroImage: heroData?.imageUrl,
-      count: stats.count,
-      winRate: stats.count > 0 ? (stats.wins / stats.count) * 100 : 0,
-      totalGames: stats.totalGames,
-      primaryAttribute: heroData?.primaryAttribute,
-      playedRoles: undefined,
-    };
-  });
-}
-
-function sortHeroes(heroes: HeroSummary[], sortField: SortField, sortDirection: SortDirection): HeroSummary[] {
-  return [...heroes].sort((a, b) => {
-    let comparison = 0;
-    switch (sortField) {
-      case 'name':
-        comparison = a.heroName.localeCompare(b.heroName);
-        break;
-      case 'count':
-        comparison = a.count - b.count;
-        break;
-      case 'winRate':
-        comparison = (a.winRate || 0) - (b.winRate || 0);
-        break;
-    }
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
-}
+type SortState = { field: SortField; direction: SortDirection };
 
 function getProgressBarColor(count: number, winRate: number): string {
   if (winRate >= 80) return 'bg-primary';
@@ -263,18 +151,21 @@ function HeroSummarySection({
   onToggleChange?: (checked: boolean) => void;
   highPerformingHeroes?: Set<string>;
 }) {
-  const filteredHeroes = useMemo(() => {
-    return showToggle && toggleState ? heroes.filter((hero) => highPerformingHeroes?.has(hero.heroId)) : heroes;
-  }, [heroes, showToggle, toggleState, highPerformingHeroes]);
-  const sortedHeroes = useMemo(
-    () => sortHeroes(filteredHeroes, sortField, sortDirection),
-    [filteredHeroes, sortField, sortDirection],
-  );
-  if (filteredHeroes.length === 0) {
+  // Always show the toggle button, even when there's no data, so users can untoggle
+  if (heroes.length === 0) {
     return (
       <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
-        <CardHeader className="flex-shrink-0">
-          <CardTitle className="text-sm">{title}</CardTitle>
+        <CardHeader className="shrink-0">
+          <div className="flex items-center justify-between h-8">
+            <CardTitle className="text-sm">{title}</CardTitle>
+            {showToggle ? (
+              <Toggle pressed={toggleState} onPressedChange={onToggleChange} className="text-xs">
+                Show High Performing Heroes Only
+              </Toggle>
+            ) : (
+              <div className="w-[200px]" />
+            )}
+          </div>
         </CardHeader>
         <CardContent className="flex-1 flex items-center justify-center">
           <div className="text-sm text-muted-foreground text-center py-4">No data available</div>
@@ -284,7 +175,7 @@ function HeroSummarySection({
   }
   return (
     <Card className="flex flex-col min-h-[calc(100vh-2rem)] max-h-[calc(100vh-2rem)]">
-      <CardHeader className="flex-shrink-0">
+      <CardHeader className="shrink-0">
         <div className="flex items-center justify-between h-8">
           <CardTitle className="text-sm">{title}</CardTitle>
           {showToggle ? (
@@ -300,7 +191,7 @@ function HeroSummarySection({
         <Table>
           {renderTableHeaders(sortField, sortDirection, onSortChange)}
           <TableBody>
-            {sortedHeroes.map((hero) =>
+            {heroes.map((hero) =>
               renderHeroRow(hero, title === 'Active Team Picks', highPerformingHeroes?.has(hero.heroId)),
             )}
           </TableBody>
@@ -409,43 +300,145 @@ const HeroSummaryGrid: React.FC<HeroSummaryGridProps> = ({
   );
 };
 
+// Helper function to map HeroSummaryEntry to HeroSummary (compatible types)
+function mapHeroSummaryEntry(entry: HeroSummaryEntry): HeroSummary {
+  return {
+    heroId: entry.heroId,
+    heroName: entry.heroName,
+    heroImage: entry.heroImage,
+    count: entry.count,
+    winRate: entry.winRate,
+    totalGames: entry.totalGames,
+    primaryAttribute: entry.primaryAttribute,
+    playedRoles: entry.playedRoles,
+  };
+}
+
+function useHeroSummaryFilters({
+  appData,
+  heroSummary,
+  highPerformingHeroes,
+  showHighPerformersOnly,
+  activeTeamPicksToggle,
+  activeTeamSort,
+  opponentTeamSort,
+  activeTeamBansSort,
+  opponentTeamBansSort,
+}: {
+  appData: ReturnType<typeof useAppData>;
+  heroSummary: ReturnType<ReturnType<typeof useAppData>['getTeamHeroSummaryForMatches']>;
+  highPerformingHeroes: Set<string>;
+  showHighPerformersOnly: boolean | undefined;
+  activeTeamPicksToggle: boolean;
+  activeTeamSort: SortState;
+  opponentTeamSort: SortState;
+  activeTeamBansSort: SortState;
+  opponentTeamBansSort: SortState;
+}) {
+  const filteredActiveTeamPicks = useMemo(() => {
+    let heroes = heroSummary.activeTeamPicks;
+    if (activeTeamPicksToggle && highPerformingHeroes.size > 0) {
+      heroes = appData.filterHeroSummaryByHighPerformers(heroes, highPerformingHeroes);
+    }
+    heroes = appData.sortHeroSummaryEntries(heroes, activeTeamSort.field, activeTeamSort.direction);
+    return heroes.map(mapHeroSummaryEntry);
+  }, [appData, heroSummary.activeTeamPicks, activeTeamPicksToggle, highPerformingHeroes, activeTeamSort]);
+
+  const filteredOpponentTeamPicks = useMemo(() => {
+    let heroes = heroSummary.opponentTeamPicks;
+    if (showHighPerformersOnly && highPerformingHeroes.size > 0) {
+      heroes = appData.filterHeroSummaryByHighPerformers(heroes, highPerformingHeroes);
+    }
+    heroes = appData.sortHeroSummaryEntries(heroes, opponentTeamSort.field, opponentTeamSort.direction);
+    return heroes.map(mapHeroSummaryEntry);
+  }, [appData, heroSummary.opponentTeamPicks, showHighPerformersOnly, highPerformingHeroes, opponentTeamSort]);
+
+  const filteredActiveTeamBans = useMemo(() => {
+    let heroes = heroSummary.activeTeamBans;
+    if (showHighPerformersOnly && highPerformingHeroes.size > 0) {
+      heroes = appData.filterHeroSummaryByHighPerformers(heroes, highPerformingHeroes);
+    }
+    heroes = appData.sortHeroSummaryEntries(heroes, activeTeamBansSort.field, activeTeamBansSort.direction);
+    return heroes.map(mapHeroSummaryEntry);
+  }, [appData, heroSummary.activeTeamBans, showHighPerformersOnly, highPerformingHeroes, activeTeamBansSort]);
+
+  const filteredOpponentTeamBans = useMemo(() => {
+    let heroes = heroSummary.opponentTeamBans;
+    if (showHighPerformersOnly && highPerformingHeroes.size > 0) {
+      heroes = appData.filterHeroSummaryByHighPerformers(heroes, highPerformingHeroes);
+    }
+    heroes = appData.sortHeroSummaryEntries(heroes, opponentTeamBansSort.field, opponentTeamBansSort.direction);
+    return heroes.map(mapHeroSummaryEntry);
+  }, [appData, heroSummary.opponentTeamBans, showHighPerformersOnly, highPerformingHeroes, opponentTeamBansSort]);
+
+  return {
+    filteredActiveTeamPicks,
+    filteredOpponentTeamPicks,
+    filteredActiveTeamBans,
+    filteredOpponentTeamBans,
+  };
+}
+
 export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({
   matches,
-  teamMatches,
   showHighPerformersOnly,
   className,
+  highPerformingHeroes = new Set(),
 }) => {
-  const { highPerformingHeroes } = useTeamContext();
-  const { heroes } = useConstantsContext();
-  const [activeTeamSort, setActiveTeamSort] = useState<{ field: SortField; direction: SortDirection }>({
+  const appData = useAppData();
+  const selectedTeamId = appData.state.selectedTeamId;
+
+  // Get hero summary from AppData
+  const heroSummary = useMemo(() => {
+    if (!selectedTeamId || matches.length === 0) {
+      return {
+        matchesCount: 0,
+        activeTeamPicks: [],
+        opponentTeamPicks: [],
+        activeTeamBans: [],
+        opponentTeamBans: [],
+      };
+    }
+    return appData.getTeamHeroSummaryForMatches(selectedTeamId, matches);
+    // Dependencies:
+    // - appData: access to methods
+    // - selectedTeamId: re-run when team changes
+    // - matches: re-run when matches change
+    // - appData.teams: re-run when teams change (triggered by updateTeamsRef)
+    // Intentional: use appData.teams ref updates to refresh this memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appData, selectedTeamId, matches, appData.teams]);
+
+  const [activeTeamSort, setActiveTeamSort] = useState<SortState>({
     field: 'winRate',
     direction: 'desc',
   });
-  const [opponentTeamSort, setOpponentTeamSort] = useState<{ field: SortField; direction: SortDirection }>({
+  const [opponentTeamSort, setOpponentTeamSort] = useState<SortState>({
     field: 'count',
     direction: 'desc',
   });
-  const [activeTeamBansSort, setActiveTeamBansSort] = useState<{ field: SortField; direction: SortDirection }>({
+  const [activeTeamBansSort, setActiveTeamBansSort] = useState<SortState>({
     field: 'count',
     direction: 'desc',
   });
-  const [opponentTeamBansSort, setOpponentTeamBansSort] = useState<{ field: SortField; direction: SortDirection }>({
+  const [opponentTeamBansSort, setOpponentTeamBansSort] = useState<SortState>({
     field: 'count',
     direction: 'desc',
   });
   const [activeTeamPicksToggle, setActiveTeamPicksToggle] = useState(false);
-  if (matches.length === 0) return <NoMatchesNotice className={className} />;
-  const heroesArray = Object.values(heroes);
-  const activeTeamPicks = aggregateHeroes(matches, teamMatches, true, heroesArray);
-  const opponentTeamPicks = aggregateHeroes(matches, teamMatches, false, heroesArray);
-  const activeTeamBans = aggregateBans(matches, teamMatches, true, heroesArray);
-  const opponentTeamBans = aggregateBans(matches, teamMatches, false, heroesArray);
-  const filterHighPerformers = (heroes: HeroSummary[]) =>
-    !showHighPerformersOnly ? heroes : heroes.filter((hero) => highPerformingHeroes.has(hero.heroId));
-  const filteredActiveTeamPicks = filterHighPerformers(activeTeamPicks);
-  const filteredOpponentTeamPicks = filterHighPerformers(opponentTeamPicks);
-  const filteredActiveTeamBans = filterHighPerformers(activeTeamBans);
-  const filteredOpponentTeamBans = filterHighPerformers(opponentTeamBans);
+
+  const { filteredActiveTeamPicks, filteredOpponentTeamPicks, filteredActiveTeamBans, filteredOpponentTeamBans } =
+    useHeroSummaryFilters({
+      appData,
+      heroSummary,
+      highPerformingHeroes,
+      showHighPerformersOnly,
+      activeTeamPicksToggle,
+      activeTeamSort,
+      opponentTeamSort,
+      activeTeamBansSort,
+      opponentTeamBansSort,
+    });
   const handleActiveTeamSort = (field: SortField) => {
     setActiveTeamSort((prev) => ({
       field,
@@ -470,6 +463,8 @@ export const HeroSummaryTable: React.FC<HeroSummaryTableProps> = ({
       direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
     }));
   };
+  if (matches.length === 0) return <NoMatchesNotice className={className} />;
+
   return (
     <HeroSummaryGrid
       className={className}

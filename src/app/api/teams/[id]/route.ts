@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 import { fetchSteamTeam } from '@/lib/api/steam/teams';
-import { ApiErrorResponse } from '@/types/api';
+import { ApiErrorResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**
@@ -205,6 +205,10 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id: teamId } = await params;
+    const idResult = schemas.pathParamId.safeParse(teamId);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid id', status: 400, details: idResult.error.message }, { status: 400 });
+    }
 
     // Extract query parameters
     const { searchParams } = new URL(request.url);

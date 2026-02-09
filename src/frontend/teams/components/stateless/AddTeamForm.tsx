@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormField, FormRow } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getValidationAriaAttributes, validateTeamForm } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 interface AddTeamFormProps {
   teamId: string;
@@ -15,6 +15,7 @@ interface AddTeamFormProps {
   onLeagueIdChange: (value: string) => void;
   onAddTeam: (teamId: string, leagueId: string) => Promise<void>;
   teamExists: (teamId: string, leagueId: string) => boolean;
+  validation: { isValid: boolean; errors: { teamId?: string; leagueId?: string } };
   isSubmitting?: boolean;
   onReset?: () => void;
 }
@@ -28,7 +29,6 @@ interface FormFieldInputProps {
   disabled: boolean;
   helpText: React.ReactNode;
   error?: string;
-  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -40,10 +40,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid,
 }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -68,12 +68,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      ) : null}
+      {!hasError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </FormField>
   );
 };
@@ -105,19 +104,19 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
   onLeagueIdChange,
   onAddTeam,
   teamExists,
+  validation,
   isSubmitting = false,
   onReset,
 }) => {
-  const validation = validateTeamForm(teamId, leagueId);
-
-  const isDisabled = teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim();
+  const isDisabled =
+    teamExists(teamId, leagueId) || isSubmitting || !teamId.trim() || !leagueId.trim() || !validation.isValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isDisabled) {
-      const currentTeamId = teamId;
-      const currentLeagueId = leagueId;
+      const currentTeamId = teamId.trim();
+      const currentLeagueId = leagueId.trim();
       onTeamIdChange('');
       onLeagueIdChange('');
       await onAddTeam(currentTeamId, currentLeagueId);
@@ -163,7 +162,6 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
                 </>
               }
               error={shouldShowTeamError}
-              isValid={!validation.errors.teamId}
             />
             <FormFieldInput
               id="league-id"
@@ -187,7 +185,6 @@ export const AddTeamForm: React.FC<AddTeamFormProps> = ({
                 </>
               }
               error={shouldShowLeagueError}
-              isValid={!validation.errors.leagueId}
             />
           </FormRow>
           <FormActions

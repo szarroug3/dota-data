@@ -3,10 +3,12 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { z } from 'zod';
 
 import { cache, getSharedPayload, setSharedPayload } from '@/app/api/share/cache';
 import { getEnv } from '@/lib/config/environment';
-import type { CacheValue } from '@/types/cache';
+import { schemas } from '@/types/api-zod';
+import type { CacheValue } from '@/types/cache/cache';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 
@@ -24,10 +26,7 @@ export interface SharePayload {
   globalManualPlayers: number[];
 }
 
-interface ShareRequestBody {
-  key?: string;
-  data: SharePayload;
-}
+type ShareRequestBody = z.infer<typeof schemas.postApiShareBody>;
 
 function buildCacheKey(key: string): string {
   return `config:share:${key}`;
@@ -79,13 +78,6 @@ async function generateUniqueKey(): Promise<string> {
   throw new Error('Failed to generate a unique share key');
 }
 
-function isValidShareBody(body: object | null | undefined): body is ShareRequestBody {
-  if (!body || typeof body !== 'object') return false;
-  const b = body as { key?: string; data?: object };
-  if (!b.data || typeof b.data !== 'object') return false;
-  return true;
-}
-
 function toSerializable(data: SharePayload): ShareSerializable {
   return {
     teams: data.teams,
@@ -98,7 +90,7 @@ function toSerializable(data: SharePayload): ShareSerializable {
 async function writeMockShare(key: string, value: ShareSerializable): Promise<void> {
   if (!getEnv.WRITE_REAL_DATA_TO_MOCK()) return;
   try {
-    const folder = path.join(process.cwd(), 'mock-data', 'share');
+    const folder = path.join(process.cwd(), 'mock-data', 'external-data', 'share');
     await fs.mkdir(folder, { recursive: true });
     const filePath = path.join(folder, `${key}.json`);
     await fs.writeFile(filePath, JSON.stringify(value, null, 2), 'utf-8');
@@ -201,27 +193,21 @@ async function writeMockShare(key: string, value: ShareSerializable): Promise<vo
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const parsed = await request.json();
-    if (!isValidShareBody(parsed)) {
+    const result = schemas.postApiShareBody.safeParse(parsed);
+    if (!result.success) {
       return NextResponse.json(
-        { error: 'Invalid request body', status: 400, details: 'Missing or invalid data field' },
+        { error: 'Invalid request body', status: 400, details: result.error.message },
         { status: 400 },
       );
     }
-    const body = parsed as ShareRequestBody;
+    const body: ShareRequestBody = result.data;
 
     let key: string;
     let cacheKey: string;
-    if (body.key && typeof body.key === 'string' && body.key.trim().length > 0) {
-      // If key is provided, reject if it already exists
+    if (body.key) {
+      // If key is provided, upsert under the same key
       key = body.key;
       cacheKey = buildCacheKey(key);
-      const exists = await getSharedPayload<Record<string, CacheValue> | null>(cacheKey);
-      if (exists) {
-        return NextResponse.json(
-          { error: 'Key already exists', status: 409, details: 'Provided key conflicts with an existing share' },
-          { status: 409 },
-        );
-      }
     } else {
       // Create a new unique key
       key = await generateUniqueKey();

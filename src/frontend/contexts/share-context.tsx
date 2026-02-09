@@ -3,7 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, Suspense } from 'react';
 
-import type { TeamData } from '@/types/contexts/team-context-value';
+import type { Team } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredTeamData } from '@/frontend/lib/storage/storage-manager';
 
 type ActiveTeam = { teamId: number; leagueId: number } | null;
 
@@ -14,7 +15,8 @@ export type Serializable =
   | null
   | Serializable[]
   | { [key: string]: Serializable }
-  | TeamData;
+  | Team
+  | StoredTeamData;
 
 export interface SharePayload {
   teams: Record<string, Serializable>;
@@ -27,7 +29,7 @@ interface ShareContextValue {
   isShareMode: boolean;
   shareKey: string | null;
   payload: SharePayload | null;
-  setPayload: (payload: SharePayload) => void;
+  setPayload: (payload: SharePayload | null) => void;
   createShare: (partial: Partial<SharePayload>) => Promise<string | null>;
 }
 
@@ -40,11 +42,37 @@ const defaultShareContext: ShareContextValue = {
   createShare: async () => null,
 };
 
+// Type guard for SharePayload validation
+function isSharePayload(data: unknown): data is SharePayload {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'teams' in data &&
+    'activeTeam' in data &&
+    'globalManualMatches' in data &&
+    'globalManualPlayers' in data &&
+    typeof (data as Record<string, unknown>).teams === 'object' &&
+    Array.isArray((data as Record<string, unknown>).globalManualMatches) &&
+    Array.isArray((data as Record<string, unknown>).globalManualPlayers)
+  );
+}
+
 async function fetchSharePayload(key: string): Promise<SharePayload | null> {
   try {
     const res = await fetch(`/api/share/${encodeURIComponent(key)}`);
     if (!res.ok) return null;
-    return (await res.json()) as SharePayload;
+
+    // Use unknown intermediate step for safer type narrowing
+    const responseData: unknown = await res.json();
+    const shareData = responseData as unknown as SharePayload;
+
+    // Validate the response structure
+    if (!isSharePayload(shareData)) {
+      console.warn(`Invalid share payload structure for key ${key}`);
+      return null;
+    }
+
+    return shareData;
   } catch (e) {
     console.error('Failed to fetch share payload', e);
     return null;
@@ -83,8 +111,9 @@ const ShareProviderContent: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     let cancelled = false;
     if (urlKey) {
+      setPayload(null);
       fetchSharePayload(urlKey).then((data) => {
-        if (!cancelled) setPayload((prev) => (prev ? prev : data));
+        if (!cancelled) setPayload(data ?? null);
       });
     } else {
       setPayload(null);

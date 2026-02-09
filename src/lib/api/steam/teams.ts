@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { CacheTtlSeconds } from '@/lib/cache-ttls';
+import { CacheTtlSeconds } from '@/lib/cache/cache-ttls';
 import { request, requestWithRetry } from '@/lib/utils/request';
 import type { SteamTeam } from '@/types/external-apis/steam';
 
@@ -38,20 +38,30 @@ async function fetchTeamInfoFromSteam(teamId: string): Promise<string> {
 function parseSteamTeamInfo(data: string, teamId: string): SteamTeam {
   const json = JSON.parse(data) as SteamTeamInfoResponse;
   const team = json.result?.teams?.[0];
-  const name = team?.name || `Team ${teamId}`;
-  return { id: String(teamId), name } as SteamTeam;
+
+  if (!team || !team.name) {
+    throw new Error(`Data Not Found: Team ${teamId} does not exist`);
+  }
+
+  return { id: String(teamId), name: team.name } as SteamTeam;
 }
 
 export async function fetchSteamTeam(teamId: string, force = false): Promise<SteamTeam> {
   const cacheKey = `steam:team:${teamId}`;
   const cacheTTL = CacheTtlSeconds.steamTeamById;
-  const mockFilename = path.join(process.cwd(), 'mock-data', 'teams', `steam-team-${teamId}.json`);
+  const externalDataFilename = path.join(
+    process.cwd(),
+    'mock-data',
+    'external-data',
+    'teams',
+    `steam-team-${teamId}.json`,
+  );
 
   const result = await request<SteamTeam>(
     'steam',
     () => fetchTeamInfoFromSteam(teamId),
     (data: string) => parseSteamTeamInfo(data, teamId),
-    mockFilename,
+    externalDataFilename,
     force,
     cacheTTL,
     cacheKey,

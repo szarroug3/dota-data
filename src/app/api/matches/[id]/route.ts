@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchOpenDotaMatch } from '@/lib/api/opendota/matches';
-import { ApiErrorResponse } from '@/types/api';
+import { apiLogger } from '@/lib/config/logger';
+import { ApiErrorResponse } from '@/types/api/api';
 import { schemas } from '@/types/api-zod';
 
 /**
@@ -150,6 +151,10 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { id: matchId } = await params;
+    const idResult = schemas.pathParamId.safeParse(matchId);
+    if (!idResult.success) {
+      return NextResponse.json({ error: 'Invalid id', status: 400, details: idResult.error.message }, { status: 400 });
+    }
 
     // Extract query parameters
     const { searchParams } = new URL(request.url);
@@ -166,7 +171,11 @@ export async function GET(
       throw new Error('Failed to parse match');
     }
   } catch (error) {
-    console.error('Matches API Error:', error);
+    const { id } = await params;
+    apiLogger.error(
+      'Matches API Error',
+      `Failed to fetch match data for ID: ${id} - ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
 
     if (error instanceof Error) {
       const { id } = await params;

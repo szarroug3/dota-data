@@ -14,7 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 interface AddPlayerSheetProps {
   isOpen: boolean;
@@ -41,7 +41,6 @@ interface FormFieldInputProps {
   disabled: boolean;
   helpText: React.ReactNode;
   error?: string;
-  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -53,10 +52,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid,
 }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -81,12 +80,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      ) : null}
+      {!hasError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </FormField>
   );
 };
@@ -98,7 +96,6 @@ function AddPlayerFields({
   isDisabled,
   handleSubmit,
   shouldShowPlayerError,
-  isValid,
 }: {
   playerId: string;
   setPlayerId: (v: string) => void;
@@ -106,7 +103,6 @@ function AddPlayerFields({
   isDisabled: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   shouldShowPlayerError?: string;
-  isValid: boolean;
 }) {
   return (
     <div
@@ -149,7 +145,6 @@ function AddPlayerFields({
           </>
         }
         error={shouldShowPlayerError}
-        isValid={isValid}
       />
     </div>
   );
@@ -200,7 +195,6 @@ export function AddPlayerSheet({
           isDisabled={isDisabled}
           handleSubmit={handleSubmit}
           shouldShowPlayerError={shouldShowPlayerError}
-          isValid={playerId.trim().length === 0 || isValid}
           error={error}
         />
 
@@ -226,7 +220,6 @@ function AddPlayerSheetBody({
   isDisabled,
   handleSubmit,
   shouldShowPlayerError,
-  isValid,
   error,
 }: {
   playerId: string;
@@ -235,7 +228,6 @@ function AddPlayerSheetBody({
   isDisabled: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   shouldShowPlayerError?: string;
-  isValid: boolean;
   error?: string;
 }) {
   return (
@@ -248,11 +240,10 @@ function AddPlayerSheetBody({
           isDisabled={isDisabled}
           handleSubmit={handleSubmit}
           shouldShowPlayerError={shouldShowPlayerError}
-          isValid={isValid}
         />
         {error && (
           <div className="flex items-center gap-2 p-3 text-sm border rounded-md bg-destructive/10 text-destructive border-destructive/20">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}

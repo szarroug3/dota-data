@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+- When running shell commands, always use `zsh -lc "<command>"`.

@@ -1,8 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import type { TeamMatchParticipation, Match } from '@/frontend/lib/app-data/app-data-types';
 import { MatchListViewList } from '@/frontend/matches/components/list/MatchListViewList';
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
 
 // Mock config context used by components
 jest.mock('@/frontend/contexts/config-context', () => ({
@@ -13,13 +12,19 @@ jest.mock('@/frontend/contexts/config-context', () => ({
   }),
 }));
 
-jest.mock('@/frontend/teams/contexts/state/team-context', () => ({
-  useTeamContext: () => ({
-    getSelectedTeam: () => ({ manualMatches: {} }),
-    removeManualMatch: jest.fn(),
-    editManualMatch: jest.fn(),
-    highPerformingHeroes: new Set<string>(),
-  }),
+// Mock AppData context instead of old team context
+const mockAppData = {
+  state: { selectedTeamId: '1-1' },
+  getMatchManualMetadata: jest.fn(() => ({ isManual: false, side: 'radiant' as const })),
+  getMatchHeroesForTeam: jest.fn(() => []),
+  getMatchResultBadgeData: jest.fn(() => ({ teamWon: true, teamSide: 'radiant' as const })),
+  getMatchPickOrderLabel: jest.fn(() => 'first pick'),
+  removeManualMatchFromTeam: jest.fn(),
+  editManualMatchToTeam: jest.fn(),
+};
+
+jest.mock('@/frontend/contexts/app-data-context', () => ({
+  useAppData: () => mockAppData,
 }));
 
 // No hero context needed; components use hero data from matches via contexts already
@@ -67,28 +72,28 @@ const defaultProps = {
   onSelectMatch: jest.fn() as (id: number) => void,
   onHideMatch: jest.fn() as (id: number) => void,
   onRefreshMatch: jest.fn() as (id: number) => void,
-  teamMatches: {
-    1: {
-      matchId: 1,
-      duration: 3120,
-      opponentName: 'Test Opponent 1',
-      leagueId: 'league-1',
-      startTime: 1732492800,
-      side: 'radiant',
-      result: 'won',
-      pickOrder: 'first',
-    },
-    2: {
-      matchId: 2,
-      duration: 2400,
-      opponentName: 'Test Opponent 2',
-      leagueId: 'league-2',
-      startTime: 1732406400,
-      side: 'dire',
-      result: 'lost',
-      pickOrder: 'second',
-    },
-  } as Record<number, TeamMatchParticipation>,
+  teamMatches: new Map<number, TeamMatchParticipation>([
+    [
+      1,
+      {
+        side: 'radiant',
+        result: 'won',
+        opponentName: 'Test Opponent 1',
+        isManual: false,
+        isHidden: false,
+      },
+    ],
+    [
+      2,
+      {
+        side: 'dire',
+        result: 'lost',
+        opponentName: 'Test Opponent 2',
+        isManual: false,
+        isHidden: false,
+      },
+    ],
+  ]),
 };
 
 describe('MatchListViewList', () => {
@@ -222,19 +227,14 @@ describe('MatchListViewList', () => {
       ...mockMatches[0],
       id: 101,
     } as Match;
-    const teamMatches: Record<number, TeamMatchParticipation> = {
-      ...defaultProps.teamMatches,
-      101: {
-        matchId: 101,
-        duration: 3000,
-        opponentName: 'Very Long Opponent Name That Should Be Truncated When It Exceeds The Available Space',
-        leagueId: 'league-4',
-        startTime: 1732233600,
-        side: 'radiant',
-        result: 'won',
-        pickOrder: 'first',
-      },
-    };
+    const teamMatches = new Map(defaultProps.teamMatches);
+    teamMatches.set(101, {
+      side: 'radiant',
+      result: 'won',
+      opponentName: 'Very Long Opponent Name That Should Be Truncated When It Exceeds The Available Space',
+      isManual: false,
+      isHidden: false,
+    });
     render(<MatchListViewList {...defaultProps} matches={[longNameMatch]} teamMatches={teamMatches} />);
     expect(screen.getByText(/Very Long Opponent Name/)).toBeInTheDocument();
   });
@@ -324,8 +324,8 @@ describe('MatchListViewList', () => {
     it('renders MatchBadges component', () => {
       render(<MatchListViewList {...defaultProps} />);
 
-      expect(screen.getByText('Victory')).toBeInTheDocument();
-      expect(screen.getByText('Radiant')).toBeInTheDocument();
+      expect(screen.getAllByText('Victory').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Radiant').length).toBeGreaterThan(0);
     });
 
     it('renders MatchActions component', () => {
@@ -349,7 +349,12 @@ describe('MatchListViewList', () => {
 
     const onSelectMatch = jest.fn();
     render(
-      <MatchListViewList {...defaultProps} matches={[errorMatch]} onSelectMatch={onSelectMatch} teamMatches={{}} />,
+      <MatchListViewList
+        {...defaultProps}
+        matches={[errorMatch]}
+        onSelectMatch={onSelectMatch}
+        teamMatches={new Map()}
+      />,
     );
 
     // Title still shows Match {id}
@@ -357,11 +362,9 @@ describe('MatchListViewList', () => {
     // Error text is shown in the subtitle area
     expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch match data');
 
-    // Clicking should not trigger selection when errored
-    const card = screen.getByRole('button');
-    if (card) {
-      fireEvent.click(card);
-    }
+    // Clicking the errored card should not trigger selection
+    const card = screen.getByLabelText('Match 999 - Error: Failed to fetch match data');
+    fireEvent.click(card);
     expect(onSelectMatch).not.toHaveBeenCalled();
   });
 });

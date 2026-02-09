@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type { Match } from '@/types/contexts/match-context-value';
-import type { TeamMatchParticipation } from '@/types/contexts/team-context-value';
+import type { Match, TeamMatchParticipation } from '@/frontend/lib/app-data/app-data-types';
+import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 import { MatchListViewCard } from './MatchListViewCard';
 import { MatchListViewList } from './MatchListViewList';
@@ -15,9 +15,9 @@ interface MatchListViewProps {
   onHideMatch: (matchId: number) => void;
   onRefreshMatch: (matchId: number) => void;
   viewMode: MatchListViewMode;
-  teamMatches?: Record<number, TeamMatchParticipation>;
-  hiddenMatchIds?: Set<number>;
-  allMatches?: Match[];
+  teamMatches: Map<number, TeamMatchParticipation>;
+  hiddenMatchIds: Set<number>;
+  allMatches: Match[];
   onScrollToMatch?: (matchId: number) => void;
 }
 
@@ -41,7 +41,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        teamMatches={teamMatches}
+        teamMatches={teamMatches as Map<number, StoredMatchData>}
         hiddenMatchIds={hiddenMatchIds}
         allMatches={allMatches}
         onScrollToMatch={onScrollToMatch}
@@ -56,7 +56,7 @@ export const MatchListView: React.FC<MatchListViewProps> = ({
         onSelectMatch={onSelectMatch}
         onHideMatch={onHideMatch}
         onRefreshMatch={onRefreshMatch}
-        teamMatches={teamMatches}
+        teamMatches={teamMatches as Map<number, StoredMatchData>}
         onScrollToMatch={onScrollToMatch}
       />
     );

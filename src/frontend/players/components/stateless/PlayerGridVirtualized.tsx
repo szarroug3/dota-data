@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React from 'react';
+import { List } from 'react-window';
 
 import { PlayerDetailedCard } from '@/frontend/players/components/stateless/PlayerDetailedCard';
 import { PlayerOverviewCard } from '@/frontend/players/components/stateless/PlayerOverviewCard';
@@ -18,23 +18,42 @@ const DEFAULT_ITEM_HEIGHT = 200;
 // Default container height
 const DEFAULT_HEIGHT = 600;
 
+type PlayerRowProps = {
+  players: PlayerStats[];
+  viewType: 'overview' | 'detailed';
+};
+
+type PlayerRowComponentProps = {
+  index: number;
+  style: React.CSSProperties;
+  ariaAttributes: {
+    'aria-posinset': number;
+    'aria-setsize': number;
+    role: 'listitem';
+  };
+} & PlayerRowProps;
+
+const PlayerRow = ({ index, style, ariaAttributes, players, viewType }: PlayerRowComponentProps) => {
+  const player = players[index];
+  if (!player) return null;
+  return (
+    <div style={style} className="px-2" {...ariaAttributes}>
+      {viewType === 'overview' ? <PlayerOverviewCard player={player} /> : <PlayerDetailedCard player={player} />}
+    </div>
+  );
+};
+
 export const PlayerGridVirtualized: React.FC<PlayerGridVirtualizedProps> = ({
   players,
   viewType,
   height = DEFAULT_HEIGHT,
   itemHeight = DEFAULT_ITEM_HEIGHT,
 }) => {
-  // Render function for each virtualized item
-  const renderPlayerItem = useCallback(
-    ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const player = players[index];
-
-      return (
-        <div style={style} className="px-2">
-          {viewType === 'overview' ? <PlayerOverviewCard player={player} /> : <PlayerDetailedCard player={player} />}
-        </div>
-      );
-    },
+  const rowProps = React.useMemo(
+    () => ({
+      players,
+      viewType,
+    }),
     [players, viewType],
   );
 
@@ -48,14 +67,13 @@ export const PlayerGridVirtualized: React.FC<PlayerGridVirtualizedProps> = ({
 
   return (
     <List
-      height={height}
-      itemCount={players.length}
-      itemSize={itemHeight}
-      width="100%"
-      overscanCount={3} // Number of items to render outside the visible area
-      itemData={players}
-    >
-      {renderPlayerItem}
-    </List>
+      defaultHeight={height}
+      rowCount={players.length}
+      rowHeight={itemHeight}
+      rowComponent={PlayerRow}
+      rowProps={rowProps}
+      overscanCount={3}
+      style={{ height, width: '100%' }}
+    />
   );
 };

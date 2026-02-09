@@ -2,70 +2,55 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import { PlayerExternalSiteButton } from '@/frontend/players/components/stateless/PlayerExternalSiteButton';
 
-// Mock window.open
-const mockOpen = jest.fn();
-Object.defineProperty(window, 'open', {
-  value: mockOpen,
-  writable: true,
-});
-
 describe('PlayerExternalSiteButton', () => {
-  beforeEach(() => {
-    mockOpen.mockClear();
-  });
-
   it('renders with dotabuff configuration', () => {
     render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
 
-    const button = screen.getByRole('button');
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute('title', 'View on Dotabuff');
-    expect(button).toHaveAttribute('aria-label', 'Open player on Dotabuff');
+    const link = screen.getByRole('link', { name: 'Open player on Dotabuff' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('title', 'View on Dotabuff');
+    expect(link).toHaveAttribute('aria-label', 'Open player on Dotabuff');
+    expect(link).toHaveAttribute('href', 'https://www.dotabuff.com/players/123456789');
   });
 
   it('renders with opendota configuration', () => {
     render(<PlayerExternalSiteButton playerId={123456789} preferredSite="opendota" />);
 
-    const button = screen.getByRole('button');
-    expect(button).toBeInTheDocument();
-    expect(button).toHaveAttribute('title', 'View on OpenDota');
-    expect(button).toHaveAttribute('aria-label', 'Open player on OpenDota');
+    const link = screen.getByRole('link', { name: 'Open player on OpenDota' });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('title', 'View on OpenDota');
+    expect(link).toHaveAttribute('aria-label', 'Open player on OpenDota');
+    expect(link).toHaveAttribute('href', 'https://www.opendota.com/players/123456789');
   });
 
-  it('opens correct URL when clicked for dotabuff', () => {
+  it('links to dotabuff with safe target attributes', () => {
     render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
 
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
-
-    expect(mockOpen).toHaveBeenCalledWith(
-      'https://www.dotabuff.com/players/123456789',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    const link = screen.getByRole('link', { name: 'Open player on Dotabuff' });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('opens correct URL when clicked for opendota', () => {
+  it('links to opendota with safe target attributes', () => {
     render(<PlayerExternalSiteButton playerId={123456789} preferredSite="opendota" />);
 
-    const button = screen.getByRole('button');
-    fireEvent.click(button);
-
-    expect(mockOpen).toHaveBeenCalledWith(
-      'https://www.opendota.com/players/123456789',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    const link = screen.getByRole('link', { name: 'Open player on OpenDota' });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('prevents event propagation when clicked', () => {
-    const mockStopPropagation = jest.fn();
+    const parentClick = jest.fn();
 
-    render(<PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />);
+    render(
+      <div onClick={parentClick}>
+        <PlayerExternalSiteButton playerId={123456789} preferredSite="dotabuff" />
+      </div>,
+    );
 
-    const button = screen.getByRole('button');
-    fireEvent.click(button, { stopPropagation: mockStopPropagation });
+    const link = screen.getByRole('link', { name: 'Open player on Dotabuff' });
+    fireEvent.click(link);
 
-    expect(mockOpen).toHaveBeenCalled();
+    expect(parentClick).not.toHaveBeenCalled();
   });
 });

@@ -49,7 +49,7 @@ describe('fetchOpenDotaHeroes', () => {
         'opendota',
         expect.any(Function),
         expect.any(Function),
-        expect.stringContaining('mock-data/heroes.json'),
+        expect.stringContaining('mock-data/external-data/heroes.json'),
         false,
         60 * 60 * 24 * 7, // 7 days
         'opendota:heroes',
@@ -71,7 +71,7 @@ describe('fetchOpenDotaHeroes', () => {
         'opendota',
         expect.any(Function),
         expect.any(Function),
-        expect.stringContaining('mock-data/heroes.json'),
+        expect.stringContaining('mock-data/external-data/heroes.json'),
         true, // force parameter
         60 * 60 * 24 * 7,
         'opendota:heroes',
@@ -281,7 +281,7 @@ describe('fetchOpenDotaHeroes', () => {
         'opendota',
         expect.any(Function),
         expect.any(Function),
-        expect.stringContaining('mock-data/heroes.json'),
+        expect.stringContaining('mock-data/external-data/heroes.json'),
         true,
         60 * 60 * 24 * 7,
         'opendota:heroes',

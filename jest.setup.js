@@ -1,3 +1,4 @@
+// Jest setup runs in Node; require is intentional.
 // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
 require('@testing-library/jest-dom');
 

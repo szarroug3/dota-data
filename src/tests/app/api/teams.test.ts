@@ -44,6 +44,17 @@ describe('Teams API', () => {
     });
 
     describe('Error Cases', () => {
+      it('should return 400 for invalid team id', async () => {
+        const request = new NextRequest('http://localhost:3000/api/teams/-1');
+        const response = await GET(request, { params: Promise.resolve({ id: '-1' }) });
+        const data = await response.json();
+
+        expect(response.status).toBe(400);
+        expect(data.error).toBe('Invalid id');
+        expect(data.status).toBe(400);
+        expect(mockFetchSteamTeam).not.toHaveBeenCalled();
+      });
+
       it('should handle rate limiting errors', async () => {
         mockFetchSteamTeam.mockRejectedValueOnce(new Error('Rate limited by Steam API'));
 

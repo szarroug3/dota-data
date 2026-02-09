@@ -17,7 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { getValidationAriaAttributes } from '@/utils/validation';
+import { getValidationAriaAttributes } from '@/utils/validation/validation';
 
 interface EditManualMatchSheetProps {
   isOpen: boolean;
@@ -46,7 +46,6 @@ interface FormFieldInputProps {
   disabled: boolean;
   helpText: React.ReactNode;
   error?: string;
-  isValid: boolean;
 }
 
 const FormFieldInput: React.FC<FormFieldInputProps> = ({
@@ -58,10 +57,10 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
   disabled,
   helpText,
   error,
-  isValid,
 }) => {
   const hasError = Boolean(error);
-  const ariaAttributes = getValidationAriaAttributes(isValid, hasError, error);
+  const errorId = `${id}-error`;
+  const ariaAttributes = getValidationAriaAttributes(hasError, errorId);
 
   return (
     <FormField>
@@ -87,12 +86,11 @@ const FormFieldInput: React.FC<FormFieldInputProps> = ({
         )}
       </div>
       {hasError ? (
-        <p className="text-xs text-destructive mt-1" role="alert">
-          {error}
+        <p className="text-xs text-destructive mt-1" id={errorId} tabIndex={0}>
+          {error ?? ''}
         </p>
-      ) : (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      ) : null}
+      {!hasError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </FormField>
   );
 };
@@ -175,7 +173,6 @@ function EditManualMatchForm({
           </>
         }
         error={combinedError}
-        isValid={!validationError && !duplicateError}
       />
 
       <FormField>

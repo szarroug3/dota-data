@@ -22,6 +22,8 @@ describe('/api/matches/[id]/parse route', () => {
     const mockParsedMatch: OpenDotaMatch = {
       match_id: Number(matchId),
       radiant_win: true,
+      radiant_score: 40,
+      dire_score: 32,
       duration: 2400,
       start_time: 1640995200,
       players: [],

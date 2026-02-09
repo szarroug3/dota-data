@@ -5,7 +5,7 @@
  * This backend is used when Redis is unavailable or for development environments.
  */
 
-import { CacheBackend, CacheBackendType, CacheEntry, CacheStats, CacheValue } from '@/types/cache';
+import { CacheBackend, CacheBackendType, CacheEntry, CacheStats, CacheValue } from '@/types/cache/cache';
 
 /**
  * Memory cache entry with metadata

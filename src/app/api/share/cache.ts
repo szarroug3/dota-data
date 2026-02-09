@@ -1,5 +1,5 @@
-import { CacheService } from '@/lib/cache-service';
-import type { CacheValue } from '@/types/cache';
+import { CacheService } from '@/lib/cache/cache-service';
+import type { CacheValue } from '@/types/cache/cache';
 
 // Ensure a true singleton across Jest module registries by using globalThis
 const globalKey = '__dota_share_cache__';

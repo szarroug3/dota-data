@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAppData } from '@/frontend/contexts/app-data-context';
+import type { Hero, Player } from '@/frontend/lib/app-data/app-data-types';
 import { HeroAvatar } from '@/frontend/matches/components/stateless/common/HeroAvatar';
-import type { Hero } from '@/types/contexts/constants-context-value';
-import type { Player } from '@/types/contexts/player-context-value';
-import type { OpenDotaPlayerMatches } from '@/types/external-apis';
 
 type SortKey = 'games' | 'winRate' | 'name';
 
@@ -29,103 +28,6 @@ const renderHeroWithAvatar = (hero: Hero) => (
 );
 
 type DateRangeSelection = 'all' | '7days' | '30days' | 'custom';
-
-function getDateCutoffs(
-  selection: DateRangeSelection,
-  custom: { start: string | null; end: string | null },
-): { startCutoffSec: number | null; endCutoffSec: number | null; referenceNowSec: number } {
-  // Presets should represent whole calendar days ending yesterday (local time),
-  // so they align with the Custom date inputs that are inclusive of full days.
-  const now = new Date();
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const yesterdayEnd = new Date(todayStart);
-  yesterdayEnd.setMilliseconds(-1); // 23:59:59.999 of the previous day
-
-  const yesterdayEndSec = Math.floor(yesterdayEnd.getTime() / 1000);
-
-  if (selection === 'all') {
-    return { startCutoffSec: null, endCutoffSec: null, referenceNowSec: Math.floor(now.getTime() / 1000) };
-  }
-
-  if (selection === '7days') {
-    const start = new Date(todayStart);
-    start.setDate(start.getDate() - 7);
-    return {
-      startCutoffSec: Math.floor(start.getTime() / 1000),
-      endCutoffSec: yesterdayEndSec,
-      referenceNowSec: Math.floor(now.getTime() / 1000),
-    };
-  }
-  if (selection === '30days') {
-    const start = new Date(todayStart);
-    start.setDate(start.getDate() - 30);
-    return {
-      startCutoffSec: Math.floor(start.getTime() / 1000),
-      endCutoffSec: yesterdayEndSec,
-      referenceNowSec: Math.floor(now.getTime() / 1000),
-    };
-  }
-  let startCutoffSec: number | null = null;
-  let endCutoffSec: number | null = null;
-  if (custom.start) {
-    // Interpret start as the start of the selected day in local time
-    const startDate = new Date(custom.start);
-    startDate.setHours(0, 0, 0, 0);
-    startCutoffSec = Math.floor(startDate.getTime() / 1000);
-  }
-  if (custom.end) {
-    // Interpret end as the end of the selected day inclusively in local time
-    const endDate = new Date(custom.end);
-    endDate.setHours(23, 59, 59, 999);
-    endCutoffSec = Math.floor(endDate.getTime() / 1000);
-  }
-  return { startCutoffSec, endCutoffSec, referenceNowSec: Math.floor(now.getTime() / 1000) };
-}
-
-function filterMatchesByDateRange(
-  matches: OpenDotaPlayerMatches[],
-  cutoffs: { startCutoffSec: number | null; endCutoffSec: number | null },
-): OpenDotaPlayerMatches[] {
-  const { startCutoffSec, endCutoffSec } = cutoffs;
-  return matches.filter((m) => {
-    if (startCutoffSec !== null && m.start_time < startCutoffSec) return false;
-    if (endCutoffSec !== null && m.start_time > endCutoffSec) return false;
-    return true;
-  });
-}
-
-function buildHeroRows(
-  filtered: OpenDotaPlayerMatches[],
-  heroesMap: Record<string, Hero>,
-): Array<{ hero: Hero; games: number; winRate: number }> {
-  const byHero: Record<string, { games: number; wins: number }> = {};
-  for (const match of filtered) {
-    const heroId = match.hero_id.toString();
-    const isRadiantPlayer = match.player_slot < 128;
-    const isWin = match.radiant_win ? isRadiantPlayer : !isRadiantPlayer;
-    if (!byHero[heroId]) byHero[heroId] = { games: 0, wins: 0 };
-    byHero[heroId].games += 1;
-    if (isWin) byHero[heroId].wins += 1;
-  }
-  return Object.entries(byHero)
-    .map(([heroId, agg]) => {
-      const hero =
-        heroesMap[heroId] ||
-        ({
-          id: heroId,
-          name: `npc_dota_hero_${heroId}`,
-          localizedName: `Hero ${heroId}`,
-          primaryAttribute: 'strength',
-          attackType: 'melee',
-          roles: [],
-          imageUrl: '',
-        } as Hero);
-      const winRate = agg.games > 0 ? (agg.wins / agg.games) * 100 : 0;
-      return { hero, games: agg.games, winRate };
-    })
-    .filter(Boolean) as Array<{ hero: Hero; games: number; winRate: number }>;
-}
 
 function HeroStatsHeaderControls({
   dateRange,
@@ -190,12 +92,10 @@ function HeroStatsHeaderControls({
 
 interface PlayerDetailsPanelDetailsProps {
   player: Player;
-  _allPlayers?: Player[];
-  _hiddenPlayerIds?: Set<number>;
-  heroes: Record<string, Hero>;
 }
 
-export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player, heroes }) => {
+export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps> = React.memo(({ player }) => {
+  const appData = useAppData();
   const [sortKey] = useState<SortKey>('games');
   const [sortDirection] = useState<'asc' | 'desc'>('desc');
   const [dateRange, setDateRange] = useState<DateRangeSelection>('all');
@@ -204,30 +104,18 @@ export const PlayerDetailsPanelDetails: React.FC<PlayerDetailsPanelDetailsProps>
     end: null,
   });
 
-  const matches = useMemo(() => {
-    return Array.isArray(player.recentMatches) ? (player.recentMatches as OpenDotaPlayerMatches[]) : [];
-  }, [player.recentMatches]);
+  // Auto-refresh player if recentMatches is missing (e.g., loaded from storage before this field was added)
+  useEffect(() => {
+    if (player.recentMatches === undefined || player.recentMatches === null) {
+      appData.refreshPlayer(player.accountId).catch((error) => {
+        console.error(`Failed to refresh player ${player.accountId}:`, error);
+      });
+    }
+  }, [appData, player.accountId, player.recentMatches]);
 
-  const cutoffs = useMemo(() => getDateCutoffs(dateRange, customDateRange), [dateRange, customDateRange]);
-
-  const filteredMatches = useMemo(() => filterMatchesByDateRange(matches, cutoffs), [matches, cutoffs]);
-
-  const unsortedRows = useMemo(() => buildHeroRows(filteredMatches, heroes), [filteredMatches, heroes]);
-
-  const rows = useMemo(() => {
-    const comparator = (
-      a: { hero: Hero; games: number; winRate: number },
-      b: { hero: Hero; games: number; winRate: number },
-    ) => {
-      if (sortKey === 'name') return a.hero.localizedName.localeCompare(b.hero.localizedName);
-      if (sortKey === 'games') return b.games - a.games;
-      return b.winRate - a.winRate;
-    };
-    const sorted = [...unsortedRows].sort(comparator);
-    return sortDirection === 'asc' ? sorted.reverse() : sorted;
-  }, [unsortedRows, sortKey, sortDirection]);
-
-  const totalGames = useMemo(() => filteredMatches.length, [filteredMatches]);
+  const { rows, totalGames } = useMemo(() => {
+    return appData.getPlayerRecentHeroRows(player.accountId, dateRange, customDateRange, sortKey, sortDirection);
+  }, [appData, player.accountId, dateRange, customDateRange, sortKey, sortDirection]);
 
   return (
     <div className="space-y-6">
