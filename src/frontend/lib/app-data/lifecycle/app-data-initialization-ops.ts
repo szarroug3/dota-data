@@ -5,7 +5,6 @@
  * Extracted to reduce app-data.ts file size.
  */
 
-import * as TeamOps from '@/frontend/lib/app-data/app-data-team-ops';
 import type {
   AppDataState,
   Hero,
@@ -16,6 +15,7 @@ import type {
   Player,
   Team,
 } from '@/frontend/lib/app-data/app-data-types';
+import * as TeamOps from '@/frontend/lib/app-data/team/app-data-team-ops';
 import { fetchAndProcessMatch } from '@/frontend/lib/match/match-loader';
 import { fetchAndProcessPlayer } from '@/frontend/lib/player/player-loader';
 import { loadHeroes, loadItems, loadLeagues } from '@/frontend/lib/reference/reference-data-loader';

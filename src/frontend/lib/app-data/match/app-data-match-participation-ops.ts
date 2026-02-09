@@ -1,5 +1,5 @@
-import * as ParticipationHelpers from '@/frontend/lib/app-data/app-data-participation-helpers';
 import type { Hero, LeagueMatchesCache, Match, Team } from '@/frontend/lib/app-data/app-data-types';
+import * as ParticipationHelpers from '@/frontend/lib/app-data/match/app-data-participation-helpers';
 import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 interface MatchParticipationContext {

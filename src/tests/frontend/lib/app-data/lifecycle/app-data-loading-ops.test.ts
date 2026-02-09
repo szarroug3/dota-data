@@ -2,9 +2,9 @@
  * Tests for app-data-loading-ops
  */
 
-import { loadTeamMatches } from '@/frontend/lib/app-data/app-data-loading-ops';
-import type { AppDataLoadingOpsContext } from '@/frontend/lib/app-data/app-data-loading-ops';
 import type { LeagueMatchesCache, Match, Player, Team } from '@/frontend/lib/app-data/app-data-types';
+import { loadTeamMatches } from '@/frontend/lib/app-data/lifecycle/app-data-loading-ops';
+import type { AppDataLoadingOpsContext } from '@/frontend/lib/app-data/lifecycle/app-data-loading-ops';
 import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 const minimalHero = {

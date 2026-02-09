@@ -1,5 +1,5 @@
-import { createPlaceholderMatch } from '@/frontend/lib/app-data/app-data-match-placeholder';
 import type { Hero, Team } from '@/frontend/lib/app-data/app-data-types';
+import { createPlaceholderMatch } from '@/frontend/lib/app-data/match/app-data-match-placeholder';
 import type { StoredHero, StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 const baseTeam: Team = {

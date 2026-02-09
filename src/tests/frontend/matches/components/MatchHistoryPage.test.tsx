@@ -73,7 +73,7 @@ jest.mock('@/frontend/matches/components/containers/ResizableMatchLayout', () =>
 }));
 
 // Mock AppData context instead of old contexts
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => ({
     state: {
       selectedTeamId: 'team1-league1',

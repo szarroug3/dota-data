@@ -1,6 +1,6 @@
-import { addManualPlayerToTeam } from '@/frontend/lib/app-data/app-data-player-ops';
-import type { AppDataPlayerOpsContext } from '@/frontend/lib/app-data/app-data-player-ops';
 import type { Player, Team } from '@/frontend/lib/app-data/app-data-types';
+import { addManualPlayerToTeam } from '@/frontend/lib/app-data/player/app-data-player-ops';
+import type { AppDataPlayerOpsContext } from '@/frontend/lib/app-data/player/app-data-player-ops';
 
 const teamKey = '1-2';
 

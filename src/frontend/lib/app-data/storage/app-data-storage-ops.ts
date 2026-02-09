@@ -6,9 +6,9 @@
  */
 
 import { createPlaceholderTeam } from '@/frontend/lib/app-data/app-data-data-ops';
-import { createPlaceholderMatch } from '@/frontend/lib/app-data/app-data-match-placeholder';
 import type { Team, Player, AppDataState, Match, Hero } from '@/frontend/lib/app-data/app-data-types';
 import { GLOBAL_TEAM_KEY } from '@/frontend/lib/app-data/app-data-types';
+import { createPlaceholderMatch } from '@/frontend/lib/app-data/match/app-data-match-placeholder';
 import {
   loadTeamsFromStorage,
   loadTeamsFromStoredData,

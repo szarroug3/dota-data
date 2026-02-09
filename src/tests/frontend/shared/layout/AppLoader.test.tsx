@@ -6,7 +6,7 @@ import { ThemeContextProvider, useThemeContext } from '@/frontend/contexts/theme
 import { AppLoader } from '@/frontend/shared/layout/AppLoader';
 
 // Mock AppData context instead of old team context
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   useAppData: () => ({
     teams: new Map(),
     matches: new Map(),

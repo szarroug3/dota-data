@@ -1,9 +1,9 @@
+import type { Match, Team } from '@/frontend/lib/app-data/app-data-types';
 import {
   editManualMatchToTeam,
   addManualMatchToTeam,
   removeManualMatchFromTeam,
-} from '@/frontend/lib/app-data/app-data-match-ops';
-import type { Match, Team } from '@/frontend/lib/app-data/app-data-types';
+} from '@/frontend/lib/app-data/match/app-data-match-ops';
 import type { StoredMatchData, StoredPlayerData } from '@/frontend/lib/storage/storage-manager';
 
 // Mock the AppData context interface

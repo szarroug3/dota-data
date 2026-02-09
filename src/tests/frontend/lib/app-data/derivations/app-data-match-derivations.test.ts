@@ -1,10 +1,10 @@
+import type { Hero, Match } from '@/frontend/lib/app-data/app-data-types';
 import {
   computeTeamfightTotals,
   deriveTeamfightRowData,
   getHeroesPlayedOptionsForTeam,
   getMatchPlayerKda,
-} from '@/frontend/lib/app-data/app-data-match-derivations';
-import type { Hero, Match } from '@/frontend/lib/app-data/app-data-types';
+} from '@/frontend/lib/app-data/derivations/app-data-match-derivations';
 import type { StoredMatchData } from '@/frontend/lib/storage/storage-manager';
 
 type MatchWithOptionalDraft = Omit<Match, 'draft'> & { draft?: Match['draft'] | null };

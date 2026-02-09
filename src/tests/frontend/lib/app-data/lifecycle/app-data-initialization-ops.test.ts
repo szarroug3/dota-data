@@ -1,6 +1,6 @@
-import { loadMatch, refreshMatch, refreshPlayer } from '@/frontend/lib/app-data/app-data-initialization-ops';
-import type { AppDataInitializationOpsContext } from '@/frontend/lib/app-data/app-data-initialization-ops';
 import type { Hero, Item, Match, Player, Team } from '@/frontend/lib/app-data/app-data-types';
+import { loadMatch, refreshMatch, refreshPlayer } from '@/frontend/lib/app-data/lifecycle/app-data-initialization-ops';
+import type { AppDataInitializationOpsContext } from '@/frontend/lib/app-data/lifecycle/app-data-initialization-ops';
 import { fetchAndProcessMatch } from '@/frontend/lib/match/match-loader';
 import { fetchAndProcessPlayer } from '@/frontend/lib/player/player-loader';
 import { loadHeroes, loadItems } from '@/frontend/lib/reference/reference-data-loader';

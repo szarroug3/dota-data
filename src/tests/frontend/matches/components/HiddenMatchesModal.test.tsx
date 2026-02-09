@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
-import { AppDataProvider } from '@/contexts/app-data-context';
+import { AppDataProvider } from '@/frontend/contexts/app-data-context';
 import { HiddenMatchesModal } from '@/frontend/matches/components/stateless/HiddenMatchesModal';
 
-jest.mock('@/contexts/app-data-context', () => ({
+jest.mock('@/frontend/contexts/app-data-context', () => ({
   AppDataProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAppData: () => ({
     getMatchResultLabel: () => 'Victory',
