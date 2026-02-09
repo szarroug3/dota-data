@@ -43,7 +43,7 @@ export function AdvantageItem({ entry }: { entry: TooltipEntry }) {
   const team = numValue > 0 ? 'Radiant' : 'Dire';
   const advantage = Math.abs(numValue);
   const absValue = Math.abs(advantage);
-  const formattedValue = absValue >= 1000 ? Math.round(advantage / 1000) : advantage;
+  const formattedValue = absValue >= 1000 ? Math.round(advantage / 1000) : Math.round(advantage);
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />

@@ -82,6 +82,21 @@ describe('Event descriptions and tooltip items', () => {
     expect(container.textContent).toContain('advantage');
     expect(container.textContent).not.toContain('other');
   });
+
+  it('AdvantagesList rounds non-integer values', () => {
+    const payload: TooltipEntry[] = [
+      {
+        dataKey: 'xpAdvantage',
+        value: 186.89999999999998,
+        name: 'XP Advantage',
+        color: '#000',
+        payload: { time: 0, goldAdvantage: 0, xpAdvantage: 0, radiantGold: 0, direGold: 0, radiantXP: 0, direXP: 0 },
+      },
+    ];
+    const { container } = render(<AdvantagesList payload={payload} />);
+    expect(container.textContent).toContain('187');
+    expect(container.textContent).not.toContain('186.8');
+  });
 });
 
 describe('renderEventDot', () => {
